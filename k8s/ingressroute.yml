@@ -1,0 +1,29 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: selfservice
+  namespace: selfservice
+spec:
+  entryPoints: []
+  routes:
+    - kind: Rule
+      match: Host(`build.dfds.cloud`) && PathPrefix(`/v2/api`)
+      priority: 0
+      middlewares:
+        - name: selfservice
+          namespace: selfservice
+      services:
+        - kind: Service
+          name: selfservice
+          namespace: selfservice
+          port: external
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: selfservice
+  namespace: selfservice
+spec:
+  stripPrefix:
+    prefixes:
+      - /v2/api

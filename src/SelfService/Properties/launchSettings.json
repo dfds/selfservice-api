@@ -1,0 +1,14 @@
+﻿{
+  "profiles": {
+    "SelfService": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:8080",
+      "environmentVariables": {
+        "HUMAN_READABLE_LOG": "true",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

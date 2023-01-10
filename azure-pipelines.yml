@@ -1,0 +1,62 @@
+trigger:
+  branches:
+    include:
+      - main
+      - "*"
+
+variables:
+  agent-pool: "Docker-pool"
+
+stages:
+  - stage: CI
+    displayName: "Build, test, deliver deployment artifacts"
+    jobs:
+      - job: Build
+        pool:
+          vmImage: "ubuntu-20.04"
+
+        steps:
+          - task: UseDotNet@2
+            displayName: "Use .NET sdk"
+            inputs:
+              packageType: sdk
+              version: 7.0.x
+              installationPath: $(Agent.ToolsDirectory)/dotnet
+          - bash: |
+              chmod +x ./tools/push-container.sh
+              make cd BUILD_NUMBER="$(Build.BuildNumber)"
+            env:
+              AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+              AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+              ALLOW_PUSH_CONTAINER: $(ALLOW_PUSH_CONTAINER)
+            displayName: "make cd"
+            condition: succeeded()
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish Artifact: manifests"
+            inputs:
+              PathtoPublish: "$(System.DefaultWorkingDirectory)/.output/manifests"
+              ArtifactName: manifests
+
+  - stage: Deploy
+    dependsOn: CD
+    displayName: "Deployments"
+    jobs:
+      - job: Production
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: none
+          - download: current
+            artifact: manifests
+            displayName: "Download build artifacts"
+          - publish: "$(Pipeline.Workspace)/manifests/"
+            artifact: deployed-manifests
+            displayName: "Publish manifests"
+          - task: Kubernetes@1
+            displayName: kubectl apply
+            inputs:
+              connectionType: Kubernetes Service Connection
+              kubernetesServiceEndpoint: Kubernetes-Hellman-selfservice-deploy
+              cwd: "$(Pipeline.Workspace)/manifests/"
+              command: apply
+              arguments: -f .
