@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: selfservice
+  name: selfservice-api
   namespace: selfservice
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: selfservice
+      app: selfservice-api
   template:
     metadata:
       labels:
-        app: selfservice
+        app: selfservice-api
       annotations:
         prometheus.io/port: "8888"
         prometheus.io/scrape: "true"
     spec:
       containers:
         - name: app
-          image: 579478677147.dkr.ecr.eu-central-1.amazonaws.com/selfservice/app:${BUILD_NUMBER}
+          image: 579478677147.dkr.ecr.eu-central-1.amazonaws.com/selfservice-api/app:${BUILD_NUMBER}
           ports:
             - name: web
               containerPort: 8080

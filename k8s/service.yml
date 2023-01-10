@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: selfservice
+  name: selfservice-api
   namespace: selfservice
   labels:
     scrape-service-metrics: "true"
@@ -14,4 +14,4 @@ spec:
       port: 8888
       targetPort: metrics
   selector:
-    app: selfservice
+    app: selfservice-api
