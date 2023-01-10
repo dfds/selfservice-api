@@ -8,7 +8,7 @@ variables:
   agent-pool: "Docker-pool"
 
 stages:
-  - stage: CI
+  - stage: CD
     displayName: "Build, test, deliver deployment artifacts"
     jobs:
       - job: Build
