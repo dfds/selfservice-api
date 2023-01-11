@@ -24,6 +24,12 @@ spec:
               containerPort: 8080
             - name: metrics
               containerPort: 8888
+          env:
+            - name: SS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: capability-service-db
+                  key: connection-string
           resources:
             requests:
               memory: "50Mi"
