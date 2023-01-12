@@ -5,11 +5,6 @@ namespace SelfService.Infrastructure.Persistence;
 
 public static class Projections
 {
-    public static IResult NotImplemented(object? id, object? memberEmail, object? name)
-    {
-        return Results.StatusCode(StatusCodes.Status501NotImplemented);
-    }
-
     public static async Task<IResult> GetCapabilityList(SelfServiceDbContext dbContext)
     {
         var capabilities = await dbContext
@@ -115,7 +110,7 @@ public static class Projections
             return new ClusterDto(cluster.Name, cluster.Description, cluster.Enabled, cluster.ClusterId);
         }
     }
-    
+
     public static async Task<IResult> GetAllByCapability(Guid id, SelfServiceDbContext dbContext)
     {
         var topics = await dbContext
@@ -131,7 +126,7 @@ public static class Projections
 
     public static async Task<IResult> GetAllTopics(SelfServiceDbContext dbContext)
     {
-        var topics =await dbContext
+        var topics = await dbContext
             .Topics
             .ToListAsync();
 
@@ -142,8 +137,8 @@ public static class Projections
     }
 
     public record TopicDto(Guid Id, string? Name, string? Description, Guid CapabilityId, Guid KafkaClusterId, int Partitions, string? Status)
-    {    
-        public Dictionary<string, object> Configurations { get; set; }
+    {
+        public Dictionary<string, object>? Configurations { get; set; }
 
         public static TopicDto CreateFrom(Topic topic)
         {
@@ -154,8 +149,7 @@ public static class Projections
                 topic.CapabilityId,
                 topic.KafkaClusterId,
                 topic.Partitions,
-                topic.Status
-            )
+                topic.Status)
             {
                 Configurations = topic.Configurations
             };
@@ -163,6 +157,4 @@ public static class Projections
             return topicDto;
         }
     }
-
-    
 }
