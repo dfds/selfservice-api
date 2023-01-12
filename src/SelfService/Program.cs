@@ -28,6 +28,8 @@ try
     app.UseSwaggerUI();
 
     app.MapEndpoints();
+
+    app.UseSerilogRequestLogging();
     
     app.Run();
 }
