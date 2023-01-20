@@ -35,6 +35,8 @@ build:
 		--nologo \
 		-v q
 
+tests: test
+
 test:
 	@cd src && dotnet test \
 		--configuration $(CONFIGURATION) \
