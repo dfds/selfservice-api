@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Identity.Web;
 using SelfService;
 using SelfService.Domain;
 using SelfService.Infrastructure.Api.Configuration;
@@ -20,6 +23,20 @@ try
     builder.AddSwagger();
     builder.AddDatabase();
 
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
+    builder.Services.AddAuthorization(opt =>
+    {
+        opt.FallbackPolicy = new AuthorizationPolicyBuilder()
+            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+            .RequireAuthenticatedUser()
+            .Build();
+    });
+    
+    // NOTE: enable to debug authentication issues
+    // IdentityModelEventSource.ShowPII = true;
+    
     var app = builder.Build();
 
     app.UseForwardedPrefixAsBasePath();
@@ -27,6 +44,9 @@ try
     app.UseSwagger();
     app.UseSwaggerUI();
 
+    app.UseAuthentication();
+    app.UseAuthorization();
+    
     app.MapEndpoints();
 
     app.UseSerilogRequestLogging();
