@@ -7,10 +7,9 @@ namespace SelfService.Infrastructure.Persistence
     {
         public static void AddDatabase(this WebApplicationBuilder builder)
         {
-            builder.Services.AddDbContext<SelfServiceDbContext>(options =>
-            {
-                options.UseNpgsql(builder.Configuration["SS_CONNECTION_STRING"]);
-            });
+            builder.Services.AddDbContext<LegacyDbContext>(options => { options.UseNpgsql(builder.Configuration["SS_LEGACY_CONNECTION_STRING"]); });
+
+            builder.Services.AddDbContext<SelfServiceDbContext>(options => { options.UseNpgsql(builder.Configuration["SS_CONNECTION_STRING"]); });
         }
     }
 
@@ -20,60 +19,16 @@ namespace SelfService.Infrastructure.Persistence
         {
         }
 
-        public DbSet<Capability> Capabilities { get; set; }
-        public DbSet<Topic> Topics { get; set; }
-        public DbSet<Cluster> Clusters { get; set; }
+        public DbSet<ServiceDescription> ServiceCatalog { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Capability>(cfg =>
+            modelBuilder.Entity<ServiceDescription>(cfg =>
             {
-                cfg.ToTable("Capability");
-
-                cfg.HasMany<Membership>(x => x.Memberships)
-                    .WithOne()
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                cfg.HasMany<Context>(x => x.Contexts)
-                    .WithOne()
-                    .OnDelete(DeleteBehavior.Cascade);
+                cfg.ToTable("ServiceCatalog");
             });
-
-            modelBuilder.Entity<Context>(cfg =>
-            {
-                cfg.ToTable("Context");
-            });
-
-            modelBuilder.Entity<Membership>(cfg =>
-            {
-                cfg.ToTable("Membership");
-
-
-                cfg.OwnsOne(x => x.Member)
-                    .Property(x => x.Email)
-                    .HasColumnName("MemberEmail");
-            });
-
-            modelBuilder.Entity<Topic>(cfg =>
-            {
-                cfg.ToTable("KafkaTopic");
-                cfg.Ignore(t => t.Configurations);
-
-                // cfg.Property(t => t.Configurations)
-                // 	.HasConversion(
-                // 		d => JsonConvert.SerializeObject(d, Formatting.None),
-                // 		s => JsonConvert.DeserializeObject<Dictionary<string, object>>(s)
-                // 	)
-                // 	.HasMaxLength(4096);
-            });
-
-            modelBuilder.Entity<Cluster>(cfg =>
-            {
-                cfg.ToTable("KafkaCluster");
-            });
-
         }
     }
 }

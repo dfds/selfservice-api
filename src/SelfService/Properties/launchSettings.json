@@ -8,7 +8,8 @@
       "environmentVariables": {
         "HUMAN_READABLE_LOG": "true",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "SS_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=capabilitydb;"
+        "SS_LEGACY_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db",
+        "SS_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db"
       }
     }
   }

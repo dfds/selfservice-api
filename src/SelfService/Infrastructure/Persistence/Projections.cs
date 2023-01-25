@@ -5,7 +5,7 @@ namespace SelfService.Infrastructure.Persistence;
 
 public static class Projections
 {
-    public static async Task<IResult> GetCapabilityList(SelfServiceDbContext dbContext)
+    public static async Task<IResult> GetCapabilityList(LegacyDbContext dbContext)
     {
         var capabilities = await dbContext
             .Capabilities
@@ -16,7 +16,7 @@ public static class Projections
         return Results.Ok(new { items = capabilities.Select(CapabilityListItemDto.Create).ToArray() });
     }
 
-    public static async Task<IResult> GetCapability(Guid id, SelfServiceDbContext dbContext)
+    public static async Task<IResult> GetCapability(Guid id, LegacyDbContext dbContext)
     {
         var capability = await dbContext
             .Capabilities
@@ -96,7 +96,7 @@ public static class Projections
         }
     }
 
-    public static async Task<IResult> GetClusterList(SelfServiceDbContext dbContext)
+    public static async Task<IResult> GetClusterList(LegacyDbContext dbContext)
     {
         var clusters = await dbContext.Clusters.ToListAsync();
 
@@ -111,7 +111,7 @@ public static class Projections
         }
     }
 
-    public static async Task<IResult> GetAllByCapability(Guid id, SelfServiceDbContext dbContext)
+    public static async Task<IResult> GetAllByCapability(Guid id, LegacyDbContext dbContext)
     {
         var topics = await dbContext
             .Topics
@@ -124,7 +124,7 @@ public static class Projections
         });
     }
 
-    public static async Task<IResult> GetAllTopics(SelfServiceDbContext dbContext)
+    public static async Task<IResult> GetAllTopics(LegacyDbContext dbContext)
     {
         var topics = await dbContext
             .Topics
