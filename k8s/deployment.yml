@@ -30,6 +30,18 @@ spec:
                 secretKeyRef:
                   name: capability-service-db
                   key: connection-string
+            - name: SS_LEGACY_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: capability-service-db
+                  key: connection-string
+            - name: CG_KAFKA_GROUP_ID
+              value: build.selfservice.selfservice-api
+            - name: CG_TOPIC_NAME_SELF_SERVICE
+              value: cloudengineering.selfservice.apispecs
+          envFrom:
+            - secretRef:
+                name: kafka-credentials
           resources:
             requests:
               memory: "50Mi"
