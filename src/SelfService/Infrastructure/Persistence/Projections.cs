@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Domain;
 
@@ -5,6 +6,57 @@ namespace SelfService.Infrastructure.Persistence;
 
 public static class Projections
 {
+
+    public static async Task<IResult> GetMe(LegacyDbContext dbContext, ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext)
+    {
+        var name = user.Identity.Name;
+        
+        var capabilities = await dbContext
+            .Capabilities
+            .Where(x => x.Memberships.Any(y => y.Email.ToLower()==name.ToLower()))
+            .Where(c => c.Deleted == null)
+            .Include(x => x.Memberships)
+            .OrderBy(x => x.Name)
+            .ToListAsync();
+
+        return TypedResults.Ok(new Me
+        {
+            Capabilities = capabilities
+                .Select(x => new MyCapability
+                {
+                    Id = x.Id.ToString(),
+                    RootId = x.RootId,
+                    Name = x.Name,
+                    Description = x.Description,
+                    Members = x.Memberships.Select(x => x.Email).ToArray(),
+                    Links = new Link[]
+                    {
+                        new Link("self", linkGenerator.GetUriByName(httpContext, "capability", new { id = x.Id}))
+                    }
+                })
+                .ToArray()
+        });
+    }
+    
+    
+    public class Me
+    {
+        public MyCapability[] Capabilities { get; set; }
+    }
+    
+    public class MyCapability
+    {
+        public string Id { get; set; }
+        public string RootId { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string[] Members { get; set; }
+        public Link[] Links { get; set; } = Array.Empty<Link>();
+    }
+    
+    public record Link(string rel, string href);
+
+
     public static async Task<IResult> GetCapabilityList(LegacyDbContext dbContext)
     {
         var capabilities = await dbContext

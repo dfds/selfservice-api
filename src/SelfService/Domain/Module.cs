@@ -9,6 +9,8 @@ public static class Module
     {
         app.MapGet("/", () => "Hello World!").WithTags("System").NoSwaggerDocs();
 
+        app.MapGet("/me", Projections.GetMe).WithTags("Account").Produces<Projections.Me>();
+        
         MapCapabilityEndpoints(app);
 
         MapClusterEndpoints(app);
@@ -21,7 +23,7 @@ public static class Module
         var group = app.MapGroup("/capabilities").WithTags("Capability");
 
         group.MapGet("", Projections.GetCapabilityList);
-        group.MapGet("{id:guid}", Projections.GetCapability);
+        group.MapGet("{id:guid}", Projections.GetCapability).WithName("capability");
         group.MapPost("", NotImplemented);
         group.MapPut("{id:guid}", NotImplemented);
         group.MapDelete("{id:guid}", NotImplemented);
