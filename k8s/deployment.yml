@@ -37,7 +37,7 @@ spec:
                   key: connection-string
             - name: CG_KAFKA_GROUP_ID
               value: build.selfservice.selfservice-api
-            - name: CG_TOPIC_NAME_SELF_SERVICE
+            - name: SS_APISPECS_TOPIC
               value: cloudengineering.selfservice.apispecs
           envFrom:
             - secretRef:
