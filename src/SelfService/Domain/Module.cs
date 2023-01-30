@@ -16,6 +16,8 @@ public static class Module
         MapClusterEndpoints(app);
 
         MapKafkaTopicEndpoints(app);
+
+        MapServiceCatalogEndpoints(app);
     }
 
     private static void MapCapabilityEndpoints(IEndpointRouteBuilder app)
@@ -51,5 +53,13 @@ public static class Module
     private static IResult NotImplemented()
     {
         return Results.StatusCode(StatusCodes.Status501NotImplemented);
+    }
+
+    private static void MapServiceCatalogEndpoints(IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/apispecs").WithTags("ServiceCatalog");
+
+        group.MapGet("", Projections.GetServiceCatalog).AllowAnonymous();
+        group.MapGet("{id:guid}", Projections.GetService).AllowAnonymous();
     }
 }

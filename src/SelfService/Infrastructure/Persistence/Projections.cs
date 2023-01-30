@@ -208,4 +208,29 @@ public static class Projections
             return topicDto;
         }
     }
+
+    public static async Task<IResult> GetServiceCatalog(SelfServiceDbContext dbContext)
+    {
+        var serviceDescriptions = await dbContext.ServiceCatalog
+            .OrderBy(x => x.Name)
+            .ToListAsync();
+
+        return Results.Ok(new
+        {
+            items = serviceDescriptions.Select(x => new ServiceDescriptionDto(x.Id, x.Name)).ToArray()
+        });
+    }
+
+    public record ServiceDescriptionDto(Guid Id, string Name);
+
+    public static async Task<IResult> GetService(Guid id, SelfServiceDbContext dbContext)
+    {
+        var serviceDescription = await dbContext.ServiceCatalog.FirstOrDefaultAsync();
+        if (serviceDescription == null)
+        {
+            return Results.NotFound();
+        }
+
+        return Results.Ok(serviceDescription);
+    }
 }
