@@ -3,6 +3,6 @@
     public class Membership
     {
         public Guid Id { get; set; }
-        public Member? Member { get; set; }
+        public string? Email { get; set; }
     }
 }

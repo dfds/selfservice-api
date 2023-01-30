@@ -63,7 +63,6 @@ public static class Projections
                 RootId = capability.RootId,
                 Description = capability.Description,
                 Members = capability.Memberships
-                    .Select(x => x.Member!)
                     .Select(MemberDto.Create)
                     .ToArray(),
                 Contexts = capability
@@ -76,7 +75,7 @@ public static class Projections
 
     public record MemberDto(string Email)
     {
-        public static MemberDto Create(Member member)
+        public static MemberDto Create(Membership member)
         {
             return new MemberDto(member.Email);
         }

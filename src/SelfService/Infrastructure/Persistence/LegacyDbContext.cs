@@ -39,9 +39,7 @@ public class LegacyDbContext : DbContext
         {
             cfg.ToTable("Membership");
 
-
-            cfg.OwnsOne(x => x.Member)
-                .Property(x => x.Email)
+            cfg.Property(x => x.Email)
                 .HasColumnName("MemberEmail");
         });
 
