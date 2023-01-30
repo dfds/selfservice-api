@@ -9,7 +9,10 @@
         "HUMAN_READABLE_LOG": "true",
         "ASPNETCORE_ENVIRONMENT": "Development",
         "SS_LEGACY_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db",
-        "SS_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db"
+        "SS_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db",
+        "DEFAULT_KAFKA_BOOTSTRAP_SERVERS": "localhost:9092",
+        "DEFAULT_KAFKA_GROUP_ID": "selfservice.consumer",
+        "SS_APISPECS_TOPIC": "cloudengineering.selfservice.apispecs"
       }
     }
   }

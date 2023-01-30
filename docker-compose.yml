@@ -61,18 +61,7 @@ services:
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
                       sleep 5 && \
                       cub kafka-ready -b kafka:29092 1 20 && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.kafkatopic && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.ascraper.spec && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.confluentgateway.provisioning'"
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.apispecs'"
     environment:
       KAFKA_BROKER_ID: ignored
       KAFKA_ZOOKEEPER_CONNECT: ignored
-
-  # outbox:
-  #   image: public.ecr.aws/d8r0z9h2/dafda-gendis:0.9.1
-  #   depends_on:
-  #     kafka-setup:
-  #       condition: service_completed_successfully
-  #   environment:
-  #     - DEFAULT_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-  #     - DB_CONNECTION_STRING=User ID=postgres;Password=p;Host=database;Port=5432;Database=db

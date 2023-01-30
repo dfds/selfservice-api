@@ -4,6 +4,7 @@ using Microsoft.Identity.Web;
 using SelfService;
 using SelfService.Domain;
 using SelfService.Infrastructure.Api.Configuration;
+using SelfService.Infrastructure.Messaging;
 using SelfService.Infrastructure.Metrics;
 using SelfService.Infrastructure.Persistence;
 using Serilog;
@@ -22,6 +23,7 @@ try
     builder.AddMetrics();
     builder.AddSwagger();
     builder.AddDatabase();
+    builder.AddMessaging();
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
