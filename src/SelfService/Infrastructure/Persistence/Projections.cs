@@ -1,12 +1,11 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using SelfService.Domain;
+using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Persistence;
 
 public static class Projections
 {
-
     public static async Task<IResult> GetMe(LegacyDbContext dbContext, ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext)
     {
         var name = user.Identity.Name;

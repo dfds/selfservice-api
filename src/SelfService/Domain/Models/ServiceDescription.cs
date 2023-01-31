@@ -1,4 +1,4 @@
-﻿namespace SelfService.Domain;
+﻿namespace SelfService.Domain.Models;
 
 public class ServiceDescription
 {

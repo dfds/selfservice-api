@@ -1,5 +1,6 @@
 using Dafda.Consuming;
 using Microsoft.EntityFrameworkCore;
+using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Domain;

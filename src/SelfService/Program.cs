@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
 using SelfService;
-using SelfService.Domain;
+using SelfService.Infrastructure.Api;
 using SelfService.Infrastructure.Api.Configuration;
 using SelfService.Infrastructure.Messaging;
 using SelfService.Infrastructure.Metrics;

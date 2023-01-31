@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SelfService.Domain;
+using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Persistence
 {
