@@ -1,4 +1,4 @@
-using SelfService.Domain.Models;
+using SelfService.Legacy.Models;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 

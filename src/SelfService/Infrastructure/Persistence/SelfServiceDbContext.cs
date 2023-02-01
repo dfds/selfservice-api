@@ -7,9 +7,7 @@ namespace SelfService.Infrastructure.Persistence
     {
         public static void AddDatabase(this WebApplicationBuilder builder)
         {
-            builder.Services.AddDbContext<LegacyDbContext>(options => { options.UseNpgsql(builder.Configuration["SS_LEGACY_CONNECTION_STRING"]); });
-
-            builder.Services.AddDbContext<SelfServiceDbContext>(options => { options.UseNpgsql(builder.Configuration["SS_CONNECTION_STRING"]); });
+            builder.Services.AddDbContext<SelfServiceDbContext>(options => {options.UseNpgsql(builder.Configuration["SS_CONNECTION_STRING"]);});
         }
     }
 

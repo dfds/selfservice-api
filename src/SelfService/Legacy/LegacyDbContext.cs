@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SelfService.Domain.Models;
+using Microsoft.EntityFrameworkCore;
+using SelfService.Legacy.Models;
 
-namespace SelfService.Infrastructure.Persistence;
+namespace SelfService.Legacy;
 
 public class LegacyDbContext : DbContext
 {

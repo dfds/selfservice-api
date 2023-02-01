@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using SelfService.Infrastructure.Persistence;
+using SelfService.Legacy;
 
 namespace SelfService.Infrastructure.Api.Me;
 

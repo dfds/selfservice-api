@@ -1,4 +1,4 @@
-namespace SelfService.Domain.Models
+namespace SelfService.Legacy.Models
 {
     public class Context
     {
