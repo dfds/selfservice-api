@@ -15,7 +15,7 @@ public static class Serilog
 
             configuration
                 .Enrich.FromLogContext()
-                .Enrich.WithProperty("Application", "Logistics.Customs.CustomsHandlingService")
+                .Enrich.WithProperty("Application", "SelfService.Api")
                 .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
                 .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
