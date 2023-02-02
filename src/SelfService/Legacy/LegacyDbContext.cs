@@ -10,9 +10,9 @@ public class LegacyDbContext : DbContext
     }
 
     public DbSet<Capability> Capabilities { get; set; }
-    public DbSet<Topic> Topics { get; set; }
     public DbSet<Cluster> Clusters { get; set; }
-
+    public DbSet<Topic> Topics { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -30,36 +30,16 @@ public class LegacyDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<Context>(cfg =>
-        {
-            cfg.ToTable("Context");
-        });
+        modelBuilder.Entity<Context>().ToTable("Context");
 
         modelBuilder.Entity<Membership>(cfg =>
         {
             cfg.ToTable("Membership");
 
-            cfg.Property(x => x.Email)
-                .HasColumnName("MemberEmail");
+            cfg.Property(x => x.Email).HasColumnName("MemberEmail");
         });
 
-        modelBuilder.Entity<Topic>(cfg =>
-        {
-            cfg.ToTable("KafkaTopic");
-            cfg.Ignore(t => t.Configurations);
-
-            // cfg.Property(t => t.Configurations)
-            // 	.HasConversion(
-            // 		d => JsonConvert.SerializeObject(d, Formatting.None),
-            // 		s => JsonConvert.DeserializeObject<Dictionary<string, object>>(s)
-            // 	)
-            // 	.HasMaxLength(4096);
-        });
-
-        modelBuilder.Entity<Cluster>(cfg =>
-        {
-            cfg.ToTable("KafkaCluster");
-        });
-
+        modelBuilder.Entity<Topic>().ToTable("KafkaTopic");
+        modelBuilder.Entity<Cluster>().ToTable("KafkaCluster");
     }
 }

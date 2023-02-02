@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Legacy;
 
@@ -10,5 +9,9 @@ public static class LegacyConfiguration
         builder.Services.AddDbContext<LegacyDbContext>(options => {options.UseNpgsql(builder.Configuration["SS_LEGACY_CONNECTION_STRING"]);});
 
         builder.Services.AddHostedService<Synchronizer>();
+
+        builder.Services.AddTransient<CapabilitySynchronizer>();
+        builder.Services.AddTransient<KafkaSynchronizer>();
+
     }
 }

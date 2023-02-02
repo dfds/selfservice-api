@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SelfService.Infrastructure.Persistence;
 using SelfService.Legacy;
 
 namespace SelfService.Infrastructure.Api.Kafka;
@@ -20,7 +21,7 @@ public static class Module
     private static void MapKafkaTopicEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("").WithTags("KafkaTopics");
-        group.MapGet("/capabilities/{id:guid}/topics", GetAllByCapability);
+        group.MapGet("/capabilities/{id}/topics", GetAllByCapability);
         group.MapGet("/capabilities/{id:guid}/request-credential-generation", NotImplemented);
         group.MapGet("/topics", GetAllTopics);
         group.MapPost("/capabilities/{id:guid}/topics", NotImplemented);
@@ -34,10 +35,10 @@ public static class Module
         return Results.Ok(clusters.Select(ClusterDto.Create));
     }
 
-    private static async Task<IResult> GetAllByCapability(Guid id, LegacyDbContext dbContext)
+    private static async Task<IResult> GetAllByCapability(string id, SelfServiceDbContext dbContext)
     {
         var topics = await dbContext
-            .Topics
+            .KafkaTopics
             .Where(x => x.CapabilityId == id)
             .ToListAsync();
 
@@ -47,10 +48,10 @@ public static class Module
         });
     }
 
-    private static async Task<IResult> GetAllTopics(LegacyDbContext dbContext)
+    private static async Task<IResult> GetAllTopics(SelfServiceDbContext dbContext)
     {
         var topics = await dbContext
-            .Topics
+            .KafkaTopics
             .ToListAsync();
 
         return Results.Ok(new
