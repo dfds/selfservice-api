@@ -4,11 +4,13 @@ public class Synchronizer : BackgroundService
 {
     private readonly ILogger<Synchronizer> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly int _syncInterval;
 
-    public Synchronizer(ILogger<Synchronizer> logger, IServiceScopeFactory serviceScopeFactory)
+    public Synchronizer(ILogger<Synchronizer> logger, IServiceScopeFactory serviceScopeFactory, int syncInterval)
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
+        _syncInterval = syncInterval;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -20,7 +22,9 @@ public class Synchronizer : BackgroundService
             await SynchronizeCapabilities(stoppingToken);
             await SynchronizeKafka(stoppingToken);
 
-            await Task.Delay(10_000, stoppingToken);
+            _logger.LogDebug("Synchronizing again in {Timeout} seconds", _syncInterval);
+
+            await Task.Delay(_syncInterval, stoppingToken);
         }
     }
 

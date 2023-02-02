@@ -8,10 +8,19 @@ public static class LegacyConfiguration
     {
         builder.Services.AddDbContext<LegacyDbContext>(options => {options.UseNpgsql(builder.Configuration["SS_LEGACY_CONNECTION_STRING"]);});
 
-        builder.Services.AddHostedService<Synchronizer>();
+        if (!int.TryParse(builder.Configuration["SS_SYNC_INTERVAL"], out var syncInterval) || syncInterval <= 0)
+        {
+            return;
+        }
+
+        builder.Services.AddHostedService<Synchronizer>(provider =>
+        {
+            var logger = provider.GetRequiredService<ILogger<Synchronizer>>();
+            var serviceScopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
+            return new Synchronizer(logger, serviceScopeFactory, syncInterval);
+        });
 
         builder.Services.AddTransient<CapabilitySynchronizer>();
         builder.Services.AddTransient<KafkaSynchronizer>();
-
     }
 }
