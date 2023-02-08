@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SelfService.Legacy;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
@@ -10,7 +10,7 @@ public static class Module
         var group = app.MapGroup("/capabilities").WithTags("Capability");
 
         group.MapGet("", GetCapabilityList);
-        group.MapGet("{id:guid}", GetCapability).WithName("capability");
+        group.MapGet("{id:required}", GetCapability).WithName("capability");
         group.MapPost("", NotImplemented);
         group.MapPut("{id:guid}", NotImplemented);
         group.MapDelete("{id:guid}", NotImplemented);
@@ -19,9 +19,9 @@ public static class Module
         group.MapPost("{id:guid}/contexts", NotImplemented);
     }
 
-    private static async Task<IResult> GetCapabilityList(LegacyDbContext dbContext)
+    private static async Task<IResult> GetCapabilityList(SelfServiceDbContext context)
     {
-        var capabilities = await dbContext
+        var capabilities = await context
             .Capabilities
             .Where(c => c.Deleted == null)
             .OrderBy(x => x.Name)
@@ -30,12 +30,13 @@ public static class Module
         return Results.Ok(new { items = capabilities.Select(CapabilityListItemDto.Create).ToArray() });
     }
 
-    private static async Task<IResult> GetCapability(Guid id, LegacyDbContext dbContext)
+    private static async Task<IResult> GetCapability(string id, SelfServiceDbContext context)
     {
-        var capability = await dbContext
+        var capability = await context
             .Capabilities
             .Include(x => x.Memberships)
-            .Include(x => x.Contexts)
+            .ThenInclude(x => x.Member)
+            .Include(x => x.AwsAccount)
             .SingleOrDefaultAsync(x => x.Id == id);
 
         if (capability == null)

@@ -1,15 +1,15 @@
-using SelfService.Legacy.Models;
+using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class CapabilityDetailDto
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; }
     public string? Name { get; set; }
     public string? RootId { get; set; }
     public string? Description { get; set; }
     public MemberDto[] Members { get; set; } = Array.Empty<MemberDto>();
-    public ContextDto[] Contexts { get; set; } = Array.Empty<ContextDto>();
+    public AwsAccountDto AwsAccount { get; set; }
 
     public static CapabilityDetailDto Create(Capability capability)
     {
@@ -17,15 +17,12 @@ public class CapabilityDetailDto
         {
             Id = capability.Id,
             Name = capability.Name,
-            RootId = capability.RootId,
+            RootId = capability.Id,
             Description = capability.Description,
             Members = capability.Memberships
-                .Select(MemberDto.Create)
+                .Select(x => MemberDto.Create(x.Member))
                 .ToArray(),
-            Contexts = capability
-                .Contexts
-                .Select(ContextDto.Create)
-                .ToArray(),
+            AwsAccount = AwsAccountDto.Create(capability.AwsAccount)
         };
     }
 }

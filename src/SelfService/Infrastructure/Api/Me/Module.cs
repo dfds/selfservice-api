@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using SelfService.Legacy;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.Me;
 
@@ -11,16 +11,16 @@ public static class Module
         app.MapGet("/me", GetMe).WithTags("Account").Produces<Me>();
     }
 
-    private static async Task<IResult> GetMe(LegacyDbContext dbContext, ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext)
+    private static async Task<IResult> GetMe(SelfServiceDbContext context, ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext)
     {
-        var name = user.Identity.Name;
-
-        var capabilities = await dbContext
-            .Capabilities
-            .Where(x => x.Memberships.Any(y => y.Email.ToLower() == name.ToLower()))
-            .Where(c => c.Deleted == null)
-            .Include(x => x.Memberships)
-            .OrderBy(x => x.Name)
+        var upn = user.Identity?.Name.ToLower();
+        
+        var capabilities = await context
+            .Memberships
+            .Include(x => x.Capability)
+            .Where(x => x.UPN.ToLower() == upn)
+            .OrderBy(x => x.Capability.Name)
+            .Select(x => x.Capability)
             .ToListAsync();
 
         return TypedResults.Ok(new Me
@@ -29,10 +29,9 @@ public static class Module
                 .Select(x => new MyCapability
                 {
                     Id = x.Id.ToString(),
-                    RootId = x.RootId,
+                    RootId = x.Id.ToString(),
                     Name = x.Name,
                     Description = x.Description,
-                    Members = x.Memberships.Select(x => x.Email).ToArray(),
                     Links = new Link[]
                     {
                         new Link("self", linkGenerator.GetUriByName(httpContext, "capability", new { id = x.Id }))

@@ -1,10 +1,10 @@
-using SelfService.Legacy.Models;
+using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Api.Kafka;
 
 internal record ClusterDto(string? Name, string? Description, bool Enabled, string? ClusterId)
 {
-    public static ClusterDto Create(Cluster cluster)
+    public static ClusterDto Create(KafkaCluster cluster)
     {
         return new ClusterDto(cluster.Name, cluster.Description, cluster.Enabled, cluster.ClusterId);
     }

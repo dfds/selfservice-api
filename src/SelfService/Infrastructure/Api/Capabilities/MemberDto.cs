@@ -1,11 +1,11 @@
-using SelfService.Legacy.Models;
+using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
-public record MemberDto(string Email)
+public record MemberDto(string UPN)
 {
-    public static MemberDto Create(Membership member)
+    public static MemberDto Create(Member member)
     {
-        return new MemberDto(member.Email);
+        return new MemberDto(member.UPN);
     }
 }

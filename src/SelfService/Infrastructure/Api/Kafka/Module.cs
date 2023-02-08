@@ -28,9 +28,9 @@ public static class Module
         group.MapDelete("/topics/{name}", NotImplemented);
     }
 
-    private static async Task<IResult> GetClusterList(LegacyDbContext dbContext)
+    private static async Task<IResult> GetClusterList(SelfServiceDbContext context)
     {
-        var clusters = await dbContext.Clusters.ToListAsync();
+        var clusters = await context.KafkaClusters.ToListAsync();
 
         return Results.Ok(clusters.Select(ClusterDto.Create));
     }
