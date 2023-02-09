@@ -8,6 +8,7 @@
         public DateTime? Deleted { get; set; }
         public List<Membership> Memberships { get; set; } = new();
         public AwsAccount? AwsAccount { get; set; }
-
+        public DateTime CreatedAt { get; set; }
+        public string CreatedBy { get; set; }
     }
 }

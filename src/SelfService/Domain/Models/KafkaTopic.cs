@@ -10,7 +10,9 @@ namespace SelfService.Domain.Models
         public string Status { get; set; }
         public int Partitions { get; set; }
         public long Retention { get; set; }
-        public DateTime Created { get; set; }
-        public DateTime? LastModified { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string CreatedBy { get; set; }
+        public DateTime? ModifiedAt { get; set; }
+        public string? ModifiedBy { get; set; }
     }
 }

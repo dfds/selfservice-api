@@ -3,9 +3,11 @@
 create table "AwsAccount"
 (
     "Id" uuid not null,
-    "AccountId" varchar(12),
-    "RoleArn" varchar(255),
-    "RoleEmail" varchar(255),
+    "AccountId" varchar(12) not null,
+    "RoleArn" varchar(255) not null,
+    "RoleEmail" varchar(255) not null,
+    "CreatedAt" timestamp not null,
+    "CreatedBy" varchar(255) not null,
 
     constraint "AwsAccount_PK" primary key ("Id")
 );
@@ -17,6 +19,8 @@ create table "Capability"
     "Description" varchar(255) not null,
     "Deleted" timestamp,
     "AwsAccountId" uuid,
+    "CreatedAt" timestamp not null,
+    "CreatedBy" varchar(255) not null,
     
     constraint "Capability_PK" primary key ("Id"),
     constraint "Capability_AwsAccount_Id_FK" foreign key ("AwsAccountId") references "AwsAccount" ("Id") on delete cascade
@@ -34,6 +38,7 @@ create table "Membership"
 (
     "CapabilityId" varchar(255) not null,
     "UPN" varchar(255) not null,
+    "CreatedAt" timestamp not null,
 
     constraint "Membership_PK" primary key ("CapabilityId", "UPN"),
     constraint "Membership_Capability_Id_FK" foreign key ("CapabilityId") references "Capability" ("Id") on delete cascade,
@@ -61,8 +66,10 @@ create table "KafkaTopic"
     "Partitions" int not null,
     "Retention" bigint not null,
     "Status" varchar(50) not null,
-    "Created" timestamp not null,
-    "LastModified" timestamp,
+    "CreatedAt" timestamp not null,
+    "CreatedBy" varchar(255) not null,
+    "ModifiedAt" timestamp null,
+    "ModifiedBy" varchar(255) null,
 
     constraint "KafkaTopic_PK" primary key ("Id"),
     constraint "KafkaTopic_Capability_Id_FK" foreign key ("CapabilityId") references "Capability" ("Id") on delete cascade,

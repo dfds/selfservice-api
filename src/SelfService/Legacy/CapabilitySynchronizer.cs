@@ -37,7 +37,9 @@ public class CapabilitySynchronizer
                     Id = legacyCapability.RootId!,
                     Name = legacyCapability.Name!,
                     Description = legacyCapability.Description ?? "",
-                    Deleted = legacyCapability.Deleted.HasValue ? DateTime.SpecifyKind(legacyCapability.Deleted.Value, DateTimeKind.Utc) : null
+                    Deleted = legacyCapability.Deleted.HasValue ? DateTime.SpecifyKind(legacyCapability.Deleted.Value, DateTimeKind.Utc) : null,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM",
                 };
 
                 AddMemberships(legacyCapability, capability, memberLookup);
@@ -122,7 +124,8 @@ public class CapabilitySynchronizer
             CapabilityId = capability.Id,
             Capability = capability,
             UPN = legacyMembership.Email,
-            Member = member
+            Member = member,
+            CreatedAt = DateTime.UtcNow,
         });
     }
 
@@ -141,7 +144,9 @@ public class CapabilitySynchronizer
                 Id = context.Id,
                 AccountId = context.AWSAccountId,
                 RoleArn = context.AWSRoleArn,
-                RoleEmail = context.AWSRoleEmail
+                RoleEmail = context.AWSRoleEmail,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "SYSTEM",
             };
             capability.AwsAccount = awsAccount;
         }

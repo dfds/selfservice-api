@@ -92,8 +92,10 @@ public class KafkaSynchronizer
                     Status = legacyTopic.Status,
                     Partitions = legacyTopic.Partitions,
                     Retention = legacyTopic.Retention,
-                    Created = DateTime.SpecifyKind(legacyTopic.Created, DateTimeKind.Utc),
-                    LastModified = legacyTopic.LastModified.HasValue ? DateTime.SpecifyKind(legacyTopic.LastModified.Value, DateTimeKind.Utc) : null,
+                    CreatedAt = DateTime.SpecifyKind(legacyTopic.Created, DateTimeKind.Utc),
+                    CreatedBy = "SYSTEM",
+                    ModifiedAt =  legacyTopic.LastModified.HasValue ? DateTime.SpecifyKind(legacyTopic.LastModified.Value, DateTimeKind.Utc) : null,
+                    ModifiedBy = legacyTopic.LastModified.HasValue ? "SYSTEM" : null
                 };
                 await _selfServiceDbContext.KafkaTopics.AddAsync(topic, stoppingToken);
             }
@@ -106,8 +108,8 @@ public class KafkaSynchronizer
                 topic.Status = legacyTopic.Status;
                 topic.Partitions = legacyTopic.Partitions;
                 topic.Retention = legacyTopic.Retention;
-                topic.Created = DateTime.SpecifyKind(legacyTopic.Created, DateTimeKind.Utc);
-                topic.LastModified = legacyTopic.LastModified.HasValue ? DateTime.SpecifyKind(legacyTopic.LastModified.Value, DateTimeKind.Utc) : null;
+                topic.ModifiedAt =  legacyTopic.LastModified.HasValue ? DateTime.SpecifyKind(legacyTopic.LastModified.Value, DateTimeKind.Utc) : null;
+                topic.ModifiedBy = legacyTopic.LastModified.HasValue ? "SYSTEM" : null;
             }
         }
 
