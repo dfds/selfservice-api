@@ -61,20 +61,19 @@ publish:
 appcontainer:
 	@docker build -t ${APP_IMAGE_NAME} .
 
-# migrationcontainer:
-# 	@docker build -t ${DB_IMAGE_NAME} ./db
+migrationcontainer:
+	@docker build -t ${DB_IMAGE_NAME} ./db
 
-containers: appcontainer #migrationcontainer
+containers: appcontainer migrationcontainer
 
 ci: clean restore build test publish containers
 
 manifests:
 	@for m in k8s/*.yml; do envsubst <$$m >$(OUTPUT_DIR_MANIFESTS)/$$(basename $$m); done
-	@for m in k8s/*.yml; do envsubst < $$m > $(OUTPUT_DIR_MANIFESTS)/$$(basename $$m); done
 
 deliver:
 	@sh ./tools/push-container.sh "$(APP_IMAGE_NAME)" "${BUILD_NUMBER}"
-	# @sh ./tools/push-container.sh "$(DB_IMAGE_NAME)" "${BUILD_NUMBER}"
+	@sh ./tools/push-container.sh "$(DB_IMAGE_NAME)" "${BUILD_NUMBER}"
 
 cd: ci manifests deliver
 

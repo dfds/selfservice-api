@@ -16,6 +16,12 @@ spec:
         prometheus.io/port: "8888"
         prometheus.io/scrape: "true"
     spec:
+      initContainers:
+        - name: dbmigration
+          image: 579478677147.dkr.ecr.eu-central-1.amazonaws.com/selfservice-api/dbmigrations:{{BUILD_NUMBER}}
+          envFrom:
+            - secretRef:
+                name: selfservice-api-postgres
       containers:
         - name: app
           image: 579478677147.dkr.ecr.eu-central-1.amazonaws.com/selfservice-api/app:${BUILD_NUMBER}
@@ -28,8 +34,8 @@ spec:
             - name: SS_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
-                  name: capability-service-db
-                  key: connection-string
+                  name: selfservice-api-postgres
+                  key: PGCONNSTRING
             - name: SS_LEGACY_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
