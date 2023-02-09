@@ -8,7 +8,7 @@ public static class LegacyConfiguration
     {
         builder.Services.AddDbContext<LegacyDbContext>(options => {options.UseNpgsql(builder.Configuration["SS_LEGACY_CONNECTION_STRING"]);});
 
-        if (!int.TryParse(builder.Configuration["SS_SYNC_INTERVAL"], out var syncInterval) || syncInterval <= 0)
+        if (!int.TryParse(builder.Configuration["SS_SYNC_TIMEOUT_SECONDS"], out var syncTimeoutSeconds) || syncTimeoutSeconds <= 0)
         {
             return;
         }
@@ -17,7 +17,7 @@ public static class LegacyConfiguration
         {
             var logger = provider.GetRequiredService<ILogger<Synchronizer>>();
             var serviceScopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
-            return new Synchronizer(logger, serviceScopeFactory, syncInterval);
+            return new Synchronizer(logger, serviceScopeFactory, syncTimeoutSeconds);
         });
 
         builder.Services.AddTransient<CapabilitySynchronizer>();

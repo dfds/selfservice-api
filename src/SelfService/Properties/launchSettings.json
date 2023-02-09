@@ -13,7 +13,7 @@
         "DEFAULT_KAFKA_BOOTSTRAP_SERVERS": "localhost:9092",
         "DEFAULT_KAFKA_GROUP_ID": "selfservice.consumer",
         "SS_APISPECS_TOPIC": "cloudengineering.selfservice.apispecs",
-        "SS_SYNC_INTERVAL": "0"
+        "SS_SYNC_TIMEOUT_SECONDS": "0"
       }
     }
   }
