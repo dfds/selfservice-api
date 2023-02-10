@@ -24,6 +24,37 @@ public static class Module
         //group.MapPost("{id:guid}/contexts", NotImplemented);
     }
 
+    private static object ConvertToResourceDto(Capability capability, HttpContext httpContext, LinkGenerator linkGenerator)
+    {
+        return new
+        {
+            id = capability.Id,
+            name = capability.Name,
+            description = capability.Description,
+            _links = new
+            {
+                self = new
+                {
+                    href = linkGenerator.GetUriByName(httpContext, "capability", new {id = capability.Id}),
+                    rel = "self",
+                    allow = new[] {"GET"}
+                },
+                members = new
+                {
+                    href = linkGenerator.GetUriByName(httpContext, "capability members", new {id = capability.Id}),
+                    rel = "related",
+                    allow = new[] {"GET"}
+                },
+                topics = new
+                {
+                    href = linkGenerator.GetUriByName(httpContext, "capability topics", new {id = capability.Id}),
+                    rel = "related",
+                    allow = new[] {"GET"}
+                },
+            }
+        };
+    }
+
     private static async Task<IResult> GetCapabilityList(HttpContext httpContext, SelfServiceDbContext dbContext, LinkGenerator linkGenerator)
     {
         var capabilities = await dbContext
@@ -35,33 +66,7 @@ public static class Module
         return Results.Ok(new
         {
             items = capabilities
-                .Select(x => new
-                {
-                    id = x.Id,
-                    name = x.Name,
-                    description = x.Description,
-                    _links = new
-                    {
-                        self = new
-                        {
-                            href = linkGenerator.GetUriByName(httpContext, "capability", new { id = x.Id }),
-                            rel = "self",
-                            allow = new[]{ "GET" }
-                        },
-                        members = new
-                        {
-                            href = linkGenerator.GetUriByName(httpContext, "capability members", new { id = x.Id }),
-                            rel = "related",
-                            allow = new[] { "GET" }
-                        },
-                        topics = new
-                        {
-                            href = linkGenerator.GetUriByName(httpContext, "capability topics", new { id = x.Id }),
-                            rel = "related",
-                            allow = new[] { "GET" }
-                        },
-                    }
-                })
+                .Select(x => ConvertToResourceDto(x, httpContext, linkGenerator))
                 .ToArray()
         });
     }
@@ -198,9 +203,9 @@ public static class Module
         });
     }
 
-    private static async Task<IResult> GetCapability(string id, SelfServiceDbContext context)
+    private static async Task<IResult> GetCapability(string id, SelfServiceDbContext dbContext, HttpContext context, LinkGenerator linkGenerator)
     {
-        var capability = await context
+        var capability = await dbContext
             .Capabilities
             .Include(x => x.Memberships)
             .ThenInclude(x => x.Member)
@@ -212,7 +217,7 @@ public static class Module
             return Results.NotFound();
         }
 
-        return Results.Ok(CapabilityDetailDto.Create(capability));
+        return Results.Ok(ConvertToResourceDto(capability, context, linkGenerator));
     }
 
     private static IResult NotImplemented()
