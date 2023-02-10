@@ -13,7 +13,7 @@ public static class Module
 
     private static async Task<IResult> GetMe(SelfServiceDbContext context, ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext)
     {
-        var upn = user.Identity?.Name.ToLower();
+        var upn = user.Identity?.Name?.ToLower();
         
         var capabilities = await context
             .Memberships
