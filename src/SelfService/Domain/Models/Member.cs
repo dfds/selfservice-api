@@ -1,10 +1,18 @@
-﻿namespace SelfService.Domain.Models
+﻿namespace SelfService.Domain.Models;
+
+public class Member : AggregateRoot<UserId>
 {
-    public class Member
+    public Member(UserId id, string email, string? displayName) : base(id)
     {
-        public string UPN { get; set; }
-        public string Email { get; set; }
-        public string? DisplayName { get; set; }
-        public List<Membership> Memberships { get; set; } = new();
+        Email = email;
+        DisplayName = displayName;
+    }
+
+    public string Email { get; private set; }
+    public string? DisplayName { get; private set; }
+
+    public override string ToString()
+    {
+        return Id.ToString();
     }
 }

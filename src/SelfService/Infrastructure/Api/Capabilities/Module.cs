@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
+using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
@@ -10,18 +11,13 @@ public static class Module
     {
         var group = app.MapGroup("/capabilities").WithTags("Capability");
 
-        group.MapGet("", GetCapabilityList);
+        group.MapGet("", GetAllCapabilities);
         group.MapGet("{id:required}", GetCapability).WithName("capability");
         group.MapGet("{id:required}/members", GetCapabilityMembers).WithName("capability members");
         group.MapGet("{id:required}/topics", GetCapabilityTopics).WithName("capability topics");
-        group.MapPost("{id:required}/topics", AddCapabilityTopic).WithName("add capability topic");
+        group.MapPost("{id:required}/topics", AddCapabilityTopic).WithName("add capability topic"); // TODO [jandr@2023-02-22]: consider moving this to topics "controller"
 
-        //group.MapPost("", NotImplemented);
-        //group.MapPut("{id:guid}", NotImplemented);
-        //group.MapDelete("{id:guid}", NotImplemented);
-        //group.MapPost("{id:guid}/members", NotImplemented);
-        //group.MapDelete("{id:guid}/members/{memberEmail}", NotImplemented);
-        //group.MapPost("{id:guid}/contexts", NotImplemented);
+        group.MapGet("{id:required}/awsaccount", GetCapabilityAwsAccount).WithName("capability aws account");
     }
 
     private static object ConvertToResourceDto(Capability capability, HttpContext httpContext, LinkGenerator linkGenerator)
@@ -55,7 +51,22 @@ public static class Module
         };
     }
 
-    private static async Task<IResult> GetCapabilityList(HttpContext httpContext, SelfServiceDbContext dbContext, LinkGenerator linkGenerator)
+    private static async Task<IResult> GetCapability(string id, SelfServiceDbContext dbContext, HttpContext context, LinkGenerator linkGenerator)
+    {
+        var capability = await dbContext
+            .Capabilities
+            .SingleOrDefaultAsync(x => x.Id == id);
+
+        if (capability is null)
+        {
+            return Results.NotFound();
+        }
+
+        return Results.Ok(ConvertToResourceDto(capability, context, linkGenerator));
+    }
+
+    private static async Task<IResult> GetAllCapabilities(HttpContext httpContext, SelfServiceDbContext dbContext,
+        LinkGenerator linkGenerator)
     {
         var capabilities = await dbContext
             .Capabilities
@@ -71,27 +82,27 @@ public static class Module
         });
     }
 
-    private static async Task<IResult> GetCapabilityMembers(string id, HttpContext httpContext, SelfServiceDbContext dbContext, LinkGenerator linkGenerator)
+    private static async Task<IResult> GetCapabilityMembers(string id, ICapabilityMembersQuery membersQuery)
     {
-        var capability = await dbContext
-            .Capabilities
-            .Include(x => x.Memberships)
-            .ThenInclude(x => x.Member)
-            .SingleOrDefaultAsync(x => x.Id == id);
-
-        if (capability == null)
+        var errors = new Dictionary<string, string[]>();
+        if (!CapabilityId.TryParse(id, out var capabilityId))
         {
-            return Results.NotFound();
+            errors.Add(nameof(id), new [] {$"Value \"{id}\" is not a valid capability id."});
         }
+
+        if (errors.Any())
+        {
+            return Results.ValidationProblem(errors);
+        }
+
+        var members = await membersQuery.FindBy(capabilityId);
 
         return Results.Ok(new
         {
-            items = capability
-                .Memberships
-                .Select(x => x.Member)
+            items = members
                 .Select(x => new
                 {
-                    upn = x.UPN,
+                    upn = x.Id.ToString(),
                     name = x.DisplayName,
                     email = x.Email,
                 })
@@ -121,7 +132,8 @@ public static class Module
                     description = x.Description,
                     kafkaClusterId = x.KafkaClusterId,
                     partitions = x.Partitions,
-                    retention = x.Retention, // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
+                    retention = x
+                        .Retention, // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
                     status = x.Status,
                 })
                 .ToArray(),
@@ -141,9 +153,10 @@ public static class Module
                     {
                         self = new
                         {
-                            href = linkGenerator.GetUriByName(httpContext, "kafkaclusters"), // TODO [jandr@2023-02-10]: this returns null!
+                            href = linkGenerator.GetUriByName(httpContext,
+                                "kafkaclusters"), // TODO [jandr@2023-02-10]: this returns null!
                             rel = "related",
-                            allow = new[] { "GET" }
+                            allow = new[] {"GET"}
                         }
                     }
                 }
@@ -160,6 +173,36 @@ public static class Module
         });
     }
 
+    private static async Task<IResult> GetCapabilityAwsAccount(HttpContext context, string id, SelfServiceDbContext dbContext)
+    {
+        var errors = new Dictionary<string, string[]>();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            errors.Add(nameof(id), new[] { $"Value \"{id}\" is not a valid capability id." });
+        }
+
+        if (errors.Any())
+        {
+            return Results.ValidationProblem(errors);
+        }
+
+        var account = await dbContext.AwsAccounts.SingleOrDefaultAsync(x => x.CapabilityId == capabilityId);
+        if (account is null)
+        {
+            return Results.NotFound();
+        }
+
+        return Results.Ok(new
+        {
+            Id = account.Id.ToString(),
+            AwsAccountId = account.AccountId.ToString(),
+            RoleArn = account.RoleArn.ToString(),
+            RoleEmail = account.RoleEmail,
+            CreatedAt = account.CreatedAt.ToString("O"),
+        });
+    }
+
     private static async Task<IResult> AddCapabilityTopic(HttpContext httpContext, SelfServiceDbContext dbContext, LinkGenerator linkGenerator)
     {
         var capabilities = await dbContext
@@ -170,9 +213,7 @@ public static class Module
 
         return Results.Ok(new
         {
-            items = capabilities
-                //.Select(CapabilityListItemDto.Create)
-                .Select(x => new
+            items = capabilities.Select(x => new
                 {
                     id = x.Id,
                     name = x.Name,
@@ -181,47 +222,25 @@ public static class Module
                     {
                         self = new
                         {
-                            href = linkGenerator.GetUriByName(httpContext, "capability", new { id = x.Id }),
+                            href = linkGenerator.GetUriByName(httpContext, "capability", new {id = x.Id}),
                             rel = "self",
-                            allow = new[]{ "GET" }
+                            allow = new[] {"GET"}
                         },
                         members = new
                         {
                             href = "",
                             rel = "related",
-                            allow = new[] { "GET" }
+                            allow = new[] {"GET"}
                         },
                         topics = new
                         {
                             href = "",
                             rel = "related",
-                            allow = new[] { "GET" }
+                            allow = new[] {"GET"}
                         },
                     }
                 })
                 .ToArray()
         });
-    }
-
-    private static async Task<IResult> GetCapability(string id, SelfServiceDbContext dbContext, HttpContext context, LinkGenerator linkGenerator)
-    {
-        var capability = await dbContext
-            .Capabilities
-            .Include(x => x.Memberships)
-            .ThenInclude(x => x.Member)
-            .Include(x => x.AwsAccount)
-            .SingleOrDefaultAsync(x => x.Id == id);
-
-        if (capability == null)
-        {
-            return Results.NotFound();
-        }
-
-        return Results.Ok(ConvertToResourceDto(capability, context, linkGenerator));
-    }
-
-    private static IResult NotImplemented()
-    {
-        return Results.StatusCode(StatusCodes.Status501NotImplemented);
     }
 }

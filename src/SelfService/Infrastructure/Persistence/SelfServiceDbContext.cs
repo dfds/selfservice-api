@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using SelfService.Domain.Models;
+using SelfService.Infrastructure.Persistence.Converters;
 
 namespace SelfService.Infrastructure.Persistence
 {
@@ -15,46 +17,108 @@ namespace SelfService.Infrastructure.Persistence
     {
         public SelfServiceDbContext(DbContextOptions<SelfServiceDbContext> options) : base(options)
         {
+
         }
 
-        public DbSet<Capability> Capabilities { get; set; }
-        public DbSet<Member> Members { get; set; }
-        public DbSet<Membership> Memberships { get; set; }
-        public DbSet<AwsAccount> AwsAccounts { get; set; }
+        public DbSet<Capability> Capabilities { get; set; } = null!;
+        public DbSet<Member> Members { get; set; } = null!;
+        public DbSet<Membership> Memberships { get; set; } = null!;
+        public DbSet<AwsAccount> AwsAccounts { get; set; } = null!;
 
-        public DbSet<KafkaCluster> KafkaClusters { get; set; }
-        public DbSet<KafkaTopic> KafkaTopics { get; set; }
-        
-        public DbSet<ServiceDescription> ServiceCatalog { get; set; }
+        public DbSet<KafkaCluster> KafkaClusters { get; set; } = null!;
+        public DbSet<KafkaTopic> KafkaTopics { get; set; } = null!;
+
+        public DbSet<ServiceDescription> ServiceCatalog { get; set; } = null!;
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+
+            configurationBuilder
+                .Properties<CapabilityId>()
+                .HaveConversion<CapabilityIdConverter>();
+
+            configurationBuilder
+                .Properties<UserId>()
+                .HaveConversion<UserIdConverter>();
+
+            configurationBuilder
+                .Properties<MembershipId>()
+                .HaveConversion<MembershipIdConverter>();
+
+            configurationBuilder
+                .Properties<AwsAccountId>()
+                .HaveConversion<AwsAccountIdConverter>();
+
+            configurationBuilder
+                .Properties<RealAwsAccountId>()
+                .HaveConversion<RealAwsAccountIdConverter>();
+
+            configurationBuilder
+                .Properties<AwsRoleArn>()
+                .HaveConversion<AwsRoleArnConverter>();
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Capability>().ToTable("Capability").HasOne(x => x.AwsAccount);
-            modelBuilder.Entity<Member>().ToTable("Member").HasKey(x => x.UPN);
+            modelBuilder.Entity<Capability>(cfg =>
+            {
+                cfg.ToTable("Capability");
+                cfg.HasKey(x => x.Id);
+                cfg.Property(x => x.Name);
+                cfg.Property(x => x.Description);
+                cfg.Property(x => x.Deleted);
+                cfg.Property(x => x.CreatedAt);
+                cfg.Property(x => x.CreatedBy);
+            });
 
             modelBuilder.Entity<Membership>(opt =>
             {
                 opt.ToTable("Membership");
-                
-                opt.HasKey(x => new { x.CapabilityId, x.UPN });
-
-                opt.HasOne(x => x.Capability)
-                    .WithMany(x => x.Memberships)
-                    .HasForeignKey(x => x.CapabilityId);
-
-                opt.HasOne(x => x.Member)
-                    .WithMany(x => x.Memberships)
-                    .HasForeignKey(x => x.UPN);
+                opt.HasKey(x => x.Id);
+                opt.Property(x => x.CapabilityId);
+                opt.Property(x => x.UserId);
+                opt.Property(x => x.CreatedAt);
             });
 
-            modelBuilder.Entity<AwsAccount>().ToTable("AwsAccount");
+            modelBuilder.Entity<Member>(cfg =>
+            {
+                cfg.ToTable("Member");
+                cfg.HasKey(x => x.Id);
+                cfg.Property(x => x.DisplayName);
+                cfg.Property(x => x.Email);
+            });
 
-            modelBuilder.Entity<KafkaCluster>().ToTable("KafkaCluster");
-            modelBuilder.Entity<KafkaTopic>().ToTable("KafkaTopic");
+            modelBuilder.Entity<AwsAccount>(cfg =>
+            {
+                cfg.ToTable("AwsAccount");
+                cfg.HasKey(x => x.Id);
+                cfg.Property(x => x.CapabilityId);
+                cfg.Property(x => x.AccountId);
+                cfg.Property(x => x.RoleArn);
+                cfg.Property(x => x.RoleEmail);
+                cfg.Property(x => x.CreatedAt);
+                cfg.Property(x => x.CreatedBy);
+            });
 
-            modelBuilder.Entity<ServiceDescription>().ToTable("ServiceCatalog");
+            // ----------------------------------------------
+
+            modelBuilder.Entity<KafkaCluster>(cfg =>
+            {
+                cfg.ToTable("KafkaCluster");
+            });
+
+            modelBuilder.Entity<KafkaTopic>(cfg =>
+            {
+                cfg.ToTable("KafkaTopic");
+            });
+
+            modelBuilder.Entity<ServiceDescription>(cfg =>
+            {
+                cfg.ToTable("ServiceCatalog");
+            });
         }
     }
 }

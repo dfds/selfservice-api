@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
 using SelfService;
+using SelfService.Configuration;
 using SelfService.Infrastructure.Api;
 using SelfService.Infrastructure.Api.Configuration;
 using SelfService.Infrastructure.Messaging;
@@ -26,6 +27,7 @@ try
     builder.AddLegacy();
     builder.AddDatabase();
     builder.AddMessaging();
+    builder.AddDomain();
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));

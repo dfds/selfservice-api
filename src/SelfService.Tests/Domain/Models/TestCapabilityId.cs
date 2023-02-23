@@ -1,0 +1,28 @@
+﻿using SelfService.Domain.Models;
+
+namespace SelfService.Tests.Domain.Models;
+
+public class TestCapabilityId
+{
+    [Theory]
+    [InlineData("foo", "foo")]
+    [InlineData("FOO", "foo")]
+    [InlineData("foo bar", "foo-bar")]
+    [InlineData("foo       bar", "foo-bar")]
+    [InlineData("foo-", "foo")]
+    [InlineData("-foo", "foo")]
+    [InlineData(" foo", "foo")]
+    [InlineData("f99", "f")]
+    [InlineData("foo_bar", "foo-bar")]
+    [InlineData("foo!!", "foo")]
+    [InlineData("fo@@@o", "foo")]
+    [InlineData("fææ", "faeae")]
+    [InlineData("føø", "foeoe")]
+    [InlineData("fåå", "faaaa")]
+    public void returns_expected_value(string input, string expected)
+    {
+        var result = CapabilityId.CreateFrom(input);
+        Assert.Equal(expected, result);
+    }
+
+}
