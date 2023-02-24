@@ -21,7 +21,7 @@ public class CapabilityRepository : ICapabilityRepository
 
         if (found is null)
         {
-            throw new NotFoundException($"Capability with id \"{id}\" could not be found.");
+            throw new EntityNotFoundException($"Capability with id \"{id}\" could not be found.");
         }
 
         return found;

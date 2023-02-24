@@ -20,16 +20,17 @@ public class MembershipApplicationService : IMembershipApplicationService
         _systemTime = systemTime;
     }
 
-    //[Transactional, Outboxed]
+    [TransactionalBoundary, Outboxed]
     public async Task<MembershipId> StartNewMembership(CapabilityId capabilityId, UserId userId)
     {
-        using var _ = _logger.BeginScope("{Action}", nameof(StartNewMembership));
+        using var _ = _logger.BeginScope("{Action} on {ImplementationType} for {CurrentUser}", 
+            nameof(StartNewMembership), GetType().FullName, userId);
 
         var capabilityExists = await _capabilityRepository.Exists(capabilityId);
         if (!capabilityExists)
         {
-            _logger.LogWarning("Could not find a capability with id {CapabilityId}", capabilityId);
-            throw new NotFoundException($"Capability with id \"{capabilityId}\" could not be found.");
+            _logger.LogError("Could not find a capability with id {CapabilityId}", capabilityId);
+            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
 
         // TODO [jandr@2023-02-22]: deal with user is unknown at this point!

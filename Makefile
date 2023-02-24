@@ -35,9 +35,9 @@ build:
 		--nologo \
 		-v q
 
-tests: test
+unittest: unittests
 
-test:
+unittests:
 	@cd src && dotnet test \
 		--configuration $(CONFIGURATION) \
 		--no-restore \
@@ -47,6 +47,15 @@ test:
 		--collect "XPlat Code Coverage" \
 		--nologo \
 		-v normal
+
+integrationtest: integrationtests
+
+integrationtests:
+	@cd integrationtest && sh ./run.sh $(CONFIGURATION) $(OUTPUT_DIR_TESTRESULTS)
+
+test: tests
+
+tests: unittests integrationtests
 
 publish:
 	@cd src && dotnet publish \
@@ -82,3 +91,9 @@ dev:
 
 run:
 	@cd src && dotnet run --configuration $(CONFIGURATION) --project $(APP_PROJECT)
+
+newmigration:
+	@echo "Enter name of migration (e.g. add-table-for-xxx):" && read && \
+		echo "-- $(shell date +'%4Y-%m-%d %H:%M:%S') : $$REPLY" > db/migrations/$(shell date +'%4Y%m%d%H%M%S')_$$REPLY.sql
+
+nm: newmigration

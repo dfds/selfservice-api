@@ -9,11 +9,18 @@ services:
     environment:
     - POSTGRES_USER=postgres
     - POSTGRES_PASSWORD=p
+    healthcheck:
+      test: "pg_isready -h localhost -p 5432 -U postgres"
+      interval: 2s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   pgup:
     build: ./db
     depends_on:
-    - database
+      database:
+        condition: service_healthy
     # volumes:
     # - ${PWD}/db/export:/tmp
     environment:

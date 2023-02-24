@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Api.Capabilities;
@@ -12,7 +13,7 @@ public static class Module
         app.MapGet("/me", GetMe).WithTags("Account").Produces<Me>();
     }
 
-    private static async Task<IResult> GetMe(ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext, IMyCapabilitiesQuery myCapabilitiesQuery)
+    private static async Task<IResult> GetMe(ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext, [FromServices] IMyCapabilitiesQuery myCapabilitiesQuery)
     {
         var errors = new Dictionary<string, string[]>();
 

@@ -38,22 +38,28 @@ public class KafkaSynchronizer
             var cluster = clusters.FirstOrDefault(x => x.Id == legacyCluster.Id);
             if (cluster == null)
             {
-                var kafkaCluster = new KafkaCluster
-                {
-                    Id = legacyCluster.Id,
-                    ClusterId = legacyCluster.ClusterId,
-                    Name = legacyCluster.Name,
-                    Description = legacyCluster.Description,
-                    Enabled = legacyCluster.Enabled
-                };
+                var kafkaCluster = new KafkaCluster(
+                    id: legacyCluster.Id,
+                    realClusterId: legacyCluster.ClusterId ?? "" ,
+                    name: legacyCluster.Name ?? "",
+                    description: legacyCluster.Description ?? "",
+                    enabled: legacyCluster.Enabled
+                );
+
                 await _selfServiceDbContext.KafkaClusters.AddAsync(kafkaCluster, stoppingToken);
             }
             else
             {
-                cluster.Id = legacyCluster.Id;
-                cluster.ClusterId = legacyCluster.ClusterId;
-                cluster.Name = legacyCluster.Name;
-                cluster.Description = legacyCluster.Description;
+                if (!string.IsNullOrWhiteSpace(legacyCluster.Name))
+                {
+                    cluster.Name = legacyCluster.Name;
+                }
+
+                if (!string.IsNullOrWhiteSpace(legacyCluster.Description))
+                {
+                    cluster.Description = legacyCluster.Description;
+                }
+
                 cluster.Enabled = legacyCluster.Enabled;
             }
         }
@@ -83,33 +89,43 @@ public class KafkaSynchronizer
             if (topic == null)
             {
                 topic = new KafkaTopic
-                {
-                    Id = legacyTopic.Id,
-                    CapabilityId = legacyTopic.CapabilityId,
-                    KafkaClusterId = legacyTopic.KafkaClusterId,
-                    Name = legacyTopic.Name,
-                    Description = legacyTopic.Description,
-                    Status = legacyTopic.Status,
-                    Partitions = legacyTopic.Partitions,
-                    Retention = legacyTopic.Retention,
-                    CreatedAt = DateTime.SpecifyKind(legacyTopic.Created, DateTimeKind.Utc),
-                    CreatedBy = "SYSTEM",
-                    ModifiedAt =  legacyTopic.LastModified.HasValue ? DateTime.SpecifyKind(legacyTopic.LastModified.Value, DateTimeKind.Utc) : null,
-                    ModifiedBy = legacyTopic.LastModified.HasValue ? "SYSTEM" : null
-                };
+                (
+                    id: legacyTopic.Id,
+                    capabilityId: legacyTopic.CapabilityId,
+                    kafkaClusterId: legacyTopic.KafkaClusterId,
+                    name: legacyTopic.Name,
+                    description: legacyTopic.Description,
+                    status: legacyTopic.Status switch
+                    {
+                        "InProgress" => KafkaTopicStatusType.InProgress,
+                        "In Progress" => KafkaTopicStatusType.InProgress,
+                        "inprogress" => KafkaTopicStatusType.InProgress,
+                        "in progress" => KafkaTopicStatusType.InProgress,
+                        "Provisioned" => KafkaTopicStatusType.Provisioned,
+                        "provisioned" => KafkaTopicStatusType.Provisioned,
+                        _ => KafkaTopicStatusType.Unknown
+                    },
+                    partitions: Convert.ToUInt32(legacyTopic.Partitions),
+                    retention: legacyTopic.Retention,
+                    createdAt: DateTime.SpecifyKind(legacyTopic.Created, DateTimeKind.Utc),
+                    createdBy: "LEGACY SYNCHRONIZER",
+                    modifiedAt: legacyTopic.LastModified.HasValue
+                        ? DateTime.SpecifyKind(legacyTopic.LastModified.Value, DateTimeKind.Utc)
+                        : DateTime.UtcNow,
+                    modifiedBy: "LEGACY SYNCHRONIZER"
+                );
+
                 await _selfServiceDbContext.KafkaTopics.AddAsync(topic, stoppingToken);
             }
             else
             {
-                topic.CapabilityId = legacyTopic.CapabilityId;
-                topic.KafkaClusterId = legacyTopic.KafkaClusterId;
-                topic.Name = legacyTopic.Name;
-                topic.Description = legacyTopic.Description;
-                topic.Status = legacyTopic.Status;
-                topic.Partitions = legacyTopic.Partitions;
-                topic.Retention = legacyTopic.Retention;
-                topic.ModifiedAt =  legacyTopic.LastModified.HasValue ? DateTime.SpecifyKind(legacyTopic.LastModified.Value, DateTimeKind.Utc) : null;
-                topic.ModifiedBy = legacyTopic.LastModified.HasValue ? "SYSTEM" : null;
+                topic.ChangeDescription(
+                    newDescription: legacyTopic.Description,
+                    modifiedAt: legacyTopic.LastModified.HasValue 
+                        ? DateTime.SpecifyKind(legacyTopic.LastModified.Value, DateTimeKind.Utc) 
+                        : DateTime.UtcNow,
+                    modifiedBy: "LEGACY SYNCHRONIZER"
+                );
             }
         }
 

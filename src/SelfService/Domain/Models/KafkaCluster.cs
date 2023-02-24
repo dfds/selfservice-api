@@ -1,11 +1,17 @@
-﻿namespace SelfService.Domain.Models
+﻿namespace SelfService.Domain.Models;
+
+public class KafkaCluster : AggregateRoot<KafkaClusterId>
 {
-	public class KafkaCluster
-	{
-		public Guid Id { get; set; }
-		public string ClusterId { get; set; }
-		public string Name { get; set; }
-		public string Description { get; set; }
-		public bool Enabled { get; set; }
-	}
+    public KafkaCluster(KafkaClusterId id, string realClusterId, string name, string description, bool enabled) : base(id)
+    {
+        RealClusterId = realClusterId;
+        Name = name;
+        Description = description;
+        Enabled = enabled;
+    }
+
+    public string RealClusterId { get; private set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public bool Enabled { get; set; }
 }

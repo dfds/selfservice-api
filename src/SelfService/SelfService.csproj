@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Aspectly" Version="1.0.0" />
       <PackageReference Include="Dafda" Version="0.11.3" />
       <PackageReference Include="Microsoft.Identity.Web" Version="1.25.10" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.1" />
@@ -17,7 +18,6 @@
 
     <ItemGroup>
       <Folder Include="Domain\Events\" />
-      <Folder Include="Domain\Exceptions\" />
       <Folder Include="Infrastructure\Api\Memberships\" />
       <Folder Include="Configuration\" />
       <Folder Include="Infrastructure\Persistence\Queries\" />

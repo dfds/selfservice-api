@@ -39,10 +39,13 @@ try
             .RequireAuthenticatedUser()
             .Build();
     });
-    
+
     // NOTE: enable to debug authentication issues
     // IdentityModelEventSource.ShowPII = true;
-    
+
+    // **PLEASE NOTE** : keep this as the last configuration!
+    builder.ConfigureAspects();
+
     var app = builder.Build();
 
     app.UseForwardedPrefixAsBasePath();

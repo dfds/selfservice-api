@@ -1,4 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Persistence;
@@ -16,6 +20,7 @@ public static class Module
         group.MapGet("{id:required}/members", GetCapabilityMembers).WithName("capability members");
         group.MapGet("{id:required}/topics", GetCapabilityTopics).WithName("capability topics");
         group.MapPost("{id:required}/topics", AddCapabilityTopic).WithName("add capability topic"); // TODO [jandr@2023-02-22]: consider moving this to topics "controller"
+        group.MapGet("{id:required}/topics/{topicId:required}", GetCapabilityTopic).WithName("get capability topic"); // TODO [jandr@2023-02-22]: consider moving this to topics "controller"
 
         group.MapGet("{id:required}/awsaccount", GetCapabilityAwsAccount).WithName("capability aws account");
     }
@@ -24,7 +29,7 @@ public static class Module
     {
         return new
         {
-            id = capability.Id,
+            id = capability.Id.ToString(),
             name = capability.Name,
             description = capability.Description,
             _links = new
@@ -65,8 +70,8 @@ public static class Module
         return Results.Ok(ConvertToResourceDto(capability, context, linkGenerator));
     }
 
-    private static async Task<IResult> GetAllCapabilities(HttpContext httpContext, SelfServiceDbContext dbContext,
-        LinkGenerator linkGenerator)
+    private static async Task<IResult> GetAllCapabilities(HttpContext httpContext, [FromServices] SelfServiceDbContext dbContext,
+        [FromServices] LinkGenerator linkGenerator)
     {
         var capabilities = await dbContext
             .Capabilities
@@ -82,7 +87,7 @@ public static class Module
         });
     }
 
-    private static async Task<IResult> GetCapabilityMembers(string id, ICapabilityMembersQuery membersQuery)
+    private static async Task<IResult> GetCapabilityMembers(string id, [FromServices] ICapabilityMembersQuery membersQuery)
     {
         var errors = new Dictionary<string, string[]>();
         if (!CapabilityId.TryParse(id, out var capabilityId))
@@ -203,44 +208,125 @@ public static class Module
         });
     }
 
-    private static async Task<IResult> AddCapabilityTopic(HttpContext httpContext, SelfServiceDbContext dbContext, LinkGenerator linkGenerator)
+    private static async Task<IResult> GetCapabilityTopic(string id, string topicId, HttpContext httpContext, 
+        SelfServiceDbContext dbContext, LinkGenerator linkGenerator)
     {
-        var capabilities = await dbContext
-            .Capabilities
-            .Where(c => c.Deleted == null)
-            .OrderBy(x => x.Name)
-            .ToListAsync();
+        var errors = new Dictionary<string, string[]>();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            errors.Add(nameof(id), new[] { $"Value \"{id}\" is not a valid capability id." });
+        }
+
+        if (!KafkaTopicId.TryParse(topicId, out var kafkaTopicId))
+        {
+            errors.Add(nameof(topicId), new[] { $"Value \"{topicId}\" is not a valid kafka topic id." });
+        }
+
+        if (errors.Any())
+        {
+            return Results.ValidationProblem(errors);
+        }
+
+        var topic = await dbContext
+            .KafkaTopics
+            .SingleOrDefaultAsync(x => x.Id == kafkaTopicId && x.CapabilityId == capabilityId);
+
+        if (topic is null)
+        {
+            return Results.NotFound();
+        }
 
         return Results.Ok(new
         {
-            items = capabilities.Select(x => new
+            id = topic.Id,
+            name = topic.Name,
+            description = topic.Description,
+            kafkaClusterId = topic.KafkaClusterId,
+            partitions = topic.Partitions,
+            retention = topic.Retention, // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
+            status = topic.Status,
+            _links = new
+            {
+                self = new
                 {
-                    id = x.Id,
-                    name = x.Name,
-                    description = x.Description,
-                    _links = new
-                    {
-                        self = new
-                        {
-                            href = linkGenerator.GetUriByName(httpContext, "capability", new {id = x.Id}),
-                            rel = "self",
-                            allow = new[] {"GET"}
-                        },
-                        members = new
-                        {
-                            href = "",
-                            rel = "related",
-                            allow = new[] {"GET"}
-                        },
-                        topics = new
-                        {
-                            href = "",
-                            rel = "related",
-                            allow = new[] {"GET"}
-                        },
-                    }
-                })
-                .ToArray()
+                    href = linkGenerator.GetUriByName(httpContext, "get capability topic", new {id = id}),
+                    rel = "self",
+                    allow = new[] {"GET"}
+                }
+            }
         });
     }
+
+    private static async Task<IResult> AddCapabilityTopic(string id, [FromBody] NewKafkaTopicRequest topicRequest, 
+        ClaimsPrincipal user, ICapabilityApplicationService capabilityApplicationService)
+    {
+        var errors = new Dictionary<string, string[]>();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            errors.Add(nameof(id), new[] { $"Value \"{id}\" is not a valid capability id." });
+        }
+
+        if (!KafkaClusterId.TryParse(topicRequest.KafkaClusterId, out var kafkaClusterId))
+        {
+            errors.Add(nameof(topicRequest.KafkaClusterId), new[] { $"Value \"{topicRequest.KafkaClusterId}\" is not a valid kafka cluster id." });
+        }
+
+        if (!KafkaTopicName.TryParse(topicRequest.KafkaTopicName, out var kafkaTopicName))
+        {
+            errors.Add(nameof(topicRequest.KafkaTopicName), new[] { $"Value \"{topicRequest.KafkaTopicName}\" is not a valid kafka topic name." });
+        }
+
+        if (!topicRequest.Partitions.HasValue)
+        {
+            errors.Add(nameof(topicRequest.Partitions), new[] { $"Value is missing." });
+        }
+
+        if (!topicRequest.Retention.HasValue)
+        {
+            errors.Add(nameof(topicRequest.Retention), new[] { $"Value is missing." });
+        }
+        
+        var upn = user.Identity?.Name?.ToLower();
+        if (!UserId.TryParse(upn, out var userId))
+        {
+            errors.Add("upn", new[] { $"Identity \"{upn}\" is not a valid user id." });
+        }
+
+        if (errors.Any())
+        {
+            return Results.ValidationProblem(errors);
+        }
+
+        var topicId = await capabilityApplicationService.RequestNewTopic(
+            capabilityId: capabilityId,
+            kafkaClusterId: kafkaClusterId,
+            name: kafkaTopicName,
+            description: topicRequest.Description ?? "",
+            partitions: topicRequest.Partitions!.Value,
+            retention: topicRequest.Retention!.Value,
+            requestedBy: userId
+        );
+
+        return Results.CreatedAtRoute("get capability topic", new {id = topicId});
+    }
+}
+
+public class NewKafkaTopicRequest
+{
+    [Required]
+    public string? KafkaClusterId { get; set; }
+
+    [Required]
+    public string? KafkaTopicName { get; set; }
+
+    [Required]
+    public string? Description { get; set; }
+
+    [Required]
+    public uint? Partitions { get; set; }
+
+    [Required]
+    public long? Retention { get; set; }
 }

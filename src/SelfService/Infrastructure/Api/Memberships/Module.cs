@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
@@ -13,25 +14,39 @@ public static class Module
     {
         var group = app.MapGroup("/memberships").WithTags("Memberships");
 
+        group.MapGet("{id:required}", GetById).WithName("get membership");
         group.MapPost("", NewMembership).WithName("new membership");
-        group.MapPost("{id:required}", GetById).WithName("get membership");
-
     }
 
-    private static async Task<IResult> GetById(HttpContext context, string id, SelfServiceDbContext dbContext)
+    private static async Task<IResult> GetById(string id, ClaimsPrincipal user, SelfServiceDbContext dbContext)
     {
+        var errors = new Dictionary<string, string[]>();
+
         if (!MembershipId.TryParse(id, out var membershipId))
         {
-            return Results.ValidationProblem(new Dictionary<string, string[]>
-            {
-                {nameof(id), new[] {"Value is not a valid membership id."}}
-            });
+            errors.Add(nameof(id), new[] { "Value is not a valid membership id." });
+        }
+
+        if (!UserId.TryParse(user?.Identity?.Name, out var userId))
+        {
+            errors.Add("upn", new[] { "Value is not a valid user id." });
+        }
+
+        if (errors.Any())
+        {
+            return Results.ValidationProblem(errors);
         }
 
         var found = await dbContext.Memberships.SingleOrDefaultAsync(x => x.Id == membershipId);
         if (found is null)
         {
             return Results.NotFound();
+        }
+
+        // NOTE [jandr@2023-02-23]: does this make sense at all or should it just be allowed?
+        if (found.UserId != userId)
+        {
+            return Results.Unauthorized();
         }
 
         return Results.Ok(new
@@ -44,8 +59,8 @@ public static class Module
         });
     }
 
-    private static async Task<IResult> NewMembership(HttpContext context, [FromBody] NewMembershipRequest newMembershipRequest, 
-        IMembershipApplicationService membershipApplicationService)
+    private static async Task<IResult> NewMembership([FromBody] NewMembershipRequest newMembershipRequest, ClaimsPrincipal user,
+        [FromServices] IMembershipApplicationService membershipApplicationService)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -54,9 +69,9 @@ public static class Module
             errors.Add(nameof(newMembershipRequest.CapabilityId), new []{"Invalid capability id."});
         }
 
-        if (!UserId.TryParse(newMembershipRequest.UserId, out var userId))
+        if (!UserId.TryParse(user?.Identity?.Name, out var userId))
         {
-            errors.Add(nameof(newMembershipRequest.CapabilityId), new []{"Invalid user id."});
+            errors.Add("upn", new []{"Invalid user id."});
         }
 
         if (errors.Any())
@@ -72,9 +87,6 @@ public static class Module
 
 public class NewMembershipRequest
 {
-    [Required(AllowEmptyStrings = false)]
+    [Required]
     public string? CapabilityId { get; set; }
-
-    [Required(AllowEmptyStrings = false)]
-    public string? UserId { get; set; }
 }
