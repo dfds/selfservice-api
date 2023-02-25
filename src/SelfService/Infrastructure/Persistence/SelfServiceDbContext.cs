@@ -22,6 +22,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<Capability> Capabilities { get; set; } = null!;
     public DbSet<Member> Members { get; set; } = null!;
     public DbSet<Membership> Memberships { get; set; } = null!;
+    public DbSet<MembershipApplication> MembershipApplications { get; set; } = null!;
     public DbSet<AwsAccount> AwsAccounts { get; set; } = null!;
 
     public DbSet<KafkaCluster> KafkaClusters { get; set; } = null!;
@@ -110,6 +111,30 @@ public class SelfServiceDbContext : DbContext
             opt.Property(x => x.CreatedAt);
         });
 
+        modelBuilder.Entity<MembershipApplication>(opt =>
+        {
+            opt.ToTable("MembershipApplication");
+            opt.HasKey(x => x.Id);
+            opt.Property(x => x.CapabilityId);
+            opt.Property(x => x.Applicant);
+            opt.Property(x => x.Status);
+            opt.Property(x => x.SubmittedAt);
+            opt.Property(x => x.DeadlineAt);
+
+            opt.HasMany(x => x.Approvals);
+
+            opt.Ignore(x => x.IsFinalized);
+            opt.Ignore(x => x.IsCancelled);
+        });
+
+        modelBuilder.Entity<MembershipApproval>(cfg =>
+        {
+            cfg.ToTable("MembershipApproval");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.ApprovedBy);
+            cfg.Property(x => x.ApprovedAt);
+        });
+        
         modelBuilder.Entity<AwsAccount>(cfg =>
         {
             cfg.ToTable("AwsAccount");

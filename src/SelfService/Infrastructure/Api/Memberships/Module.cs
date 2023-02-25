@@ -1,8 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 
@@ -13,9 +10,7 @@ public static class Module
     public static void MapMembershipEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/memberships").WithTags("Memberships");
-
         group.MapGet("{id:required}", GetById).WithName("get membership");
-        group.MapPost("", NewMembership).WithName("new membership");
     }
 
     private static async Task<IResult> GetById(string id, ClaimsPrincipal user, SelfServiceDbContext dbContext)
@@ -58,35 +53,4 @@ public static class Module
             // TODO [jandr@2023-02-22]: add links section
         });
     }
-
-    private static async Task<IResult> NewMembership([FromBody] NewMembershipRequest newMembershipRequest, ClaimsPrincipal user,
-        [FromServices] IMembershipApplicationService membershipApplicationService)
-    {
-        var errors = new Dictionary<string, string[]>();
-
-        if (!CapabilityId.TryParse(newMembershipRequest.CapabilityId, out var capabilityId))
-        {
-            errors.Add(nameof(newMembershipRequest.CapabilityId), new []{"Invalid capability id."});
-        }
-
-        if (!UserId.TryParse(user?.Identity?.Name, out var userId))
-        {
-            errors.Add("upn", new []{"Invalid user id."});
-        }
-
-        if (errors.Any())
-        {
-            return Results.ValidationProblem(errors);
-        }
-
-        var membershipId = await membershipApplicationService.StartNewMembership(capabilityId, userId);
-
-        return Results.CreatedAtRoute("get membership", new {id = membershipId.ToString()});
-    }
-}
-
-public class NewMembershipRequest
-{
-    [Required]
-    public string? CapabilityId { get; set; }
 }

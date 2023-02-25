@@ -4,5 +4,6 @@ namespace SelfService.Application;
 
 public interface IMembershipApplicationService
 {
-    Task<MembershipId> StartNewMembership(CapabilityId capabilityId, UserId userId);
+    Task<MembershipId> StartNewMembership(MembershipApplicationId applicationId);
+    Task<MembershipApplicationId> SubmitMembershipApplication(CapabilityId capabilityId, UserId userId);
 }

@@ -18,6 +18,7 @@ public static class Module
         group.MapGet("", GetAllCapabilities);
         group.MapGet("{id:required}", GetCapability).WithName("capability");
         group.MapGet("{id:required}/members", GetCapabilityMembers).WithName("capability members");
+        group.MapGet("{id:required}/membershipapplications", GetCapabilityMembershipApplications).WithName("capability membership applications");
         group.MapGet("{id:required}/topics", GetCapabilityTopics).WithName("capability topics");
         group.MapPost("{id:required}/topics", AddCapabilityTopic).WithName("add capability topic"); // TODO [jandr@2023-02-22]: consider moving this to topics "controller"
         group.MapGet("{id:required}/topics/{topicId:required}", GetCapabilityTopic).WithName("get capability topic"); // TODO [jandr@2023-02-22]: consider moving this to topics "controller"
@@ -110,6 +111,41 @@ public static class Module
                     upn = x.Id.ToString(),
                     name = x.DisplayName,
                     email = x.Email,
+                })
+                .ToArray()
+        });
+    }
+
+    private static async Task<IResult> GetCapabilityMembershipApplications(string id, ClaimsPrincipal user, SelfServiceDbContext dbContext)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            errors.Add(nameof(id), new [] {$"Value \"{id}\" is not a valid capability id."});
+        }
+
+        if (errors.Any())
+        {
+            return Results.ValidationProblem(errors);
+        }
+
+        var applications = await dbContext.MembershipApplications
+            .Where(x => x.CapabilityId == capabilityId)
+            .OrderBy(x => x.SubmittedAt)
+            .ToListAsync();
+
+        return Results.Ok(new
+        {
+            items = applications
+                .Select(x => new
+                {
+                    id = x.Id.ToString(),
+                    applicant = x.Applicant,
+                    submittedAt = x.SubmittedAt,
+                    deadlineAt = x.DeadlineAt,
+                    approvedBy = x.Approvals
+                        .Select(y => y.ApprovedBy)
+                        .ToArray()
                 })
                 .ToArray()
         });
