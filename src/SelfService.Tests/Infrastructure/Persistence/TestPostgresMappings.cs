@@ -141,4 +141,41 @@ public class TestPostgresMappings
             comparer: new KafkaTopicComparer()
         );
     }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task membershipapplication()
+    {
+        await using var databaseFactory = new ExternalDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext();
+
+        var stubApprovals = new[]
+        {
+            A.MembershipApproval.Build(),
+            A.MembershipApproval.Build(),
+        };
+        
+        var stub = A.MembershipApplication
+            .WithApprovals(stubApprovals)
+            .Build();
+
+        // write
+        await dbContext.MembershipApplications.AddAsync(stub);
+        await dbContext.SaveChangesAsync();
+
+        // read
+        var storedVersion = await dbContext.MembershipApplications.FindAsync(stub.Id);
+
+        Assert.Equal(
+            expected: stub,
+            actual: storedVersion,
+            comparer: new MembershipApplicationComparer()
+        );
+
+        Assert.Equal(
+            expected: stubApprovals,
+            actual: storedVersion!.Approvals,
+            comparer: new MembershipApprovalComparer()
+        );
+    }
 }

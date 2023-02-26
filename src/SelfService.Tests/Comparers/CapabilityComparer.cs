@@ -232,3 +232,65 @@ public class KafkaTopicComparer : IEqualityComparer<KafkaTopic?>
         return hashCode.ToHashCode();
     }
 }
+
+public class MembershipApplicationComparer : IEqualityComparer<MembershipApplication?>
+{
+    public bool Equals(MembershipApplication? x, MembershipApplication? y)
+    {
+        if (ReferenceEquals(x, y))
+        {
+            return true;
+        }
+
+        if (ReferenceEquals(x, null))
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(y, null))
+        {
+            return false;
+        }
+
+        if (x.GetType() != y.GetType())
+        {
+            return false;
+        }
+
+        return x.CapabilityId.Equals(y.CapabilityId) &&
+               x.Applicant.Equals(y.Applicant) &&
+               x.Status.Equals(y.Status) &&
+               x.SubmittedAt.Equals(y.SubmittedAt) &&
+               x.ExpiresOn.Equals(y.ExpiresOn) &&
+               x.Approvals.SequenceEqual(y.Approvals);
+    }
+
+    public int GetHashCode(MembershipApplication obj)
+    {
+        return HashCode.Combine(
+            obj.CapabilityId,
+            obj.Applicant,
+            obj.Status,
+            obj.SubmittedAt,
+            obj.ExpiresOn,
+            obj.Applicant
+        );
+    }
+}
+
+public class MembershipApprovalComparer : IEqualityComparer<MembershipApproval?>
+{
+    public bool Equals(MembershipApproval? x, MembershipApproval? y)
+    {
+        if (ReferenceEquals(x, y)) return true;
+        if (ReferenceEquals(x, null)) return false;
+        if (ReferenceEquals(y, null)) return false;
+        if (x.GetType() != y.GetType()) return false;
+        return x.ApprovedBy.Equals(y.ApprovedBy) && x.ApprovedAt.Equals(y.ApprovedAt);
+    }
+
+    public int GetHashCode(MembershipApproval obj)
+    {
+        return HashCode.Combine(obj.ApprovedBy, obj.ApprovedAt);
+    }
+}

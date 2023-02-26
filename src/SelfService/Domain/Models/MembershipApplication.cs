@@ -1,25 +1,28 @@
-using SelfService.Application;
 using SelfService.Domain.Events;
 
 namespace SelfService.Domain.Models;
 
 public class MembershipApplication : AggregateRoot<MembershipApplicationId>
 {
-    private readonly IList<MembershipApproval> _approvals = new List<MembershipApproval>();
+    private MembershipApplication() { }
+    
+    private readonly List<MembershipApproval> _approvals = new List<MembershipApproval>();
     private readonly CapabilityId _capabilityId;
     private readonly UserId _applicant;
     private MempershipApplicationStatusOptions _status;
     private readonly DateTime _submittedAt;
-    private readonly DateTime _deadlineAt;
+    private readonly DateTime _expiresOn;
 
     public MembershipApplication(MembershipApplicationId id, CapabilityId capabilityId, UserId applicant,
-        MempershipApplicationStatusOptions status, DateTime submittedAt, DateTime deadlineAt) : base(id)
+        IEnumerable<MembershipApproval> approvals, MempershipApplicationStatusOptions status, 
+        DateTime submittedAt, DateTime expiresOn) : base(id)
     {
         _capabilityId = capabilityId;
         _applicant = applicant;
+        _approvals.AddRange(approvals);
         _status = status;
         _submittedAt = submittedAt;
-        _deadlineAt = deadlineAt;
+        _expiresOn = expiresOn;
     }
 
     public CapabilityId CapabilityId => _capabilityId;
@@ -27,7 +30,7 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
     public IEnumerable<MembershipApproval> Approvals => _approvals;
     public MempershipApplicationStatusOptions Status => _status;
     public DateTime SubmittedAt => _submittedAt;
-    public DateTime DeadlineAt => _deadlineAt;
+    public DateTime ExpiresOn => _expiresOn;
 
     public bool IsFinalized => _status == MempershipApplicationStatusOptions.Finalized;
     public bool IsCancelled => _status == MempershipApplicationStatusOptions.Cancelled;
@@ -115,9 +118,10 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
             id: MembershipApplicationId.New(),
             capabilityId: capabilityId,
             applicant: applicant,
+            approvals: Enumerable.Empty<MembershipApproval>(), 
             status: MempershipApplicationStatusOptions.PendingApprovals,
             submittedAt: submittedAt,
-            deadlineAt: submittedAt
+            expiresOn: submittedAt
                 .AddDays(15)
                 .Subtract(submittedAt.TimeOfDay)
         );

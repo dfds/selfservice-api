@@ -77,6 +77,10 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder
             .Properties<KafkaTopicStatusType>()
             .HaveConversion<string>();
+
+        configurationBuilder
+            .Properties<MembershipApplicationId>()
+            .HaveConversion<MembershipApplicationIdConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -119,7 +123,7 @@ public class SelfServiceDbContext : DbContext
             opt.Property(x => x.Applicant);
             opt.Property(x => x.Status);
             opt.Property(x => x.SubmittedAt);
-            opt.Property(x => x.DeadlineAt);
+            opt.Property(x => x.ExpiresOn);
 
             opt.HasMany(x => x.Approvals);
 

@@ -142,7 +142,7 @@ public static class Module
                     id = x.Id.ToString(),
                     applicant = x.Applicant,
                     submittedAt = x.SubmittedAt,
-                    deadlineAt = x.DeadlineAt,
+                    deadlineAt = x.ExpiresOn,
                     approvedBy = x.Approvals
                         .Select(y => y.ApprovedBy)
                         .ToArray()

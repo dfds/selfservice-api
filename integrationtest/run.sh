@@ -30,13 +30,15 @@ docker-compose -p ${INTEGRATION_TEST_NAME} up --build -d
 echo -e "\e[35mGetting port of database container...\e[0m"
 PORT=$(docker-compose -p ${INTEGRATION_TEST_NAME} port database 5432 | awk -F : '{print $2}')
 
+MIGRATION_CONTAINER_NAME=$(docker-compose -p ${INTEGRATION_TEST_NAME} ps | grep -i 'db-migration' | awk '{print $1}')
+
 echo -e "\e[35mWaiting for database to be migrated...\e[0m"
-migration_result=$(docker wait ${INTEGRATION_TEST_NAME}-db-migration-1)
+migration_result=$(docker wait ${MIGRATION_CONTAINER_NAME})
 if [ "$migration_result" != "0" ]
 then
    echo -e "\e[31mDatabase migration FAILED!!\e[0m"
    echo -e "\e[33mHere is the logs from the container:\e[0m"
-   docker logs ${INTEGRATION_TEST_NAME}-db-migration-1
+   docker logs ${MIGRATION_CONTAINER_NAME}
 
    echo ""
    echo -e "\e[33mClosing containers...\e[0m"
