@@ -13,7 +13,7 @@ public class CapabilityRepository : ICapabilityRepository
         _dbContext = dbContext;
     }
 
-    public async Task<Capability> GetById(CapabilityId id)
+    public async Task<Capability> Get(CapabilityId id)
     {
         var found = await _dbContext
             .Capabilities

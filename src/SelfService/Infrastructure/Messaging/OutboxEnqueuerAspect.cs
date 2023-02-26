@@ -28,12 +28,6 @@ namespace SelfService.Infrastructure.Messaging;
 //    {
 //        var aggregateDomainEvents = GetAggregates();
 
-//        if (aggregateDomainEvents.Length > 1)
-//        {
-//            // TODO [jandr@2023-02-23]: rethink this - maybe remove
-//            throw new InvalidOperationException("Multiple aggregates modified in the same transaction");
-//        }
-
 //        foreach (var aggregate in aggregateDomainEvents)
 //        {
 //            var domainEvents = aggregate

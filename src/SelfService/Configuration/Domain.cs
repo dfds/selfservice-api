@@ -2,6 +2,7 @@
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
 
@@ -24,6 +25,7 @@ public static class Domain
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
 
-
+        // background jobs
+        builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
     }
 }
