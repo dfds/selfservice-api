@@ -8,7 +8,10 @@ public static class DependencyInjection
 {
     public static void AddDatabase(this WebApplicationBuilder builder)
     {
-        builder.Services.AddDbContext<SelfServiceDbContext>(options => {options.UseNpgsql(builder.Configuration["SS_CONNECTION_STRING"]);});
+        builder.Services.AddDbContext<SelfServiceDbContext>(options =>
+        {
+            options.UseNpgsql(builder.Configuration["SS_CONNECTION_STRING"]);
+        });
     }
 }
 
@@ -81,6 +84,10 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder
             .Properties<MembershipApplicationId>()
             .HaveConversion<MembershipApplicationIdConverter>();
+
+        configurationBuilder
+            .Properties<MempershipApplicationStatusOptions>()
+            .HaveConversion<string>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

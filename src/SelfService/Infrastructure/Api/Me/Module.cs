@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
-using SelfService.Infrastructure.Api.Capabilities;
 
 namespace SelfService.Infrastructure.Api.Me;
 
@@ -10,7 +9,7 @@ public static class Module
 {
     public static void MapMeEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/me", GetMe).WithTags("Account").Produces<Me>();
+        app.MapGet("/me", GetMe).WithTags("Account");
     }
 
     private static async Task<IResult> GetMe(ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext, [FromServices] IMyCapabilitiesQuery myCapabilitiesQuery)
@@ -30,21 +29,20 @@ public static class Module
 
         var capabilities = await myCapabilitiesQuery.FindBy(userId);
 
-        return TypedResults.Ok(new Me
+        return TypedResults.Ok(new
         {
-            Capabilities = capabilities
-                .Select(x => new MyCapability
+            Capabilities = capabilities.Select(x => new
                 {
                     Id = x.Id.ToString(),
-                    RootId = x.Id.ToString(),
                     Name = x.Name,
                     Description = x.Description,
-                    Links = new Link[] // TODO [jandr@2023-02-22]: change link field from array to object representation
-                    {
-                        new Link("self", linkGenerator.GetUriByName(httpContext, "capability", new { id = x.Id }))
-                    }
+                    //Links = new Link[] // TODO [jandr@2023-02-22]: change link field from array to object representation
+                    //{
+                    //    new Link("self", linkGenerator.GetUriByName(httpContext, "capability", new {id = x.Id}))
+                    //}
                 })
                 .ToArray()
         });
+
     }
 }

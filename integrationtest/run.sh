@@ -30,7 +30,9 @@ docker-compose -p ${INTEGRATION_TEST_NAME} up --build -d
 echo -e "\e[35mGetting port of database container...\e[0m"
 PORT=$(docker-compose -p ${INTEGRATION_TEST_NAME} port database 5432 | awk -F : '{print $2}')
 
-MIGRATION_CONTAINER_NAME=$(docker-compose -p ${INTEGRATION_TEST_NAME} ps | grep -i 'db-migration' | awk '{print $1}')
+MIGRATION_CONTAINER_NAME=$(docker-compose -p ${INTEGRATION_TEST_NAME} ps --all | grep -i 'db-migration' | awk '{print $1}')
+
+echo "container name: ${MIGRATION_CONTAINER_NAME}"
 
 echo -e "\e[35mWaiting for database to be migrated...\e[0m"
 migration_result=$(docker wait ${MIGRATION_CONTAINER_NAME})

@@ -58,11 +58,11 @@ public static class Module
         {
             Items = topics
                 .Select(topic => new {
-                    Id = topic.Id,
-                    Name = topic.Name,
+                    Id = topic.Id.ToString(),
+                    Name = topic.Name.ToString(),
                     Description = topic.Description,
-                    CapabilityId = topic.CapabilityId,
-                    KafkaClusterId = topic.KafkaClusterId,
+                    CapabilityId = topic.CapabilityId.ToString(),
+                    KafkaClusterId = topic.KafkaClusterId.ToString(),
                     Partitions = topic.Partitions,
                     Retention = topic.Retention,
                     Status = topic.Status switch

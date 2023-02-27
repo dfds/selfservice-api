@@ -168,14 +168,19 @@ public static class Module
             items = topics
                 .Select(x => new
                 {
-                    id = x.Id,
-                    name = x.Name,
+                    id = x.Id.ToString(),
+                    name = x.Name.ToString(),
                     description = x.Description,
-                    kafkaClusterId = x.KafkaClusterId,
+                    kafkaClusterId = x.KafkaClusterId.ToString(),
                     partitions = x.Partitions,
-                    retention = x
-                        .Retention, // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
-                    status = x.Status,
+                    retention = x.Retention, // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
+                    status = x.Status switch
+                    {
+                        KafkaTopicStatusType.Requested => "Requested",
+                        KafkaTopicStatusType.InProgress => "In Progress",
+                        KafkaTopicStatusType.Provisioned => "Provisioned",
+                        _ => "Unknown"
+                    }
                 })
                 .ToArray(),
             _embedded = new
@@ -185,7 +190,7 @@ public static class Module
                     items = clusters
                         .Select(x => new
                         {
-                            id = x.Id,
+                            id = x.Id.ToString(),
                             name = x.Name,
                             description = x.Description,
                         })
@@ -275,13 +280,19 @@ public static class Module
 
         return Results.Ok(new
         {
-            id = topic.Id,
-            name = topic.Name,
+            id = topic.Id.ToString(),
+            name = topic.Name.ToString(),
             description = topic.Description,
-            kafkaClusterId = topic.KafkaClusterId,
+            kafkaClusterId = topic.KafkaClusterId.ToString(),
             partitions = topic.Partitions,
             retention = topic.Retention, // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
-            status = topic.Status,
+            status = topic.Status switch
+            {
+                KafkaTopicStatusType.Requested => "Requested",
+                KafkaTopicStatusType.InProgress => "In Progress",
+                KafkaTopicStatusType.Provisioned => "Provisioned",
+                _ => "Unknown"
+            },
             _links = new
             {
                 self = new

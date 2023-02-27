@@ -24,6 +24,10 @@ public static class Domain
         builder.Services.AddTransient<ICapabilityKafkaTopicsQuery, CapabilityKafkaTopicsQuery>();
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
+        
+        builder.Services.AddTransient<IMembershipApplicationRepository, MembershipApplicationRepository>();
+
+
 
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();

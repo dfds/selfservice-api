@@ -7,8 +7,8 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
     private MembershipApplication() { }
     
     private readonly List<MembershipApproval> _approvals = new List<MembershipApproval>();
-    private readonly CapabilityId _capabilityId;
-    private readonly UserId _applicant;
+    private readonly CapabilityId _capabilityId = null!;
+    private readonly UserId _applicant = null!;
     private MempershipApplicationStatusOptions _status;
     private readonly DateTime _submittedAt;
     private readonly DateTime _expiresOn;

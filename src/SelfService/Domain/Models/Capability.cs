@@ -13,12 +13,12 @@ public class Capability : AggregateRoot<CapabilityId>
         CreatedBy = createdBy;
     }
 
-    public string Name { get; private set; }
-    public string Description { get; set; }
+    public string Name { get; private set; } = null!;
+    public string Description { get; set; } = null!;
     public DateTime? Deleted { get; set; }
 
     public DateTime CreatedAt { get; private set; }
-    public string CreatedBy { get; private set; }
+    public string CreatedBy { get; private set; } = null!;
 
     public override string ToString()
     {

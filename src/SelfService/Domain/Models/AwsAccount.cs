@@ -14,12 +14,12 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
         CreatedBy = createdBy;
     }
 
-    public CapabilityId CapabilityId { get; private set; }
-    public RealAwsAccountId AccountId { get; set; }
-    public AwsRoleArn RoleArn { get; set; }
-    public string RoleEmail { get; set; }
+    public CapabilityId CapabilityId { get; private set; } = null!;
+    public RealAwsAccountId AccountId { get; set; } = null!;
+    public AwsRoleArn RoleArn { get; set; } = null!;
+    public string RoleEmail { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
-    public string CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = null!;
 
     public static AwsAccount RegisterNew(CapabilityId capabilityId, RealAwsAccountId accountId, AwsRoleArn roleArn, string roleEmail, DateTime createdAt, string createdBy)
     {
