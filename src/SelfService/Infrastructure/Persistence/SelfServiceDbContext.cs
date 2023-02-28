@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Dafda.Outbox;
+using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence.Converters;
 
@@ -21,6 +22,8 @@ public class SelfServiceDbContext : DbContext
     {
 
     }
+
+    public DbSet<OutboxEntry> OutboxEntries { get; set; } = null!;
 
     public DbSet<Capability> Capabilities { get; set; } = null!;
     public DbSet<Member> Members { get; set; } = null!;
@@ -93,6 +96,18 @@ public class SelfServiceDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<OutboxEntry>(cfg =>
+        {
+            cfg.ToTable("_outbox");
+            cfg.HasKey(x => x.MessageId);
+            cfg.Property(x => x.MessageId).HasColumnName("Id");
+            cfg.Property(x => x.Topic);
+            cfg.Property(x => x.Key);
+            cfg.Property(x => x.Payload);
+            cfg.Property(x => x.OccurredUtc);
+            cfg.Property(x => x.ProcessedUtc);
+        });
 
         modelBuilder.Entity<Capability>(cfg =>
         {

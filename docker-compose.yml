@@ -68,7 +68,30 @@ services:
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
                       sleep 5 && \
                       cub kafka-ready -b kafka:29092 1 20 && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.apispecs'"
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.apispecs && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.capability && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.membership && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.member && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.membershipapplication && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.awsaccount && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.kafkacluster && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.kafkatopic && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic hello'"
+
     environment:
       KAFKA_BROKER_ID: ignored
       KAFKA_ZOOKEEPER_CONNECT: ignored
+
+  gendis:
+    image: public.ecr.aws/d8r0z9h2/dafda-gendis:0.9.0
+    depends_on:
+      database:
+        condition: service_healthy
+      kafka-setup:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    environment:
+      - DB_CONNECTION_STRING=User ID=postgres;Password=p;Host=database;Port=5432;Database=db;
+      - DAFDA_OUTBOX_NOTIFICATION_CHANNEL=dafda_outbox
+      - GENDIS_PREFIX_FOR_KAFKA=GENDIS_KAFKA_
+      - GENDIS_KAFKA_BOOTSTRAP_SERVERS=kafka:29092

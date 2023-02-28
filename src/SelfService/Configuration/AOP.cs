@@ -11,7 +11,7 @@ public static class AOP
         builder.Services.RewireWithAspects(options =>
         {
             options.Register<TransactionalBoundaryAttribute, TransactionalAspect>();
-            //options.Register<OutboxedAttribute, OutboxEnqueuerAspect>();
+            options.Register<OutboxedAttribute, OutboxEnqueuerAspect>();
         });
     }
 }
