@@ -1,3 +1,3 @@
-Id;RealClusterId;Name;Description;Enabled
-3FF8BDB4-A979-49A2-BAA8-9E19D7826089;dev1;Development;A development cluster special for you;1
-7F1AE996-93EF-493E-A17E-0FF047F34DD9;prod1;Production;This is production;1
+Id;Name;Description;Enabled
+dev1;Development;A development cluster special for you;1
+prod1;Production;This is production;1

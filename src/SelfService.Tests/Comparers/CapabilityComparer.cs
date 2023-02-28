@@ -169,12 +169,12 @@ public class KafkaClusterComparer : IEqualityComparer<KafkaCluster?>
             return false;
         }
 
-        return x.RealClusterId == y.RealClusterId && x.Name == y.Name && x.Description == y.Description && x.Enabled == y.Enabled;
+        return x.Name == y.Name && x.Description == y.Description && x.Enabled == y.Enabled;
     }
 
     public int GetHashCode(KafkaCluster obj)
     {
-        return HashCode.Combine(obj.RealClusterId, obj.Name, obj.Description, obj.Enabled);
+        return HashCode.Combine(obj.Name, obj.Description, obj.Enabled);
     }
 }
 

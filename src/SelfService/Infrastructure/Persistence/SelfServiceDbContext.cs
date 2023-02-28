@@ -177,7 +177,6 @@ public class SelfServiceDbContext : DbContext
         {
             cfg.ToTable("KafkaCluster");
             cfg.HasKey(x => x.Id);
-            cfg.Property(x => x.RealClusterId);
             cfg.Property(x => x.Name);
             cfg.Property(x => x.Description);
             cfg.Property(x => x.Enabled);

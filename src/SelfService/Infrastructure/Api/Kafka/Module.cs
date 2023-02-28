@@ -40,7 +40,6 @@ public static class Module
                     Name = x.Name,
                     Description = x.Description,
                     Enabled = x.Enabled,
-                    ClusterId = x.RealClusterId
                 })
                 .ToArray()
             // TODO [jandr@2023-02-23]: add links section

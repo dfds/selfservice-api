@@ -117,7 +117,7 @@ public class KafkaTopicBuilder
     public KafkaTopicBuilder()
     {
         _id = KafkaTopicId.New();
-        _kafkaClusterId = KafkaClusterId.New();
+        _kafkaClusterId = KafkaClusterId.Parse("cluster foo");
         _capabilityId = CapabilityId.Parse("foo");
         _name = KafkaTopicName.Parse("bar");
         _description = "baz";
@@ -156,15 +156,13 @@ public class KafkaTopicBuilder
 public class KafkaClusterBuilder
 {
     private KafkaClusterId _id;
-    private string _realClusterId;
     private string _name;
     private string _description;
     private bool _enabled;
 
     public KafkaClusterBuilder()
     {
-        _id = KafkaClusterId.New();
-        _realClusterId = "foo";
+        _id = KafkaClusterId.Parse("cluster foo");
         _name = "bar";
         _description = "baz";
         _enabled = true;
@@ -174,7 +172,6 @@ public class KafkaClusterBuilder
     {
         return new KafkaCluster(
             id: _id,
-            realClusterId: _realClusterId,
             name: _name,
             description: _description,
             enabled: _enabled

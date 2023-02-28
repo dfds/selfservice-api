@@ -4,13 +4,13 @@ using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Persistence.Converters;
 
-public class KafkaClusterIdConverter : ValueConverter<KafkaClusterId, Guid>
+public class KafkaClusterIdConverter : ValueConverter<KafkaClusterId, string>
 {
     public KafkaClusterIdConverter() : base(ToDatabaseType, FromDatabaseType)
     {
             
     }
 
-    private static Expression<Func<KafkaClusterId, Guid>> ToDatabaseType => id => id;
-    private static Expression<Func<Guid, KafkaClusterId>> FromDatabaseType => value => value;
+    private static Expression<Func<KafkaClusterId, string>> ToDatabaseType => id => id;
+    private static Expression<Func<string, KafkaClusterId>> FromDatabaseType => value => value;
 }

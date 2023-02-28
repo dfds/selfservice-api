@@ -35,12 +35,11 @@ public class KafkaSynchronizer
 
         foreach (var legacyCluster in legacyClusters)
         {
-            var cluster = clusters.FirstOrDefault(x => x.Id == legacyCluster.Id);
+            var cluster = clusters.FirstOrDefault(x => x.Id == legacyCluster.ClusterId);
             if (cluster == null)
             {
                 var kafkaCluster = new KafkaCluster(
-                    id: legacyCluster.Id,
-                    realClusterId: legacyCluster.ClusterId ?? "" ,
+                    id: KafkaClusterId.Parse(legacyCluster.ClusterId),
                     name: legacyCluster.Name ?? "",
                     description: legacyCluster.Description ?? "",
                     enabled: legacyCluster.Enabled
@@ -77,6 +76,7 @@ public class KafkaSynchronizer
 
     private async Task SynchronizeTopics(CancellationToken stoppingToken)
     {
+        var legacyClusters = await GetAllLegacyClusters(stoppingToken);
         var legacyTopics = await GetAllLegacyTopics(stoppingToken);
         var topics = await GetAllTopics(stoppingToken);
 
@@ -88,11 +88,13 @@ public class KafkaSynchronizer
             var topic = topics.FirstOrDefault(x => x.Id == legacyTopic.Id);
             if (topic == null)
             {
+                var cluster = legacyClusters.Single(x => x.Id == legacyTopic.KafkaClusterId);
+
                 topic = new KafkaTopic
                 (
                     id: legacyTopic.Id,
                     capabilityId: legacyTopic.CapabilityId,
-                    kafkaClusterId: legacyTopic.KafkaClusterId,
+                    kafkaClusterId: KafkaClusterId.Parse(cluster.ClusterId), 
                     name: legacyTopic.Name,
                     description: legacyTopic.Description,
                     status: legacyTopic.Status switch

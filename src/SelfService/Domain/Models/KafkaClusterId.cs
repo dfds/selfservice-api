@@ -2,9 +2,9 @@
 
 public class KafkaClusterId : ValueObject
 {
-    private readonly Guid _value;
+    private readonly string _value;
 
-    private KafkaClusterId(Guid value)
+    private KafkaClusterId(string value)
     {
         _value = value;
     }
@@ -16,12 +16,7 @@ public class KafkaClusterId : ValueObject
 
     public override string ToString()
     {
-        return _value.ToString("N");
-    }
-
-    public static KafkaClusterId New()
-    {
-        return new KafkaClusterId(Guid.NewGuid());
+        return _value;
     }
 
     public static KafkaClusterId Parse(string? text)
@@ -36,9 +31,9 @@ public class KafkaClusterId : ValueObject
 
     public static bool TryParse(string? text, out KafkaClusterId id)
     {
-        if (Guid.TryParse(text, out var idValue))
+        if (!string.IsNullOrWhiteSpace(text))
         {
-            id = new KafkaClusterId(idValue);
+            id = new KafkaClusterId(text);
             return true;
         }
 
@@ -48,7 +43,4 @@ public class KafkaClusterId : ValueObject
 
     public static implicit operator KafkaClusterId(string text) => Parse(text);
     public static implicit operator string(KafkaClusterId id) => id.ToString();
-
-    public static implicit operator KafkaClusterId(Guid idValue) => new KafkaClusterId(idValue);
-    public static implicit operator Guid(KafkaClusterId id) => id._value;
 }
