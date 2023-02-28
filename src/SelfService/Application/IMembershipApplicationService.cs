@@ -8,4 +8,5 @@ public interface IMembershipApplicationService
     Task<MembershipApplicationId> SubmitMembershipApplication(CapabilityId capabilityId, UserId userId);
     Task CancelExpiredMembershipApplications();
     Task TryFinalizeMembershipApplication(MembershipApplicationId applicationId);
+    Task ApproveMembershipApplication(MembershipApplicationId applicationId, UserId approvedBy);
 }

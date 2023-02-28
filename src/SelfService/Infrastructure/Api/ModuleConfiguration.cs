@@ -2,6 +2,7 @@
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
+using SelfService.Infrastructure.Api.MembershipApplications;
 using SelfService.Infrastructure.Api.Memberships;
 using SelfService.Infrastructure.Api.System;
 
@@ -17,5 +18,6 @@ public static class ModuleConfiguration
         app.MapKafkaEndpoints();
         app.MapServiceCatalogEndpoints();
         app.MapMembershipEndpoints();
+        app.MapMembershipApplicationsEndpoints();
     }
 }

@@ -107,6 +107,22 @@ public class MembershipApplicationService : IMembershipApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
+    public async Task ApproveMembershipApplication(MembershipApplicationId applicationId, UserId approvedBy)
+    {
+        using var _ = _logger.BeginScope("{Action} on {ImplementationType}",
+            nameof(SubmitMembershipApplication), GetType().FullName);
+
+        _logger.LogDebug("User {UserId} wants to approve membership application {MembershipApplicationId}", 
+            approvedBy, applicationId);
+
+        var application = await _membershipApplicationRepository.Get(applicationId);
+        application.Approve(approvedBy, _systemTime.Now);
+
+        _logger.LogDebug("Membership application {MembershipApplicationId} has received approval by {UserId} for capability {CapabilityId}",
+            applicationId, approvedBy, application.CapabilityId);
+    }
+
+    [TransactionalBoundary, Outboxed]
     public async Task CancelExpiredMembershipApplications()
     {
         using var _ = _logger.BeginScope("{Action} on {ImplementationType}", 
