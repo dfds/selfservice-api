@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Persistence;
@@ -297,7 +298,7 @@ public static class Module
             {
                 self = new
                 {
-                    href = linkGenerator.GetUriByName(httpContext, "get capability topic", new {id = id}),
+                    href = linkGenerator.GetUriByName(httpContext, "get capability topic", new {id = id, topicId = topic.Id}),
                     rel = "self",
                     allow = new[] {"GET"}
                 }
@@ -306,7 +307,7 @@ public static class Module
     }
 
     private static async Task<IResult> AddCapabilityTopic(string id, [FromBody] NewKafkaTopicRequest topicRequest, 
-        ClaimsPrincipal user, ICapabilityApplicationService capabilityApplicationService)
+        ClaimsPrincipal user, ICapabilityApplicationService capabilityApplicationService, IKafkaTopicRepository topicRepository)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -346,17 +347,49 @@ public static class Module
             return Results.ValidationProblem(errors);
         }
 
-        var topicId = await capabilityApplicationService.RequestNewTopic(
-            capabilityId: capabilityId,
-            kafkaClusterId: kafkaClusterId,
-            name: kafkaTopicName,
-            description: topicRequest.Description ?? "",
-            partitions: topicRequest.Partitions!.Value,
-            retention: topicRequest.Retention!.Value,
-            requestedBy: userId
-        );
+        try
+        {
+            var topicId = await capabilityApplicationService.RequestNewTopic(
+                capabilityId: capabilityId,
+                kafkaClusterId: kafkaClusterId,
+                name: kafkaTopicName,
+                description: topicRequest.Description ?? "",
+                partitions: topicRequest.Partitions!.Value,
+                retention: topicRequest.Retention!.Value,
+                requestedBy: userId
+            );
 
-        return Results.CreatedAtRoute("get capability topic", new {id = topicId});
+            var topic = await topicRepository.Get(topicId);
+
+            return Results.CreatedAtRoute(
+                "get capability topic",
+                new {id = capabilityId, topicId = topicId},
+                new
+                {
+                    id = topic.Id.ToString(),
+                    name = topic.Name.ToString(),
+                    description = topic.Description,
+                    kafkaClusterId = topic.KafkaClusterId.ToString(),
+                    partitions = topic.Partitions,
+                    retention = topic.Retention, // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
+                    status = topic.Status switch
+                    {
+                        KafkaTopicStatusType.Requested => "Requested",
+                        KafkaTopicStatusType.InProgress => "In Progress",
+                        KafkaTopicStatusType.Provisioned => "Provisioned",
+                        _ => "Unknown"
+                    },
+                }
+            );
+        }
+        catch (EntityAlreadyExistsException err)
+        {
+            return Results.Conflict(new ProblemDetails
+            {
+                Title = "Topic already exists",
+                Detail = err.Message,
+            });
+        }
     }
 }
 

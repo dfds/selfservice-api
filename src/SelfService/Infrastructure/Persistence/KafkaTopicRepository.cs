@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Persistence;
@@ -24,5 +25,16 @@ public class KafkaTopicRepository : IKafkaTopicRepository
             .FirstOrDefaultAsync();
 
         return found != null;
+    }
+
+    public async Task<KafkaTopic> Get(KafkaTopicId id)
+    {
+        var result = await _dbContext.KafkaTopics.FindAsync(id);
+        if (result is null)
+        {
+            throw EntityNotFoundException<KafkaTopic>.UsingId(id);
+        }
+
+        return result;
     }
 }
