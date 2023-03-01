@@ -285,8 +285,8 @@ public static class Module
             name = topic.Name.ToString(),
             description = topic.Description,
             kafkaClusterId = topic.KafkaClusterId.ToString(),
-            partitions = topic.Partitions,
-            retention = topic.Retention, // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
+            partitions = topic.Partitions.ToString(),
+            retention = topic.Retention.ToString(),
             status = topic.Status switch
             {
                 KafkaTopicStatusType.Requested => "Requested",
@@ -307,7 +307,7 @@ public static class Module
     }
 
     private static async Task<IResult> AddCapabilityTopic(string id, [FromBody] NewKafkaTopicRequest topicRequest, 
-        ClaimsPrincipal user, ICapabilityApplicationService capabilityApplicationService, IKafkaTopicRepository topicRepository)
+        ClaimsPrincipal user, ICapabilityApplicationService capabilityApplicationService, IKafkaTopicRepository topicRepository, IKafkaClusterRepository clusterRepository)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -342,6 +342,11 @@ public static class Module
             errors.Add("upn", new[] { $"Identity \"{upn}\" is not a valid user id." });
         }
 
+        if (!await clusterRepository.Exists(kafkaClusterId))
+        {
+            errors.Add(nameof(topicRequest.KafkaClusterId), new[] { $"Kafka cluster with id \"{kafkaClusterId}\" is unknown to the system." });
+        }
+
         if (errors.Any())
         {
             return Results.ValidationProblem(errors);
@@ -370,8 +375,8 @@ public static class Module
                     name = topic.Name.ToString(),
                     description = topic.Description,
                     kafkaClusterId = topic.KafkaClusterId.ToString(),
-                    partitions = topic.Partitions,
-                    retention = topic.Retention, // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
+                    partitions = topic.Partitions.ToString(),
+                    retention = topic.Retention.ToString(), // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
                     status = topic.Status switch
                     {
                         KafkaTopicStatusType.Requested => "Requested",

@@ -17,6 +17,8 @@ public static class Domain
         builder.Services.AddTransient<IMembershipApplicationService, MembershipApplicationService>();
         builder.Services.AddTransient<ICapabilityRepository, CapabilityRepository>();
         builder.Services.AddTransient<IMembershipRepository, MembershipRepository>();
+        
+        builder.Services.AddTransient<IKafkaClusterRepository, KafkaClusterRepository>();
         builder.Services.AddTransient<IKafkaTopicRepository, KafkaTopicRepository>();
         
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
