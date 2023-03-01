@@ -91,6 +91,14 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder
             .Properties<MempershipApplicationStatusOptions>()
             .HaveConversion<string>();
+
+        configurationBuilder
+            .Properties<KafkaTopicPartitions>()
+            .HaveConversion<KafkaTopicPartitionsConverter>();
+
+        configurationBuilder
+            .Properties<KafkaTopicRetention>()
+            .HaveConversion<KafkaTopicRetentionConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

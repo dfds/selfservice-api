@@ -107,8 +107,8 @@ public class KafkaTopicBuilder
     private KafkaTopicName _name;
     private string _description;
     private KafkaTopicStatusType _status;
-    private uint _partitions;
-    private long _retention;
+    private KafkaTopicPartitions _partitions;
+    private KafkaTopicRetention _retention;
     private DateTime _createdAt;
     private string _createdBy;
     private DateTime? _modifiedAt;
@@ -122,8 +122,8 @@ public class KafkaTopicBuilder
         _name = KafkaTopicName.Parse("bar");
         _description = "baz";
         _status = KafkaTopicStatusType.Provisioned;
-        _partitions = 1;
-        _retention = 1;
+        _partitions = KafkaTopicPartitions.One;
+        _retention = KafkaTopicRetention.OneDay;
         _createdAt = new DateTime(2000, 1, 1);
         _createdBy = nameof(KafkaTopicBuilder);
         _modifiedAt = null;

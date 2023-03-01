@@ -62,8 +62,8 @@ public static class Module
                     Description = topic.Description,
                     CapabilityId = topic.CapabilityId.ToString(),
                     KafkaClusterId = topic.KafkaClusterId.ToString(),
-                    Partitions = topic.Partitions,
-                    Retention = topic.Retention,
+                    Partitions = topic.Partitions.ToString(),
+                    Retention = topic.Retention.ToString(),
                     Status = topic.Status switch
                     {
                         KafkaTopicStatusType.Requested => "Requested",

@@ -107,7 +107,11 @@ public class KafkaSynchronizer
                         _ => KafkaTopicStatusType.Unknown
                     },
                     partitions: Convert.ToUInt32(legacyTopic.Partitions),
-                    retention: legacyTopic.Retention,
+                    retention: legacyTopic.Retention switch
+                    {
+                        -1 => KafkaTopicRetention.Forever,
+                        _ => string.Join("", (legacyTopic.Retention / 1000 / 60 / 60 / 24), "d")
+                    },
                     createdAt: DateTime.SpecifyKind(legacyTopic.Created, DateTimeKind.Utc),
                     createdBy: "LEGACY SYNCHRONIZER",
                     modifiedAt: legacyTopic.LastModified.HasValue

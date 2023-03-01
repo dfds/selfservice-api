@@ -24,7 +24,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
     [TransactionalBoundary, Outboxed]
     public async Task<KafkaTopicId> RequestNewTopic(CapabilityId capabilityId, KafkaClusterId kafkaClusterId, KafkaTopicName name, 
-        string description, uint partitions, long retention, string requestedBy)
+        string description, KafkaTopicPartitions partitions, KafkaTopicRetention retention, string requestedBy)
     {
         using var _ = _logger.BeginScope("{Action} on {ImplementationType}", nameof(RequestNewTopic), this.GetType().FullName);
 

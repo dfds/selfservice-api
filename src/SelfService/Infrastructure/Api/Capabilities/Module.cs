@@ -173,8 +173,8 @@ public static class Module
                     name = x.Name.ToString(),
                     description = x.Description,
                     kafkaClusterId = x.KafkaClusterId.ToString(),
-                    partitions = x.Partitions,
-                    retention = x.Retention, // TODO [jandr@2023-02-10]: convert to days (that's the units for the frontend),
+                    partitions = x.Partitions.ToString(),
+                    retention = x.Retention.ToString(),
                     status = x.Status switch
                     {
                         KafkaTopicStatusType.Requested => "Requested",
@@ -326,14 +326,14 @@ public static class Module
             errors.Add(nameof(topicRequest.KafkaTopicName), new[] { $"Value \"{topicRequest.KafkaTopicName}\" is not a valid kafka topic name." });
         }
 
-        if (!topicRequest.Partitions.HasValue)
+        if (!KafkaTopicPartitions.TryCreate(topicRequest.Partitions ?? 0, out var topicPartitions))
         {
-            errors.Add(nameof(topicRequest.Partitions), new[] { $"Value is missing." });
+            errors.Add(nameof(topicRequest.Partitions), new[] { $"Value \"{topicRequest.Partitions}\" is invalid for kafka topic partitions." });
         }
 
-        if (!topicRequest.Retention.HasValue)
+        if (!KafkaTopicRetention.TryParse(topicRequest.Retention, out var topicRetention))
         {
-            errors.Add(nameof(topicRequest.Retention), new[] { $"Value is missing." });
+            errors.Add(nameof(topicRequest.Retention), new[] { $"Value \"{topicRequest.Retention}\" is invalid for kafka topic retention." });
         }
         
         var upn = user.Identity?.Name?.ToLower();
@@ -354,8 +354,8 @@ public static class Module
                 kafkaClusterId: kafkaClusterId,
                 name: kafkaTopicName,
                 description: topicRequest.Description ?? "",
-                partitions: topicRequest.Partitions!.Value,
-                retention: topicRequest.Retention!.Value,
+                partitions: topicPartitions, 
+                retention: topicRetention, 
                 requestedBy: userId
             );
 
@@ -408,5 +408,5 @@ public class NewKafkaTopicRequest
     public uint? Partitions { get; set; }
 
     [Required]
-    public long? Retention { get; set; }
+    public string? Retention { get; set; }
 }
