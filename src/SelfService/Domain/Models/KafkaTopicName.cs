@@ -43,7 +43,7 @@ public class KafkaTopicName : ValueObject
             return false;
         }
 
-        if (Regex.IsMatch(name, @"[\._-]{2,}"))
+        if (Regex.IsMatch(name, @"\.{2,}") || Regex.IsMatch(name, @"_{2,}") || Regex.IsMatch(name, @"-{2,}"))
         {
             return false;
         }

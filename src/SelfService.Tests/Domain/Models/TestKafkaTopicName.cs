@@ -1,4 +1,5 @@
-﻿using SelfService.Domain.Models;
+﻿using System.Text;
+using SelfService.Domain.Models;
 
 namespace SelfService.Tests.Domain.Models;
 
@@ -56,13 +57,13 @@ public class TestKafkaTopicName
     [InlineData("foo..bar")]
     [InlineData("foo__bar")]
     [InlineData("foo--bar")]
-    [InlineData("foo.-bar")]
-    [InlineData("foo._bar")]
-    [InlineData("foo-.bar")]
-    [InlineData("foo-_bar")]
-    [InlineData("foo_.bar")]
-    [InlineData("foo_-bar")]
-    [InlineData("foo_-_-_-_-_-_-_-_bar")]
+    //[InlineData("foo.-bar")]
+    //[InlineData("foo._bar")]
+    //[InlineData("foo-.bar")]
+    //[InlineData("foo-_bar")]
+    //[InlineData("foo_.bar")]
+    //[InlineData("foo_-bar")]
+    //[InlineData("foo_-_-_-_-_-_-_-_bar")]
     [InlineData("foo bar")]
     [InlineData("foo bar ")]
     [InlineData(" foo bar")]
@@ -113,5 +114,4 @@ public class TestKafkaTopicName
 
         Assert.Equal(expectedCapabilityId, result);
     }
-
 }

@@ -36,7 +36,7 @@ public class CapabilityId : ValueObject
         value = Regex.Replace(value, @"_+", "-");
         value = Regex.Replace(value, @"-+$", "");
         value = Regex.Replace(value, @"^-+", "");
-        value = Regex.Replace(value, @"[^a-zA-Z\-]", "");
+        value = Regex.Replace(value, @"[^a-zA-Z0-9\-]", "");
 
         return new CapabilityId(value);
     }

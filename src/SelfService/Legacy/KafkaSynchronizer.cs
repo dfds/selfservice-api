@@ -21,7 +21,6 @@ public class KafkaSynchronizer
     public async Task Synchronize(CancellationToken stoppingToken)
     {
         await SynchronizeClusters(stoppingToken);
-
         await SynchronizeTopics(stoppingToken);
     }
 

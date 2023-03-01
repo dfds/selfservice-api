@@ -12,5 +12,5 @@ public class CapabilityIdConverter : ValueConverter<CapabilityId, string>
     }
 
     private static Expression<Func<CapabilityId, string>> ToDatabaseType => id => id.ToString();
-    private static Expression<Func<string, CapabilityId>> FromDatabaseType => value => CapabilityId.CreateFrom(value);
+    private static Expression<Func<string, CapabilityId>> FromDatabaseType => value => CapabilityId.Parse(value);
 }

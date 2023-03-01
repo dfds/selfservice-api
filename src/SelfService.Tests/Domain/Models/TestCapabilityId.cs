@@ -12,7 +12,7 @@ public class TestCapabilityId
     [InlineData("foo-", "foo")]
     [InlineData("-foo", "foo")]
     [InlineData(" foo", "foo")]
-    [InlineData("f99", "f")]
+    [InlineData("f99", "f99")]
     [InlineData("foo_bar", "foo-bar")]
     [InlineData("foo!!", "foo")]
     [InlineData("fo@@@o", "foo")]
@@ -24,5 +24,4 @@ public class TestCapabilityId
         var result = CapabilityId.CreateFrom(input);
         Assert.Equal(expected, result);
     }
-
 }
