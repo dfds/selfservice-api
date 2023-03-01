@@ -38,7 +38,7 @@ public class KafkaTopicName : ValueObject
             return false;
         }
 
-        if (!Regex.IsMatch(name, @"[a-zA-Z0-9]$"))
+        if (!Regex.IsMatch(name, @"[a-zA-Z0-9\.]$")) // NOTE [jandr@2023-03-01]: legacy data support: we allow that topic name ends with "." but it should be fixed!
         {
             return false;
         }
