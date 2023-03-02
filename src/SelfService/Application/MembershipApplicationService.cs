@@ -63,8 +63,18 @@ public class MembershipApplicationService : IMembershipApplicationService
         using var _ = _logger.BeginScope("{Action} on {ImplementationType} for {CurrentUser}", 
             nameof(SubmitMembershipApplication), GetType().FullName, userId);
 
-        // check if the user already has an "active" application for this capability
-        
+        if (!await _capabilityRepository.Exists(capabilityId))
+        {
+            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
+        }
+
+        var existingApplication = await _membershipApplicationRepository.FindPendingBy(capabilityId, userId);
+        if (existingApplication != null)
+        {
+            // NOTE [jandr@2023-03-02]: should this be an EntityAlreadyExistsException instead??
+            throw new PendingMembershipApplicationAlreadyExistsException($"User \"{userId}\" already has a pending membership application for capability \"{capabilityId}\"");
+        }
+
         var application = MembershipApplication.New(capabilityId, userId, _systemTime.Now);
         await _membershipApplicationRepository.Add(application);
 

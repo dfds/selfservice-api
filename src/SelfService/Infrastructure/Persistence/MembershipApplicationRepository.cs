@@ -43,4 +43,11 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
             .OrderBy(x => x.ExpiresOn)
             .ToListAsync();
     }
+
+    public async Task<MembershipApplication?> FindPendingBy(CapabilityId capabilityId, UserId userId)
+    {
+        return await _dbContext.MembershipApplications
+            .Where(x => x.Status == MempershipApplicationStatusOptions.PendingApprovals && x.CapabilityId == capabilityId && x.Applicant == userId)
+            .SingleOrDefaultAsync();
+    }
 }

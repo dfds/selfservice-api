@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 
@@ -78,9 +79,27 @@ public static class Module
             return Results.ValidationProblem(errors);
         }
 
-        var applicationId = await membershipApplicationService.SubmitMembershipApplication(capabilityId, userId);
-
-        return Results.CreatedAtRoute("get membership application", new {id = applicationId.ToString()});
+        try
+        {
+            var applicationId = await membershipApplicationService.SubmitMembershipApplication(capabilityId, userId);
+            return Results.CreatedAtRoute("get membership application", new {id = applicationId.ToString()});
+        }
+        catch (EntityNotFoundException<Capability>)
+        {
+            return Results.NotFound(new ProblemDetails
+            {
+                Title = "Capability not found",
+                Detail = $"Capability \"{capabilityId}\" is unknown by the system." 
+            });
+        }
+        catch (PendingMembershipApplicationAlreadyExistsException)
+        {
+            return Results.Conflict(new ProblemDetails
+            {
+                Title = "Already has pending membership application",
+                Detail = $"User \"{userId}\" already has a pending membership application for capability \"{capabilityId}\"."
+            });
+        }
     }
 }
 

@@ -25,7 +25,7 @@ public static class Serilog
                 .MinimumLevel.Override("Microsoft.Extensions.Http.DefaultHttpClientFactory", LogEventLevel.Information)
                 .MinimumLevel.Override("Microsoft.Extensions.Diagnostics.HealthChecks", LogEventLevel.Warning)
                 .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning)
-                .MinimumLevel.Override("Dafda", LogEventLevel.Warning);
+                .MinimumLevel.Override("Dafda", LogEventLevel.Information);
 
             if (humanReadableLog)
             {
