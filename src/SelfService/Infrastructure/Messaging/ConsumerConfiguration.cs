@@ -41,11 +41,18 @@ public static class ConsumerConfiguration
             options.RegisterMessageHandler<Placeholder, PlaceholderHandler>(topic, Placeholder.EventType);
 
             options
+                .ForTopic($"{TopicPrefix}.kafkatopic")
+                .Ignore("new-kafka-topic-has-been-requested")
+                ;
+
+            options
                 .ForTopic($"{TopicPrefix}.membershipapplication")
-                .Ignore("new-membership-application-has-been-submitted");
+                .Ignore("new-membership-application-has-been-submitted")
+                ;
         });
     }
 }
+
 public static class ConsumerOptionsExtensions
 {
     public static TopicConsumerOptions ForTopic(this ConsumerOptions options, string topic)

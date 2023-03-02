@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
@@ -396,22 +395,4 @@ public static class Module
             });
         }
     }
-}
-
-public class NewKafkaTopicRequest
-{
-    [Required]
-    public string? KafkaClusterId { get; set; }
-
-    [Required]
-    public string? KafkaTopicName { get; set; }
-
-    [Required]
-    public string? Description { get; set; }
-
-    [Required]
-    public uint? Partitions { get; set; }
-
-    [Required]
-    public string? Retention { get; set; }
 }

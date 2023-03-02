@@ -83,7 +83,8 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
             KafkaTopicId = instance.Id.ToString(),
             KafkaClusterId = kafkaClusterId.ToString(),
             CapabilityId = capabilityId.ToString(),
-
+            Partitions = instance.Partitions.ToValue(),
+            Retention = instance.Retention.ToString()
         });
 
         return instance;
@@ -112,6 +113,8 @@ public class KafkaTopicPartitions : ValueObject
     {
         return _value.ToString();
     }
+
+    public uint ToValue() => _value;
 
     public static KafkaTopicPartitions From(uint value)
     {
