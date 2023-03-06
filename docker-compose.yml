@@ -76,6 +76,7 @@ services:
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.awsaccount && \
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.kafkacluster && \
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.kafkatopic && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.confluentgateway.provisioning && \
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic hello'"
 
     environment:
@@ -95,3 +96,15 @@ services:
       - DAFDA_OUTBOX_NOTIFICATION_CHANNEL=dafda_outbox
       - GENDIS_PREFIX_FOR_KAFKA=GENDIS_KAFKA_
       - GENDIS_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+
+  fake-confluent-gateway:
+    build: ./fake_dependencies/confluent-gateway
+    depends_on:
+      kafka-setup:
+        condition: service_completed_successfully
+    volumes:
+      - ./fake_dependencies/confluent-gateway/FakeConfluentGateway.App:/app
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+    ports:
+      - 5051:5051
