@@ -18,7 +18,7 @@ public static class ConsumerConfiguration
             options
                 .ForTopic($"{TopicPrefix}.kafkatopic")
                 .Register<NewKafkaTopicHasBeenRequested>(
-                    messageType: "new-kafka-topic-has-been-requested",
+                    messageType: "topic-requested",
                     keySelector: x => x.KafkaTopicId!
                 )
                 ;
@@ -26,7 +26,7 @@ public static class ConsumerConfiguration
             options
                 .ForTopic($"{TopicPrefix}.membershipapplication")
                 .Register<NewMembershipApplicationHasBeenSubmitted>(
-                    messageType: "new-membership-application-has-been-submitted",
+                    messageType: "membership-submitted",
                     keySelector: x => x.MembershipApplicationId!
                 )
                 ;
@@ -42,12 +42,12 @@ public static class ConsumerConfiguration
 
             options
                 .ForTopic($"{TopicPrefix}.kafkatopic")
-                .Ignore("new-kafka-topic-has-been-requested")
+                .Ignore("topic-requested")
                 ;
 
             options
                 .ForTopic($"{TopicPrefix}.membershipapplication")
-                .Ignore("new-membership-application-has-been-submitted")
+                .Ignore("membership-submitted")
                 ;
         });
     }
