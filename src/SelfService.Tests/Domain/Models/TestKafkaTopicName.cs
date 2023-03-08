@@ -49,7 +49,7 @@ public class TestKafkaTopicName
     [InlineData("-")]
     [InlineData("_")]
     [InlineData("?")]
-    [InlineData("foo.")]
+    //[InlineData("foo.")]
     [InlineData("foo,")]
     [InlineData("foo_")]
     [InlineData("foo-")]

@@ -1,4 +1,5 @@
 ﻿using Dafda.Configuration;
+using Dafda.Consuming;
 
 namespace FakeConfluentGateway.App.Configuration;
 
@@ -13,9 +14,6 @@ public static class Dafda
             options.WithConfigurationSource(builder.Configuration);
             options.WithEnvironmentStyle("DEFAULT_KAFKA");
 
-            var topic = builder.Configuration["SS_APISPECS_TOPIC"];
-            options.RegisterMessageHandler<Placeholder, PlaceholderHandler>(topic, Placeholder.EventType);
-
             options
                 .ForTopic($"{TopicPrefix}.kafkatopic")
                 .Ignore("new-kafka-topic-has-been-requested")
@@ -26,5 +24,40 @@ public static class Dafda
                 .Ignore("new-membership-application-has-been-submitted")
                 ;
         });
+    }
+}
+
+public static class ConsumerOptionsExtensions
+{
+    public static TopicConsumerOptions ForTopic(this ConsumerOptions options, string topic)
+    {
+        return new TopicConsumerOptions(options, topic);
+    }
+
+    public class TopicConsumerOptions
+    {
+        private readonly ConsumerOptions _options;
+        private readonly string _topic;
+
+        public TopicConsumerOptions(ConsumerOptions options, string topic)
+        {
+            _options = options;
+            _topic = topic;
+        }
+
+        public TopicConsumerOptions RegisterMessageHandler<TMessage, TMessageHandler>(
+            string messageType)
+            where TMessage : class
+            where TMessageHandler : class, IMessageHandler<TMessage>
+        {
+            _options.RegisterMessageHandler<TMessage, TMessageHandler>(_topic, messageType);
+            return this;
+        }
+
+        public TopicConsumerOptions Ignore(string messageType)
+        {
+            _options.RegisterMessageHandler<object, NoOpHandler>(_topic, messageType);
+            return this;
+        }
     }
 }
