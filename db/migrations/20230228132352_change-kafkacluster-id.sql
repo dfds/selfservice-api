@@ -3,8 +3,10 @@
 alter table "KafkaTopic" 
     ALTER COLUMN "KafkaClusterId" TYPE varchar(255);
 
-update "KafkaTopic" kt set "KafkaClusterId" = c."RealClusterId"
-from "KafkaCluster" c where c."Id" = kt."Id";
+update "KafkaTopic" as kt 
+set "KafkaClusterId" = c."RealClusterId"
+from "KafkaCluster" c 
+where c."Id" = kt."Id";
 	
 
 alter table "KafkaCluster"
