@@ -37,4 +37,23 @@ public class KafkaTopicRepository : IKafkaTopicRepository
 
         return result;
     }
+
+    public async Task<KafkaTopic?> FindBy(KafkaTopicId id)
+    {
+        return await _dbContext.KafkaTopics.FindAsync(id);
+    }
+
+    public async Task<IEnumerable<KafkaTopic>> GetAllPublic()
+    {
+        return await _dbContext.KafkaTopics
+            .Where(x => ((string) x.Name).StartsWith("pub."))
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<KafkaTopic>> FindBy(CapabilityId capabilityId)
+    {
+        return await _dbContext.KafkaTopics
+            .Where(x => x.CapabilityId == capabilityId)
+            .ToListAsync();
+    }
 }

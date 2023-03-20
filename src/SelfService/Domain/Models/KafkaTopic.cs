@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using SelfService.Domain.Events;
 
 namespace SelfService.Domain.Models;
@@ -24,6 +23,20 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
     public CapabilityId CapabilityId { get; private set; }
     public KafkaClusterId KafkaClusterId { get; private set; }
     public KafkaTopicName Name { get; private set; }
+
+    /// <summary>
+    /// This is a computed value based on the name of the topic. It must begin with "pub."
+    /// to be public, if not it is considered to be private. This value is not stored as
+    /// part of this entity.
+    /// </summary>
+    public bool IsPublic => Name.ToString().StartsWith("pub.");
+
+    /// <summary>
+    /// This is a computed value based on the name of the topic. It must begin with "pub."
+    /// to be public, if not it is considered to be private. This value is not stored as
+    /// part of this entity.
+    /// </summary>
+    public bool IsPrivate => !IsPublic;
 
     public string Description { get; private set; }
 
@@ -89,111 +102,4 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
 
         return instance;
     }
-}
-
-public class KafkaTopicPartitions : ValueObject
-{
-    public static KafkaTopicPartitions One = new(1);
-    public static KafkaTopicPartitions Three = new(3);
-    public static KafkaTopicPartitions Six = new(6);
-
-    private readonly uint _value;
-
-    private KafkaTopicPartitions(uint value)
-    {
-        _value = value;
-    }
-
-    protected override IEnumerable<object> GetEqualityComponents()
-    {
-        yield return _value;
-    }
-
-    public override string ToString()
-    {
-        return _value.ToString();
-    }
-
-    public uint ToValue() => _value;
-
-    public static KafkaTopicPartitions From(uint value)
-    {
-        if (TryCreate(value, out var partitions))
-        {
-            return partitions;
-        }
-
-        throw new ArgumentOutOfRangeException(nameof(value), $"Value \"{value}\" is not supported as partition count.");
-    }
-
-    public static bool TryCreate(uint value, out KafkaTopicPartitions partitions)
-    {
-        var supportedValues = new uint[] { One, Three, Six };
-
-        if (supportedValues.Contains(value))
-        {
-            partitions = new KafkaTopicPartitions(value);
-            return true;
-        }
-
-        partitions = null!;
-        return false;
-    }
-
-    public static implicit operator KafkaTopicPartitions(uint value) => new(value);
-    public static implicit operator uint(KafkaTopicPartitions partitions) => partitions._value;
-}
-
-public class KafkaTopicRetention : ValueObject
-{
-    public static KafkaTopicRetention OneDay = new KafkaTopicRetention("1d");
-    public static KafkaTopicRetention SevenDays = new KafkaTopicRetention("7d");
-    public static KafkaTopicRetention ThirtyOneDays = new KafkaTopicRetention("31d");
-    public static KafkaTopicRetention OneYear = new KafkaTopicRetention("365d");
-    public static KafkaTopicRetention Forever = new KafkaTopicRetention("forever");
-
-    private readonly string _value;
-
-    private KafkaTopicRetention(string value)
-    {
-        _value = value;
-    }
-
-    protected override IEnumerable<object> GetEqualityComponents()
-    {
-        yield return _value;
-    }
-
-    public override string ToString()
-    {
-        return _value;
-    }
-
-    public static KafkaTopicRetention Parse(string? text)
-    {
-        if (TryParse(text, out var retention))
-        {
-            return retention;
-        }
-
-        throw new FormatException($"Value \"{text}\" is not a valid/supported topic retention.");
-    }
-
-    public static bool TryParse(string? text, out KafkaTopicRetention retention)
-    {
-        var candidate = text ?? "";
-
-        var match = Regex.Match(candidate, @"^(?<days>\d+)[dD]$");
-        if ((match.Success && match.Groups["days"].Value != "0") || "forever".Equals(candidate, StringComparison.InvariantCultureIgnoreCase))
-        {
-            retention = new KafkaTopicRetention(text!.ToLowerInvariant());
-            return true;
-        }
-
-        retention = null!;
-        return false;
-    }
-
-    public static implicit operator string(KafkaTopicRetention retention) => retention._value;
-    public static implicit operator KafkaTopicRetention(string value) => Parse(value);
 }

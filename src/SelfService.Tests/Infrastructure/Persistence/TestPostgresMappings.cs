@@ -178,4 +178,27 @@ public class TestPostgresMappings
             comparer: new MembershipApprovalComparer()
         );
     }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task messagecontract()
+    {
+        await using var databaseFactory = new ExternalDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext();
+
+        var stub = A.MessageContract.Build();
+        
+        // write
+        await dbContext.MessageContracts.AddAsync(stub);
+        await dbContext.SaveChangesAsync();
+
+        // read
+        var storedVersion = await dbContext.MessageContracts.FindAsync(stub.Id);
+
+        Assert.Equal(
+            expected: stub,
+            actual: storedVersion,
+            comparer: new MessageContractComparer()
+        );
+    }
 }

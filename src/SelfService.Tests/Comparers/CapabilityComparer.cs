@@ -294,3 +294,56 @@ public class MembershipApprovalComparer : IEqualityComparer<MembershipApproval?>
         return HashCode.Combine(obj.ApprovedBy, obj.ApprovedAt);
     }
 }
+
+public class MessageContractComparer : IEqualityComparer<MessageContract?>
+{
+    public bool Equals(MessageContract? x, MessageContract? y)
+    {
+        if (ReferenceEquals(x, y))
+        {
+            return true;
+        }
+
+        if (ReferenceEquals(x, null))
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(y, null))
+        {
+            return false;
+        }
+
+        if (x.GetType() != y.GetType())
+        {
+            return false;
+        }
+
+        return x.KafkaTopicId.Equals(y.KafkaTopicId) &&
+               x.MessageType.Equals(y.MessageType) &&
+               x.Example.Equals(y.Example) &&
+               x.Schema.Equals(y.Schema) &&
+               x.Description == y.Description &&
+               x.Status.Equals(y.Status) &&
+               x.CreatedAt.Equals(y.CreatedAt) &&
+               x.CreatedBy == y.CreatedBy &&
+               Nullable.Equals(x.ModifiedAt, y.ModifiedAt) &&
+               x.ModifiedBy == y.ModifiedBy;
+    }
+
+    public int GetHashCode(MessageContract obj)
+    {
+        var hashCode = new HashCode();
+        hashCode.Add(obj.KafkaTopicId);
+        hashCode.Add(obj.MessageType);
+        hashCode.Add(obj.Example);
+        hashCode.Add(obj.Schema);
+        hashCode.Add(obj.Description);
+        hashCode.Add(obj.Status);
+        hashCode.Add(obj.CreatedAt);
+        hashCode.Add(obj.CreatedBy);
+        hashCode.Add(obj.ModifiedAt);
+        hashCode.Add(obj.ModifiedBy);
+        return hashCode.ToHashCode();
+    }
+}

@@ -9,9 +9,22 @@ public static class DependencyInjection
 {
     public static void AddDatabase(this WebApplicationBuilder builder)
     {
-        builder.Services.AddDbContext<SelfServiceDbContext>(options =>
+        builder.Services.AddDbContext<SelfServiceDbContext>(options => 
         {
             options.UseNpgsql(builder.Configuration["SS_CONNECTION_STRING"]);
+
+            if (builder.Environment.IsDevelopment())
+            {
+                options
+                    .UseLoggerFactory(LoggerFactory.Create(loggerConfig =>
+                    {
+                        loggerConfig
+                            .AddConsole()
+                            .AddFilter(DbLoggerCategory.Database.Command.Name, LogLevel.Information);
+
+                    }))
+                    .EnableSensitiveDataLogging();
+            }
         });
     }
 }
@@ -33,6 +46,7 @@ public class SelfServiceDbContext : DbContext
 
     public DbSet<KafkaCluster> KafkaClusters { get; set; } = null!;
     public DbSet<KafkaTopic> KafkaTopics { get; set; } = null!;
+    public DbSet<MessageContract> MessageContracts { get; set; } = null!;
 
     public DbSet<ServiceDescription> ServiceCatalog { get; set; } = null!;
 
@@ -99,6 +113,26 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder
             .Properties<KafkaTopicRetention>()
             .HaveConversion<KafkaTopicRetentionConverter>();
+
+        configurationBuilder
+            .Properties<MessageContractId>()
+            .HaveConversion<MessageContractIdConverter>();
+
+        configurationBuilder
+            .Properties<MessageType>()
+            .HaveConversion<MessageTypeConverter>();
+
+        configurationBuilder
+            .Properties<MessageContractExample>()
+            .HaveConversion<MessageContractExampleConverter>();
+
+        configurationBuilder
+            .Properties<MessageContractSchema>()
+            .HaveConversion<MessageContractSchemaConverter>();
+
+        configurationBuilder
+            .Properties<MessageContractStatus>()
+            .HaveConversion<MessageContractStatusConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -205,8 +239,27 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.ModifiedAt);
             cfg.Property(x => x.ModifiedBy);
+
+            cfg.Ignore(x => x.IsPublic);
+            cfg.Ignore(x => x.IsPrivate);
         });
 
+        modelBuilder.Entity<MessageContract>(cfg =>
+        {
+            cfg.ToTable("MessageContract");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.KafkaTopicId);
+            cfg.Property(x => x.MessageType);
+            cfg.Property(x => x.Description);
+            cfg.Property(x => x.Example);
+            cfg.Property(x => x.Schema);
+            cfg.Property(x => x.Status);
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.ModifiedAt);
+            cfg.Property(x => x.ModifiedBy);
+        });
+        
         // ----------------------------------------------
 
         modelBuilder.Entity<ServiceDescription>(cfg =>

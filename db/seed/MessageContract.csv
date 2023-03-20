@@ -1,0 +1,3 @@
+Id;KafkaTopicId;MessageType;Description;Example;Schema;Status;CreatedAt;CreatedBy;ModifiedAt;ModifiedBy
+AC4E4454-A30A-4731-989F-CA478D8AD979;269C3064-E1AD-49A8-8FE8-781E04A51303;something-created;Something has been created - cool!;{"foo": "bar"};{"fooschema": "barschema"};Provisioned;2023-02-10T08:00:00;SeedScript;2023-02-10T08:00:00;SeedScript
+16A8159E-F61F-431D-9A22-D3BF03F4FBD2;269C3064-E1AD-49A8-8FE8-781E04A51303;something-updated;Someone updated something - yay!;{"foo2": "bar2"};{"foo2schema": "bar2schema"};In Progress;2023-02-10T08:00:00;SeedScript;2023-02-10T08:00:00;SeedScript

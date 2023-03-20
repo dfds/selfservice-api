@@ -1,5 +1,8 @@
 AwsAccount.csv
 Capability.csv
+Member.csv
+Membership.csv
 KafkaCluster.csv
 KafkaTopic.csv
+MessageContract.csv
 ServiceCatalog.csv

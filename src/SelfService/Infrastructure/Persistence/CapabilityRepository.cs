@@ -15,16 +15,18 @@ public class CapabilityRepository : ICapabilityRepository
 
     public async Task<Capability> Get(CapabilityId id)
     {
-        var found = await _dbContext
-            .Capabilities
-            .SingleOrDefaultAsync(x => x.Id == id);
-
+        var found = await _dbContext.Capabilities.FindAsync(id);
         if (found is null)
         {
-            throw new EntityNotFoundException($"Capability with id \"{id}\" could not be found.");
+            throw EntityNotFoundException<Capability>.UsingId(id);
         }
 
         return found;
+    }
+
+    public async Task<Capability?> FindBy(CapabilityId id)
+    {
+        return await _dbContext.Capabilities.FindAsync(id);
     }
 
     public async Task<bool> Exists(CapabilityId id)
@@ -35,5 +37,14 @@ public class CapabilityRepository : ICapabilityRepository
     public async Task Add(Capability capability)
     {
         await _dbContext.Capabilities.AddAsync(capability);
+    }
+
+    public async Task<IEnumerable<Capability>> GetAll()
+    {
+        return await _dbContext
+            .Capabilities
+            .Where(c => c.Deleted == null)
+            .OrderBy(x => x.Name)
+            .ToListAsync();
     }
 }

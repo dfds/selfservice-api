@@ -65,3 +65,38 @@ public class CapabilityKafkaTopicsQuery : ICapabilityKafkaTopicsQuery
             .ToListAsync();
     }
 }
+
+public class MembershipQuery :  IMembershipQuery
+{
+    private readonly SelfServiceDbContext _dbContext;
+
+    public MembershipQuery(SelfServiceDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public async Task<bool> HasActiveMembership(UserId userId, CapabilityId capabilityId)
+    {
+        // NOTE [jandr@2023-03-16]: this is based on membership entities are deleted when 
+        // members leave a capability - but it would be better of the membership became
+        // inactive instead (maybe with a termination date on the entity)
+
+        var activeMemberships = await _dbContext.Memberships
+            .Where(x => x.UserId == userId && x.CapabilityId == capabilityId)
+            .CountAsync();
+
+        return activeMemberships > 0;
+    }
+
+    public async Task<IEnumerable<Membership>> FindActiveBy(UserId userId)
+    {
+        // NOTE [jandr@2023-03-16]: this is based on membership entities are deleted when 
+        // members leave a capability - but it would be better of the membership became
+        // inactive instead (maybe with a termination date on the entity)
+
+        return await _dbContext.Memberships
+            .Where(x => x.UserId == userId)
+            .ToListAsync();
+    }
+}
+

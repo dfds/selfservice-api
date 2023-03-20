@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Identity.Web;
 using SelfService;
 using SelfService.Configuration;
 using SelfService.Infrastructure.Api;
@@ -28,20 +25,8 @@ try
     builder.AddDatabase();
     builder.AddMessaging();
     builder.AddDomain();
-
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
-
-    builder.Services.AddAuthorization(opt =>
-    {
-        opt.FallbackPolicy = new AuthorizationPolicyBuilder()
-            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-            .RequireAuthenticatedUser()
-            .Build();
-    });
-
-    // NOTE: enable to debug authentication issues
-    // IdentityModelEventSource.ShowPII = true;
+    builder.AddApi();
+    builder.AddSecurity();
 
     // **PLEASE NOTE** : keep this as the last configuration!
     builder.ConfigureAspects();
@@ -55,7 +40,8 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
-    
+
+    app.MapControllers();
     app.MapEndpoints();
 
     app.UseSerilogRequestLogging();

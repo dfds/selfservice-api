@@ -35,7 +35,7 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
     public bool IsFinalized => _status == MempershipApplicationStatusOptions.Finalized;
     public bool IsCancelled => _status == MempershipApplicationStatusOptions.Cancelled;
     
-    public void Approve(UserId approvedBy, DateTime approvedAt)
+    public void Approve(UserId approvedBy, DateTime approvedAt) 
     {
         if (approvedBy == Applicant)
         {
