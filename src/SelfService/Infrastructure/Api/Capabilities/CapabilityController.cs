@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
@@ -10,6 +11,7 @@ using SelfService.Infrastructure.Persistence;
 namespace SelfService.Infrastructure.Api.Capabilities;
 
 [Route("capabilities")]
+[Produces("application/json")]
 [ApiController]
 public class CapabilityController : ControllerBase
 {
@@ -79,22 +81,40 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpGet("{id:required}")]
+    [ProducesResponseType(typeof(CapabilityApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityById(string id)
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied!",
+                Detail = $"The user id is not valid and access to the resource cannot be granted.",
+                Status = StatusCodes.Status401Unauthorized
+            });
         }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
-            return NotFound();
+            return NotFound(new ProblemDetails
+            {
+                Title = "Capability not found",
+                Detail = $"No capability with id \"{id}\" is know by the system.",
+                Status = StatusCodes.Status404NotFound
+            });
         }
 
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability is null)
         {
-            return NotFound();
+            return NotFound(new ProblemDetails
+            {
+                Title = "Capability not found",
+                Detail = $"No capability with id \"{id}\" is know by the system.",
+                Status = StatusCodes.Status404NotFound
+            });
         }
 
         var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);

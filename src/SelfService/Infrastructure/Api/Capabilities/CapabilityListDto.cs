@@ -2,5 +2,5 @@
 
 public class CapabilityListDto : ResourceDtoBase
 {
-    public CapabilityDto[] Items { get; set; }
+    public CapabilityApiResource[] Items { get; set; }
 }

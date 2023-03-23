@@ -2,6 +2,7 @@
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
+[Obsolete]
 public abstract class ResourceDtoBase
 {
     [JsonPropertyName("_links")]

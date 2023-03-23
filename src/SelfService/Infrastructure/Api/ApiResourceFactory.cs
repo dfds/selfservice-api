@@ -100,7 +100,7 @@ public class ApiResourceFactory
         };
     }
 
-    public CapabilityDto Convert(Capability capability, UserAccessLevelOptions accessLevel)
+    public CapabilityApiResource Convert(Capability capability, UserAccessLevelOptions accessLevel)
     {
         var allowedInteractions = new List<string> {"GET"};
         if (accessLevel == UserAccessLevelOptions.ReadWrite)
@@ -108,50 +108,44 @@ public class ApiResourceFactory
             allowedInteractions.Add("POST");
         }
 
-        return new CapabilityDto
+        return new CapabilityApiResource
         {
             Id = capability.Id,
             Name = capability.Name,
             Description = capability.Description,
             Links =
             {
+                Self = 
                 {
-                    "self", new ResourceLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext, 
-                            action: nameof(CapabilityController.GetCapabilityById), 
-                            controller: GetNameOf<CapabilityController>(), 
-                            values: new {id = capability.Id}) ?? "",
-                        Rel = "self",
-                        Allow = {"GET"}
-                    }
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(CapabilityController.GetCapabilityById),
+                        controller: GetNameOf<CapabilityController>(),
+                        values: new {id = capability.Id}) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
                 },
+                Members = 
                 {
-                    "members", new ResourceLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            action: nameof(CapabilityController.GetCapabilityMembers),
-                            controller: GetNameOf<CapabilityController>(),
-                            values: new {id = capability.Id}) ?? "",
-                        Rel = "related",
-                        Allow = {"GET"}
-                    }
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(CapabilityController.GetCapabilityMembers),
+                        controller: GetNameOf<CapabilityController>(),
+                        values: new {id = capability.Id}) ?? "",
+                    Rel = "related",
+                    Allow = {"GET"}
                 },
+                Topics = 
                 {
-                    "topics", new ResourceLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            action: nameof(CapabilityController.GetCapabilityTopics),
-                            controller: GetNameOf<CapabilityController>(),
-                            values: new {id = capability.Id}) ?? "",
-                        Rel = "related",
-                        Allow = allowedInteractions
-                    }
-                },
-            }
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(CapabilityController.GetCapabilityTopics),
+                        controller: GetNameOf<CapabilityController>(),
+                        values: new {id = capability.Id}) ?? "",
+                    Rel = "related",
+                    Allow = allowedInteractions
+                }
+            },
         };
     }
 
