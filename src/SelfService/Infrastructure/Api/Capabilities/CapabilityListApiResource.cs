@@ -7,7 +7,7 @@ public class CapabilityListApiResource
     public CapabilityDetailsApiResource[] Items { get; set; }
 
     [JsonPropertyName("_links")]
-    public CapabilityListLinks Links { get; set; }
+    public CapabilityListLinks Links { get; set; } = new();
 
     public class CapabilityListLinks
     {

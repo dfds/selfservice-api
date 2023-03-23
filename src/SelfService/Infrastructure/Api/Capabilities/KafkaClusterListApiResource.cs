@@ -4,10 +4,10 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class KafkaClusterListApiResource
 {
-    public KafkaClusterDto[] Items { get; set; }
+    public KafkaClusterApiResource[] Items { get; set; }
 
     [JsonPropertyName("_links")]
-    public KafkaClusterListLinks Links { get; set; }
+    public KafkaClusterListLinks Links { get; set; } = new();
 
     public class KafkaClusterListLinks
     {

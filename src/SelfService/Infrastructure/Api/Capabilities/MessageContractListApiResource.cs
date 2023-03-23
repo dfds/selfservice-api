@@ -4,10 +4,10 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class MessageContractListApiResource
 {
-    public MessageContractDto[] Items { get; set; }
+    public MessageContractApiResource[] Items { get; set; }
 
     [JsonPropertyName("_links")]
-    public MessageContractListLinks Links { get; set; }
+    public MessageContractListLinks Links { get; set; } = new();
 
     public class MessageContractListLinks
     {

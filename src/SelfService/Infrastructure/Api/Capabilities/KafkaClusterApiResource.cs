@@ -2,19 +2,18 @@
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
-public class CapabilityDetailsApiResource
+public class KafkaClusterApiResource
 {
     public string Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
 
     [JsonPropertyName("_links")]
-    public CapabilityDetailsLinks Links { get; set; } = new();
+    public KafkaClusterLinks Links { get; set; } = new();
 
-    public class CapabilityDetailsLinks
+    public class KafkaClusterLinks
     {
         public ResourceLink Self { get; set; }
-        public ResourceLink Members { get; set; }
-        public ResourceLink Topics { get; set; }
     }
+
 }

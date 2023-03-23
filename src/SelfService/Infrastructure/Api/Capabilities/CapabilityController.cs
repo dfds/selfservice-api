@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
@@ -399,55 +398,5 @@ public class CapabilityController : ControllerBase
                 Detail = err.Message,
             });
         }
-    }
-}
-
-public class MembershipApprovalApiResource
-{
-    public string Id { get; set; }
-    public string ApprovedBy { get; set; }
-    public string ApprovedAt { get; set; }
-}
-
-public class MembershipApprovalListApiResource
-{
-    public MembershipApprovalApiResource[] Items { get; set; }
-
-    [JsonPropertyName("_links")]
-    public MembershipApprovalListLinks Links { get; set; }
-
-    public class MembershipApprovalListLinks
-    {
-        public ResourceLink Self { get; set; }
-    }
-}
-
-public class MembershipApplicationApiResource
-{
-    public string Id { get; set; }
-    public string Applicant { get; set; }
-    public string SubmittedAt { get; set; }
-    public string DeadlineAt { get; set; }
-    public MembershipApprovalListApiResource Approvals { get; set; }
-
-    [JsonPropertyName("_links")]
-    public MembershipApplicationLinks Links { get; set; }
-
-    public class MembershipApplicationLinks
-    {
-        public ResourceLink Self { get; set; }
-    }
-}
-
-public class MembershipApplicationListApiResource
-{
-    public MembershipApplicationApiResource[] Items { get; set; }
-
-    [JsonPropertyName("_links")]
-    public MembershipApplicationListLinks Links { get; set; }
-
-    public class MembershipApplicationListLinks
-    {
-        public ResourceLink Self { get; set; }
     }
 }

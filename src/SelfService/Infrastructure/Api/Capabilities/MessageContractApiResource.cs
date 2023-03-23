@@ -2,7 +2,7 @@
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
-public class MessageContractDto
+public class MessageContractApiResource
 {
     public string Id { get; set; }
     public string MessageType { get; set; }
@@ -13,7 +13,7 @@ public class MessageContractDto
     public string Status { get; set; }
 
     [JsonPropertyName("_links")]
-    public MessageContractLinks Links { get; set; }
+    public MessageContractLinks Links { get; set; } = new();
 
     public class MessageContractLinks
     {

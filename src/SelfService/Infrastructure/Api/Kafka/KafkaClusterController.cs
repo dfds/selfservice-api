@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
-using SelfService.Infrastructure.Api.Capabilities;
-using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.Kafka;
 
@@ -19,20 +17,14 @@ public class KafkaClusterController : ControllerBase
     }
 
     [HttpGet("")]
-    public async Task<IResult> GetAllClusters([FromServices] SelfServiceDbContext context)
+    public async Task<IActionResult> GetAllClusters()
     {
         var clusters = await _clusterRepository.GetAll();
-
-        return Results.Ok(new ResourceListDto<KafkaClusterDto>
-        {
-            Items = clusters
-                .Select(_apiResourceFactory.Convert)
-                .ToArray()
-        });
+        return Ok(_apiResourceFactory.Convert(clusters));
     }
 
     [HttpGet("{id:required}")]
-    public async Task<IActionResult> GetById(string id, [FromServices] SelfServiceDbContext context)
+    public async Task<IActionResult> GetById(string id)
     {
         if (!KafkaClusterId.TryParse(id, out var kafkaClusterId))
         {

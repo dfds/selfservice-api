@@ -10,7 +10,7 @@ public class AwsAccountApiResource
     public string RoleEmail { get; set; }
 
     [JsonPropertyName("_links")]
-    public AwsAccountLinks Links { get; set; }
+    public AwsAccountLinks Links { get; set; } = new();
 
     public class AwsAccountLinks
     {

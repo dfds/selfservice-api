@@ -46,7 +46,7 @@ public class ApiResourceFactory
             KafkaClusterId = topic.KafkaClusterId,
             Partitions = topic.Partitions,
             Retention = topic.Retention,
-            Status = topic.Status switch 
+            Status = topic.Status switch
             {
                 KafkaTopicStatusType.Requested => "Requested",
                 KafkaTopicStatusType.InProgress => "In Progress",
@@ -151,27 +151,27 @@ public class ApiResourceFactory
         };
     }
 
-    public KafkaClusterDto Convert(KafkaCluster cluster)
+    public KafkaClusterApiResource Convert(KafkaCluster cluster)
     {
-        return new KafkaClusterDto
+        var resourceLink = new ResourceLink
         {
-            Id = cluster.Id.ToString(),
+            Href = _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(KafkaClusterController.GetById),
+                controller: GetNameOf<KafkaClusterController>(),
+                values: new {id = cluster.Id}) ?? "",
+            Rel = "self",
+            Allow = {"GET"}
+        };
+
+        return new KafkaClusterApiResource
+        {
+            Id = cluster.Id,
             Name = cluster.Name,
             Description = cluster.Description,
             Links =
             {
-                {
-                    "self", new ResourceLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            action: nameof(KafkaClusterController.GetById),
-                            controller: GetNameOf<KafkaClusterController>(),
-                            values: new {id = cluster.Id}) ?? "",
-                        Rel = "self",
-                        Allow = {"GET"}
-                    }
-                }
+                Self = resourceLink
             }
         };
     }
@@ -198,9 +198,9 @@ public class ApiResourceFactory
         };
     }
 
-    public MessageContractDto Convert(MessageContract messageContract)
+    public MessageContractApiResource Convert(MessageContract messageContract)
     {
-        return new MessageContractDto
+        return new MessageContractApiResource
         {
             Id = messageContract.Id,
             MessageType = messageContract.MessageType,

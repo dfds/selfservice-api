@@ -7,7 +7,7 @@ public class CapabilityMembersApiResource
     public MemberDto[] Items { get; set; }
 
     [JsonPropertyName("_links")]
-    public CapabilityMembersLinks Links { get; set; }
+    public CapabilityMembersLinks Links { get; set; } = new();
 
     public class CapabilityMembersLinks
     {
