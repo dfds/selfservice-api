@@ -1,6 +1,8 @@
-﻿namespace SelfService.Infrastructure.Api.Capabilities;
+﻿using System.Text.Json.Serialization;
 
-public class MessageContractDto : ResourceDtoBase
+namespace SelfService.Infrastructure.Api.Capabilities;
+
+public class MessageContractDto
 {
     public string Id { get; set; }
     public string MessageType { get; set; }
@@ -9,4 +11,12 @@ public class MessageContractDto : ResourceDtoBase
     public string Schema { get; set; }
     public string Example { get; set; }
     public string Status { get; set; }
+
+    [JsonPropertyName("_links")]
+    public MessageContractLinks Links { get; set; }
+
+    public class MessageContractLinks
+    {
+        public ResourceLink Self { get; set; }
+    }
 }

@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
@@ -7,6 +7,7 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Persistence;
+using static SelfService.Infrastructure.Api.Capabilities.MembershipApplicationApiResource;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
@@ -42,6 +43,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpGet("")]
+    [ProducesResponseType(typeof(CapabilityListApiResource), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllCapabilities()
     {
         var myCapabilities = new HashSet<CapabilityId>();
@@ -56,7 +58,7 @@ public class CapabilityController : ControllerBase
         
         var capabilities = await _capabilityRepository.GetAll();
 
-        return Ok(new CapabilityListDto()
+        return Ok(new CapabilityListApiResource
         {
             Items = capabilities
                 .Select(capability => _apiResourceFactory.Convert(
@@ -68,20 +70,18 @@ public class CapabilityController : ControllerBase
                 .ToArray(),
             Links =
             {
+                Self = new ResourceLink
                 {
-                    "self", new ResourceLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetAllCapabilities)) ?? "",
-                        Rel = "self",
-                        Allow = {"GET"}
-                    }
+                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetAllCapabilities)) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
                 }
             }
         });
     }
 
     [HttpGet("{id:required}")]
-    [ProducesResponseType(typeof(CapabilityApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CapabilityDetailsApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityById(string id)
@@ -123,6 +123,8 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpGet("{id:required}/members")]
+    [ProducesResponseType(typeof(CapabilityMembersApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityMembers(string id)
     {
         if (!CapabilityId.TryParse(id, out var capabilityId))
@@ -137,15 +139,27 @@ public class CapabilityController : ControllerBase
 
         var members = await _membersQuery.FindBy(capabilityId);
 
-        return Ok(new CapabilityMemberListDto
+        return Ok(new CapabilityMembersApiResource
         {
             Items = members
                 .Select(_apiResourceFactory.Convert)
                 .ToArray(),
-        }); 
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetCapabilityMembers), values: new {id = id}) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
+                }
+            }
+        });
     }
 
     [HttpGet("{id:required}/topics")]
+    [ProducesResponseType(typeof(CapabilityTopicsApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityTopics(string id)
     {
         if (!User.TryGetUserId(out var userId))
@@ -174,41 +188,35 @@ public class CapabilityController : ControllerBase
 
         var clusters = await _kafkaClusterRepository.GetAll();
 
-        return Ok(new CapabilityTopicsDto
+        return Ok(new CapabilityTopicsApiResource
         {
             Items = topics
                 .Select(topic  => _apiResourceFactory.Convert(topic, accessLevel))
                 .ToArray(),
             Embedded = 
             {
-                {
-                    "kafkaClusters", new KafkaClusterListDto
-                    {
-                        Items = clusters
-                            .Select(_apiResourceFactory.Convert)
-                            .ToArray(),
-                    }
-                }
+                KafkaClusters = _apiResourceFactory.Convert(clusters)
             },
-            Links = 
+            Links =
             {
+                Self = new ResourceLink
                 {
-                    "self", new ResourceLink
+                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetCapabilityTopics), values: new {id = id}) ?? "",
+                    Rel = "self",
+                    Allow = accessLevel switch
                     {
-                        Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetCapabilityTopics), values: new {id = id}) ?? "",
-                        Rel = "self",
-                        Allow = accessLevel switch
-                        {
-                            UserAccessLevelOptions.ReadWrite => new List<string> {"GET", "POST"},
-                            _ => new List<string> {"GET"},
-                        }
+                        UserAccessLevelOptions.ReadWrite => new List<string> {"GET", "POST"},
+                        _ => new List<string> {"GET"}
                     }
                 }
             }
         });
     }
 
-    [HttpGet("{id:required}/awsaccount")] // TODO [jandr@2023-03-20]: refactor - have been "moved as is"
+    [HttpGet("{id:required}/awsaccount")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityAwsAccount(string id, [FromServices] SelfServiceDbContext dbContext)
     {
         if (!User.TryGetUserId(out var userId))
@@ -238,17 +246,28 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        return Ok(new
+        return Ok(new AwsAccountApiResource
         {
-            Id = account.Id.ToString(),
-            AwsAccountId = account.AccountId.ToString(),
-            RoleArn = account.RoleArn.ToString(),
+            Id = account.Id,
+            AwsAccountId = account.AccountId,
+            RoleArn = account.RoleArn,
             RoleEmail = account.RoleEmail,
-            CreatedAt = account.CreatedAt.ToString("O"),
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetCapabilityAwsAccount), values: new {id = id}) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
+                }
+            }
         });
     }
 
-    [HttpGet("{id:required}/membershipapplications")] // TODO [jandr@2023-03-20]: refactor - have been "moved as is"
+    [HttpGet("{id:required}/membershipapplications")]
+    [ProducesResponseType(typeof(MembershipApplicationListApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityMembershipApplications(string id, [FromServices] SelfServiceDbContext dbContext)
     {
         if (!User.TryGetUserId(out var userId))
@@ -277,20 +296,23 @@ public class CapabilityController : ControllerBase
             .OrderBy(x => x.SubmittedAt)
             .ToListAsync();
 
-        return Ok(new
+        return Ok(new MembershipApplicationListApiResource
         {
-            items = applications
-                .Select(x => new
+            Items = applications
+                .Select(application => _apiResourceFactory.Convert(application, accessLevel, userId))
+                .ToArray(),
+            Links =
+            {
+                Self = new ResourceLink
                 {
-                    id = x.Id.ToString(),
-                    applicant = x.Applicant,
-                    submittedAt = x.SubmittedAt,
-                    deadlineAt = x.ExpiresOn,
-                    approvedBy = x.Approvals
-                        .Select(y => y.ApprovedBy)
-                        .ToArray()
-                })
-                .ToArray()
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(GetCapabilityMembershipApplications),
+                        values: new {id = id}) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
+                }
+            }
         });
     }
 
@@ -377,5 +399,55 @@ public class CapabilityController : ControllerBase
                 Detail = err.Message,
             });
         }
+    }
+}
+
+public class MembershipApprovalApiResource
+{
+    public string Id { get; set; }
+    public string ApprovedBy { get; set; }
+    public string ApprovedAt { get; set; }
+}
+
+public class MembershipApprovalListApiResource
+{
+    public MembershipApprovalApiResource[] Items { get; set; }
+
+    [JsonPropertyName("_links")]
+    public MembershipApprovalListLinks Links { get; set; }
+
+    public class MembershipApprovalListLinks
+    {
+        public ResourceLink Self { get; set; }
+    }
+}
+
+public class MembershipApplicationApiResource
+{
+    public string Id { get; set; }
+    public string Applicant { get; set; }
+    public string SubmittedAt { get; set; }
+    public string DeadlineAt { get; set; }
+    public MembershipApprovalListApiResource Approvals { get; set; }
+
+    [JsonPropertyName("_links")]
+    public MembershipApplicationLinks Links { get; set; }
+
+    public class MembershipApplicationLinks
+    {
+        public ResourceLink Self { get; set; }
+    }
+}
+
+public class MembershipApplicationListApiResource
+{
+    public MembershipApplicationApiResource[] Items { get; set; }
+
+    [JsonPropertyName("_links")]
+    public MembershipApplicationListLinks Links { get; set; }
+
+    public class MembershipApplicationListLinks
+    {
+        public ResourceLink Self { get; set; }
     }
 }

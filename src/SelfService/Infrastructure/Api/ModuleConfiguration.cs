@@ -1,7 +1,5 @@
 ﻿using SelfService.Infrastructure.Api.Apis;
 using SelfService.Infrastructure.Api.Me;
-using SelfService.Infrastructure.Api.MembershipApplications;
-using SelfService.Infrastructure.Api.Memberships;
 using SelfService.Infrastructure.Api.System;
 
 namespace SelfService.Infrastructure.Api;
@@ -13,7 +11,5 @@ public static class ModuleConfiguration
         app.MapSystemModule();
         app.MapMeEndpoints();
         app.MapServiceCatalogEndpoints();
-        app.MapMembershipEndpoints();
-        app.MapMembershipApplicationsEndpoints();
     }
 }

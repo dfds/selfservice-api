@@ -1,6 +1,8 @@
 ﻿using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Domain.Queries;
+using SelfService.Domain.Services;
 
 namespace SelfService.Application;
 
@@ -10,17 +12,21 @@ public class MembershipApplicationService : IMembershipApplicationService
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IMembershipRepository _membershipRepository;
     private readonly IMembershipApplicationRepository _membershipApplicationRepository;
+    private readonly IAuthorizationService _authorizationService;
     private readonly SystemTime _systemTime;
+    private readonly IMembershipQuery _membershipQuery;
 
     public MembershipApplicationService(ILogger<MembershipApplicationService> logger, ICapabilityRepository capabilityRepository, 
         IMembershipRepository membershipRepository, IMembershipApplicationRepository membershipApplicationRepository, 
-        SystemTime systemTime)
+        IAuthorizationService authorizationService, SystemTime systemTime, IMembershipQuery membershipQuery)
     {
         _logger = logger;
         _capabilityRepository = capabilityRepository;
         _membershipRepository = membershipRepository;
         _membershipApplicationRepository = membershipApplicationRepository;
+        _authorizationService = authorizationService;
         _systemTime = systemTime;
+        _membershipQuery = membershipQuery;
     }
 
     [TransactionalBoundary, Outboxed]
@@ -66,6 +72,11 @@ public class MembershipApplicationService : IMembershipApplicationService
         if (!await _capabilityRepository.Exists(capabilityId))
         {
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
+        }
+
+        if (await _membershipQuery.HasActiveMembership(userId, capabilityId))
+        {
+            throw new AlreadyHasActiveMembershipException($"User \"{userId}\" is already member of \"{capabilityId}\".");
         }
 
         var existingApplication = await _membershipApplicationRepository.FindPendingBy(capabilityId, userId);
@@ -126,6 +137,16 @@ public class MembershipApplicationService : IMembershipApplicationService
             approvedBy, applicationId);
 
         var application = await _membershipApplicationRepository.Get(applicationId);
+
+        var accessLevelForCapability = await _authorizationService.GetUserAccessLevelForCapability(approvedBy, application.CapabilityId);
+        if (accessLevelForCapability != UserAccessLevelOptions.ReadWrite)
+        {
+            _logger.LogError("User \"{UserId}\" is not authorized to approve membership application \"{MembershipApplicationId}\" for capability \"{CapabilityId}\".",
+                approvedBy, application.Id, application.CapabilityId);
+
+            throw new NotAuthorizedToApproveMembershipApplication($"User \"{approvedBy}\" is not authorized to approve membership application \"{application.Id}\" for capability \"{application.CapabilityId}\".");
+        }
+
         application.Approve(approvedBy, _systemTime.Now);
 
         _logger.LogDebug("Membership application {MembershipApplicationId} has received approval by {UserId} for capability {CapabilityId}",

@@ -16,10 +16,11 @@ public class KafkaTopicController : ControllerBase
     private readonly LinkGenerator _linkGenerator;
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IAuthorizationService _authorizationService;
+    private readonly IKafkaClusterRepository _clusterRepository;
 
     public KafkaTopicController(IKafkaTopicRepository kafkaTopicRepository, IMessageContractRepository messageContractRepository, 
         IMembershipQuery membershipQuery, LinkGenerator linkGenerator, ApiResourceFactory apiResourceFactory, 
-        IAuthorizationService authorizationService)
+        IAuthorizationService authorizationService, IKafkaClusterRepository clusterRepository)
     {
         _kafkaTopicRepository = kafkaTopicRepository;
         _messageContractRepository = messageContractRepository;
@@ -27,33 +28,41 @@ public class KafkaTopicController : ControllerBase
         _linkGenerator = linkGenerator;
         _apiResourceFactory = apiResourceFactory;
         _authorizationService = authorizationService;
+        _clusterRepository = clusterRepository;
     }
 
     [HttpGet("")]
+    [ProducesResponseType(typeof(KafkaTopicListApiResource), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllTopics()
     {
         var topics = await _kafkaTopicRepository.GetAllPublic();
+        var clusters = await _clusterRepository.GetAll();
 
-        return Ok(new ResourceListDto<KafkaTopicDto>
+        return Ok(new KafkaTopicListApiResource
         {
             Items = topics
-                .Select(x => _apiResourceFactory.Convert(x, UserAccessLevelOptions.Read)) // NOTE [jandr@2023-03-20]: Hardcoding access level to read - change that!
+                .Select(topic => _apiResourceFactory.Convert(topic, UserAccessLevelOptions.Read)) // NOTE [jandr@2023-03-20]: Hardcoding access level to read - change that!
                 .ToArray(),
+            Embedded =
+            {
+                KafkaClusters = _apiResourceFactory.Convert(clusters)
+            },
             Links =
             {
+                Self = new ResourceLink
                 {
-                    "self", new ResourceLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetAllTopics)) ?? "",
-                        Rel = "self",
-                        Allow = {"GET"}
-                    }
+                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetAllTopics)) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
                 }
             }
         });
     }
 
     [HttpGet("{id:required}")]
+    [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetTopic(string id)
     {
         if (!User.TryGetUserId(out var userId))
@@ -82,6 +91,9 @@ public class KafkaTopicController : ControllerBase
     }
 
     [HttpGet(template: "{id:required}/messagecontracts")]
+    [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetMessageContracts(string id)
     {
         if (!User.TryGetUserId(userId: out var userId))
@@ -108,7 +120,7 @@ public class KafkaTopicController : ControllerBase
 
         var contracts = await _messageContractRepository.FindBy(topicId: kafkaTopicId);
 
-        return Ok(value: _apiResourceFactory.Convert(
+        return Ok(_apiResourceFactory.Convert(
             contracts: contracts,
             kafkaTopicId: kafkaTopicId,
             accessLevel: hasAccess 

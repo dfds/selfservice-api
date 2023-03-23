@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.Kafka;
+using SelfService.Infrastructure.Api.MembershipApplications;
 
 namespace SelfService.Infrastructure.Api;
 
@@ -27,9 +28,16 @@ public class ApiResourceFactory
     private static string GetNameOf<TController>()  where TController : ControllerBase 
         => typeof(TController).Name.Replace("Controller", "");
 
-    public KafkaTopicDto Convert(KafkaTopic topic, UserAccessLevelOptions accessLevel)
+    public KafkaTopicApiResource Convert(KafkaTopic topic, UserAccessLevelOptions accessLevel)
     {
-        var result = new KafkaTopicDto
+        var messageContractsAccessLevel = Convert(accessLevel);
+        if (accessLevel == UserAccessLevelOptions.Read && topic.IsPrivate)
+        {
+            // remove all access if the topic is private and user just as read access
+            messageContractsAccessLevel.Clear();
+        }
+
+        var result = new KafkaTopicApiResource
         {
             Id = topic.Id,
             Name = topic.Name,
@@ -47,34 +55,28 @@ public class ApiResourceFactory
             },
             Links =
             {
+                Self = new ResourceLink
                 {
-                    "self", new ResourceLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            action: nameof(KafkaTopicController.GetTopic),
-                            controller: GetNameOf<KafkaTopicController>(),
-                            values: new {id = topic.Id}) ?? "",
-                        Rel = "self",
-                        Allow = {"GET"}
-                    }
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaTopicController.GetTopic),
+                        controller: GetNameOf<KafkaTopicController>(),
+                        values: new {id = topic.Id}) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
                 },
+                MessageContracts = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaTopicController.GetMessageContracts),
+                        controller: GetNameOf<KafkaTopicController>(),
+                        values: new {id = topic.Id}) ?? "?",
+                    Rel = "related",
+                    Allow = messageContractsAccessLevel
+                }
             }
         };
-
-        if (topic.IsPublic)
-        {
-            result.Links.Add("messageContracts", new ResourceLink
-            {
-                Href = _linkGenerator.GetUriByAction(
-                    httpContext: HttpContext,
-                    action: nameof(KafkaTopicController.GetMessageContracts),
-                    controller: GetNameOf<KafkaTopicController>(),
-                    values: new {id = topic.Id}) ?? "?",
-                Rel = "related",
-                Allow = Convert(accessLevel)
-            });
-        }
 
         return result;
     }
@@ -100,7 +102,7 @@ public class ApiResourceFactory
         };
     }
 
-    public CapabilityApiResource Convert(Capability capability, UserAccessLevelOptions accessLevel)
+    public CapabilityDetailsApiResource Convert(Capability capability, UserAccessLevelOptions accessLevel)
     {
         var allowedInteractions = new List<string> {"GET"};
         if (accessLevel == UserAccessLevelOptions.ReadWrite)
@@ -108,7 +110,7 @@ public class ApiResourceFactory
             allowedInteractions.Add("POST");
         }
 
-        return new CapabilityApiResource
+        return new CapabilityDetailsApiResource
         {
             Id = capability.Id,
             Name = capability.Name,
@@ -174,6 +176,28 @@ public class ApiResourceFactory
         };
     }
 
+    public KafkaClusterListApiResource Convert(IEnumerable<KafkaCluster> clusters)
+    {
+        return new KafkaClusterListApiResource
+        {
+            Items = clusters
+                .Select(Convert)
+                .ToArray(),
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaClusterController.GetAllClusters),
+                        controller: GetNameOf<KafkaClusterController>()) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
+                }
+            }
+        };
+    }
+
     public MessageContractDto Convert(MessageContract messageContract)
     {
         return new MessageContractDto
@@ -187,46 +211,103 @@ public class ApiResourceFactory
             Status = messageContract.Status,
             Links =
             {
+                Self = new ResourceLink
                 {
-                    "self", new ResourceLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext, 
-                            action: nameof(KafkaTopicController.GetSingleMessageContract), 
-                            controller: GetNameOf<KafkaTopicController>(),
-                            values: new { id = messageContract.KafkaTopicId, contractId = messageContract.Id}) ?? "",
-                        Rel = "self",
-                        Allow = {"GET"}
-                    }
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaTopicController.GetSingleMessageContract),
+                        controller: GetNameOf<KafkaTopicController>(),
+                        values: new {id = messageContract.KafkaTopicId, contractId = messageContract.Id}) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
                 }
             }
         };
     }
 
-    public ResourceListDto<MessageContractDto> Convert(IEnumerable<MessageContract> contracts, 
+    public MessageContractListApiResource Convert(IEnumerable<MessageContract> contracts, 
         KafkaTopicId kafkaTopicId, UserAccessLevelOptions accessLevel)
     {
-        return new ResourceListDto<MessageContractDto>
+        return new MessageContractListApiResource
         {
             Items = contracts
                 .Select(Convert)
                 .ToArray(),
             Links =
             {
+                Self = new ResourceLink
                 {
-                    "self", new ResourceLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            action: nameof(KafkaTopicController.GetMessageContracts),
-                            controller: GetNameOf<KafkaTopicController>(),
-                            values: new { id = kafkaTopicId }) ?? "",
-                        Rel = "self",
-                        Allow = Convert(accessLevel)
-                    }
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaTopicController.GetMessageContracts),
+                        controller: GetNameOf<KafkaTopicController>(),
+                        values: new {id = kafkaTopicId}) ?? "",
+                    Rel = "self",
+                    Allow = Convert(accessLevel)
                 }
             }
         };
     }
 
+    public MembershipApplicationApiResource Convert(MembershipApplication application, UserAccessLevelOptions initialAccessLevel, UserId currentUser)
+    {
+        var approvalsAccessLevel = application.HasApproved(currentUser)
+            ? UserAccessLevelOptions.Read
+            : initialAccessLevel;
+
+        return new MembershipApplicationApiResource
+        {
+            Id = application.Id.ToString(),
+            Applicant = application.Applicant,
+            SubmittedAt = application.SubmittedAt.ToUniversalTime().ToString("O"),
+            DeadlineAt = application.ExpiresOn.ToUniversalTime().ToString("O"),
+            Approvals = Convert(application.Approvals, application.Id, approvalsAccessLevel),
+            Links =
+            {
+                Self =
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(MembershipApplicationController.GetById),
+                        controller: GetNameOf<MembershipApplicationController>(),
+                        values: new { id = application.Id.ToString() }) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
+                }
+            }
+        };
+    }
+
+    public MembershipApprovalListApiResource Convert(IEnumerable<MembershipApproval> approvals, MembershipApplicationId parentApplicationId, UserAccessLevelOptions accessLevel)
+    {
+        return new MembershipApprovalListApiResource
+        {
+            Items = approvals
+                .Select(Convert)
+                .ToArray(),
+            Links =
+            {
+                Self =
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(MembershipApplicationController.GetMembershipApplicationApprovals),
+                        controller: GetNameOf<MembershipApplicationController>(),
+                        values: new { id = parentApplicationId }) ?? "",
+                    Rel = "self",
+                    Allow = Convert(accessLevel)
+                }
+            }
+        };
+    }
+
+    public MembershipApprovalApiResource Convert(MembershipApproval approval)
+    {
+        return new MembershipApprovalApiResource
+        {
+            Id = approval.Id.ToString("N"),
+            ApprovedBy = approval.ApprovedBy,
+            ApprovedAt = approval.ApprovedAt.ToUniversalTime().ToString("O")
+        };
+    }
 }

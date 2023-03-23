@@ -34,7 +34,9 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
 
     public bool IsFinalized => _status == MempershipApplicationStatusOptions.Finalized;
     public bool IsCancelled => _status == MempershipApplicationStatusOptions.Cancelled;
-    
+
+    public bool HasApproved(UserId userId) => _approvals.Any(x => x.ApprovedBy == userId);
+
     public void Approve(UserId approvedBy, DateTime approvedAt) 
     {
         if (approvedBy == Applicant)
@@ -53,7 +55,7 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
             return;
         }
         
-        if (_approvals.Any(x => x.ApprovedBy == approvedBy))
+        if (HasApproved(approvedBy))
         {
             // already approved by THIS user
             return;

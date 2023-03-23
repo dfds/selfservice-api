@@ -2,16 +2,16 @@
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
-public class CapabilityApiResource
+public class CapabilityDetailsApiResource
 {
     public string Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
 
     [JsonPropertyName("_links")]
-    public LinksSection Links { get; set; }
+    public CapabilityDetailsLinks Links { get; set; }
 
-    public class LinksSection
+    public class CapabilityDetailsLinks
     {
         public ResourceLink Self { get; set; }
         public ResourceLink Members { get; set; }
