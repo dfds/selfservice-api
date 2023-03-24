@@ -23,9 +23,19 @@ public class CapabilityId : ValueObject
 
     public static CapabilityId CreateFrom(string capabilityName)
     {
+        if (TryCreateFrom(capabilityName, out var capabilityId))
+        {
+            return capabilityId;
+        }
+        throw new FormatException($"The value \"{capabilityName}\" is not valid.");
+    }
+
+    public static bool TryCreateFrom(string? capabilityName, out CapabilityId id)
+    {
+        id = null!; //TODO [paulseghers] null object pattern for CapabilityId & logic for this
         if (string.IsNullOrWhiteSpace(capabilityName))
         {
-            throw new FormatException($"The value \"{capabilityName}\" is not valid.");
+            return false;
         }
 
         var value = capabilityName.ToLowerInvariant();
@@ -37,9 +47,15 @@ public class CapabilityId : ValueObject
         value = Regex.Replace(value, @"-+$", "");
         value = Regex.Replace(value, @"^-+", "");
         value = Regex.Replace(value, @"[^a-zA-Z0-9\-]", "");
-
-        return new CapabilityId(value);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+        
+        id = new CapabilityId(value);
+        return true;
     }
+
 
     public static CapabilityId Parse(string? text)
     {

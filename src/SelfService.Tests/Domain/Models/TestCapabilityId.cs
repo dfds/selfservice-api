@@ -24,4 +24,15 @@ public class TestCapabilityId
         var result = CapabilityId.CreateFrom(input);
         Assert.Equal(expected, result);
     }
+    
+    [Theory]
+    [InlineData("")]
+    [InlineData("    ")]
+    [InlineData(null)]
+    [InlineData("ððð")]
+    [InlineData("---")]
+    public void handles_bad_input(string input)
+    {
+        Assert.Throws<FormatException>(() => CapabilityId.CreateFrom(input));
+    }
 }
