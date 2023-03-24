@@ -13,7 +13,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly SystemTime _systemTime;
 
-    public CapabilityApplicationService(ILogger<CapabilityApplicationService> logger, ICapabilityRepository capabilityRepository, 
+    public CapabilityApplicationService(ILogger<CapabilityApplicationService> logger, ICapabilityRepository capabilityRepository,
         IKafkaTopicRepository kafkaTopicRepository, SystemTime systemTime)
     {
         _logger = logger;
@@ -22,8 +22,18 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _systemTime = systemTime;
     }
 
+    public async Task<CapabilityId> CreateNewCapability(string name, string description, string requestedBy)
+    {
+        var id = CapabilityId.CreateFrom(name);
+        var creationTime = _systemTime.Now;
+        var capability = new Capability(id, name,description, null, creationTime, requestedBy);
+        await _capabilityRepository.Add(capability);
+
+        return id;
+    }
+
     [TransactionalBoundary, Outboxed]
-    public async Task<KafkaTopicId> RequestNewTopic(CapabilityId capabilityId, KafkaClusterId kafkaClusterId, KafkaTopicName name, 
+    public async Task<KafkaTopicId> RequestNewTopic(CapabilityId capabilityId, KafkaClusterId kafkaClusterId, KafkaTopicName name,
         string description, KafkaTopicPartitions partitions, KafkaTopicRetention retention, string requestedBy)
     {
         using var _ = _logger.BeginScope("{Action} on {ImplementationType}", nameof(RequestNewTopic), this.GetType().FullName);
@@ -59,7 +69,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
         await _kafkaTopicRepository.Add(topic);
 
-        _logger.LogInformation("New topic {KafkaTopicName} for capability {CapabilityId} has been requested by {RequestedBy}", 
+        _logger.LogInformation("New topic {KafkaTopicName} for capability {CapabilityId} has been requested by {RequestedBy}",
             topic.Name, capabilityId, requestedBy);
 
         return topic.Id;

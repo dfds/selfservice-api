@@ -78,7 +78,37 @@ public class CapabilityController : ControllerBase
             }
         });
     }
+    
+    [HttpPost("")]
+    public async Task<IActionResult> CreateNewCapability([FromBody] NewCapabilityRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
 
+        if (!CapabilityId.TryCreateFrom(request.Name, out var capabilityId))
+        {
+            ModelState.AddModelError(nameof(request.Name),$"unable to create capability ID from name \"{request.Name}\"");
+        }
+        
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem();
+        }
+
+        await _capabilityApplicationService.CreateNewCapability(request.Name!, request.Description ?? "", userId);
+        var capability = await _capabilityRepository.Get(capabilityId);
+
+        return CreatedAtAction(
+            actionName: nameof(GetCapabilityById),
+            controllerName: "Capability",
+            routeValues: new {id = capability.Id},
+            value: _apiResourceFactory.Convert(capability, UserAccessLevelOptions.ReadWrite)
+        );
+
+    }
+    
     [HttpGet("{id:required}")]
     [ProducesResponseType(typeof(CapabilityDetailsApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]

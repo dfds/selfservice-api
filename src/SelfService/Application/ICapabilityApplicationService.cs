@@ -4,6 +4,7 @@ namespace SelfService.Application;
 
 public interface ICapabilityApplicationService
 {
-    Task<KafkaTopicId> RequestNewTopic(CapabilityId capabilityId, KafkaClusterId kafkaClusterId, KafkaTopicName name, 
+    Task<CapabilityId> CreateNewCapability(string name, string description, string requestedBy);
+    Task<KafkaTopicId> RequestNewTopic(CapabilityId capabilityId, KafkaClusterId kafkaClusterId, KafkaTopicName name,
         string description, KafkaTopicPartitions partitions, KafkaTopicRetention retention, string requestedBy);
 }
