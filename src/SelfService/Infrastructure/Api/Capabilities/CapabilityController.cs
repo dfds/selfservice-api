@@ -97,7 +97,7 @@ public class CapabilityController : ControllerBase
             return ValidationProblem();
         }
 
-        await _capabilityApplicationService.CreateNewCapability(request.Name!, request.Description ?? "", userId);
+        await _capabilityApplicationService.CreateNewCapability(capabilityId, request.Name!, request.Description ?? "", userId);
         var capability = await _capabilityRepository.Get(capabilityId);
 
         return CreatedAtAction(

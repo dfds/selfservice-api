@@ -22,14 +22,14 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _systemTime = systemTime;
     }
 
-    public async Task<CapabilityId> CreateNewCapability(string name, string description, string requestedBy)
+    public async Task<CapabilityId> CreateNewCapability(CapabilityId capabilityId, string name, string description,
+        string requestedBy)
     {
-        var id = CapabilityId.CreateFrom(name);
         var creationTime = _systemTime.Now;
-        var capability = new Capability(id, name,description, null, creationTime, requestedBy);
+        var capability = new Capability(capabilityId, name,description, null, creationTime, requestedBy);
         await _capabilityRepository.Add(capability);
-
-        return id;
+        // TODO [paulseghers & thfis]: check if capability already exists in db
+        return capabilityId;
     }
 
     [TransactionalBoundary, Outboxed]
