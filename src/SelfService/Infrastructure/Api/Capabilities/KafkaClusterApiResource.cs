@@ -13,7 +13,7 @@ public class KafkaClusterApiResource
 
     public class KafkaClusterLinks
     {
-        public ResourceLink Self { get; set; }
+        public ResourceLink Self { get; set; } = new();
     }
 
 }

@@ -11,6 +11,6 @@ public class MembershipApprovalListApiResource
 
     public class MembershipApprovalListLinks
     {
-        public ResourceLink Self { get; set; }
+        public ResourceLink Self { get; set; } = new();
     }
 }

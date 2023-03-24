@@ -20,6 +20,6 @@ public class CapabilityTopicsApiResource
 
     public class CapabilityTopicsLinks
     {
-        public ResourceLink Self { get; set; }
+        public ResourceLink Self { get; set; } = new();
     }
 }

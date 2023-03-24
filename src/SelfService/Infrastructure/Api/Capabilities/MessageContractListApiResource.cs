@@ -11,6 +11,6 @@ public class MessageContractListApiResource
 
     public class MessageContractListLinks
     {
-        public ResourceLink Self { get; set; }
+        public ResourceLink Self { get; set; } = new();
     }
 }

@@ -11,6 +11,6 @@ public class CapabilityMembersApiResource
 
     public class CapabilityMembersLinks
     {
-        public ResourceLink Self { get; set; }
+        public ResourceLink Self { get; set; } = new();
     }
 }

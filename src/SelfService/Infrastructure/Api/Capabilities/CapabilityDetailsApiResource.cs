@@ -13,8 +13,8 @@ public class CapabilityDetailsApiResource
 
     public class CapabilityDetailsLinks
     {
-        public ResourceLink Self { get; set; }
-        public ResourceLink Members { get; set; }
-        public ResourceLink Topics { get; set; }
+        public ResourceLink Self { get; set; } = new();
+        public ResourceLink Members { get; set; } = new();
+        public ResourceLink Topics { get; set; } = new();
     }
 }

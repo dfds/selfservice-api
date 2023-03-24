@@ -14,6 +14,6 @@ public class AwsAccountApiResource
 
     public class AwsAccountLinks
     {
-        public ResourceLink Self { get; set; }
+        public ResourceLink Self { get; set; } = new();
     }
 }

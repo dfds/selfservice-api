@@ -11,6 +11,6 @@ public class MembershipApplicationListApiResource
 
     public class MembershipApplicationListLinks
     {
-        public ResourceLink Self { get; set; }
+        public ResourceLink Self { get; set; } = new();
     }
 }

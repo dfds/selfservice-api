@@ -19,6 +19,6 @@ public class KafkaTopicListApiResource
 
     public class KafkaTopicListLinks
     {
-        public ResourceLink Self { get; set; }
+        public ResourceLink Self { get; set; } = new();
     }
 }
