@@ -21,14 +21,20 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _kafkaTopicRepository = kafkaTopicRepository;
         _systemTime = systemTime;
     }
-
+    [TransactionalBoundary]
     public async Task<CapabilityId> CreateNewCapability(CapabilityId capabilityId, string name, string description,
         string requestedBy)
     {
+        if (await _capabilityRepository.Exists(capabilityId))
+        {
+            _logger.LogError("Capability with id {CapabilityId} already exists", capabilityId);
+            throw EntityAlreadyExistsException<Capability>.WithProperty(x => x.Name, name);
+        }
         var creationTime = _systemTime.Now;
         var capability = new Capability(capabilityId, name,description, null, creationTime, requestedBy);
         await _capabilityRepository.Add(capability);
-        // TODO [paulseghers & thfis]: check if capability already exists in db
+        
+            // TODO [paulseghers & thfis]: check if capability already exists in db
         return capabilityId;
     }
 

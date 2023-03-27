@@ -97,7 +97,16 @@ public class CapabilityController : ControllerBase
             return ValidationProblem();
         }
 
-        await _capabilityApplicationService.CreateNewCapability(capabilityId, request.Name!, request.Description ?? "", userId);
+        try
+        {
+            await _capabilityApplicationService.CreateNewCapability(capabilityId, request.Name!, request.Description ?? "", userId);
+        }
+        catch (EntityAlreadyExistsException)
+        {
+            ModelState.AddModelError(nameof(request.Name),$"The name \"{request.Name}\" results in an ID that already exists");
+            return ValidationProblem(statusCode: StatusCodes.Status409Conflict);
+        }
+       
         var capability = await _capabilityRepository.Get(capabilityId);
 
         return CreatedAtAction(
