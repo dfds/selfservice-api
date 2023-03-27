@@ -3,7 +3,6 @@ using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
-using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
@@ -18,6 +17,7 @@ public static class Domain
 
         builder.Services.AddTransient<ICapabilityApplicationService, CapabilityApplicationService>();
         builder.Services.AddTransient<IMembershipApplicationService, MembershipApplicationService>();
+        builder.Services.AddTransient<IKafkaTopicApplicationService, KafkaTopicApplicationService>();
 
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
 

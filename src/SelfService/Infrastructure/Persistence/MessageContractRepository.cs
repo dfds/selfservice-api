@@ -41,4 +41,11 @@ public class MessageContractRepository : IMessageContractRepository
             .OrderBy(x => x.MessageType)
             .ToListAsync();
     }
+
+    public async Task<bool> Exists(KafkaTopicId topicId, MessageType messageType)
+    {
+        return await _dbContext.MessageContracts
+            .Where(x => x.KafkaTopicId == topicId && x.MessageType == messageType)
+            .AnyAsync();
+    }
 }

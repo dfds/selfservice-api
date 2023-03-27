@@ -24,6 +24,19 @@ public static class ConsumerConfiguration
                 ;
 
             options
+                .ForTopic($"{TopicPrefix}.messagecontract")
+                .Register<NewMessageContractHasBeenRequested>(
+                    messageType: "message-contract-requested",
+                    keySelector: x => x.MessageContractId!
+                )
+                .Register<NewMessageContractHasBeenProvisioned>(
+                    messageType: "message-contract-provisioned",
+                    keySelector: x => x.MessageContractId!
+                )
+                
+                ;
+
+            options
                 .ForTopic($"{TopicPrefix}.membershipapplication")
                 .Register<NewMembershipApplicationHasBeenSubmitted>(
                     messageType: "membership-submitted",
