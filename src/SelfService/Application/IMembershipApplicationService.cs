@@ -9,4 +9,5 @@ public interface IMembershipApplicationService
     Task CancelExpiredMembershipApplications();
     Task TryFinalizeMembershipApplication(MembershipApplicationId applicationId);
     Task ApproveMembershipApplication(MembershipApplicationId applicationId, UserId approvedBy);
+    Task AddCreatorAsInitialMember(CapabilityId capabilityId, UserId creatorId);
 }

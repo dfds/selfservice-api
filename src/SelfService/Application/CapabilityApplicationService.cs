@@ -21,7 +21,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _kafkaTopicRepository = kafkaTopicRepository;
         _systemTime = systemTime;
     }
-    [TransactionalBoundary]
+    [TransactionalBoundary, Outboxed]
     public async Task<CapabilityId> CreateNewCapability(CapabilityId capabilityId, string name, string description,
         string requestedBy)
     {
@@ -31,7 +31,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             throw EntityAlreadyExistsException<Capability>.WithProperty(x => x.Name, name);
         }
         var creationTime = _systemTime.Now;
-        var capability = new Capability(capabilityId, name,description, null, creationTime, requestedBy);
+        var capability = Capability.CreateCapability(capabilityId, name,description, creationTime, requestedBy);
         await _capabilityRepository.Add(capability);
         
             // TODO [paulseghers & thfis]: check if capability already exists in db

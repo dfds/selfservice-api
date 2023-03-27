@@ -1,4 +1,6 @@
-﻿namespace SelfService.Domain.Models;
+﻿using SelfService.Domain.Events;
+
+namespace SelfService.Domain.Models;
 
 public class Capability : AggregateRoot<CapabilityId>
 {
@@ -11,6 +13,13 @@ public class Capability : AggregateRoot<CapabilityId>
         Deleted = deleted;
         CreatedAt = createdAt;
         CreatedBy = createdBy;
+    }
+
+    public static Capability CreateCapability(CapabilityId capabilityId, string name, string description, DateTime creationTime, string requestedBy)
+    {
+        var capability = new Capability(capabilityId, name, description, null, creationTime, requestedBy);
+        capability.Raise(new CapabilityCreated(capabilityId, requestedBy));
+        return capability;
     }
 
     public string Name { get; private set; } = null!;

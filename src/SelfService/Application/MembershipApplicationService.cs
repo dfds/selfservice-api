@@ -29,6 +29,19 @@ public class MembershipApplicationService : IMembershipApplicationService
         _membershipQuery = membershipQuery;
     }
 
+    
+    [TransactionalBoundary, Outboxed]
+    public async Task AddCreatorAsInitialMember(CapabilityId capabilityId, UserId creatorId)
+    {
+        var newMembership = Membership.CreateFor(
+            capabilityId: capabilityId,
+            userId: creatorId,
+            createdAt: _systemTime.Now
+        );
+        
+        await _membershipRepository.Add(newMembership); 
+    }
+
     [TransactionalBoundary, Outboxed]
     public async Task<MembershipId> AcceptApplication(MembershipApplicationId applicationId)
     {

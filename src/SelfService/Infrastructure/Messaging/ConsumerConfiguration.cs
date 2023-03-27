@@ -1,5 +1,6 @@
 ﻿using Dafda.Configuration;
 using Dafda.Consuming;
+using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Events;
 
@@ -14,7 +15,20 @@ public static class ConsumerConfiguration
         builder.Services.AddOutbox(options =>
         {
             options.WithOutboxEntryRepository<OutboxEntryRepository>();
-
+            options
+                .ForTopic($"{TopicPrefix}.capability")
+                .Register<CapabilityCreated>(
+                    messageType: CapabilityCreated.EventType,
+                    keySelector: x => x.CapabilityId
+                )
+                ;
+            options
+                .ForTopic($"{TopicPrefix}.members")
+                .Register<UserHasJoinedCapability>(
+                    messageType: "user-has-joined-capability",
+                    keySelector: x => x.UserId!
+                )
+                ;
             options
                 .ForTopic($"{TopicPrefix}.kafkatopic")
                 .Register<NewKafkaTopicHasBeenRequested>(
@@ -52,7 +66,9 @@ public static class ConsumerConfiguration
 
             var topic = builder.Configuration["SS_APISPECS_TOPIC"];
             options.RegisterMessageHandler<Placeholder, PlaceholderHandler>(topic, Placeholder.EventType);
-
+            options
+                .ForTopic($"{TopicPrefix}.capability")
+                .RegisterMessageHandler<CapabilityCreated, CapabilityCreatedHandler>(CapabilityCreated.EventType);
             options
                 .ForTopic($"{TopicPrefix}.kafkatopic")
                 .Ignore("topic-requested")
@@ -63,6 +79,20 @@ public static class ConsumerConfiguration
                 .Ignore("membership-submitted")
                 ;
         });
+    }
+}
+
+public class CapabilityCreatedHandler : IMessageHandler<CapabilityCreated>
+{
+    private readonly IMembershipApplicationService _membershipApplicationService;
+
+    public CapabilityCreatedHandler(IMembershipApplicationService membershipApplicationService)
+    {
+        _membershipApplicationService = membershipApplicationService;
+    }
+    public Task Handle(CapabilityCreated message, MessageHandlerContext context)
+    {
+        return _membershipApplicationService.AddCreatorAsInitialMember(message.CapabilityId, message.RequestedBy);
     }
 }
 
