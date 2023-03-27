@@ -23,7 +23,7 @@ public static class ConsumerConfiguration
                 )
                 ;
             options
-                .ForTopic($"{TopicPrefix}.members")
+                .ForTopic($"{TopicPrefix}.membership")
                 .Register<UserHasJoinedCapability>(
                     messageType: "user-has-joined-capability",
                     keySelector: x => x.UserId!
