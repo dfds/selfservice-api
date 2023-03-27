@@ -90,11 +90,11 @@ public class ApiResourceFactory
         };
     }
 
-    public MemberDto Convert(Member member)
+    public MemberApiResource Convert(Member member)
     {
-        return new MemberDto
+        return new MemberApiResource
         {
-            Upn = member.Id.ToString(), // NOTE: [jandr] consider renaming upn to id in api contract
+            Id = member.Id.ToString(),
             Name = member.DisplayName,
             Email = member.Email,
 
