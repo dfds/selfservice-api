@@ -45,6 +45,7 @@ public class KafkaTopicRepository : IKafkaTopicRepository
     {
         return await _dbContext.KafkaTopics
             .Where(x => ((string) x.Name).StartsWith("pub."))
+            .OrderBy(x => x.Name)
             .ToListAsync();
     }
 
@@ -52,6 +53,7 @@ public class KafkaTopicRepository : IKafkaTopicRepository
     {
         return await _dbContext.KafkaTopics
             .Where(x => x.CapabilityId == capabilityId)
+            .OrderBy(x => x.Name)
             .ToListAsync();
     }
 }
