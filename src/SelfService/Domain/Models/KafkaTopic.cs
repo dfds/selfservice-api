@@ -94,6 +94,7 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
         instance.Raise(new NewKafkaTopicHasBeenRequested
         {
             KafkaTopicId = instance.Id.ToString(),
+            KafkaTopicName = instance.Name.ToString(),
             KafkaClusterId = kafkaClusterId.ToString(),
             CapabilityId = capabilityId.ToString(),
             Partitions = instance.Partitions.ToValue(),
