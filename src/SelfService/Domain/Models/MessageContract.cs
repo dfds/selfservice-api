@@ -75,8 +75,9 @@ public class MessageContract : AggregateRoot<MessageContractId>
     public DateTime? ModifiedAt { get; private set; }
     public string? ModifiedBy { get; private set; }
 
-    public static MessageContract RequestNew(KafkaTopicId kafkaTopicId, MessageType messageType, string description,
-        MessageContractExample example, MessageContractSchema schema, DateTime createdAt, string createdBy)
+    public static MessageContract RequestNew(KafkaTopicId kafkaTopicId, MessageType messageType, KafkaTopicName kafkaTopicName, 
+        CapabilityId capabilityId, KafkaClusterId kafkaClusterId, string description, MessageContractExample example, 
+        MessageContractSchema schema, DateTime createdAt, string createdBy)
     {
         var instance = new MessageContract(
             id: MessageContractId.New(),
@@ -96,6 +97,9 @@ public class MessageContract : AggregateRoot<MessageContractId>
         {
             MessageContractId = instance.Id.ToString(),
             KafkaTopicId = instance.KafkaTopicId.ToString(),
+            KafkaTopicName = kafkaTopicName.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
+            KafkaClusterId = kafkaClusterId.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
+            CapabilityId = capabilityId.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
             MessageType = instance.MessageType.ToString(),
             Schema = instance.Schema.ToString(),
             Description = instance.Description,

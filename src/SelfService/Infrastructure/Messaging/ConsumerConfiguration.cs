@@ -3,12 +3,14 @@ using Dafda.Consuming;
 using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Events;
+using SelfService.Domain.Policies;
 
 namespace SelfService.Infrastructure.Messaging;
 
 public static class ConsumerConfiguration
 {
-    private const string TopicPrefix = "cloudengineering.selfservice";
+    private const string SelfServicePrefix = "cloudengineering.selfservice";
+    private const string ConfluentGatewayPrefix = "cloudengineering.confluentgateway";
 
     public static void AddMessaging(this WebApplicationBuilder builder)
     {
@@ -30,7 +32,7 @@ public static class ConsumerConfiguration
                 )
                 ;
             options
-                .ForTopic($"{TopicPrefix}.kafkatopic")
+                .ForTopic($"{SelfServicePrefix}.kafkatopic")
                 .Register<NewKafkaTopicHasBeenRequested>(
                     messageType: "topic-requested",
                     keySelector: x => x.KafkaTopicId!
@@ -38,7 +40,7 @@ public static class ConsumerConfiguration
                 ;
 
             options
-                .ForTopic($"{TopicPrefix}.messagecontract")
+                .ForTopic($"{SelfServicePrefix}.messagecontract")
                 .Register<NewMessageContractHasBeenRequested>(
                     messageType: "message-contract-requested",
                     keySelector: x => x.MessageContractId!
@@ -47,11 +49,10 @@ public static class ConsumerConfiguration
                     messageType: "message-contract-provisioned",
                     keySelector: x => x.MessageContractId!
                 )
-                
                 ;
 
             options
-                .ForTopic($"{TopicPrefix}.membershipapplication")
+                .ForTopic($"{SelfServicePrefix}.membershipapplication")
                 .Register<NewMembershipApplicationHasBeenSubmitted>(
                     messageType: "membership-submitted",
                     keySelector: x => x.MembershipApplicationId!
@@ -70,13 +71,18 @@ public static class ConsumerConfiguration
                 .ForTopic($"{TopicPrefix}.capability")
                 .RegisterMessageHandler<CapabilityCreated, CapabilityCreatedHandler>(CapabilityCreated.EventType);
             options
-                .ForTopic($"{TopicPrefix}.kafkatopic")
+                .ForTopic($"{SelfServicePrefix}.kafkatopic")
                 .Ignore("topic-requested")
                 ;
 
             options
-                .ForTopic($"{TopicPrefix}.membershipapplication")
+                .ForTopic($"{SelfServicePrefix}.membershipapplication")
                 .Ignore("membership-submitted")
+                ;
+
+            options
+                .ForTopic($"{ConfluentGatewayPrefix}.schema")
+                .RegisterMessageHandler<SchemaRegistered, MarkMessageContractAsProvisioned>("schema-registered")
                 ;
         });
     }

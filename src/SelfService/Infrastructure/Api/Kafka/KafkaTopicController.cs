@@ -263,7 +263,7 @@ public class KafkaTopicController : ControllerBase
             return Conflict(new ProblemDetails
             {
                 Title = "Message type already exists",
-                Detail = $"Topic \"{kafkaTopicId}\" already has a message with message type \"{messageType}\"."
+                Detail = $"Topic \"{topic.Name}\" already has a message with message type \"{messageType}\"."
             });
         }
     }
