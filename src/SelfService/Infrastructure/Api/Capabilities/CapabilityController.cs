@@ -388,9 +388,9 @@ public class CapabilityController : ControllerBase
             ModelState.AddModelError(nameof(topicRequest.KafkaClusterId), $"Value \"{topicRequest.KafkaClusterId}\" is not a valid kafka cluster id.");
         }
 
-        if (!KafkaTopicName.TryParse(topicRequest.KafkaTopicName, out var kafkaTopicName))
+        if (!KafkaTopicName.TryParse(topicRequest.Name, out var kafkaTopicName))
         {
-            ModelState.AddModelError(nameof(topicRequest.KafkaTopicName), $"Value \"{topicRequest.KafkaTopicName}\" is not a valid kafka topic name.");
+            ModelState.AddModelError(nameof(topicRequest.Name), $"Value \"{topicRequest.Name}\" is not a valid kafka topic name.");
         }
 
         if (!KafkaTopicPartitions.TryCreate(topicRequest.Partitions ?? 0, out var topicPartitions))

@@ -8,7 +8,7 @@ public class NewKafkaTopicRequest
     public string? KafkaClusterId { get; set; }
 
     [Required]
-    public string? KafkaTopicName { get; set; }
+    public string? Name { get; set; }
 
     [Required]
     public string? Description { get; set; }
