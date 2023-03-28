@@ -18,14 +18,14 @@ public static class ConsumerConfiguration
         {
             options.WithOutboxEntryRepository<OutboxEntryRepository>();
             options
-                .ForTopic($"{TopicPrefix}.capability")
+                .ForTopic($"{SelfServicePrefix}.capability")
                 .Register<CapabilityCreated>(
                     messageType: CapabilityCreated.EventType,
                     keySelector: x => x.CapabilityId
                 )
                 ;
             options
-                .ForTopic($"{TopicPrefix}.membership")
+                .ForTopic($"{SelfServicePrefix}.membership")
                 .Register<UserHasJoinedCapability>(
                     messageType: "user-has-joined-capability",
                     keySelector: x => x.UserId!
@@ -68,7 +68,7 @@ public static class ConsumerConfiguration
             var topic = builder.Configuration["SS_APISPECS_TOPIC"];
             options.RegisterMessageHandler<Placeholder, PlaceholderHandler>(topic, Placeholder.EventType);
             options
-                .ForTopic($"{TopicPrefix}.capability")
+                .ForTopic($"{SelfServicePrefix}.capability")
                 .RegisterMessageHandler<CapabilityCreated, CapabilityCreatedHandler>(CapabilityCreated.EventType);
             options
                 .ForTopic($"{SelfServicePrefix}.kafkatopic")

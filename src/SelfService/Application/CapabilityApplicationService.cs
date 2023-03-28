@@ -56,9 +56,9 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
 
-        if (await _kafkaTopicRepository.Exists(name))
+        if (await _kafkaTopicRepository.Exists(name, kafkaClusterId))
         {
-            _logger.LogError("Topic with name {KafkaTopicName} already exist", name);
+            _logger.LogError("Topic with name {KafkaTopicName} already exist in cluster {KafkaClusterId}", name, kafkaClusterId);
             throw EntityAlreadyExistsException<Topic>.WithProperty(x => x.Name, name);
         }
 

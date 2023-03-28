@@ -3,7 +3,7 @@
 public interface IKafkaTopicRepository
 {
     Task Add(KafkaTopic topic);
-    Task<bool> Exists(KafkaTopicName name);
+    Task<bool> Exists(KafkaTopicName name, KafkaClusterId clusterId);
     Task<KafkaTopic> Get(KafkaTopicId id);
     Task<KafkaTopic?> FindBy(KafkaTopicId id);
     

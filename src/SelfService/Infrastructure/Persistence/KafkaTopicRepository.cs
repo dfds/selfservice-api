@@ -18,13 +18,11 @@ public class KafkaTopicRepository : IKafkaTopicRepository
         await _dbContext.KafkaTopics.AddAsync(topic);
     }
 
-    public async Task<bool> Exists(KafkaTopicName name)
+    public async Task<bool> Exists(KafkaTopicName name, KafkaClusterId clusterId)
     {
-        var found = await _dbContext.KafkaTopics
-            .Where(x => x.Name == name)
-            .FirstOrDefaultAsync();
-
-        return found != null;
+        return await _dbContext.KafkaTopics
+            .Where(x => x.Name == name && x.KafkaClusterId == clusterId)
+            .AnyAsync();
     }
 
     public async Task<KafkaTopic> Get(KafkaTopicId id)
