@@ -88,6 +88,7 @@ public static class ConsumerConfiguration
                 .ForTopic($"{ConfluentGatewayPrefix}.schema")
                 .RegisterMessageHandler<SchemaRegistered, MarkMessageContractAsProvisioned>("schema-registered")
                 .RegisterMessageHandler<SchemaRegistered, MarkMessageContractAsProvisioned>("schema_registered") // NOTE [jandr@2023-03-29]: double registration due to underscore/dash confusion - we should be using dashes
+                .Ignore("schema-registration-failed")
                 ;
             options
                 .ForTopic($"{ConfluentGatewayPrefix}.provisioning")
