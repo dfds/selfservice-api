@@ -45,7 +45,7 @@ public class MarkMessageContractAsProvisioned : IMessageHandler<SchemaRegistered
     }
 }
 
-public class SchemaRegistered
+public class SchemaRegistered : IDomainEvent
 {
     public string? MessageContractId { get; set; }
 }

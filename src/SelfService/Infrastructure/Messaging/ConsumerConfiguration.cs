@@ -3,6 +3,7 @@ using Dafda.Consuming;
 using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Events;
+using SelfService.Domain.Models;
 using SelfService.Domain.Policies;
 
 namespace SelfService.Infrastructure.Messaging;
@@ -80,11 +81,113 @@ public static class ConsumerConfiguration
                 .Ignore("membership-submitted")
                 ;
 
+
+            #region confluent gateway events
+
             options
                 .ForTopic($"{ConfluentGatewayPrefix}.schema")
                 .RegisterMessageHandler<SchemaRegistered, MarkMessageContractAsProvisioned>("schema-registered")
+                .RegisterMessageHandler<SchemaRegistered, MarkMessageContractAsProvisioned>("schema_registered") // NOTE [jandr@2023-03-29]: double registration due to underscore/dash confusion - we should be using dashes
                 ;
+            options
+                .ForTopic($"{ConfluentGatewayPrefix}.provisioning")
+                .RegisterMessageHandler<KafkaTopicProvisioningHasBegun, UpdateKafkaTopicProvisioningProgress>("topic-provisioning-begun")
+                .RegisterMessageHandler<KafkaTopicProvisioningHasBegun, UpdateKafkaTopicProvisioningProgress>("topic_provisioning_begun") // NOTE [jandr@2023-03-29]: double registration due to underscore/dash confusion - we should be using dashes
+                .RegisterMessageHandler<KafkaTopicProvisioningHasCompleted, UpdateKafkaTopicProvisioningProgress>("topic-provisioned")
+                .RegisterMessageHandler<KafkaTopicProvisioningHasCompleted, UpdateKafkaTopicProvisioningProgress>("topic_provisioned") // NOTE [jandr@2023-03-29]: double registration due to underscore/dash confusion - we should be using dashes
+                ;
+
+            #endregion
+
         });
+    }
+}
+
+public class KafkaTopicProvisioningHasBegun
+{
+    public string? ClusterId { get; set; }
+    public string? TopicId { get; set; }
+    public string? TopicName { get; set; }
+}
+
+public class KafkaTopicProvisioningHasCompleted
+{
+    public string? ClusterId { get; set; }
+    public string? TopicId { get; set; }
+    public string? TopicName { get; set; }
+}
+
+public class UpdateKafkaTopicProvisioningProgress : 
+    IMessageHandler<KafkaTopicProvisioningHasBegun>,
+    IMessageHandler<KafkaTopicProvisioningHasCompleted>
+{
+    private readonly ILogger<UpdateKafkaTopicProvisioningProgress> _logger;
+    private readonly IKafkaTopicApplicationService _kafkaTopicApplicationService;
+    private readonly IKafkaTopicRepository _kafkaTopicRepository;
+
+    public UpdateKafkaTopicProvisioningProgress(ILogger<UpdateKafkaTopicProvisioningProgress> logger, IKafkaTopicApplicationService kafkaTopicApplicationService, 
+        IKafkaTopicRepository kafkaTopicRepository)
+    {
+        _logger = logger;
+        _kafkaTopicApplicationService = kafkaTopicApplicationService;
+        _kafkaTopicRepository = kafkaTopicRepository;
+    }
+
+    private string ChangedBy => string.Join("/", "SYSTEM", GetType().FullName);
+
+    private async Task<KafkaTopicId?> DetermineTopicIdFrom(string? kafkaTopicId, string? kafkaTopicName, string? kafkaClusterId)
+    {
+        if (KafkaTopicId.TryParse(kafkaTopicId, out var topicId))
+        {
+            return topicId;
+        }
+
+        if (!KafkaClusterId.TryParse(kafkaClusterId, out var clusterId))
+        {
+            return null;
+        }
+
+        if (!KafkaTopicName.TryParse(kafkaTopicName, out var topicName))
+        {
+            return null;
+        }
+
+        var topic = await _kafkaTopicRepository.FindBy(topicName, clusterId);
+        return topic?.Id;
+    }
+    
+    public async Task Handle(KafkaTopicProvisioningHasBegun message, MessageHandlerContext context)
+    {
+        using var _ = _logger.BeginScope("Handling {MessageType} on {ImplementationType} with {CorrelationId} and {CausationId}",
+            context.MessageType, GetType().Name, context.CorrelationId, context.CausationId);
+
+        var topicId = await DetermineTopicIdFrom(message.TopicId, message.TopicName, message.ClusterId);
+        if (topicId is null)
+        {
+            _logger.LogError("Could not determine a valid kafka topic id using provided topic id {KafkaTopicId}, topic name {KafkaTopicName} or cluster id {KafkaClusterId} - skipping message {MessageId}/{MessageType}", 
+                message.TopicId, message.TopicName, message.ClusterId, context.MessageId, context.MessageType);
+            
+            return;
+        }
+
+        await _kafkaTopicApplicationService.RegisterKafkaTopicAsInProgress(topicId, ChangedBy);
+    }
+
+    public async Task Handle(KafkaTopicProvisioningHasCompleted message, MessageHandlerContext context)
+    {
+        using var _ = _logger.BeginScope("Handling {MessageType} on {ImplementationType} with {CorrelationId} and {CausationId}",
+            context.MessageType, GetType().Name, context.CorrelationId, context.CausationId);
+
+        var topicId = await DetermineTopicIdFrom(message.TopicId, message.TopicName, message.ClusterId);
+        if (topicId is null)
+        {
+            _logger.LogError("Could not determine a valid kafka topic id using provided topic id {KafkaTopicId}, topic name {KafkaTopicName} or cluster id {KafkaClusterId} - skipping message {MessageId}/{MessageType}", 
+                message.TopicId, message.TopicName, message.ClusterId, context.MessageId, context.MessageType);
+            
+            return;
+        }
+
+        await _kafkaTopicApplicationService.RegisterKafkaTopicAsProvisioned(topicId, ChangedBy);
     }
 }
 
@@ -99,71 +202,5 @@ public class CapabilityCreatedHandler : IMessageHandler<CapabilityCreated>
     public Task Handle(CapabilityCreated message, MessageHandlerContext context)
     {
         return _membershipApplicationService.AddCreatorAsInitialMember(message.CapabilityId, message.RequestedBy);
-    }
-}
-
-public static class ConsumerOptionsExtensions
-{
-    public static TopicConsumerOptions ForTopic(this ConsumerOptions options, string topic)
-    {
-        return new TopicConsumerOptions(options, topic);
-    }
-
-    public class TopicConsumerOptions
-    {
-        private readonly ConsumerOptions _options;
-        private readonly string _topic;
-
-        public TopicConsumerOptions(ConsumerOptions options, string topic)
-        {
-            _options = options;
-            _topic = topic;
-        }
-
-        public TopicConsumerOptions RegisterMessageHandler<TMessage, TMessageHandler>(
-            string messageType)
-            where TMessage : class
-            where TMessageHandler : class, IMessageHandler<TMessage>
-        {
-            _options.RegisterMessageHandler<TMessage, TMessageHandler>(_topic, messageType);
-            return this;
-        }
-
-        public TopicConsumerOptions Ignore(string messageType)
-        {
-            _options.RegisterMessageHandler<object, NoOpHandler>(_topic, messageType);
-            return this;
-        }
-    }
-}
-
-public static class OutboxProducerOptionsExtensions
-{
-    public static ProducerOptions ForTopic(this OutboxOptions options, string topic)
-    {
-        return new ProducerOptions(options, topic);
-    }
-
-    public class ProducerOptions
-    {
-        private readonly OutboxOptions _options;
-        private readonly string _topic;
-
-        public ProducerOptions(OutboxOptions options, string topic)
-        {
-            _options = options;
-            _topic = topic;
-        }
-
-        public ProducerOptions Register<TMessage>(string messageType, Func<TMessage, string> keySelector) where TMessage : class
-        {
-            _options.Register<TMessage>(
-                topic: _topic,
-                type: messageType,
-                keySelector: keySelector
-            );
-
-            return this;
-        }
     }
 }

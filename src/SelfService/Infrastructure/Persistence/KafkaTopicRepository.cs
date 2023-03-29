@@ -56,4 +56,12 @@ public class KafkaTopicRepository : IKafkaTopicRepository
             .OrderBy(x => x.Name)
             .ToListAsync();
     }
+
+    public async Task<KafkaTopic?> FindBy(KafkaTopicName name, KafkaClusterId clusterId)
+    {
+        return await _dbContext.KafkaTopics
+            .Where(x => x.Name == name && x.KafkaClusterId == clusterId)
+            .SingleOrDefaultAsync();
+
+    }
 }
