@@ -104,10 +104,16 @@ public class ApiResourceFactory
 
     public CapabilityDetailsApiResource Convert(Capability capability, UserAccessLevelOptions accessLevel)
     {
-        var allowedInteractions = new List<string> {"GET"};
+        var allowedTopicInteractions = new List<string> {"GET"};
         if (accessLevel == UserAccessLevelOptions.ReadWrite)
         {
-            allowedInteractions.Add("POST");
+            allowedTopicInteractions.Add("POST");
+        }
+
+        var allowedMembershipApplicationInteractions = new List<string> { "GET" };
+        if (accessLevel == UserAccessLevelOptions.Read)
+        {
+            allowedMembershipApplicationInteractions.Add("POST");
         }
 
         return new CapabilityDetailsApiResource
@@ -145,7 +151,17 @@ public class ApiResourceFactory
                         controller: GetNameOf<CapabilityController>(),
                         values: new {id = capability.Id}) ?? "",
                     Rel = "related",
-                    Allow = allowedInteractions
+                    Allow = allowedTopicInteractions
+                },
+                MembershipApplications =
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(CapabilityController.GetCapabilityMembershipApplications),
+                        controller: GetNameOf<CapabilityController>(),
+                        values: new {id = capability.Id}) ?? "",
+                    Rel = "related",
+                    Allow = allowedMembershipApplicationInteractions
                 }
             },
         };
@@ -251,9 +267,22 @@ public class ApiResourceFactory
 
     public MembershipApplicationApiResource Convert(MembershipApplication application, UserAccessLevelOptions initialAccessLevel, UserId currentUser)
     {
-        var approvalsAccessLevel = application.HasApproved(currentUser)
-            ? UserAccessLevelOptions.Read
-            : initialAccessLevel;
+        var isCurrentUserTheApplicant = application.Applicant == currentUser;
+
+        // hide list of approvals if current user is the applicant
+        var approvals = isCurrentUserTheApplicant
+            ? Enumerable.Empty<MembershipApproval>()
+            : application.Approvals;
+
+        var allowedApprovalInteractions = new List<string>();
+        if (!isCurrentUserTheApplicant)
+        {
+            allowedApprovalInteractions.Add("GET");
+            if (!application.HasApproved(currentUser))
+            {
+                allowedApprovalInteractions.Add("POST");
+            }
+        }
 
         return new MembershipApplicationApiResource
         {
@@ -261,7 +290,7 @@ public class ApiResourceFactory
             Applicant = application.Applicant,
             SubmittedAt = application.SubmittedAt.ToUniversalTime().ToString("O"),
             DeadlineAt = application.ExpiresOn.ToUniversalTime().ToString("O"),
-            Approvals = Convert(application.Approvals, application.Id, approvalsAccessLevel),
+            Approvals = Convert(approvals, application.Id, allowedApprovalInteractions),
             Links =
             {
                 Self =
@@ -278,7 +307,7 @@ public class ApiResourceFactory
         };
     }
 
-    public MembershipApprovalListApiResource Convert(IEnumerable<MembershipApproval> approvals, MembershipApplicationId parentApplicationId, UserAccessLevelOptions accessLevel)
+    public MembershipApprovalListApiResource Convert(IEnumerable<MembershipApproval> approvals, MembershipApplicationId parentApplicationId, List<string> allowedInteractions)
     {
         return new MembershipApprovalListApiResource
         {
@@ -295,7 +324,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<MembershipApplicationController>(),
                         values: new { id = parentApplicationId }) ?? "",
                     Rel = "self",
-                    Allow = Convert(accessLevel)
+                    Allow = allowedInteractions
                 }
             }
         };

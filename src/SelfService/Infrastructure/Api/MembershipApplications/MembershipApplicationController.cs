@@ -152,7 +152,8 @@ public class MembershipApplicationController : ControllerBase
                 });
             }
 
-            return Ok(_apiResourceFactory.Convert(application.Approvals, application.Id, accessLevelForCapability));
+            var parent = _apiResourceFactory.Convert(application,accessLevelForCapability, userId);
+            return Ok(parent.Approvals);
         }
         catch (EntityNotFoundException<MembershipApplication>)
         {

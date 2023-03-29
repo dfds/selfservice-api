@@ -323,16 +323,26 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
-        if (accessLevel == UserAccessLevelOptions.Read)
-        {
-            return Unauthorized();
-        }
-
         var applications = await dbContext.MembershipApplications
+            .Include(x => x.Approvals)
             .Where(x => x.CapabilityId == capabilityId)
             .OrderBy(x => x.SubmittedAt)
             .ToListAsync();
+        
+        var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
+        if (accessLevel == UserAccessLevelOptions.Read)
+        {
+            // only allow the current users own application(s)
+            applications = applications
+                .Where(x => x.Applicant == userId)
+                .ToList();
+        }
+
+        var allowedInteractions = new List<string> {"GET"};
+        if (accessLevel == UserAccessLevelOptions.Read && applications.Count == 0)
+        {
+            allowedInteractions.Add("POST");
+        }
 
         return Ok(new MembershipApplicationListApiResource
         {
@@ -348,7 +358,7 @@ public class CapabilityController : ControllerBase
                         action: nameof(GetCapabilityMembershipApplications),
                         values: new {id = id}) ?? "",
                     Rel = "self",
-                    Allow = {"GET"}
+                    Allow = allowedInteractions
                 }
             }
         });
