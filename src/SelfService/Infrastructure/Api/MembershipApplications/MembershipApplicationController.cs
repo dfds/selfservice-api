@@ -127,7 +127,7 @@ public class MembershipApplicationController : ControllerBase
     [ProducesResponseType(typeof(MembershipApprovalListApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetMembershipApplicationApprovals(string id, [FromServices] SelfServiceDbContext dbContext)
+    public async Task<IActionResult> GetMembershipApplicationApprovals(string id)
     {
         if (!User.TryGetUserId(out var userId))
         {
