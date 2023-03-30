@@ -8,7 +8,6 @@ using SelfService.Infrastructure.Persistence;
 using SelfService.Legacy;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
-
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(theme: AnsiConsoleTheme.Code)
     .CreateBootstrapLogger();
@@ -28,6 +27,8 @@ try
     builder.AddApi();
     builder.AddSecurity();
 
+    builder.Services.AddTransient<Impersonation.ImpersonationMiddleware>();
+
     // **PLEASE NOTE** : keep this as the last configuration!
     builder.ConfigureAspects();
 
@@ -39,6 +40,7 @@ try
     app.UseSwaggerUI();
 
     app.UseAuthentication();
+    //app.UseImpersonation();
     app.UseAuthorization();
 
     app.MapControllers();
