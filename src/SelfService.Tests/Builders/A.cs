@@ -72,7 +72,7 @@ public class MembershipApplicationBuilder
     private MembershipApplicationId _id;
     private CapabilityId _capability;
     private UserId _applicant;
-    private MempershipApplicationStatusOptions _status;
+    private MembershipApplicationStatusOptions _status;
     private DateTime _submittedAt;
     private DateTime _expiresOn;
     private IEnumerable<MembershipApproval> _approvals;
@@ -82,7 +82,7 @@ public class MembershipApplicationBuilder
         _id = MembershipApplicationId.New();
         _capability = CapabilityId.Parse("foo");
         _applicant = UserId.Parse("bar");
-        _status = MempershipApplicationStatusOptions.PendingApprovals;
+        _status = MembershipApplicationStatusOptions.PendingApprovals;
         _submittedAt = new DateTime(2000, 1, 1);
         _expiresOn = _submittedAt.AddDays(1);
         _approvals = Enumerable.Empty<MembershipApproval>();

@@ -6,7 +6,6 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Persistence;
-using static SelfService.Infrastructure.Api.Capabilities.MembershipApplicationApiResource;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 

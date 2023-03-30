@@ -40,7 +40,7 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
         var now = _systemTime.Now;
         return await _dbContext.MembershipApplications
             .Include(x => x.Approvals)
-            .Where(x => x.ExpiresOn <= now && x.Status == MempershipApplicationStatusOptions.PendingApprovals)
+            .Where(x => x.ExpiresOn <= now && x.Status == MembershipApplicationStatusOptions.PendingApprovals)
             .OrderBy(x => x.ExpiresOn)
             .ToListAsync();
     }
@@ -49,7 +49,7 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
     {
         return await _dbContext.MembershipApplications
             .Include(x => x.Approvals)
-            .Where(x => x.Status == MempershipApplicationStatusOptions.PendingApprovals && x.CapabilityId == capabilityId && x.Applicant == userId)
+            .Where(x => x.Status == MembershipApplicationStatusOptions.PendingApprovals && x.CapabilityId == capabilityId && x.Applicant == userId)
             .SingleOrDefaultAsync();
     }
 }

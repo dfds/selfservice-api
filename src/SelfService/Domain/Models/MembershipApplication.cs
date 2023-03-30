@@ -9,12 +9,12 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
     private readonly List<MembershipApproval> _approvals = new List<MembershipApproval>();
     private readonly CapabilityId _capabilityId = null!;
     private readonly UserId _applicant = null!;
-    private MempershipApplicationStatusOptions _status;
+    private MembershipApplicationStatusOptions _status;
     private readonly DateTime _submittedAt;
     private readonly DateTime _expiresOn;
 
     public MembershipApplication(MembershipApplicationId id, CapabilityId capabilityId, UserId applicant,
-        IEnumerable<MembershipApproval> approvals, MempershipApplicationStatusOptions status, 
+        IEnumerable<MembershipApproval> approvals, MembershipApplicationStatusOptions status, 
         DateTime submittedAt, DateTime expiresOn) : base(id)
     {
         _capabilityId = capabilityId;
@@ -28,12 +28,12 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
     public CapabilityId CapabilityId => _capabilityId;
     public UserId Applicant => _applicant;
     public IEnumerable<MembershipApproval> Approvals => _approvals;
-    public MempershipApplicationStatusOptions Status => _status;
+    public MembershipApplicationStatusOptions Status => _status;
     public DateTime SubmittedAt => _submittedAt;
     public DateTime ExpiresOn => _expiresOn;
 
-    public bool IsFinalized => _status == MempershipApplicationStatusOptions.Finalized;
-    public bool IsCancelled => _status == MempershipApplicationStatusOptions.Cancelled;
+    public bool IsFinalized => _status == MembershipApplicationStatusOptions.Finalized;
+    public bool IsCancelled => _status == MembershipApplicationStatusOptions.Cancelled;
 
     public bool HasApproved(UserId userId) => _approvals.Any(x => x.ApprovedBy == userId);
 
@@ -44,12 +44,12 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
             throw new Exception($"User {approvedBy} cannot approve its own membership application {Id}");
         }
 
-        if (_status == MempershipApplicationStatusOptions.Cancelled)
+        if (_status == MembershipApplicationStatusOptions.Cancelled)
         {
             throw new Exception($"User {approvedBy} cannot approve a cancelled membership application {Id}");
         }
         
-        if (_status == MempershipApplicationStatusOptions.Finalized)
+        if (_status == MembershipApplicationStatusOptions.Finalized)
         {
             // already finalized
             return;
@@ -72,19 +72,19 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
     
     public void FinalizeApprovals()
     {
-        if (_status == MempershipApplicationStatusOptions.Cancelled)
+        if (_status == MembershipApplicationStatusOptions.Cancelled)
         {
             throw new Exception($"Cannot finalize a cancelled membership application {Id}");
         }
         
-        if (_status == MempershipApplicationStatusOptions.Finalized)
+        if (_status == MembershipApplicationStatusOptions.Finalized)
         {
             return;
         }
         
-        if (_status == MempershipApplicationStatusOptions.PendingApprovals)
+        if (_status == MembershipApplicationStatusOptions.PendingApprovals)
         {
-            _status = MempershipApplicationStatusOptions.Finalized;
+            _status = MembershipApplicationStatusOptions.Finalized;
             Raise(new MembershipApplicationHasBeenFinalized
             {
                 MembershipApplicationId = Id.ToString()
@@ -94,19 +94,19 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
 
     public void Cancel()
     {
-        if (_status == MempershipApplicationStatusOptions.Finalized)
+        if (_status == MembershipApplicationStatusOptions.Finalized)
         {
             throw new Exception($"Cannot cancel an already finalized membership application {Id}");
         }
         
-        if (_status == MempershipApplicationStatusOptions.Cancelled)
+        if (_status == MembershipApplicationStatusOptions.Cancelled)
         {
             return;
         }
         
-        if (_status == MempershipApplicationStatusOptions.PendingApprovals)
+        if (_status == MembershipApplicationStatusOptions.PendingApprovals)
         {
-            _status = MempershipApplicationStatusOptions.Cancelled;
+            _status = MembershipApplicationStatusOptions.Cancelled;
             Raise(new MembershipApplicationHasBeenCancelled
             {
                 MembershipApplicationId = Id.ToString()
@@ -121,7 +121,7 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
             capabilityId: capabilityId,
             applicant: applicant,
             approvals: Enumerable.Empty<MembershipApproval>(), 
-            status: MempershipApplicationStatusOptions.PendingApprovals,
+            status: MembershipApplicationStatusOptions.PendingApprovals,
             submittedAt: submittedAt,
             expiresOn: submittedAt
                 .AddDays(15)

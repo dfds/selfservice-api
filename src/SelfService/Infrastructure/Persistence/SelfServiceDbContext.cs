@@ -103,7 +103,7 @@ public class SelfServiceDbContext : DbContext
             .HaveConversion<MembershipApplicationIdConverter>();
 
         configurationBuilder
-            .Properties<MempershipApplicationStatusOptions>()
+            .Properties<MembershipApplicationStatusOptions>()
             .HaveConversion<string>();
 
         configurationBuilder
