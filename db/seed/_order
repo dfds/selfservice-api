@@ -5,4 +5,5 @@ Membership.csv
 KafkaCluster.csv
 KafkaTopic.csv
 MessageContract.csv
+MembershipApplication.csv
 ServiceCatalog.csv
