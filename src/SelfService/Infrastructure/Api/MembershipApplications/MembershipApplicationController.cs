@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
@@ -150,9 +151,11 @@ public class MembershipApplicationController : ControllerBase
         try
         {
             var application = await _membershipApplicationRepository.Get(membershipApplicationId);
-
             var accessLevelForCapability = await _authorizationService.GetUserAccessLevelForCapability(userId, application.CapabilityId);
-            if (accessLevelForCapability == UserAccessLevelOptions.Read && application.Applicant != userId)
+
+            _logger.LogDebug("access level: {AccessLevel}", accessLevelForCapability);
+
+            if (accessLevelForCapability == UserAccessLevelOptions.Read)
             {
                 // user is not member of capability and the membership application does not belong to the user
                 return Unauthorized(new ProblemDetails
