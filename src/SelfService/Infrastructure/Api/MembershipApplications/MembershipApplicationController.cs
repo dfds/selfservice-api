@@ -113,6 +113,14 @@ public class MembershipApplicationController : ControllerBase
                 Detail = $"User \"{userId}\" already has a pending membership application for capability \"{capabilityId}\"."
             });
         }
+        catch (AlreadyHasActiveMembershipException)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "Already member",
+                Detail = $"User \"{userId}\" is already member of capability \"{capabilityId}\"."
+            });
+        }
     }
 
     [HttpGet("{id}/approvals")]
