@@ -18,11 +18,13 @@ public class MembershipApplicationController : ControllerBase
     private readonly IAuthorizationService _authorizationService;
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IMembershipApplicationRepository _membershipApplicationRepository;
+    private readonly ILogger<MembershipApplicationController> _logger;
     private readonly ApiResourceFactory _apiResourceFactory;
 
-    public MembershipApplicationController(ApiResourceFactory apiResourceFactory, IAuthorizationService authorizationService, 
+    public MembershipApplicationController(ILogger<MembershipApplicationController> logger, ApiResourceFactory apiResourceFactory, IAuthorizationService authorizationService, 
         IMembershipApplicationService membershipApplicationService, IMembershipApplicationRepository membershipApplicationRepository)
     {
+        _logger = logger;
         _apiResourceFactory = apiResourceFactory;
         _authorizationService = authorizationService;
         _membershipApplicationService = membershipApplicationService;

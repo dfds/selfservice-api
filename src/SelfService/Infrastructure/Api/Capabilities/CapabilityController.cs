@@ -14,6 +14,7 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 [ApiController]
 public class CapabilityController : ControllerBase
 {
+    private readonly ILogger<CapabilityController> _logger;
     private readonly LinkGenerator _linkGenerator;
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ICapabilityRepository _capabilityRepository;
@@ -24,11 +25,12 @@ public class CapabilityController : ControllerBase
     private readonly IMembershipQuery _membershipQuery;
     private readonly ICapabilityApplicationService _capabilityApplicationService;
 
-    public CapabilityController(LinkGenerator linkGenerator, ICapabilityMembersQuery membersQuery, 
+    public CapabilityController(ILogger<CapabilityController> logger, LinkGenerator linkGenerator, ICapabilityMembersQuery membersQuery, 
         ICapabilityRepository capabilityRepository, IKafkaTopicRepository kafkaTopicRepository, ApiResourceFactory apiResourceFactory, 
         IAuthorizationService authorizationService, IKafkaClusterRepository kafkaClusterRepository, IMembershipQuery membershipQuery, 
         ICapabilityApplicationService capabilityApplicationService)
     {
+        _logger = logger;
         _linkGenerator = linkGenerator;
         _membersQuery = membersQuery;
         _capabilityRepository = capabilityRepository;
