@@ -289,7 +289,6 @@ public class CapabilityController : ControllerBase
         {
             Id = account.Id,
             AwsAccountId = account.AccountId,
-            RoleArn = account.RoleArn,
             RoleEmail = account.RoleEmail,
             Links =
             {

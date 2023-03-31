@@ -1,2 +1,2 @@
-Id;AccountId;RoleArn;RoleEmail;CreatedAt;CreatedBy;CapabilityId
-ECFF1558-DB23-4F1B-98DA-8235C5D49A76;123456789012;arn:aws:iam::123456789012:role/Capability;duno@duno.com;2023-02-24T08:00:00;SeedScript;cloudengineering-xxx
+Id;AccountId;RoleEmail;CreatedAt;CreatedBy;CapabilityId
+ECFF1558-DB23-4F1B-98DA-8235C5D49A76;123456789012;duno@duno.com;2023-02-24T08:00:00;SeedScript;cloudengineering-xxx

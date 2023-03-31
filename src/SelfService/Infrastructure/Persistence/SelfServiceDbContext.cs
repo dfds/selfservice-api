@@ -209,7 +209,6 @@ public class SelfServiceDbContext : DbContext
             cfg.HasKey(x => x.Id);
             cfg.Property(x => x.CapabilityId);
             cfg.Property(x => x.AccountId);
-            cfg.Property(x => x.RoleArn);
             cfg.Property(x => x.RoleEmail);
             cfg.Property(x => x.CreatedAt);
             cfg.Property(x => x.CreatedBy);

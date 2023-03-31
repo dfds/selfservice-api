@@ -29,7 +29,6 @@ public class AwsAccountBuilder
             id: _id,
             capabilityId: _capabilityId,
             accountId: _accountId,
-            roleArn: _roleArn,
             roleEmail: _roleEmail,
             createdAt: _createdAt,
             createdBy: _createdBy
