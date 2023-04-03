@@ -4,7 +4,7 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
 {
     protected AwsAccount() { }
 
-    public AwsAccount(AwsAccountId id, CapabilityId capabilityId, RealAwsAccountId accountId, string roleEmail, DateTime createdAt, string createdBy) : base(id)
+    public AwsAccount(AwsAccountId id, CapabilityId capabilityId, RealAwsAccountId? accountId, string? roleEmail, DateTime createdAt, string createdBy) : base(id)
     {
         AccountId = accountId;
         CapabilityId = capabilityId;

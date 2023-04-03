@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 /// </summary>
 public class RealAwsAccountId : ValueObject
 {
+    public static readonly RealAwsAccountId Empty = new("");
+    
     private readonly string _value;
 
     private RealAwsAccountId(string value)
@@ -35,6 +37,13 @@ public class RealAwsAccountId : ValueObject
 
     public static bool TryParse(string? text, out RealAwsAccountId accountId)
     {
+        // TODO -- [thfis] allow empty string for now, since we've got those in the database
+        if (string.IsNullOrEmpty(text))
+        {
+            accountId = Empty;
+            return true;
+        }
+        
         if (string.IsNullOrWhiteSpace(text) || !Regex.IsMatch(text, @"\d{12}"))
         {
             accountId = null!;

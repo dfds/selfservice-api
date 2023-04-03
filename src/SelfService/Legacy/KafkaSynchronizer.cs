@@ -124,6 +124,11 @@ public class KafkaSynchronizer
             }
             else
             {
+                if (string.Equals(legacyTopic.Description, topic.Description))
+                {
+                    continue;
+                }
+                
                 topic.ChangeDescription(
                     newDescription: legacyTopic.Description,
                     modifiedAt: legacyTopic.LastModified.HasValue 
