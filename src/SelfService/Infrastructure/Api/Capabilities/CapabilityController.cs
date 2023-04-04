@@ -25,11 +25,13 @@ public class CapabilityController : ControllerBase
     private readonly IMembershipQuery _membershipQuery;
     private readonly ICapabilityApplicationService _capabilityApplicationService;
     private readonly IAwsAccountRepository _awsAccountRepository;
+    private readonly IAwsAccountApplicationService _awsAccountApplicationService;
 
     public CapabilityController(ILogger<CapabilityController> logger, LinkGenerator linkGenerator, ICapabilityMembersQuery membersQuery, 
         ICapabilityRepository capabilityRepository, IKafkaTopicRepository kafkaTopicRepository, ApiResourceFactory apiResourceFactory, 
         IAuthorizationService authorizationService, IKafkaClusterRepository kafkaClusterRepository, IMembershipQuery membershipQuery, 
-        ICapabilityApplicationService capabilityApplicationService, IAwsAccountRepository awsAccountRepository)
+        ICapabilityApplicationService capabilityApplicationService, IAwsAccountRepository awsAccountRepository,
+        IAwsAccountApplicationService awsAccountApplicationService)
     {
         _logger = logger;
         _linkGenerator = linkGenerator;
@@ -42,6 +44,7 @@ public class CapabilityController : ControllerBase
         _membershipQuery = membershipQuery;
         _capabilityApplicationService = capabilityApplicationService;
         _awsAccountRepository = awsAccountRepository;
+        _awsAccountApplicationService = awsAccountApplicationService;
     }
 
     [HttpGet("")]
@@ -291,6 +294,47 @@ public class CapabilityController : ControllerBase
         }
 
         return Ok(_apiResourceFactory.Convert(account, UserAccessLevelOptions.Read));
+    }
+
+    [HttpPost("{id:required}/awsaccount")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> RequestAwsAccount(string id, [FromServices] SelfServiceDbContext dbContext)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound();
+        }
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+        {
+            return NotFound();
+        }
+
+        var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
+        if (accessLevel != UserAccessLevelOptions.ReadWrite)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var awsAccountId = await _awsAccountApplicationService.RequestAwsAccount(capabilityId, userId);
+            
+            var account = await _awsAccountRepository.Get(awsAccountId);
+
+            return Ok(_apiResourceFactory.Convert(account, UserAccessLevelOptions.Read));
+        }
+        catch (AlreadyHasAwsAccountException)
+        {
+            return Conflict();
+        }
     }
 
     [HttpGet("{id:required}/membershipapplications")]

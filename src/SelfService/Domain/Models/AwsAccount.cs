@@ -19,6 +19,17 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
     public DateTime CreatedAt { get; set; }
     public string CreatedBy { get; set; } = null!;
 
+    public static AwsAccount RequestNew(CapabilityId capabilityId, DateTime createdAt, string requestedBy)
+    {
+        return new AwsAccount(
+            id: AwsAccountId.New(),
+            capabilityId: capabilityId,
+            accountId: null,
+            roleEmail: null,
+            createdAt: createdAt,
+            createdBy: requestedBy);
+    }
+
     public static AwsAccount RegisterNew(CapabilityId capabilityId, RealAwsAccountId accountId, AwsRoleArn roleArn, string roleEmail, DateTime createdAt, string createdBy)
     {
         return new AwsAccount(

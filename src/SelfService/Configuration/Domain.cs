@@ -16,6 +16,7 @@ public static class Domain
         builder.Services.AddSingleton(_ => SystemTime.Default);
 
         builder.Services.AddTransient<ICapabilityApplicationService, CapabilityApplicationService>();
+        builder.Services.AddTransient<IAwsAccountApplicationService, AwsAccountApplicationService>();
         builder.Services.AddTransient<IMembershipApplicationService, MembershipApplicationService>();
         builder.Services.AddTransient<IKafkaTopicApplicationService, KafkaTopicApplicationService>();
 
