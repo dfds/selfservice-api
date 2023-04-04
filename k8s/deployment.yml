@@ -41,6 +41,8 @@ spec:
                 secretKeyRef:
                   name: capability-service-db
                   key: connection-string
+            - name: SS_SYNC_TIMEOUT_SECONDS
+              value: "900"
             - name: DEFAULT_KAFKA_GROUP_ID
               value: build.selfservice.selfservice-api
             - name: SS_APISPECS_TOPIC
@@ -55,7 +57,6 @@ spec:
             limits:
               memory: "200Mi"
               cpu: "200m"
-
 
 ---
 apiVersion: apps/v1
