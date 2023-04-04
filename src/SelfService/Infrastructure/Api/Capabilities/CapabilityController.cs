@@ -290,21 +290,7 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        return Ok(new AwsAccountApiResource
-        {
-            Id = account.Id,
-            AwsAccountId = account.AccountId,
-            RoleEmail = account.RoleEmail,
-            Links =
-            {
-                Self = new ResourceLink
-                {
-                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetCapabilityAwsAccount), values: new {id = id}) ?? "",
-                    Rel = "self",
-                    Allow = {"GET"}
-                }
-            }
-        });
+        return Ok(_apiResourceFactory.Convert(account, UserAccessLevelOptions.Read));
     }
 
     [HttpGet("{id:required}/membershipapplications")]

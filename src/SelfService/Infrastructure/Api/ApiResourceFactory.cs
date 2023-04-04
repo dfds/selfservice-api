@@ -183,6 +183,35 @@ public class ApiResourceFactory
         };
     }
 
+    public AwsAccountApiResource Convert(AwsAccount account, UserAccessLevelOptions accessLevel)
+    {
+        var allowedInteractions = new List<string> {"GET"};
+        if (accessLevel == UserAccessLevelOptions.ReadWrite)
+        {
+            allowedInteractions.Add("POST");
+        }
+
+        return new AwsAccountApiResource
+        {
+            Id = account.Id,
+            AwsAccountId = account.AccountId?.ToString(),
+            RoleEmail = account.RoleEmail,
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(CapabilityController.GetCapabilityAwsAccount),
+                        controller: GetNameOf<CapabilityController>(),
+                        values: new {id = account.CapabilityId}) ?? "",
+                    Rel = "self",
+                    Allow = allowedInteractions
+                }
+            }
+        };
+    }
+
     public KafkaClusterApiResource Convert(KafkaCluster cluster)
     {
         var resourceLink = new ResourceLink
