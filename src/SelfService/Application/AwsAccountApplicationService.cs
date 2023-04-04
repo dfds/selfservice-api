@@ -1,17 +1,22 @@
 using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Domain.Services;
 
 namespace SelfService.Application;
 
 public class AwsAccountApplicationService : IAwsAccountApplicationService
 {
     private readonly IAwsAccountRepository _awsAccountRepository;
+    private readonly ICapabilityRepository _capabilityRepository;
+    private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
 
-    public AwsAccountApplicationService(IAwsAccountRepository awsAccountRepository, SystemTime systemTime)
+    public AwsAccountApplicationService(IAwsAccountRepository awsAccountRepository, ICapabilityRepository capabilityRepository, ITicketingSystem ticketingSystem, SystemTime systemTime)
     {
         _awsAccountRepository = awsAccountRepository;
+        _capabilityRepository = capabilityRepository;
+        _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
     }
 
@@ -28,5 +33,49 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         await _awsAccountRepository.Add(account);
 
         return account.Id;
+    }
+
+    public async Task CreateAwsAccountRequestTicket(AwsAccountId id)
+    {
+        var account = await _awsAccountRepository.Get(id);
+        var capability = await _capabilityRepository.Get(account.CapabilityId);
+
+        var message = CreateMessage("", new ContextAddedToCapabilityData
+        {
+            CapabilityId = capability.Id,
+            CapabilityName = capability.Name,
+            CapabilityRootId = capability.Id,
+            ContextId = account.Id,
+            ContextName = "default"
+        });
+
+        await _ticketingSystem.CreateTicket(message);
+    }
+
+    private static string CreateMessage(string xCorrelationId, ContextAddedToCapabilityData payload)
+    {
+        var message = "*New capability context created*\n" +
+                      "\nRun the following command from github.com/dfds/aws-account-manifests:\n" +
+                      "\n```\n" +
+                      $"CORRELATION_ID=\"{xCorrelationId}\" \\\n" +
+                      $"CAPABILITY_NAME=\"{payload.CapabilityName}\" \\\n" +
+                      $"CAPABILITY_ID=\"{payload.CapabilityId}\" \\\n" +
+                      $"CAPABILITY_ROOT_ID=\"{payload.CapabilityRootId}\" \\\n" +
+                      $"ACCOUNT_NAME=\"{payload.CapabilityRootId}\" \\\n" + // NB: for now account name and capability root id is the same by design
+                      $"CONTEXT_NAME=\"{payload.ContextName}\" \\\n" +
+                      $"CONTEXT_ID=\"{payload.ContextId}\" \\\n" +
+                      "./generate-tfvars.sh" +
+                      "\n```";
+
+        return message;
+    }
+
+    private class ContextAddedToCapabilityData
+    {
+        public string CapabilityId { get; set; }
+        public string CapabilityName { get; set; }
+        public string CapabilityRootId { get; set; }
+        public string ContextId { get; set; }
+        public string ContextName { get; set; }
     }
 }

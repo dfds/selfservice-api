@@ -50,6 +50,8 @@ spec:
           envFrom:
             - secretRef:
                 name: kafka-credentials
+            - secretRef:
+                name: selfservice-api-topdesk
           resources:
             requests:
               memory: "50Mi"

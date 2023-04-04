@@ -25,6 +25,15 @@ public static class ConsumerConfiguration
                     keySelector: x => x.CapabilityId
                 )
                 ;
+
+            options
+                .ForTopic($"{SelfServicePrefix}.awsaccount")
+                .Register<AwsAccountRequested>(
+                    messageType: AwsAccountRequested.EventType,
+                    keySelector: x => x.AccountId
+                )
+                ;
+
             options
                 .ForTopic($"{SelfServicePrefix}.membership")
                 .Register<UserHasJoinedCapability>(
@@ -32,6 +41,7 @@ public static class ConsumerConfiguration
                     keySelector: x => x.UserId!
                 )
                 ;
+
             options
                 .ForTopic($"{SelfServicePrefix}.kafkatopic")
                 .Register<NewKafkaTopicHasBeenRequested>(
@@ -68,9 +78,15 @@ public static class ConsumerConfiguration
 
             var topic = builder.Configuration["SS_APISPECS_TOPIC"];
             options.RegisterMessageHandler<Placeholder, PlaceholderHandler>(topic, Placeholder.EventType);
+
             options
                 .ForTopic($"{SelfServicePrefix}.capability")
                 .RegisterMessageHandler<CapabilityCreated, CapabilityCreatedHandler>(CapabilityCreated.EventType);
+
+            options
+                .ForTopic($"{SelfServicePrefix}.awsaccount")
+                .RegisterMessageHandler<AwsAccountRequested, AwsAccountRequestedHandler>(AwsAccountRequested.EventType);
+
             options
                 .ForTopic($"{SelfServicePrefix}.kafkatopic")
                 .Ignore("topic-requested")
@@ -200,8 +216,29 @@ public class CapabilityCreatedHandler : IMessageHandler<CapabilityCreated>
     {
         _membershipApplicationService = membershipApplicationService;
     }
+
     public Task Handle(CapabilityCreated message, MessageHandlerContext context)
     {
         return _membershipApplicationService.AddCreatorAsInitialMember(message.CapabilityId, message.RequestedBy);
+    }
+}
+
+public class AwsAccountRequestedHandler : IMessageHandler<AwsAccountRequested>
+{
+    private readonly IAwsAccountApplicationService _awsAccountApplicationService;
+
+    public AwsAccountRequestedHandler(IAwsAccountApplicationService awsAccountApplicationService)
+    {
+        _awsAccountApplicationService = awsAccountApplicationService;
+    }
+
+    public Task Handle(AwsAccountRequested message, MessageHandlerContext context)
+    {
+        if (!AwsAccountId.TryParse(message.AccountId, out var id))
+        {
+            throw new InvalidOperationException($"Invalid AwsAccountId {message.AccountId}");
+        }
+
+        return _awsAccountApplicationService.CreateAwsAccountRequestTicket(id);
     }
 }

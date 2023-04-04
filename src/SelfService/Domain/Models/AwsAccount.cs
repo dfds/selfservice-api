@@ -1,3 +1,5 @@
+using SelfService.Domain.Events;
+
 namespace SelfService.Domain.Models;
 
 public class AwsAccount : AggregateRoot<AwsAccountId>
@@ -21,13 +23,20 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
 
     public static AwsAccount RequestNew(CapabilityId capabilityId, DateTime createdAt, string requestedBy)
     {
-        return new AwsAccount(
+        var account = new AwsAccount(
             id: AwsAccountId.New(),
             capabilityId: capabilityId,
             accountId: null,
             roleEmail: null,
             createdAt: createdAt,
             createdBy: requestedBy);
+
+        account.Raise(new AwsAccountRequested
+        {
+            AccountId = account.Id
+        });
+        
+        return account;
     }
 
     public static AwsAccount RegisterNew(CapabilityId capabilityId, RealAwsAccountId accountId, AwsRoleArn roleArn, string roleEmail, DateTime createdAt, string createdBy)

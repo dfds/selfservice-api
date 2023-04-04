@@ -6,6 +6,7 @@ using SelfService.Domain.Services;
 using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
+using SelfService.Infrastructure.Ticketing;
 
 namespace SelfService.Configuration;
 
@@ -22,6 +23,14 @@ public static class Domain
 
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
 
+        var endpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
+        var apiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
+        builder.Services.AddHttpClient<ITicketingSystem, TopDesk>(client =>
+        {
+            client.BaseAddress = endpoint;
+            client.DefaultRequestHeaders.Add("x-api-key", apiKey);
+        });
+        
         builder.Services.AddTransient<ICapabilityRepository, CapabilityRepository>();
         builder.Services.AddTransient<IAwsAccountRepository, AwsAccountRepository>();
         builder.Services.AddTransient<IMembershipRepository, MembershipRepository>();

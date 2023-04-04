@@ -5,4 +5,5 @@ namespace SelfService.Application;
 public interface IAwsAccountApplicationService
 {
     Task<AwsAccountId> RequestAwsAccount(CapabilityId capabilityId, UserId requestedBy);
+    Task CreateAwsAccountRequestTicket(AwsAccountId id);
 }
