@@ -24,11 +24,12 @@ public class CapabilityController : ControllerBase
     private readonly IKafkaClusterRepository _kafkaClusterRepository;
     private readonly IMembershipQuery _membershipQuery;
     private readonly ICapabilityApplicationService _capabilityApplicationService;
+    private readonly IAwsAccountRepository _awsAccountRepository;
 
     public CapabilityController(ILogger<CapabilityController> logger, LinkGenerator linkGenerator, ICapabilityMembersQuery membersQuery, 
         ICapabilityRepository capabilityRepository, IKafkaTopicRepository kafkaTopicRepository, ApiResourceFactory apiResourceFactory, 
         IAuthorizationService authorizationService, IKafkaClusterRepository kafkaClusterRepository, IMembershipQuery membershipQuery, 
-        ICapabilityApplicationService capabilityApplicationService)
+        ICapabilityApplicationService capabilityApplicationService, IAwsAccountRepository awsAccountRepository)
     {
         _logger = logger;
         _linkGenerator = linkGenerator;
@@ -40,6 +41,7 @@ public class CapabilityController : ControllerBase
         _kafkaClusterRepository = kafkaClusterRepository;
         _membershipQuery = membershipQuery;
         _capabilityApplicationService = capabilityApplicationService;
+        _awsAccountRepository = awsAccountRepository;
     }
 
     [HttpGet("")]
@@ -57,6 +59,7 @@ public class CapabilityController : ControllerBase
         }
         
         var capabilities = await _capabilityRepository.GetAll();
+        var awsAccounts = await _awsAccountRepository.GetAll();
 
         return Ok(new CapabilityListApiResource
         {
@@ -65,7 +68,8 @@ public class CapabilityController : ControllerBase
                     capability: capability,
                     accessLevel: myCapabilities.Contains(capability.Id) // TODO [jandr@2023-03-17]: move this knowledge (read/readwrite) to authorization service
                         ? UserAccessLevelOptions.ReadWrite
-                        : UserAccessLevelOptions.Read
+                        : UserAccessLevelOptions.Read,
+                    hasAwsAccount: awsAccounts.Any(x => x.CapabilityId==capability.Id)
                 ))
                 .ToArray(),
             Links =
@@ -114,7 +118,7 @@ public class CapabilityController : ControllerBase
             actionName: nameof(GetCapabilityById),
             controllerName: "Capability",
             routeValues: new {id = capability.Id},
-            value: _apiResourceFactory.Convert(capability, UserAccessLevelOptions.ReadWrite)
+            value: _apiResourceFactory.Convert(capability, UserAccessLevelOptions.ReadWrite, false)
         );
 
     }
@@ -157,8 +161,9 @@ public class CapabilityController : ControllerBase
         }
 
         var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
-
-        return Ok(_apiResourceFactory.Convert(capability, accessLevel));
+        var awsAccount = await _awsAccountRepository.FindBy(capabilityId);
+        
+        return Ok(_apiResourceFactory.Convert(capability, accessLevel, awsAccount!=null));
     }
 
     [HttpGet("{id:required}/members")]
@@ -256,7 +261,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetCapabilityAwsAccount(string id, [FromServices] SelfServiceDbContext dbContext)
+    public async Task<IActionResult> GetCapabilityAwsAccount(string id)
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -279,7 +284,7 @@ public class CapabilityController : ControllerBase
             return Unauthorized();
         }
 
-        var account = await dbContext.AwsAccounts.SingleOrDefaultAsync(x => x.CapabilityId == capabilityId);
+        var account = await _awsAccountRepository.FindBy(capabilityId);
         if (account is null)
         {
             return NotFound();

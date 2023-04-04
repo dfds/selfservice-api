@@ -22,6 +22,7 @@ public static class Domain
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
 
         builder.Services.AddTransient<ICapabilityRepository, CapabilityRepository>();
+        builder.Services.AddTransient<IAwsAccountRepository, AwsAccountRepository>();
         builder.Services.AddTransient<IMembershipRepository, MembershipRepository>();
         builder.Services.AddTransient<IMembershipApplicationRepository, MembershipApplicationRepository>();
         builder.Services.AddTransient<IKafkaClusterRepository, KafkaClusterRepository>();

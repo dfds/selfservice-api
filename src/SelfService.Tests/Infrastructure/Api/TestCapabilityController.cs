@@ -35,6 +35,7 @@ public class TestCapabilityController
     {
         await using var application = new ApiApplication();
         application.ReplaceService<ICapabilityRepository>(new CapabilityRepositoryStub(new CapabilityBuilder().Build()));
+        application.ReplaceService<IAwsAccountRepository>(new AwsAccountRepositoryStub());
         application.ReplaceService<IAuthorizationService>(new AuthorizationServiceStub());
         
         using var client = application.CreateClient();
@@ -63,6 +64,41 @@ public class TestCapabilityController
         public Task<UserAccessLevelOptions> GetUserAccessLevelForCapability(UserId userId, CapabilityId capabilityId)
         {
             return Task.FromResult(_userAccessLevelOptions);
+        }
+    }
+    
+    private class AwsAccountRepositoryStub : IAwsAccountRepository
+    {
+        private readonly AwsAccount? _awsAccount;
+
+        public AwsAccountRepositoryStub(AwsAccount? awsAccount=null)
+        {
+            _awsAccount = awsAccount;
+        }
+
+        public Task<AwsAccount?> FindBy(CapabilityId capabilityId)
+        {
+            return Task.FromResult(_awsAccount);
+        }
+
+        public Task<List<AwsAccount>> GetAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<AwsAccount> Get(AwsAccountId id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Add(AwsAccount account)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> Exists(CapabilityId capabilityId)
+        {
+            throw new NotImplementedException();
         }
     }
     

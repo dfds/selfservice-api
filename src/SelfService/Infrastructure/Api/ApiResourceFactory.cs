@@ -102,7 +102,7 @@ public class ApiResourceFactory
         };
     }
 
-    public CapabilityDetailsApiResource Convert(Capability capability, UserAccessLevelOptions accessLevel)
+    public CapabilityDetailsApiResource Convert(Capability capability, UserAccessLevelOptions accessLevel, bool hasAwsAccount)
     {
         var allowedTopicInteractions = new List<string> {"GET"};
         if (accessLevel == UserAccessLevelOptions.ReadWrite)
@@ -114,6 +114,12 @@ public class ApiResourceFactory
         if (accessLevel == UserAccessLevelOptions.Read)
         {
             allowedMembershipApplicationInteractions.Add("POST");
+        }
+
+        var awsAccountInteractions = new List<string>();
+        if (accessLevel == UserAccessLevelOptions.ReadWrite)
+        {
+            awsAccountInteractions.Add(hasAwsAccount ? "GET" : "POST");
         }
 
         return new CapabilityDetailsApiResource
@@ -162,7 +168,17 @@ public class ApiResourceFactory
                         values: new {id = capability.Id}) ?? "",
                     Rel = "related",
                     Allow = allowedMembershipApplicationInteractions
-                }
+                },
+                AwsAccount =
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                       httpContext: HttpContext,
+                       action: nameof(CapabilityController.RequestAwsAccount),
+                       controller: GetNameOf<CapabilityController>(),
+                       values: new { id = capability.Id }) ?? "",
+                    Rel = "related",
+                    Allow = awsAccountInteractions
+                },
             },
         };
     }

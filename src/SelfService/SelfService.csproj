@@ -23,7 +23,6 @@
       <Folder Include="Domain\Events\" />
       <Folder Include="Domain\Policies\" />
       <Folder Include="Domain\Services\" />
-      <Folder Include="Infrastructure\Api\Memberships\" />
       <Folder Include="Configuration\" />
       <Folder Include="Infrastructure\Persistence\Queries\" />
     </ItemGroup>
