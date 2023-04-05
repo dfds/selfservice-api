@@ -70,7 +70,7 @@ public static class Module
                         .CountAsync()
                 ),
                 new Stat(
-                    Title: "Public Topics",
+                    Title: "Private Topics",
                     Value: await dbContext.KafkaTopics
                         .Where(x => !((string) x.Name).StartsWith("pub."))
                         .CountAsync()
