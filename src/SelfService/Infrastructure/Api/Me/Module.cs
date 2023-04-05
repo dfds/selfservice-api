@@ -1,7 +1,9 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.Me;
 
@@ -12,7 +14,8 @@ public static class Module
         app.MapGet("/me", GetMe).WithTags("Account");
     }
 
-    private static async Task<IResult> GetMe(ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext, [FromServices] IMyCapabilitiesQuery myCapabilitiesQuery)
+    private static async Task<IResult> GetMe(ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext, 
+        [FromServices] IMyCapabilitiesQuery myCapabilitiesQuery, [FromServices] SelfServiceDbContext dbContext)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -41,8 +44,41 @@ public static class Module
                     //    new Link("self", linkGenerator.GetUriByName(httpContext, "capability", new {id = x.Id}))
                     //}
                 })
-                .ToArray()
+                .ToArray(),
+            Stats = new Stat[]
+            {
+                new Stat(
+                    Title: "Capabilities",
+                    Value: await dbContext.Capabilities.CountAsync()
+                ),
+                new Stat(
+                    Title: "AWS Accounts",
+                    Value: await dbContext.AwsAccounts.CountAsync()
+                ),
+                new Stat(
+                    Title: "Kubernetes Clusters",
+                    Value: 1
+                ),
+                new Stat(
+                    Title: "Kafka Clusters",
+                    Value: await dbContext.KafkaClusters.CountAsync()
+                ),
+                new Stat(
+                    Title: "Public Topics",
+                    Value: await dbContext.KafkaTopics
+                        .Where(x => ((string) x.Name).StartsWith("pub."))
+                        .CountAsync()
+                ),
+                new Stat(
+                    Title: "Public Topics",
+                    Value: await dbContext.KafkaTopics
+                        .Where(x => !((string) x.Name).StartsWith("pub."))
+                        .CountAsync()
+                ),
+            },
         });
 
     }
 }
+
+public record Stat(string Title, int Value);
