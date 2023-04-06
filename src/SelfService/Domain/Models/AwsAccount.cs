@@ -6,30 +6,30 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
 {
     protected AwsAccount() { }
 
-    public AwsAccount(AwsAccountId id, CapabilityId capabilityId, RealAwsAccountId? accountId, string? roleEmail, DateTime createdAt, string createdBy) : base(id)
+    public AwsAccount(AwsAccountId id, CapabilityId capabilityId, RealAwsAccountId? accountId, string? roleEmail, DateTime requestedAt, string requestedBy) : base(id)
     {
         AccountId = accountId;
         CapabilityId = capabilityId;
         RoleEmail = roleEmail;
-        CreatedAt = createdAt;
-        CreatedBy = createdBy;
+        RequestedAt = requestedAt;
+        RequestedBy = requestedBy;
     }
 
     public CapabilityId CapabilityId { get; private set; } = null!;
     public RealAwsAccountId? AccountId { get; set; }
     public string? RoleEmail { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public string CreatedBy { get; set; } = null!;
+    public DateTime RequestedAt { get; set; }
+    public string RequestedBy { get; set; } = null!;
 
-    public static AwsAccount RequestNew(CapabilityId capabilityId, DateTime createdAt, string requestedBy)
+    public static AwsAccount RequestNew(CapabilityId capabilityId, DateTime requestedAt, string requestedBy)
     {
         var account = new AwsAccount(
             id: AwsAccountId.New(),
             capabilityId: capabilityId,
             accountId: null,
             roleEmail: null,
-            createdAt: createdAt,
-            createdBy: requestedBy);
+            requestedAt: requestedAt,
+            requestedBy: requestedBy);
 
         account.Raise(new AwsAccountRequested
         {

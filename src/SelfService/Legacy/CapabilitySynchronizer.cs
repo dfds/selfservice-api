@@ -161,8 +161,8 @@ public class CapabilitySynchronizer
             capabilityId: capabilityId,
             accountId: string.IsNullOrWhiteSpace(context.AWSAccountId) ? null : RealAwsAccountId.Parse(context.AWSAccountId),
             roleEmail: context.AWSRoleEmail,
-            createdAt: DateTime.UtcNow,
-            createdBy: "SYSTEM"
+            requestedAt: DateTime.UtcNow,
+            requestedBy: "SYSTEM"
         );
     }
 }

@@ -210,8 +210,8 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CapabilityId);
             cfg.Property(x => x.AccountId);
             cfg.Property(x => x.RoleEmail);
-            cfg.Property(x => x.CreatedAt);
-            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.RequestedAt);
+            cfg.Property(x => x.RequestedBy);
         });
 
         modelBuilder.Entity<KafkaCluster>(cfg =>

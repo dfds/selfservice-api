@@ -30,8 +30,8 @@ public class AwsAccountBuilder
             capabilityId: _capabilityId,
             accountId: _accountId,
             roleEmail: _roleEmail,
-            createdAt: _createdAt,
-            createdBy: _createdBy
+            requestedAt: _createdAt,
+            requestedBy: _createdBy
         );
     }
 
