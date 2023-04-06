@@ -20,6 +20,7 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
     public string? RoleEmail { get; set; }
     public DateTime RequestedAt { get; set; }
     public string RequestedBy { get; set; } = null!;
+    public DateTime? RegisteredAt { get; set; }
 
     public static AwsAccount RequestNew(CapabilityId capabilityId, DateTime requestedAt, string requestedBy)
     {
@@ -39,15 +40,10 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
         return account;
     }
 
-    public static AwsAccount RegisterNew(CapabilityId capabilityId, RealAwsAccountId accountId, AwsRoleArn roleArn, string roleEmail, DateTime createdAt, string createdBy)
+    public void RegisterRealAwsAccount(RealAwsAccountId accountId, string? roleEmail, DateTime registeredAt)
     {
-        return new AwsAccount(
-            id: AwsAccountId.New(),
-            capabilityId: capabilityId,
-            accountId: accountId,
-            roleEmail: roleEmail,
-            createdAt: createdAt,
-            createdBy: createdBy
-        );
+        AccountId = accountId;
+        RoleEmail = roleEmail;
+        RegisteredAt = registeredAt;
     }
 }

@@ -52,6 +52,14 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         await _ticketingSystem.CreateTicket(message);
     }
 
+    [TransactionalBoundary, Outboxed]
+    public async Task RegisterRealAwsAccount(AwsAccountId id, RealAwsAccountId realAwsAccountId, string? roleEmail)
+    {
+        var account = await _awsAccountRepository.Get(id);
+
+        account.RegisterRealAwsAccount(realAwsAccountId, roleEmail, _systemTime.Now);
+    }
+
     private static string CreateMessage(string xCorrelationId, ContextAddedToCapabilityData payload)
     {
         var message = "*New capability context created*\n" +
