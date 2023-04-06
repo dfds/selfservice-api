@@ -21,6 +21,7 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
     public DateTime RequestedAt { get; set; }
     public string RequestedBy { get; set; } = null!;
     public DateTime? RegisteredAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
 
     public static AwsAccount RequestNew(CapabilityId capabilityId, DateTime requestedAt, string requestedBy)
     {
@@ -45,5 +46,10 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
         AccountId = accountId;
         RoleEmail = roleEmail;
         RegisteredAt = registeredAt;
+    }
+
+    public void Complete(DateTime completedAt)
+    {
+        CompletedAt = completedAt;
     }
 }

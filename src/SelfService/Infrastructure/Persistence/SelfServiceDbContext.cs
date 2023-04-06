@@ -213,6 +213,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.RequestedAt);
             cfg.Property(x => x.RequestedBy);
             cfg.Property(x => x.RegisteredAt);
+            cfg.Property(x => x.CompletedAt);
         });
 
         modelBuilder.Entity<KafkaCluster>(cfg =>

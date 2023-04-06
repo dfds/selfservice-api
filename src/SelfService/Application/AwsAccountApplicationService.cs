@@ -60,6 +60,14 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         account.RegisterRealAwsAccount(realAwsAccountId, roleEmail, _systemTime.Now);
     }
 
+    [TransactionalBoundary, Outboxed]
+    public async Task CompleteAwsAccount(AwsAccountId id)
+    {
+        var account = await _awsAccountRepository.Get(id);
+
+        account.Complete(_systemTime.Now);
+    }
+
     private static string CreateMessage(string xCorrelationId, ContextAddedToCapabilityData payload)
     {
         var message = "*New capability context created*\n" +
