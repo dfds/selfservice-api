@@ -196,6 +196,10 @@ public class ApiResourceFactory
             Id = account.Id,
             AwsAccountId = account.AccountId?.ToString(),
             RoleEmail = account.RoleEmail,
+            RequestedAt = account.RequestedAt,
+            RegisteredAt = account.RegisteredAt,
+            CompletedAt = account.CompletedAt,
+            Status = Convert(account.Status),
             Links =
             {
                 Self = new ResourceLink
@@ -209,6 +213,17 @@ public class ApiResourceFactory
                     Allow = allowedInteractions
                 }
             }
+        };
+    }
+
+    private static string Convert(AwsAccountStatus accountStatus)
+    {
+        return accountStatus switch
+        {
+            AwsAccountStatus.Registered => "registered",
+            AwsAccountStatus.Completed => "completed",
+            AwsAccountStatus.Pending => "pending",
+            _ => "pending"
         };
     }
 

@@ -31,11 +31,9 @@
 
   <ItemGroup>
     <Folder Include="Comparers\" />
-    <Folder Include="Domain\Models\" />
     <Folder Include="Infrastructure\Queries\" />
     <Folder Include="Infrastructure\Persistence\" />
     <Folder Include="Builders\" />
-    <Folder Include="TestDoubles\" />
   </ItemGroup>
 
 </Project>

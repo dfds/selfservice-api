@@ -22,6 +22,21 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
     public string RequestedBy { get; set; } = null!;
     public DateTime? RegisteredAt { get; set; }
     public DateTime? CompletedAt { get; set; }
+    public AwsAccountStatus Status
+    {
+        get
+        {
+            if (CompletedAt is not null)
+            {
+                return AwsAccountStatus.Completed;
+            }
+            if (RegisteredAt is null)
+            {
+                return AwsAccountStatus.Pending;
+            }
+            return AwsAccountStatus.Registered;
+        }
+    }
 
     public static AwsAccount RequestNew(CapabilityId capabilityId, DateTime requestedAt, string requestedBy)
     {
