@@ -364,6 +364,70 @@ public class CapabilityController : ControllerBase
         });
     }
 
+    [HttpPost("{id:required}/membershipapplications")]
+    [ProducesResponseType(typeof(MembershipApplicationApiResource), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
+    public async Task<IActionResult> AddCapabilityMembershipApplications(string id, 
+        [FromServices] IMembershipApplicationService membershipApplicationService,
+        [FromServices] IMembershipApplicationRepository membershipApplicationRepository)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound();
+        }
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var applicationId = await membershipApplicationService.SubmitMembershipApplication(capabilityId, userId);
+            var membershipApplication = await membershipApplicationRepository.Get(applicationId);
+
+            // TODO [jandr@2023-04-12]: refactor this! this is intimate knowledge of another controller
+            return CreatedAtAction(
+                actionName: "GetById",
+                controllerName: "MembershipApplication",
+                routeValues: new {id = applicationId.ToString()},
+                value: _apiResourceFactory.Convert(membershipApplication, UserAccessLevelOptions.ReadWrite, userId)
+            );
+        }
+        catch (EntityNotFoundException<Capability>)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Capability not found",
+                Detail = $"Capability \"{capabilityId}\" is unknown by the system."
+            });
+        }
+        catch (PendingMembershipApplicationAlreadyExistsException)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "Already has pending membership application",
+                Detail = $"User \"{userId}\" already has a pending membership application for capability \"{capabilityId}\"."
+            });
+        }
+        catch (AlreadyHasActiveMembershipException)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "Already member",
+                Detail = $"User \"{userId}\" is already member of capability \"{capabilityId}\"."
+            });
+        }
+    }
+
     [HttpPost("{id:required}/topics")] // TODO [jandr@2023-03-20]: refactor - have been "moved as is"
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
