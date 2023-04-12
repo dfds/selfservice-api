@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
 
 namespace SelfService.Configuration;
@@ -12,14 +11,7 @@ public static class Security
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
 
-        builder.Services.AddAuthorization(opt =>
-        {
-            opt.FallbackPolicy = new AuthorizationPolicyBuilder()
-                .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-                .RequireAuthenticatedUser()
-                .Build();
-        });
-
+        builder.Services.AddAuthorization();
 
         // NOTE: enable to debug authentication issues
         // IdentityModelEventSource.ShowPII = true;
