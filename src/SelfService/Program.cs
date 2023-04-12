@@ -34,6 +34,8 @@ try
 
     var app = builder.Build();
 
+    app.UseCors();
+
     app.UseForwardedPrefixAsBasePath();
     app.UseHealthChecks("/healthz");
     app.UseSwagger();
@@ -47,7 +49,7 @@ try
     app.MapEndpoints();
 
     app.UseSerilogRequestLogging();
-    
+
     app.Run();
 }
 catch (Exception ex)

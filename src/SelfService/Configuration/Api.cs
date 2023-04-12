@@ -1,5 +1,4 @@
-﻿using SelfService.Infrastructure.Api.Kafka;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using SelfService.Infrastructure.Api;
 
@@ -9,6 +8,19 @@ public static class Api
 {
     public static void AddApi(this WebApplicationBuilder builder)
     {
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(x =>
+            {
+                x.AllowAnyOrigin();
+                x.AllowAnyHeader();
+                x.AllowAnyMethod();
+                //x.WithExposedHeaders("Strict-Transport-Security");
+                x.SetIsOriginAllowedToAllowWildcardSubdomains();
+                x.SetIsOriginAllowed(_ => true);
+            });
+        });
+
         builder.Services
             .AddControllers()
             .ConfigureApiBehaviorOptions(options =>
