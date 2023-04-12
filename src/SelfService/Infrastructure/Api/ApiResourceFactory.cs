@@ -289,7 +289,7 @@ public class ApiResourceFactory
             Id = application.Id.ToString(),
             Applicant = application.Applicant,
             SubmittedAt = application.SubmittedAt.ToUniversalTime().ToString("O"),
-            DeadlineAt = application.ExpiresOn.ToUniversalTime().ToString("O"),
+            ExpiresOn = application.ExpiresOn.ToUniversalTime().ToString("O"),
             Approvals = Convert(approvals, application.Id, allowedApprovalInteractions),
             Links =
             {
