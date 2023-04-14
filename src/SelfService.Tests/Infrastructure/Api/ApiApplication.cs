@@ -87,6 +87,8 @@ public class ApiApplication : WebApplicationFactory<Program>
         builder.UseSetting("DEFAULT_KAFKA_BOOTSTRAP_SERVERS", "dummy value");
         builder.UseSetting("DEFAULT_KAFKA_GROUP_ID", "dummy value");
         builder.UseSetting("SS_APISPECS_TOPIC", "dummy");
+        builder.UseSetting("SS_TOPDESK_API_GATEWAY_ENDPOINT", "http://localhost:5051");
+        builder.UseSetting("SS_TOPDESK_API_GATEWAY_API_KEY", "dummy");
 
         builder.ConfigureAppConfiguration(x =>
         {
