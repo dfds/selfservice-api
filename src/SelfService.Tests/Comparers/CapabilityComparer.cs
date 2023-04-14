@@ -132,15 +132,14 @@ public class AwsAccountComparer : IEqualityComparer<AwsAccount?>
         }
 
         return x.CapabilityId.Equals(y.CapabilityId) &&
-               x.AccountId.Equals(y.AccountId) &&
-               x.RoleEmail == y.RoleEmail &&
+               x.Registration.Equals(y.Registration) &&
                x.RequestedAt.Equals(y.RequestedAt) &&
                x.RequestedBy == y.RequestedBy;
     }
 
     public int GetHashCode(AwsAccount obj)
     {
-        return HashCode.Combine(obj.CapabilityId, obj.AccountId, obj.RoleEmail, obj.RequestedAt, obj.RequestedBy);
+        return HashCode.Combine(obj.CapabilityId, obj.Registration, obj.RequestedAt, obj.RequestedBy);
     }
 }
 

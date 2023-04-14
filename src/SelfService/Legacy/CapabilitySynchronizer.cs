@@ -155,14 +155,18 @@ public class CapabilitySynchronizer
             return null;
         }
 
-        return new AwsAccount
-        (
+        var account = new AwsAccount(
             id: context.Id,
             capabilityId: capabilityId,
-            accountId: string.IsNullOrWhiteSpace(context.AWSAccountId) ? null : RealAwsAccountId.Parse(context.AWSAccountId),
-            roleEmail: context.AWSRoleEmail,
             requestedAt: DateTime.UtcNow,
-            requestedBy: "SYSTEM"
-        );
+            requestedBy: "SYSTEM");
+
+        var accountId = string.IsNullOrWhiteSpace(context.AWSAccountId) 
+            ? RealAwsAccountId.Empty 
+            : RealAwsAccountId.Parse(context.AWSAccountId);
+
+        account.RegisterRealAwsAccount(accountId, context.AWSRoleEmail, DateTime.UtcNow);
+        
+        return account;
     }
 }

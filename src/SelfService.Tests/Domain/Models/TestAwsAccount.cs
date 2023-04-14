@@ -9,9 +9,7 @@ public class TestAwsAccount
     {
         var account = AwsAccount.RequestNew(CapabilityId.Parse("foo"), DateTime.Today, "bar");
 
-        Assert.Null(account.AccountId);
-        Assert.Null(account.RoleEmail);
-        Assert.Null(account.RegisteredAt);
+        Assert.Equal(AwsAccountRegistration.Incomplete, account.Registration);
         Assert.Null(account.CompletedAt);
     }
 
@@ -22,9 +20,7 @@ public class TestAwsAccount
 
         account.RegisterRealAwsAccount(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today);
 
-        Assert.Equal(RealAwsAccountId.Empty, account.AccountId);
-        Assert.Equal("foo@foo.com", account.RoleEmail);
-        Assert.Equal(DateTime.Today, account.RegisteredAt);
+        Assert.Equal(new AwsAccountRegistration(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today), account.Registration);
         Assert.Null(account.CompletedAt);
     }
 
@@ -36,9 +32,7 @@ public class TestAwsAccount
         account.RegisterRealAwsAccount(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today);
         account.Complete(DateTime.Today);
 
-        Assert.Equal(RealAwsAccountId.Empty, account.AccountId);
-        Assert.Equal("foo@foo.com", account.RoleEmail);
-        Assert.Equal(DateTime.Today, account.RegisteredAt);
+        Assert.Equal(new AwsAccountRegistration(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today), account.Registration);
         Assert.Equal(DateTime.Today, account.CompletedAt);
     }
 

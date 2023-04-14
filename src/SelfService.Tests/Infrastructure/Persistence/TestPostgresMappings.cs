@@ -1,4 +1,5 @@
-﻿using SelfService.Tests.Comparers;
+﻿using SelfService.Domain.Models;
+using SelfService.Tests.Comparers;
 
 namespace SelfService.Tests.Infrastructure.Persistence;
 
@@ -81,6 +82,7 @@ public class TestPostgresMappings
         var dbContext = await databaseFactory.CreateDbContext();
 
         var stub = A.AwsAccount.Build();
+        stub.RegisterRealAwsAccount(RealAwsAccountId.Parse(new string('0', 12)), "foo@foo.com", new DateTime(2000, 1, 1));
 
         // write
         await dbContext.AwsAccounts.AddAsync(stub);

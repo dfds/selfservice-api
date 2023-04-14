@@ -286,10 +286,10 @@ public class ApiResourceFactory
         return new AwsAccountApiResource
         {
             Id = account.Id,
-            AwsAccountId = account.AccountId?.ToString(),
-            RoleEmail = account.RoleEmail,
+            AwsAccountId = account.Registration.AccountId?.ToString(),
+            RoleEmail = account.Registration.RoleEmail,
             RequestedAt = account.RequestedAt,
-            RegisteredAt = account.RegisteredAt,
+            RegisteredAt = account.Registration.RegisteredAt,
             CompletedAt = account.CompletedAt,
             Status = Convert(account.Status),
             Links =

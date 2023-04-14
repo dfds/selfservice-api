@@ -219,11 +219,14 @@ public class SelfServiceDbContext : DbContext
             cfg.HasKey(x => x.Id);
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.CapabilityId);
-            cfg.Property(x => x.AccountId);
-            cfg.Property(x => x.RoleEmail);
+            cfg.OwnsOne(x => x.Registration, o =>
+            {
+                o.Property(x => x.AccountId).HasColumnName(nameof(AwsAccountRegistration.AccountId));
+                o.Property(x => x.RoleEmail).HasColumnName(nameof(AwsAccountRegistration.RoleEmail));
+                o.Property(x => x.RegisteredAt).HasColumnName(nameof(AwsAccountRegistration.RegisteredAt));
+            });
             cfg.Property(x => x.RequestedAt);
             cfg.Property(x => x.RequestedBy);
-            cfg.Property(x => x.RegisteredAt);
             cfg.Property(x => x.CompletedAt);
         });
 
