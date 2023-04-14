@@ -83,6 +83,7 @@ public class TestPostgresMappings
 
         var stub = A.AwsAccount.Build();
         stub.RegisterRealAwsAccount(RealAwsAccountId.Parse(new string('0', 12)), "foo@foo.com", new DateTime(2000, 1, 1));
+        stub.LinkKubernetesNamespace("the-namespace", new DateTime(2000, 1, 1));
 
         // write
         await dbContext.AwsAccounts.AddAsync(stub);

@@ -9,8 +9,9 @@ public class AwsAccountApiResource
     public string? RoleEmail { get; set; }
     public DateTime RequestedAt { get; set; }
     public DateTime? RegisteredAt { get; set; }
+    public string? KubernetesNamespace { get; set; }
     public DateTime? CompletedAt { get; set; }
-    public string Status { get; set; }
+    public string? Status { get; set; }
 
     [JsonPropertyName("_links")]
     public AwsAccountLinks Links { get; set; } = new();

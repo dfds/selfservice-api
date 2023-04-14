@@ -402,7 +402,7 @@ public class K8sNamespaceCreatedAndAwsArnConnectedHandler : IMessageHandler<K8sN
             throw new InvalidOperationException($"Invalid AwsAccountId {message.ContextId}");
         }
 
-        return _awsAccountApplicationService.CompleteAwsAccount(id);
+        return _awsAccountApplicationService.LinkKubernetesNamespace(id, message.NamespaceName);
     }
 
 }

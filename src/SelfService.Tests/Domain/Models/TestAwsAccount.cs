@@ -5,12 +5,12 @@ namespace SelfService.Tests.Domain.Models;
 public class TestAwsAccount
 {
     [Fact]
-    public void requested_account_is_not_registered_nor_completed()
+    public void requested_account_is_not_registered_nor_linked_to_kubernetes()
     {
         var account = AwsAccount.RequestNew(CapabilityId.Parse("foo"), DateTime.Today, "bar");
 
         Assert.Equal(AwsAccountRegistration.Incomplete, account.Registration);
-        Assert.Null(account.CompletedAt);
+        Assert.Equal(KubernetesLink.Unlinked, account.KubernetesLink);
     }
 
     [Fact]
@@ -21,19 +21,19 @@ public class TestAwsAccount
         account.RegisterRealAwsAccount(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today);
 
         Assert.Equal(new AwsAccountRegistration(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today), account.Registration);
-        Assert.Null(account.CompletedAt);
+        Assert.Equal(KubernetesLink.Unlinked, account.KubernetesLink);
     }
 
     [Fact]
-    public void completed_account_as_expected()
+    public void linked_to_kubernetes_as_expected()
     {
         var account = AwsAccount.RequestNew(CapabilityId.Parse("foo"), DateTime.Today, "bar");
 
         account.RegisterRealAwsAccount(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today);
-        account.Complete(DateTime.Today);
+        account.LinkKubernetesNamespace("dummy-namespace", DateTime.Today);
 
         Assert.Equal(new AwsAccountRegistration(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today), account.Registration);
-        Assert.Equal(DateTime.Today, account.CompletedAt);
+        Assert.Equal( new KubernetesLink("dummy-namespace", DateTime.Today), account.KubernetesLink);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class TestAwsAccount
     {
         var account = AwsAccount.RequestNew(CapabilityId.Parse("foo"), DateTime.Today, "bar");
 
-        Assert.Equal(AwsAccountStatus.Pending, account.Status);
+        Assert.Equal(AwsAccountStatus.Requested, account.Status);
     }
 
     [Fact]
@@ -51,16 +51,16 @@ public class TestAwsAccount
 
         account.RegisterRealAwsAccount(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today);
 
-        Assert.Equal(AwsAccountStatus.Registered, account.Status);
+        Assert.Equal(AwsAccountStatus.Pending, account.Status);
     }
 
     [Fact]
-    public void completed_account_has_expected_status()
+    public void linked_account_has_expected_status()
     {
         var account = AwsAccount.RequestNew(CapabilityId.Parse("foo"), DateTime.Today, "bar");
 
         account.RegisterRealAwsAccount(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today);
-        account.Complete(DateTime.Today);
+        account.LinkKubernetesNamespace("dummy-namespace", DateTime.Today);
 
         Assert.Equal(AwsAccountStatus.Completed, account.Status);
     }

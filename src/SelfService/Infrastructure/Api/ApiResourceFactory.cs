@@ -290,7 +290,8 @@ public class ApiResourceFactory
             RoleEmail = account.Registration.RoleEmail,
             RequestedAt = account.RequestedAt,
             RegisteredAt = account.Registration.RegisteredAt,
-            CompletedAt = account.CompletedAt,
+            KubernetesNamespace = account.KubernetesLink.Namespace,
+            CompletedAt = account.KubernetesLink.LinkedAt,
             Status = Convert(account.Status),
             Links =
             {
@@ -312,9 +313,9 @@ public class ApiResourceFactory
     {
         return accountStatus switch
         {
-            AwsAccountStatus.Registered => "registered",
-            AwsAccountStatus.Completed => "completed",
+            AwsAccountStatus.Requested => "requested",
             AwsAccountStatus.Pending => "pending",
+            AwsAccountStatus.Completed => "completed",
             _ => "pending"
         };
     }

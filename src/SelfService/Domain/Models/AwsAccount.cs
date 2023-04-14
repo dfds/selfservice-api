@@ -17,26 +17,26 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
 
     public CapabilityId CapabilityId { get; private set; } = null!;
     public AwsAccountRegistration Registration { get; private set; } = AwsAccountRegistration.Incomplete;
-    public DateTime RequestedAt { get; set; }
-    public string RequestedBy { get; set; } = null!;
-
-    public DateTime? CompletedAt { get; set; }
+    public KubernetesLink KubernetesLink { get; private set; } = KubernetesLink.Unlinked;
+    public DateTime RequestedAt { get; private set; }
+    public string RequestedBy { get; private set; } = null!;
 
     public AwsAccountStatus Status
     {
         get
         {
-            if (CompletedAt is not null)
+            if (KubernetesLink.LinkedAt is not null)
             {
                 return AwsAccountStatus.Completed;
             }
             if (Registration.RegisteredAt is null)
             {
-                return AwsAccountStatus.Pending;
+                return AwsAccountStatus.Requested;
             }
-            return AwsAccountStatus.Registered;
+            return AwsAccountStatus.Pending;
         }
     }
+
 
     public static AwsAccount RequestNew(CapabilityId capabilityId, DateTime requestedAt, string requestedBy)
     {
@@ -59,8 +59,8 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
         Registration = new AwsAccountRegistration(accountId, roleEmail, registeredAt);
     }
 
-    public void Complete(DateTime completedAt)
+    public void LinkKubernetesNamespace(string? @namespace, DateTime connectedAt)
     {
-        CompletedAt = completedAt;
+        KubernetesLink = new KubernetesLink(@namespace, connectedAt);
     }
 }

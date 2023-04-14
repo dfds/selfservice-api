@@ -61,11 +61,11 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task CompleteAwsAccount(AwsAccountId id)
+    public async Task LinkKubernetesNamespace(AwsAccountId id, string? @namespace)
     {
         var account = await _awsAccountRepository.Get(id);
 
-        account.Complete(_systemTime.Now);
+        account.LinkKubernetesNamespace(@namespace, _systemTime.Now);
     }
 
     private static string CreateMessage(string xCorrelationId, ContextAddedToCapabilityData payload)

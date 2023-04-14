@@ -166,6 +166,7 @@ public class CapabilitySynchronizer
             : RealAwsAccountId.Parse(context.AWSAccountId);
 
         account.RegisterRealAwsAccount(accountId, context.AWSRoleEmail, DateTime.UtcNow);
+        account.LinkKubernetesNamespace(legacyCapability.RootId, DateTime.UtcNow);
         
         return account;
     }

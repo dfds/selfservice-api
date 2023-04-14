@@ -1,2 +1,2 @@
-Id;AccountId;RoleEmail;RequestedAt;RequestedBy;CapabilityId;RegisteredAt;CompletedAt
-ECFF1558-DB23-4F1B-98DA-8235C5D49A76;123456789012;duno@duno.com;2023-02-24T08:00:00;SeedScript;cloudengineering-xxx;2023-02-24T08:05:00;2023-02-24T08:10:00
+Id;AccountId;RoleEmail;RequestedAt;RequestedBy;CapabilityId;RegisteredAt;LinkedAt;Namespace
+ECFF1558-DB23-4F1B-98DA-8235C5D49A76;123456789012;duno@duno.com;2023-02-24T08:00:00;SeedScript;cloudengineering-xxx;2023-02-24T08:05:00;2023-02-24T08:10:00;cloudengineering-xxx

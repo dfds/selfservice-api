@@ -225,9 +225,13 @@ public class SelfServiceDbContext : DbContext
                 o.Property(x => x.RoleEmail).HasColumnName(nameof(AwsAccountRegistration.RoleEmail));
                 o.Property(x => x.RegisteredAt).HasColumnName(nameof(AwsAccountRegistration.RegisteredAt));
             });
+            cfg.OwnsOne(x => x.KubernetesLink, o =>
+            {
+                o.Property(x => x.Namespace).HasColumnName(nameof(KubernetesLink.Namespace));
+                o.Property(x => x.LinkedAt).HasColumnName(nameof(KubernetesLink.LinkedAt));
+            });
             cfg.Property(x => x.RequestedAt);
             cfg.Property(x => x.RequestedBy);
-            cfg.Property(x => x.CompletedAt);
         });
 
         modelBuilder.Entity<KafkaCluster>(cfg =>
