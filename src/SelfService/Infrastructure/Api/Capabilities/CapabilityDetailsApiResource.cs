@@ -20,3 +20,18 @@ public class CapabilityDetailsApiResource
         public ResourceLink AwsAccount { get; set; } = new();
     }
 }
+
+public class CapabilityListItemApiResource
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+
+    [JsonPropertyName("_links")]
+    public CapabilityListItemLinks Links { get; set; } = new();
+
+    public class CapabilityListItemLinks
+    {
+        public ResourceLink Self { get; set; } = new();
+    }
+}

@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 using Xunit.Abstractions;
@@ -52,7 +52,8 @@ public class TestCapabilityController
         );
     }
 
-    private class AuthorizationServiceStub : IAuthorizationService
+    [Obsolete]
+    public class AuthorizationServiceStub : IAuthorizationService
     {
         private readonly UserAccessLevelOptions _userAccessLevelOptions;
 
@@ -67,7 +68,7 @@ public class TestCapabilityController
         }
     }
     
-    private class AwsAccountRepositoryStub : IAwsAccountRepository
+    public class AwsAccountRepositoryStub : IAwsAccountRepository
     {
         private readonly AwsAccount? _awsAccount;
 
@@ -98,11 +99,11 @@ public class TestCapabilityController
 
         public Task<bool> Exists(CapabilityId capabilityId)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(_awsAccount != null);
         }
     }
     
-    private class CapabilityRepositoryStub : ICapabilityRepository
+    public class CapabilityRepositoryStub : ICapabilityRepository
     {
         private readonly Capability? _capability;
 

@@ -78,7 +78,7 @@ public class MembershipQuery :  IMembershipQuery
     public async Task<bool> HasActiveMembership(UserId userId, CapabilityId capabilityId)
     {
         // NOTE [jandr@2023-03-16]: this is based on membership entities are deleted when 
-        // members leave a capability - but it would be better of the membership became
+        // members leave a capability - but it would be better if the membership became
         // inactive instead (maybe with a termination date on the entity)
 
         var activeMemberships = await _dbContext.Memberships
@@ -88,15 +88,13 @@ public class MembershipQuery :  IMembershipQuery
         return activeMemberships > 0;
     }
 
-    public async Task<IEnumerable<Membership>> FindActiveBy(UserId userId)
+    public async Task<bool> HasActiveMembershipApplication(UserId userId, CapabilityId capabilityId)
     {
-        // NOTE [jandr@2023-03-16]: this is based on membership entities are deleted when 
-        // members leave a capability - but it would be better of the membership became
-        // inactive instead (maybe with a termination date on the entity)
+        var activeMembershipApplications = await _dbContext.MembershipApplications
+            .Where(x => x.Applicant == userId && x.CapabilityId == capabilityId && x.Status == MembershipApplicationStatusOptions.PendingApprovals)
+            .CountAsync();
 
-        return await _dbContext.Memberships
-            .Where(x => x.UserId == userId)
-            .ToListAsync();
+        return activeMembershipApplications > 0;
     }
 }
 

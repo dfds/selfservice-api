@@ -51,29 +51,12 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(CapabilityListApiResource), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllCapabilities()
     {
-        var myCapabilities = new HashSet<CapabilityId>();
-
-        if (User.TryGetUserId(out var userId))
-        {
-            var activeMemberships = await _membershipQuery.FindActiveBy(userId);
-            myCapabilities = activeMemberships
-                .Select(x => x.CapabilityId)
-                .ToHashSet();
-        }
-        
         var capabilities = await _capabilityRepository.GetAll();
-        var awsAccounts = await _awsAccountRepository.GetAll();
 
         return Ok(new CapabilityListApiResource
         {
             Items = capabilities
-                .Select(capability => _apiResourceFactory.Convert(
-                    capability: capability,
-                    accessLevel: myCapabilities.Contains(capability.Id) // TODO [jandr@2023-03-17]: move this knowledge (read/readwrite) to authorization service
-                        ? UserAccessLevelOptions.ReadWrite
-                        : UserAccessLevelOptions.Read,
-                    hasAwsAccount: awsAccounts.Any(x => x.CapabilityId==capability.Id)
-                ))
+                .Select(_apiResourceFactory.ConvertToListItem)
                 .ToArray(),
             Links =
             {
@@ -121,7 +104,7 @@ public class CapabilityController : ControllerBase
             actionName: nameof(GetCapabilityById),
             controllerName: "Capability",
             routeValues: new {id = capability.Id},
-            value: _apiResourceFactory.Convert(capability, UserAccessLevelOptions.ReadWrite, false)
+            value: _apiResourceFactory.Convert(capability)
         );
 
     }
@@ -162,11 +145,8 @@ public class CapabilityController : ControllerBase
                 Status = StatusCodes.Status404NotFound
             });
         }
-
-        var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
-        var awsAccount = await _awsAccountRepository.FindBy(capabilityId);
         
-        return Ok(_apiResourceFactory.Convert(capability, accessLevel, awsAccount!=null));
+        return Ok(await _apiResourceFactory.Convert(capability));
     }
 
     [HttpGet("{id:required}/members")]

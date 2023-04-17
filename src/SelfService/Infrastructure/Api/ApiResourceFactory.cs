@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
+using SelfService.Infrastructure.Api.Authorization;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.MembershipApplications;
@@ -10,11 +12,13 @@ public class ApiResourceFactory
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly LinkGenerator _linkGenerator;
+    private readonly IAuthorizationService _authorizationService;
 
-    public ApiResourceFactory(IHttpContextAccessor httpContextAccessor, LinkGenerator linkGenerator)
+    public ApiResourceFactory(IHttpContextAccessor httpContextAccessor, LinkGenerator linkGenerator, IAuthorizationService authorizationService)
     {
         _httpContextAccessor = httpContextAccessor;
         _linkGenerator = linkGenerator;
+        _authorizationService = authorizationService;
     }
 
     private HttpContext HttpContext => _httpContextAccessor.HttpContext ?? throw new ApplicationException("Not in a http request context!");
@@ -102,27 +106,9 @@ public class ApiResourceFactory
         };
     }
 
-    public CapabilityDetailsApiResource Convert(Capability capability, UserAccessLevelOptions accessLevel, bool hasAwsAccount)
+    public CapabilityListItemApiResource ConvertToListItem(Capability capability)
     {
-        var allowedTopicInteractions = new List<string> {"GET"};
-        if (accessLevel == UserAccessLevelOptions.ReadWrite)
-        {
-            allowedTopicInteractions.Add("POST");
-        }
-
-        var allowedMembershipApplicationInteractions = new List<string> { "GET" };
-        if (accessLevel == UserAccessLevelOptions.Read)
-        {
-            allowedMembershipApplicationInteractions.Add("POST");
-        }
-
-        var awsAccountInteractions = new List<string>();
-        if (accessLevel == UserAccessLevelOptions.ReadWrite)
-        {
-            awsAccountInteractions.Add(hasAwsAccount ? "GET" : "POST");
-        }
-
-        return new CapabilityDetailsApiResource
+        return new CapabilityListItemApiResource
         {
             Id = capability.Id,
             Name = capability.Name,
@@ -139,46 +125,152 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = {"GET"}
                 },
-                Members = 
+            },
+        };
+    }
+
+    private async Task<ResourceLink> CreateMembershipApplicationsLinkFor(Capability capability)
+    {
+        var allowedInteractions = new List<string> {"GET"};
+
+        var authorizationResult = await _authorizationService.AuthorizeAsync(
+            user: HttpContext.User,
+            resource: capability,
+            requirements: new IAuthorizationRequirement[]
+            {
+                new IsNotMemberOfCapability(),
+                new NotHasPendingMembershipApplication(), 
+            });
+        
+        if (authorizationResult.Succeeded)
+        {
+            allowedInteractions.Add("POST");
+        }
+
+        return new ResourceLink
+        {
+            Href = _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCapabilityMembershipApplications),
+                controller: GetNameOf<CapabilityController>(),
+                values: new {id = capability.Id}) ?? "",
+            Rel = "related",
+            Allow = allowedInteractions
+        };
+    }
+
+    private async Task<ResourceLink> CreateSelfLinkFor(Capability capability)
+    {
+        return new ResourceLink
+        {
+            Href = _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCapabilityById),
+                controller: GetNameOf<CapabilityController>(),
+                values: new {id = capability.Id}) ?? "",
+            Rel = "self",
+            Allow = {"GET"}
+        };
+    }
+
+    private async Task<ResourceLink> CreateMembersLinkFor(Capability capability)
+    {
+        return new ResourceLink
+        {
+            Href = _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCapabilityMembers),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }) ?? "",
+            Rel = "related",
+            Allow = { "GET" }
+        };
+    }
+
+    private async Task<ResourceLink> CreateTopicsLinkFor(Capability capability)
+    {
+        var allowedInteractions = new List<string>();
+        allowedInteractions.Add("GET");
+
+        var postRequirements = new IAuthorizationRequirement[]
+        {
+            new IsMemberOfCapability()
+        };
+
+        var authorizationResult = await _authorizationService.AuthorizeAsync(HttpContext.User, capability, postRequirements);
+        if (authorizationResult.Succeeded)
+        {
+            allowedInteractions.Add("POST");
+        }
+
+        return new ResourceLink
+        {
+            Href = _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCapabilityTopics),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }) ?? "",
+            Rel = "related",
+            Allow = allowedInteractions
+        };
+    }
+
+    private async Task<ResourceLink> CreateAwsAccountLinkFor(Capability capability)
+    {
+        var allowedInteractions = new List<string>();
+
+        var authorizationResult = await _authorizationService.AuthorizeAsync(
+            user: HttpContext.User,
+            resource: capability,
+            requirements: new[]
+            {
+                new IsMemberOfCapability()
+            });
+
+        if (authorizationResult.Succeeded)
+        {
+            allowedInteractions.Add("GET");
+
+            authorizationResult = await _authorizationService.AuthorizeAsync(
+                user: HttpContext.User,
+                resource: capability,
+                requirements: new[]
                 {
-                    Href = _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        action: nameof(CapabilityController.GetCapabilityMembers),
-                        controller: GetNameOf<CapabilityController>(),
-                        values: new {id = capability.Id}) ?? "",
-                    Rel = "related",
-                    Allow = {"GET"}
-                },
-                Topics = 
-                {
-                    Href = _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        action: nameof(CapabilityController.GetCapabilityTopics),
-                        controller: GetNameOf<CapabilityController>(),
-                        values: new {id = capability.Id}) ?? "",
-                    Rel = "related",
-                    Allow = allowedTopicInteractions
-                },
-                MembershipApplications =
-                {
-                    Href = _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        action: nameof(CapabilityController.GetCapabilityMembershipApplications),
-                        controller: GetNameOf<CapabilityController>(),
-                        values: new {id = capability.Id}) ?? "",
-                    Rel = "related",
-                    Allow = allowedMembershipApplicationInteractions
-                },
-                AwsAccount =
-                {
-                    Href = _linkGenerator.GetUriByAction(
-                       httpContext: HttpContext,
-                       action: nameof(CapabilityController.RequestAwsAccount),
-                       controller: GetNameOf<CapabilityController>(),
-                       values: new { id = capability.Id }) ?? "",
-                    Rel = "related",
-                    Allow = awsAccountInteractions
-                },
+                    new HasNoAwsAccount()
+                });
+
+            if (authorizationResult.Succeeded)
+            {
+                allowedInteractions.Add("POST");
+            }
+        }
+
+        return new ResourceLink
+        {
+            Href = _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.RequestAwsAccount),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }) ?? "",
+            Rel = "related",
+            Allow = allowedInteractions
+        };
+    }
+
+    public async Task<CapabilityDetailsApiResource> Convert(Capability capability)
+    {
+        return new CapabilityDetailsApiResource
+        {
+            Id = capability.Id,
+            Name = capability.Name,
+            Description = capability.Description,
+            Links =
+            {
+                Self = await CreateSelfLinkFor(capability),
+                Members = await CreateMembersLinkFor(capability),
+                Topics = await CreateTopicsLinkFor(capability),
+                MembershipApplications = await CreateMembershipApplicationsLinkFor(capability),
+                AwsAccount = await CreateAwsAccountLinkFor(capability),
             },
         };
     }

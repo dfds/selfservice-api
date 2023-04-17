@@ -23,6 +23,12 @@ public class AwsAccountBuilder
         _createdBy = nameof(AwsAccountBuilder);
     }
 
+    public AwsAccountBuilder WithCapabilityId(CapabilityId capabilityId)
+    {
+        _capabilityId = capabilityId;
+        return this;
+    }
+
     public AwsAccount Build()
     {
         return new AwsAccount(

@@ -4,7 +4,7 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class CapabilityListApiResource
 {
-    public CapabilityDetailsApiResource[] Items { get; set; }
+    public CapabilityListItemApiResource[] Items { get; set; }
 
     [JsonPropertyName("_links")]
     public CapabilityListLinks Links { get; set; } = new();

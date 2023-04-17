@@ -1,9 +1,10 @@
 ﻿using SelfService.Domain.Models;
-using SelfService.Infrastructure.Api.Kafka;
 
 namespace SelfService.Domain.Services;
 
+[Obsolete]
 public interface IAuthorizationService
 {
+    [Obsolete]
     Task<UserAccessLevelOptions> GetUserAccessLevelForCapability(UserId userId, CapabilityId capabilityId);
 }
