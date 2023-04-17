@@ -14,7 +14,6 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 [ApiController]
 public class CapabilityController : ControllerBase
 {
-    private readonly ILogger<CapabilityController> _logger;
     private readonly LinkGenerator _linkGenerator;
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ICapabilityRepository _capabilityRepository;
@@ -22,18 +21,16 @@ public class CapabilityController : ControllerBase
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IAuthorizationService _authorizationService;
     private readonly IKafkaClusterRepository _kafkaClusterRepository;
-    private readonly IMembershipQuery _membershipQuery;
     private readonly ICapabilityApplicationService _capabilityApplicationService;
     private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly IAwsAccountApplicationService _awsAccountApplicationService;
 
-    public CapabilityController(ILogger<CapabilityController> logger, LinkGenerator linkGenerator, ICapabilityMembersQuery membersQuery, 
+    public CapabilityController(LinkGenerator linkGenerator, ICapabilityMembersQuery membersQuery, 
         ICapabilityRepository capabilityRepository, IKafkaTopicRepository kafkaTopicRepository, ApiResourceFactory apiResourceFactory, 
-        IAuthorizationService authorizationService, IKafkaClusterRepository kafkaClusterRepository, IMembershipQuery membershipQuery, 
+        IAuthorizationService authorizationService, IKafkaClusterRepository kafkaClusterRepository, 
         ICapabilityApplicationService capabilityApplicationService, IAwsAccountRepository awsAccountRepository,
         IAwsAccountApplicationService awsAccountApplicationService)
     {
-        _logger = logger;
         _linkGenerator = linkGenerator;
         _membersQuery = membersQuery;
         _capabilityRepository = capabilityRepository;
@@ -41,7 +38,6 @@ public class CapabilityController : ControllerBase
         _apiResourceFactory = apiResourceFactory;
         _authorizationService = authorizationService;
         _kafkaClusterRepository = kafkaClusterRepository;
-        _membershipQuery = membershipQuery;
         _capabilityApplicationService = capabilityApplicationService;
         _awsAccountRepository = awsAccountRepository;
         _awsAccountApplicationService = awsAccountApplicationService;

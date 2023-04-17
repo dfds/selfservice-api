@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using SelfService.Domain.Models;
-using SelfService.Domain.Services;
+using SelfService.Domain.Queries;
 using Xunit.Abstractions;
 
 namespace SelfService.Tests.Infrastructure.Api;
@@ -34,9 +34,8 @@ public class TestCapabilityController
     public async Task getting_capability_by_id_returns_ok()
     {
         await using var application = new ApiApplication();
-        application.ReplaceService<ICapabilityRepository>(new CapabilityRepositoryStub(new CapabilityBuilder().Build()));
-        application.ReplaceService<IAwsAccountRepository>(new AwsAccountRepositoryStub());
-        application.ReplaceService<IAuthorizationService>(new AuthorizationServiceStub());
+        application.ReplaceService<ICapabilityRepository>(new CapabilityRepositoryStub(A.Capability));
+        application.ReplaceService<IMembershipQuery>(new MembershipQueryStub());
         
         using var client = application.CreateClient();
 
@@ -52,22 +51,6 @@ public class TestCapabilityController
         );
     }
 
-    [Obsolete]
-    public class AuthorizationServiceStub : IAuthorizationService
-    {
-        private readonly UserAccessLevelOptions _userAccessLevelOptions;
-
-        public AuthorizationServiceStub(UserAccessLevelOptions userAccessLevelOptions = UserAccessLevelOptions.Read)
-        {
-            _userAccessLevelOptions = userAccessLevelOptions;
-        }
-
-        public Task<UserAccessLevelOptions> GetUserAccessLevelForCapability(UserId userId, CapabilityId capabilityId)
-        {
-            return Task.FromResult(_userAccessLevelOptions);
-        }
-    }
-    
     public class AwsAccountRepositoryStub : IAwsAccountRepository
     {
         private readonly AwsAccount? _awsAccount;
