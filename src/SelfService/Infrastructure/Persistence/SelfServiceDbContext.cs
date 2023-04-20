@@ -155,6 +155,7 @@ public class SelfServiceDbContext : DbContext
         {
             cfg.ToTable("Capability");
             cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.Name);
             cfg.Property(x => x.Description);
             cfg.Property(x => x.Deleted);
@@ -166,23 +167,26 @@ public class SelfServiceDbContext : DbContext
         {
             cfg.ToTable("Member");
             cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.DisplayName);
             cfg.Property(x => x.Email);
         });
 
-        modelBuilder.Entity<Membership>(opt =>
+        modelBuilder.Entity<Membership>(cfg =>
         {
-            opt.ToTable("Membership");
-            opt.HasKey(x => x.Id);
-            opt.Property(x => x.CapabilityId);
-            opt.Property(x => x.UserId);
-            opt.Property(x => x.CreatedAt);
+            cfg.ToTable("Membership");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CapabilityId);
+            cfg.Property(x => x.UserId);
+            cfg.Property(x => x.CreatedAt);
         });
 
         modelBuilder.Entity<MembershipApplication>(opt =>
         {
             opt.ToTable("MembershipApplication");
             opt.HasKey(x => x.Id);
+            opt.Property(x => x.Id).ValueGeneratedNever();
             opt.Property(x => x.CapabilityId);
             opt.Property(x => x.Applicant);
             opt.Property(x => x.Status);
@@ -190,6 +194,7 @@ public class SelfServiceDbContext : DbContext
             opt.Property(x => x.ExpiresOn);
 
             opt.HasMany(x => x.Approvals);
+            opt.Navigation(x => x.Approvals).AutoInclude();
 
             opt.Ignore(x => x.IsFinalized);
             opt.Ignore(x => x.IsCancelled);
@@ -198,7 +203,9 @@ public class SelfServiceDbContext : DbContext
         modelBuilder.Entity<MembershipApproval>(cfg =>
         {
             cfg.ToTable("MembershipApproval");
+            
             cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.ApprovedBy);
             cfg.Property(x => x.ApprovedAt);
         });
@@ -207,6 +214,7 @@ public class SelfServiceDbContext : DbContext
         {
             cfg.ToTable("AwsAccount");
             cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.CapabilityId);
             cfg.Property(x => x.AccountId);
             cfg.Property(x => x.RoleEmail);
@@ -220,6 +228,7 @@ public class SelfServiceDbContext : DbContext
         {
             cfg.ToTable("KafkaCluster");
             cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.Name);
             cfg.Property(x => x.Description);
             cfg.Property(x => x.Enabled);
@@ -229,6 +238,7 @@ public class SelfServiceDbContext : DbContext
         {
             cfg.ToTable("KafkaTopic");
             cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.KafkaClusterId);
             cfg.Property(x => x.CapabilityId);
             cfg.Property(x => x.Name);
@@ -249,6 +259,7 @@ public class SelfServiceDbContext : DbContext
         {
             cfg.ToTable("MessageContract");
             cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.KafkaTopicId);
             cfg.Property(x => x.MessageType);
             cfg.Property(x => x.Description);

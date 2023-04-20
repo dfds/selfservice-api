@@ -317,7 +317,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(MembershipApplicationListApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetCapabilityMembershipApplications(string id, [FromServices] SelfServiceDbContext dbContext)
+    public async Task<IActionResult> GetCapabilityMembershipApplications(string id, [FromServices] ICapabilityMembershipApplicationQuery query)
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -334,11 +334,7 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        var applications = await dbContext.MembershipApplications
-            .Include(x => x.Approvals)
-            .Where(x => x.CapabilityId == capabilityId)
-            .OrderBy(x => x.SubmittedAt)
-            .ToListAsync();
+        var applications = await query.FindPendingBy(capabilityId);
         
         var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
         if (accessLevel == UserAccessLevelOptions.Read)
@@ -350,7 +346,7 @@ public class CapabilityController : ControllerBase
         }
 
         var allowedInteractions = new List<string> {"GET"};
-        if (accessLevel == UserAccessLevelOptions.Read && applications.Count == 0)
+        if (accessLevel == UserAccessLevelOptions.Read && applications.Count() == 0)
         {
             allowedInteractions.Add("POST");
         }

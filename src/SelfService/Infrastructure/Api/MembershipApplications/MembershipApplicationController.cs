@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
@@ -7,7 +6,6 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Persistence;
-using Capability = SelfService.Domain.Models.Capability;
 
 namespace SelfService.Infrastructure.Api.MembershipApplications;
 

@@ -22,6 +22,7 @@ public static class Domain
         builder.Services.AddTransient<IKafkaTopicApplicationService, KafkaTopicApplicationService>();
 
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
+        builder.Services.AddTransient<MembershipApplicationDomainService>();
 
         var endpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
         var apiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
@@ -45,6 +46,7 @@ public static class Domain
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
         builder.Services.AddTransient<IMembershipQuery, MembershipQuery>();
+        builder.Services.AddTransient<ICapabilityMembershipApplicationQuery, CapabilityMembershipApplicationQuery>();
 
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();

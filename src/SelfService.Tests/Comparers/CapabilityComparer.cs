@@ -261,7 +261,7 @@ public class MembershipApplicationComparer : IEqualityComparer<MembershipApplica
                x.Status.Equals(y.Status) &&
                x.SubmittedAt.Equals(y.SubmittedAt) &&
                x.ExpiresOn.Equals(y.ExpiresOn) &&
-               x.Approvals.SequenceEqual(y.Approvals);
+               x.Approvals.SequenceEqual(y.Approvals, new MembershipApprovalComparer());
     }
 
     public int GetHashCode(MembershipApplication obj)

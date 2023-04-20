@@ -6,7 +6,7 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
 {
     private MembershipApplication() { }
     
-    private readonly List<MembershipApproval> _approvals = new List<MembershipApproval>();
+    private readonly IList<MembershipApproval> _approvals = new List<MembershipApproval>();
     private readonly CapabilityId _capabilityId = null!;
     private readonly UserId _applicant = null!;
     private MembershipApplicationStatusOptions _status;
@@ -14,12 +14,12 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
     private readonly DateTime _expiresOn;
 
     public MembershipApplication(MembershipApplicationId id, CapabilityId capabilityId, UserId applicant,
-        IEnumerable<MembershipApproval> approvals, MembershipApplicationStatusOptions status, 
+        IList<MembershipApproval> approvals, MembershipApplicationStatusOptions status, 
         DateTime submittedAt, DateTime expiresOn) : base(id)
     {
         _capabilityId = capabilityId;
         _applicant = applicant;
-        _approvals.AddRange(approvals);
+        _approvals = approvals;
         _status = status;
         _submittedAt = submittedAt;
         _expiresOn = expiresOn;
@@ -63,8 +63,8 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
 
         var approval = MembershipApproval.Register(approvedBy, approvedAt);
         _approvals.Add(approval);
-        
-        Raise(new MembershipApplicationHasRecievedAnApproval
+
+        Raise(new MembershipApplicationHasReceivedAnApproval
         {
             MembershipApplicationId = Id.ToString()
         });
@@ -120,7 +120,7 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
             id: MembershipApplicationId.New(),
             capabilityId: capabilityId,
             applicant: applicant,
-            approvals: Enumerable.Empty<MembershipApproval>(), 
+            approvals: new List<MembershipApproval>(), 
             status: MembershipApplicationStatusOptions.PendingApprovals,
             submittedAt: submittedAt,
             expiresOn: submittedAt

@@ -6,4 +6,7 @@ public interface IMembershipApplicationRepository
     Task<MembershipApplication> Get(MembershipApplicationId id);
     Task<IEnumerable<MembershipApplication>> FindExpiredApplications();
     Task<MembershipApplication?> FindPendingBy(CapabilityId capabilityId, UserId userId);
+    Task<MembershipApplication?> FindBy(MembershipApplicationId id);
+    Task Remove(MembershipApplicationId id);
+    Task Remove(MembershipApplication application);
 }

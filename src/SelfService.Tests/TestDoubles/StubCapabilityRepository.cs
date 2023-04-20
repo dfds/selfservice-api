@@ -23,7 +23,7 @@ public class StubCapabilityRepository : ICapabilityRepository
 
     public Task<bool> Exists(CapabilityId id)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(_capability != null);
     }
 
     public Task Add(Capability capability)

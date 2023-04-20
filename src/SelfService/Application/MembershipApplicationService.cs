@@ -15,10 +15,12 @@ public class MembershipApplicationService : IMembershipApplicationService
     private readonly IAuthorizationService _authorizationService;
     private readonly SystemTime _systemTime;
     private readonly IMembershipQuery _membershipQuery;
+    private readonly MembershipApplicationDomainService _membershipApplicationDomainService;
 
     public MembershipApplicationService(ILogger<MembershipApplicationService> logger, ICapabilityRepository capabilityRepository, 
         IMembershipRepository membershipRepository, IMembershipApplicationRepository membershipApplicationRepository, 
-        IAuthorizationService authorizationService, SystemTime systemTime, IMembershipQuery membershipQuery)
+        IAuthorizationService authorizationService, SystemTime systemTime, IMembershipQuery membershipQuery, 
+        MembershipApplicationDomainService membershipApplicationDomainService)
     {
         _logger = logger;
         _capabilityRepository = capabilityRepository;
@@ -27,9 +29,9 @@ public class MembershipApplicationService : IMembershipApplicationService
         _authorizationService = authorizationService;
         _systemTime = systemTime;
         _membershipQuery = membershipQuery;
+        _membershipApplicationDomainService = membershipApplicationDomainService;
     }
 
-    
     [TransactionalBoundary, Outboxed]
     public async Task AddCreatorAsInitialMember(CapabilityId capabilityId, UserId creatorId)
     {
@@ -112,31 +114,18 @@ public class MembershipApplicationService : IMembershipApplicationService
             nameof(TryFinalizeMembershipApplication), GetType().FullName);
 
         var application = await _membershipApplicationRepository.Get(applicationId);
-        var memberships = await _membershipRepository.FindBy(application.CapabilityId);
-        
-        var currentMemberCount = memberships.Count();
-        var approvalCount = application.Approvals.Count();
 
-        if (currentMemberCount == 1)
+        if (await _membershipApplicationDomainService.CanBeFinalized(application))
         {
-            if (approvalCount == 1)
-            {
-                application.FinalizeApprovals();
-            }
+            application.FinalizeApprovals();
+
+            _logger.LogInformation("Finalized membership application approvals on {MembershipApplicationId} for {CapabilityId}",
+                application.Id, application.CapabilityId);
         }
-        else if (currentMemberCount == 2)
+        else
         {
-            if (approvalCount == 1)
-            {
-                application.FinalizeApprovals();
-            }
-        }
-        else if (currentMemberCount > 2)
-        {
-            if (approvalCount == 2)
-            {
-                application.FinalizeApprovals();
-            }
+            _logger.LogDebug("Could not yet finalize membership application approvals for {MembershipApplicationId}", 
+                application.Id);
         }
     }
 
@@ -144,7 +133,7 @@ public class MembershipApplicationService : IMembershipApplicationService
     public async Task ApproveMembershipApplication(MembershipApplicationId applicationId, UserId approvedBy)
     {
         using var _ = _logger.BeginScope("{Action} on {ImplementationType}",
-            nameof(SubmitMembershipApplication), GetType().FullName);
+            nameof(ApproveMembershipApplication), GetType().FullName);
 
         _logger.LogDebug("User {UserId} wants to approve membership application {MembershipApplicationId}", 
             approvedBy, applicationId);
@@ -186,5 +175,11 @@ public class MembershipApplicationService : IMembershipApplicationService
 
             application.Cancel();
         }
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task RemoveMembershipApplication(MembershipApplicationId applicationId)
+    {
+        await _membershipApplicationRepository.Remove(applicationId);
     }
 }

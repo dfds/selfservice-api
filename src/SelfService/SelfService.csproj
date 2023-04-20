@@ -20,9 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Domain\Events\" />
       <Folder Include="Domain\Policies\" />
-      <Folder Include="Domain\Services\" />
       <Folder Include="Configuration\" />
       <Folder Include="Infrastructure\Persistence\Queries\" />
     </ItemGroup>

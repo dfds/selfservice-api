@@ -35,6 +35,13 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
         return result;
     }
 
+    public async Task<MembershipApplication?> FindBy(MembershipApplicationId id)
+    {
+        return await _dbContext.MembershipApplications
+            .Include(x => x.Approvals)
+            .FirstOrDefaultAsync(x => x.Id == id);
+    }
+
     public async Task<IEnumerable<MembershipApplication>> FindExpiredApplications()
     {
         var now = _systemTime.Now;
@@ -51,5 +58,20 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
             .Include(x => x.Approvals)
             .Where(x => x.Status == MembershipApplicationStatusOptions.PendingApprovals && x.CapabilityId == capabilityId && x.Applicant == userId)
             .SingleOrDefaultAsync();
+    }
+
+    public async Task Remove(MembershipApplicationId id)
+    {
+        var application = await FindBy(id);
+        if (application != null)
+        {
+            await Remove(application);
+        }
+    }
+
+    public Task Remove(MembershipApplication application)
+    {
+        _dbContext.MembershipApplications.Remove(application);
+        return Task.CompletedTask;
     }
 }

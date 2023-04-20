@@ -68,12 +68,24 @@ public static class ConsumerConfiguration
             options
                 .ForTopic($"{SelfServicePrefix}.membershipapplication")
                 .Register<NewMembershipApplicationHasBeenSubmitted>(
-                    messageType: "membership-submitted",
+                    messageType: "membership-application-submitted",
+                    keySelector: x => x.MembershipApplicationId!
+                )
+                .Register<MembershipApplicationHasBeenFinalized>(
+                    messageType: "membership-application-finalized",
+                    keySelector: x => x.MembershipApplicationId!
+                )
+                .Register<MembershipApplicationHasReceivedAnApproval>(
+                    messageType: "membership-application-received-approval",
+                    keySelector: x => x.MembershipApplicationId!
+                )
+                .Register<MembershipApplicationHasBeenCancelled>(
+                    messageType: "membership-application-cancelled",
                     keySelector: x => x.MembershipApplicationId!
                 )
                 ;
         });
-
+        
         builder.Services.AddConsumer(options =>
         {
             options.WithConfigurationSource(builder.Configuration);
@@ -97,9 +109,11 @@ public static class ConsumerConfiguration
 
             options
                 .ForTopic($"{SelfServicePrefix}.membershipapplication")
-                .Ignore("membership-submitted")
+                .Ignore("membership-application-submitted")
+                .RegisterMessageHandler<MembershipApplicationHasBeenFinalized, ConvertMembershipApplicationToActualMembership>("membership-application-finalized")
+                .RegisterMessageHandler<MembershipApplicationHasReceivedAnApproval, FinalizeMembershipApplication>("membership-application-received-approval")
+                .RegisterMessageHandler<MembershipApplicationHasBeenCancelled, RemoveCancelledMembershipApplication>("membership-application-cancelled")
                 ;
-
 
             #region confluent gateway events
 

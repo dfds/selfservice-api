@@ -15,7 +15,7 @@ public static class Module
     }
 
     private static async Task<IResult> GetMe(ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext, 
-        [FromServices] IMyCapabilitiesQuery myCapabilitiesQuery, [FromServices] SelfServiceDbContext dbContext)
+        [FromServices] IMyCapabilitiesQuery myCapabilitiesQuery, [FromServices] SelfServiceDbContext dbContext, IHostEnvironment hostEnvironment)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -76,6 +76,7 @@ public static class Module
                         .CountAsync()
                 ),
             },
+            AutoReloadTopics = !hostEnvironment.IsDevelopment(),
         });
 
     }

@@ -98,3 +98,21 @@ public class MembershipQuery :  IMembershipQuery
     }
 }
 
+public class CapabilityMembershipApplicationQuery : ICapabilityMembershipApplicationQuery
+{
+    private readonly SelfServiceDbContext _dbContext;
+
+    public CapabilityMembershipApplicationQuery(SelfServiceDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public async Task<IEnumerable<MembershipApplication>> FindPendingBy(CapabilityId capabilityId)
+    {
+        return await _dbContext.MembershipApplications
+            .Include(x => x.Approvals)
+            .Where(x => x.CapabilityId == capabilityId && x.Status == MembershipApplicationStatusOptions.PendingApprovals)
+            .OrderBy(x => x.SubmittedAt)
+            .ToListAsync();
+    }
+}
