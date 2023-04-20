@@ -1,89 +1,181 @@
-﻿using System.Security.Claims;
+﻿using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.Me;
 
-public static class Module
+[Route("me")]
+[Produces("application/json")]
+[ApiController]
+public class MeController : ControllerBase
 {
-    public static void MapMeEndpoints(this IEndpointRouteBuilder app)
+    private readonly IMyCapabilitiesQuery _myCapabilitiesQuery;
+    private readonly SelfServiceDbContext _dbContext;
+    private readonly IHostEnvironment _hostEnvironment;
+    private readonly ApiResourceFactory _apiResourceFactory;
+    private readonly IMemberRepository _memberRepository;
+    private readonly IMemberApplicationService _memberApplicationService;
+    private readonly LinkGenerator _linkGenerator;
+
+    public MeController(IMyCapabilitiesQuery myCapabilitiesQuery, SelfServiceDbContext dbContext, IHostEnvironment hostEnvironment, 
+        ApiResourceFactory apiResourceFactory, IMemberRepository memberRepository, IMemberApplicationService memberApplicationService,
+        LinkGenerator linkGenerator)
     {
-        app.MapGet("/me", GetMe).WithTags("Account");
+        _myCapabilitiesQuery = myCapabilitiesQuery;
+        _dbContext = dbContext;
+        _hostEnvironment = hostEnvironment;
+        _apiResourceFactory = apiResourceFactory;
+        _memberRepository = memberRepository;
+        _memberApplicationService = memberApplicationService;
+        _linkGenerator = linkGenerator;
     }
 
-    private static async Task<IResult> GetMe(ClaimsPrincipal user, LinkGenerator linkGenerator, HttpContext httpContext, 
-        [FromServices] IMyCapabilitiesQuery myCapabilitiesQuery, [FromServices] SelfServiceDbContext dbContext, IHostEnvironment hostEnvironment)
+    [HttpGet("")]
+    public async Task<IActionResult> GetMe()
     {
-        var errors = new Dictionary<string, string[]>();
-
-        var upn = user.Identity?.Name?.ToLower();
-        if (!UserId.TryParse(upn, out var userId))
+        if (!User.TryGetUserId(out var userId))
         {
-            errors.Add("upn", new[] { $"Identity \"{upn}\" is not a valid user id." });
-        }
-
-        if (errors.Any())
-        {
-            return Results.ValidationProblem(errors);
-        }
-
-        var capabilities = await myCapabilitiesQuery.FindBy(userId);
-
-        return TypedResults.Ok(new
-        {
-            Capabilities = capabilities.Select(x => new
-                {
-                    Id = x.Id.ToString(),
-                    Name = x.Name,
-                    Description = x.Description,
-                    //Links = new Link[] // TODO [jandr@2023-02-22]: change link field from array to object representation
-                    //{
-                    //    new Link("self", linkGenerator.GetUriByName(httpContext, "capability", new {id = x.Id}))
-                    //}
-                })
-                .ToArray(),
-            Stats = new Stat[]
+            return Unauthorized(new ProblemDetails
             {
-                new Stat(
-                    Title: "Capabilities",
-                    Value: await dbContext.Capabilities
-                        .Where(x => x.Deleted == null)
-                        .CountAsync()
-                ),
-                new Stat(
-                    Title: "AWS Accounts",
-                    Value: await dbContext.AwsAccounts.CountAsync()
-                ),
-                new Stat(
-                    Title: "Kubernetes Clusters",
-                    Value: 1
-                ),
-                new Stat(
-                    Title: "Kafka Clusters",
-                    Value: await dbContext.KafkaClusters
-                        .Where(x => x.Enabled)
-                        .CountAsync()
-                ),
-                new Stat(
-                    Title: "Public Topics",
-                    Value: await dbContext.KafkaTopics
-                        .Where(x => ((string) x.Name).StartsWith("pub."))
-                        .CountAsync()
-                ),
-                new Stat(
-                    Title: "Private Topics",
-                    Value: await dbContext.KafkaTopics
-                        .Where(x => !((string) x.Name).StartsWith("pub."))
-                        .CountAsync()
-                ),
-            },
-            AutoReloadTopics = !hostEnvironment.IsDevelopment(),
-        });
+                Title = "Access Denied!",
+                Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id."
+            });
+        }
 
+        var capabilities = await _myCapabilitiesQuery.FindBy(userId);
+        var member = await _memberRepository.FindBy(userId);
+
+        return Ok(new MyProfileApiResource
+        {
+            Capabilities = capabilities.Select(_apiResourceFactory.ConvertToListItem), 
+            Stats = await ComposeStats(),
+            AutoReloadTopics = !_hostEnvironment.IsDevelopment(),
+            PersonalInformation = member != null
+                ? new PersonalInformationApiResource
+                {
+                    Name = member.DisplayName ?? "",
+                    Email = member.Email
+                }
+                : PersonalInformationApiResource.Empty,
+            Links =
+            {
+                Self =
+                {
+                    Href = _linkGenerator.GetUriByAction(HttpContext, "GetMe") ?? "",
+                    Rel = "self",
+                    Allow = { "GET" }
+                },
+                PersonalInformation =
+                {
+                    Href = _linkGenerator.GetUriByAction(HttpContext, "UpdatePersonalInformation") ?? "",
+                    Rel = "related",
+                    Allow = {"PUT"}
+                }
+            }
+        });
     }
+
+    [HttpPut("personalinformation")]
+    public async Task<IActionResult> UpdatePersonalInformation([FromBody] UpdatePersonalInformationRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access Denied!",
+                Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid email",
+                Detail = $"Email \"{request.Email}\" for user \"{userId}\" is not valid."
+            });
+        }
+
+        await _memberApplicationService.RegisterUserProfile(userId, request.Name ?? "", request.Email);
+
+        return NoContent();
+    }
+
+    private async Task<Stat[]> ComposeStats()
+    {
+        return new Stat[]
+        {
+            new Stat(
+                Title: "Capabilities",
+                Value: await _dbContext.Capabilities
+                    .Where(x => x.Deleted == null)
+                    .CountAsync()
+            ),
+            new Stat(
+                Title: "AWS Accounts",
+                Value: await _dbContext.AwsAccounts.CountAsync()
+            ),
+            new Stat(
+                Title: "Kubernetes Clusters",
+                Value: 1
+            ),
+            new Stat(
+                Title: "Kafka Clusters",
+                Value: await _dbContext.KafkaClusters
+                    .Where(x => x.Enabled)
+                    .CountAsync()
+            ),
+            new Stat(
+                Title: "Public Topics",
+                Value: await _dbContext.KafkaTopics
+                    .Where(x => ((string) x.Name).StartsWith("pub."))
+                    .CountAsync()
+            ),
+            new Stat(
+                Title: "Private Topics",
+                Value: await _dbContext.KafkaTopics
+                    .Where(x => !((string) x.Name).StartsWith("pub."))
+                    .CountAsync()
+            ),
+        };
+    }
+}
+
+public class UpdatePersonalInformationRequest
+{
+    public string? Name { get; set; }
+    public string? Email { get; set; }
+}
+
+
+public class MyProfileApiResource
+{
+    public IEnumerable<CapabilityListItemApiResource> Capabilities { get; set; } = Enumerable.Empty<CapabilityListItemApiResource>();
+    public IEnumerable<Stat> Stats { get; set; } = Enumerable.Empty<Stat>();
+    public bool AutoReloadTopics { get; set; } = true;
+    public PersonalInformationApiResource PersonalInformation { get; set; } = new ();
+
+    [JsonPropertyName("_links")]
+    public MyProfileLinks Links { get; set; } = new();
+
+    public class MyProfileLinks
+    {
+        public ResourceLink Self { get; set; } = new();
+        public ResourceLink PersonalInformation { get; set; } = new();
+    }
+}
+
+public class PersonalInformationApiResource
+{
+    public static PersonalInformationApiResource Empty = new();
+
+    public string Name { get; set; } = "";
+    public string Email { get; set; } = "";
 }
 
 public record Stat(string Title, int Value);
