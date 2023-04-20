@@ -49,7 +49,9 @@ public static class Module
             {
                 new Stat(
                     Title: "Capabilities",
-                    Value: await dbContext.Capabilities.CountAsync()
+                    Value: await dbContext.Capabilities
+                        .Where(x => x.Deleted == null)
+                        .CountAsync()
                 ),
                 new Stat(
                     Title: "AWS Accounts",
@@ -61,7 +63,9 @@ public static class Module
                 ),
                 new Stat(
                     Title: "Kafka Clusters",
-                    Value: await dbContext.KafkaClusters.CountAsync()
+                    Value: await dbContext.KafkaClusters
+                        .Where(x => x.Enabled)
+                        .CountAsync()
                 ),
                 new Stat(
                     Title: "Public Topics",
