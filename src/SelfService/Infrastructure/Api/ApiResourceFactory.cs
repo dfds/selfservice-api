@@ -286,12 +286,9 @@ public class ApiResourceFactory
         return new AwsAccountApiResource
         {
             Id = account.Id,
-            AwsAccountId = account.Registration.AccountId?.ToString(),
+            AccountId = account.Registration.AccountId?.ToString(),
             RoleEmail = account.Registration.RoleEmail,
-            RequestedAt = account.RequestedAt,
-            RegisteredAt = account.Registration.RegisteredAt,
-            KubernetesNamespace = account.KubernetesLink.Namespace,
-            CompletedAt = account.KubernetesLink.LinkedAt,
+            Namespace = account.KubernetesLink.Namespace,
             Status = Convert(account.Status),
             Links =
             {
@@ -313,10 +310,10 @@ public class ApiResourceFactory
     {
         return accountStatus switch
         {
-            AwsAccountStatus.Requested => "requested",
-            AwsAccountStatus.Pending => "pending",
-            AwsAccountStatus.Completed => "completed",
-            _ => "pending"
+            AwsAccountStatus.Requested => "Requested",
+            AwsAccountStatus.Pending => "Pending",
+            AwsAccountStatus.Completed => "Completed",
+            _ => "Pending"
         };
     }
 
