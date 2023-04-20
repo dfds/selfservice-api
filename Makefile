@@ -51,7 +51,15 @@ unittests:
 integrationtest: integrationtests
 
 integrationtests:
-	@cd integrationtest && bash ./run.sh $(CONFIGURATION) $(OUTPUT_DIR_TESTRESULTS)
+	@cd src && dotnet test \
+		--configuration $(CONFIGURATION) \
+		--no-restore \
+		--no-build \
+		--logger "trx;LogFileName=../../../.output/testresults/integration_testresults.trx" \
+		--filter Category=Integration \
+		--collect "XPlat Code Coverage" \
+		--nologo \
+		-v normal
 
 test: tests
 

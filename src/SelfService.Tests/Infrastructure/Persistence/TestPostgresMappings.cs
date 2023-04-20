@@ -1,16 +1,26 @@
-﻿using SelfService.Domain.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Respawn;
+using SelfService.Domain.Models;
 using SelfService.Tests.Comparers;
 
 namespace SelfService.Tests.Infrastructure.Persistence;
 
-public class TestPostgresMappings
+[Trait("Category", "Integration")]
+public class TestPostgresMappings : IClassFixture<DatabaseFixture>
 {
+    private readonly DatabaseFixture _database;
+
+    public TestPostgresMappings(DatabaseFixture database)
+    {
+        _database = database;
+    }
+
     [Fact]
-    [Trait("Category", "Integration")]
     public async Task capability()
     {
         await using var databaseFactory = new ExternalDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+
+        var dbContext = await databaseFactory.CreateDbContext(_database.ConnectionString);
 
         var stub = A.Capability.Build();
 
@@ -29,11 +39,10 @@ public class TestPostgresMappings
     }
 
     [Fact]
-    [Trait("Category", "Integration")]
     public async Task member()
     {
         await using var databaseFactory = new ExternalDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateDbContext(_database.ConnectionString);
 
         var stub = A.Member.Build();
 
@@ -52,11 +61,10 @@ public class TestPostgresMappings
     }
 
     [Fact]
-    [Trait("Category", "Integration")]
     public async Task membership()
     {
         await using var databaseFactory = new ExternalDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateDbContext(_database.ConnectionString);
 
         var stub = A.Membership.Build();
 
@@ -73,13 +81,34 @@ public class TestPostgresMappings
             comparer: new MembershipComparer()
         );
     }
-    
+
     [Fact]
-    [Trait("Category", "Integration")]
-    public async Task awsaccount()
+    public async Task awsaccount_requested()
     {
         await using var databaseFactory = new ExternalDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateDbContext(_database.ConnectionString);
+
+        var stub = A.AwsAccount.Build();
+
+        // write
+        await dbContext.AwsAccounts.AddAsync(stub);
+        await dbContext.SaveChangesAsync();
+
+        // read
+        var storedVersion = await dbContext.AwsAccounts.FindAsync(stub.Id);
+
+        Assert.Equal(
+            expected: stub,
+            actual: storedVersion,
+            comparer: new AwsAccountComparer()
+        );
+    }
+
+    [Fact]
+    public async Task awsaccount_completed()
+    {
+        await using var databaseFactory = new ExternalDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext(_database.ConnectionString);
 
         var stub = A.AwsAccount.Build();
         stub.RegisterRealAwsAccount(RealAwsAccountId.Parse(new string('0', 12)), "foo@foo.com", new DateTime(2000, 1, 1));
@@ -100,11 +129,10 @@ public class TestPostgresMappings
     }
 
     [Fact]
-    [Trait("Category", "Integration")]
     public async Task kafkacluster()
     {
         await using var databaseFactory = new ExternalDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateDbContext(_database.ConnectionString);
 
         var stub = A.KafkaCluster.Build();
 
@@ -122,12 +150,19 @@ public class TestPostgresMappings
         );
     }
 
+    private static readonly Checkpoint Checkpoint = new Checkpoint()
+    {
+        SchemasToInclude = new[] { "public" },
+        DbAdapter = DbAdapter.Postgres
+    };
+
     [Fact]
-    [Trait("Category", "Integration")]
     public async Task kafkatopic()
     {
         await using var databaseFactory = new ExternalDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateDbContext(_database.ConnectionString);
+
+        await Checkpoint.Reset(dbContext.Database.GetDbConnection());
 
         var stub = A.KafkaTopic.Build();
 
@@ -146,18 +181,17 @@ public class TestPostgresMappings
     }
 
     [Fact]
-    [Trait("Category", "Integration")]
     public async Task membershipapplication()
     {
         await using var databaseFactory = new ExternalDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateDbContext(_database.ConnectionString);
 
         var stubApprovals = new[]
         {
             A.MembershipApproval.Build(),
             A.MembershipApproval.Build(),
         };
-        
+
         var stub = A.MembershipApplication
             .WithApprovals(stubApprovals)
             .Build();
@@ -183,14 +217,13 @@ public class TestPostgresMappings
     }
 
     [Fact]
-    [Trait("Category", "Integration")]
     public async Task messagecontract()
     {
         await using var databaseFactory = new ExternalDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateDbContext(_database.ConnectionString);
 
         var stub = A.MessageContract.Build();
-        
+
         // write
         await dbContext.MessageContracts.AddAsync(stub);
         await dbContext.SaveChangesAsync();

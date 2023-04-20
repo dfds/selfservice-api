@@ -12,9 +12,9 @@ public class ExternalDatabaseFactory : IDisposable, IAsyncDisposable
     private DbConnection? _connection;
     private SelfServiceDbContext? _dbContext;
 
-    public async Task<SelfServiceDbContext> CreateDbContext()
+    public async Task<SelfServiceDbContext> CreateDbContext(string? connectionString = null)
     {
-        var connectionString = Environment.GetEnvironmentVariable("SS_CONNECTION_STRING") ?? DefaultConnectionString;
+        connectionString ??= Environment.GetEnvironmentVariable("SS_CONNECTION_STRING") ?? DefaultConnectionString;
         _connection = new NpgsqlConnection(connectionString!);
 
         await _connection.OpenAsync();

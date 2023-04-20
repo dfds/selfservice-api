@@ -14,6 +14,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
     <PackageReference Include="Moq" Version="4.18.4" />
+    <PackageReference Include="Respawn" Version="3.2.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="3.0.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -34,7 +36,6 @@
     <Folder Include="Comparers\" />
     <Folder Include="Infrastructure\Api\CapabilityTopicsRoutes\" />
     <Folder Include="Infrastructure\Queries\" />
-    <Folder Include="Infrastructure\Persistence\" />
     <Folder Include="Builders\" />
   </ItemGroup>
 
