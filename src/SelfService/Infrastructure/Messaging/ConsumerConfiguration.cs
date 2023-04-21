@@ -84,6 +84,14 @@ public static class ConsumerConfiguration
                     keySelector: x => x.MembershipApplicationId!
                 )
                 ;
+
+            //options
+            //    .ForTopic($"{SelfServicePrefix}.portalvisit")
+            //    .Register<NewPortalVisitRegistered>(
+            //        messageType: "new-portal-visit-registered",
+            //        keySelector: x => x.VisitedBy!
+            //    )
+            //    ;
         });
         
         builder.Services.AddConsumer(options =>

@@ -22,6 +22,7 @@ public static class Domain
         builder.Services.AddTransient<IMembershipApplicationService, MembershipApplicationService>();
         builder.Services.AddTransient<IKafkaTopicApplicationService, KafkaTopicApplicationService>();
         builder.Services.AddTransient<IMemberApplicationService, MemberApplicationService>();
+        builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
 
         // domain services
         builder.Services.AddTransient<MembershipApplicationDomainService>();
@@ -36,7 +37,9 @@ public static class Domain
         builder.Services.AddTransient<IKafkaTopicRepository, KafkaTopicRepository>();
         builder.Services.AddTransient<IMessageContractRepository, MessageContractRepository>();
         builder.Services.AddTransient<IMemberRepository, MemberRepository>();
+        builder.Services.AddTransient<IPortalVisitRepository, PortalVisitRepository>();
 
+        builder.Services.AddTransient<TopVisitorsRepository>();
 
         // domain queries
         builder.Services.AddTransient<ICapabilityKafkaTopicsQuery, CapabilityKafkaTopicsQuery>();
@@ -47,6 +50,7 @@ public static class Domain
 
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
+        builder.Services.AddHostedService<PortalVisitAnalyzer>();
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();

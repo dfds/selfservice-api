@@ -48,6 +48,8 @@ public class SelfServiceDbContext : DbContext
     public DbSet<KafkaTopic> KafkaTopics { get; set; } = null!;
     public DbSet<MessageContract> MessageContracts { get; set; } = null!;
 
+    public DbSet<PortalVisit> PortalVisits { get; set; } = null!;
+
     public DbSet<ServiceDescription> ServiceCatalog { get; set; } = null!;
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -170,6 +172,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.DisplayName);
             cfg.Property(x => x.Email);
+            cfg.Ignore(x => x.LastSeen);
         });
 
         modelBuilder.Entity<Membership>(cfg =>
@@ -270,6 +273,15 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.ModifiedAt);
             cfg.Property(x => x.ModifiedBy);
+        });
+
+        modelBuilder.Entity<PortalVisit>(cfg =>
+        {
+            cfg.ToTable("PortalVisit");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.VisitedBy);
+            cfg.Property(x => x.VisitedAt);
         });
         
         // ----------------------------------------------

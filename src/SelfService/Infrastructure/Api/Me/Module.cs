@@ -75,6 +75,18 @@ public class MeController : ControllerBase
                     Href = _linkGenerator.GetUriByAction(HttpContext, "UpdatePersonalInformation") ?? "",
                     Rel = "related",
                     Allow = {"PUT"}
+                },
+                PortalVisits =
+                {
+                    Href = _linkGenerator.GetUriByAction(HttpContext, "RegisterVisit", "PortalVisit") ?? "",
+                    Rel = "related",
+                    Allow = {"POST"}
+                },
+                TopVisitors =
+                {
+                    Href = _linkGenerator.GetUriByAction(HttpContext, "GetTopVisitors", "System") ?? "",
+                    Rel = "related",
+                    Allow = {"GET"}
                 }
             }
         });
@@ -167,6 +179,8 @@ public class MyProfileApiResource
     {
         public ResourceLink Self { get; set; } = new();
         public ResourceLink PersonalInformation { get; set; } = new();
+        public ResourceLink PortalVisits { get; set; } = new();
+        public ResourceLink TopVisitors { get; set; } = new();
     }
 }
 
@@ -178,4 +192,4 @@ public class PersonalInformationApiResource
     public string Email { get; set; } = "";
 }
 
-public record Stat(string Title, int Value);
+public record Stat(string Title, int Value); // TODO [jandr@2023-04-20]: make this a domain concept maybe?!

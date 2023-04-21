@@ -11,6 +11,8 @@ public class Member : AggregateRoot<UserId>
     public string Email { get; private set; }
     public string? DisplayName { get; private set; } // NOTE [jandr@2023-04-20]: consider renaming this to just "name"
 
+    public DateTime? LastSeen { get; private set; }
+
     public void Update(string email, string? displayName)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -25,6 +27,11 @@ public class Member : AggregateRoot<UserId>
 
         Email = email;
         DisplayName = displayName;
+    }
+
+    public void UpdateLastSeen(DateTime lastSeen)
+    {
+        LastSeen = lastSeen;
     }
 
     public override string ToString()
