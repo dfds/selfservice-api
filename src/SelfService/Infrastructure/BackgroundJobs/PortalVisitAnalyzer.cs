@@ -23,8 +23,8 @@ public class PortalVisitAnalyzer : BackgroundService
             await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
         }, stoppingToken);
     }
-    
-    private static DateTime GetStartOfWeek(DateTime dateTime)
+
+    public static DateTime GetStartOfWeek(DateTime dateTime)
     {
         var now = dateTime.Date;
 
@@ -114,6 +114,9 @@ public class PortalVisitAnalyzer : BackgroundService
 
         var topVisitorsRepository = scope.ServiceProvider.GetRequiredService<TopVisitorsRepository>();
         topVisitorsRepository.Update(result);
+
+        logger.LogInformation("Top visitors is updated to be: {Visitors}", 
+           string.Join(", ", result.Select(x => x.Id)));
     }
 
     private record UserVisitStat(UserId UserId, DateTime LastVisit, int TotalVisits);

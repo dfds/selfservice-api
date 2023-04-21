@@ -1,4 +1,5 @@
 ﻿using SelfService.Domain.Models;
+using SelfService.Infrastructure.BackgroundJobs;
 
 namespace SelfService.Tests.Domain.Models;
 
