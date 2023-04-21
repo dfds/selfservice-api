@@ -115,8 +115,12 @@ public class PortalVisitAnalyzer : BackgroundService
         var topVisitorsRepository = scope.ServiceProvider.GetRequiredService<TopVisitorsRepository>();
         topVisitorsRepository.Update(result);
 
-        logger.LogInformation("Top visitors is updated to be: {Visitors}", 
-           string.Join(", ", result.Select(x => x.Id)));
+        logger.LogInformation("Top visitors between {WindowStart} and {WindowEnd} amongst {VisitCount} visits is updated to be: {Visitors}",
+            windowBegin.ToUniversalTime().ToString("O"), 
+            windowEnd.ToUniversalTime().ToString("O"), 
+            visits.Count, 
+            string.Join(", ", result.Select(x => x.Id))
+        );
     }
 
     private record UserVisitStat(UserId UserId, DateTime LastVisit, int TotalVisits);
