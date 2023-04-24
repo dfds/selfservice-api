@@ -11,11 +11,20 @@ public class TopDesk : ITicketingSystem
         _httpClient = httpClient;
     }
 
-    public async Task CreateTicket(string message)
+    public async Task CreateTicket(string message, IDictionary<string, string> headers)
     {
         using var content = new StringContent(message);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "sendnotification")
+        {
+            Content = content
+        };
 
-        var response = await _httpClient.PostAsync("sendnotification", content);
+        foreach (var (key, value) in headers)
+        {
+            request.Headers.Add(key, value);
+        }
+
+        var response = await _httpClient.SendAsync(request);
 
         response.EnsureSuccessStatusCode();
     }

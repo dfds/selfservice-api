@@ -8,10 +8,20 @@ var app = builder.Build();
 app.MapGet("ping", () => Results.Content("Pong!"));
 app.MapPost("sendnotification", async (HttpContext context) =>
 {
-    using var sr = new StreamReader(context.Request.Body);
+    // print received request
+    var request = context.Request;
+    var headers = request.Headers;
+    using var sr = new StreamReader(request.Body);
     var content = await sr.ReadToEndAsync();
-    
-    Console.WriteLine("Received:\n" + content);
+    Console.WriteLine("-----------------------------------------------------------");
+    Console.WriteLine($"{request.Method + " " + request.Path} {request.Protocol}");
+    foreach (var (key, value) in headers)
+    {
+        Console.WriteLine($"{key}: {value}");
+    }
+    Console.WriteLine();
+    Console.WriteLine(content);
+    Console.WriteLine("-----------------------------------------------------------");
     
     return Results.Ok(new {});
 });

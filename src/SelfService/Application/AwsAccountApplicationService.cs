@@ -11,13 +11,15 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
+    private readonly IHostEnvironment _environment;
 
-    public AwsAccountApplicationService(IAwsAccountRepository awsAccountRepository, ICapabilityRepository capabilityRepository, ITicketingSystem ticketingSystem, SystemTime systemTime)
+    public AwsAccountApplicationService(IAwsAccountRepository awsAccountRepository, ICapabilityRepository capabilityRepository, ITicketingSystem ticketingSystem, SystemTime systemTime, IHostEnvironment environment)
     {
         _awsAccountRepository = awsAccountRepository;
         _capabilityRepository = capabilityRepository;
         _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
+        _environment = environment;
     }
 
     [TransactionalBoundary, Outboxed]
@@ -49,7 +51,20 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
             ContextName = "default"
         });
 
-        await _ticketingSystem.CreateTicket(message);
+        var headers = new Dictionary<string, string>();
+
+        if (_environment.IsDevelopment())
+        {
+            headers["CORRELATION_ID"] = "";
+            headers["CAPABILITY_NAME"] = capability.Name;
+            headers["CAPABILITY_ID"] = capability.Id;
+            headers["CAPABILITY_ROOT_ID"] = capability.Id;
+            headers["ACCOUNT_NAME"] = capability.Id;
+            headers["CONTEXT_NAME"] = "default";
+            headers["CONTEXT_ID"] = account.Id;
+        }
+
+        await _ticketingSystem.CreateTicket(message, headers);
     }
 
     [TransactionalBoundary, Outboxed]
