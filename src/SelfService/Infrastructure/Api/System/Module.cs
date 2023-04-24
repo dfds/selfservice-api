@@ -23,7 +23,7 @@ public class SystemController : ControllerBase
         _topVisitorsRepository = topVisitorsRepository;
     }
 
-    [Route("stats/topvisitors")]
+    [HttpGet("stats/topvisitors")]
     public async Task<IActionResult> GetTopVisitors()
     {
         var visitorRecords = _topVisitorsRepository.GetAll();

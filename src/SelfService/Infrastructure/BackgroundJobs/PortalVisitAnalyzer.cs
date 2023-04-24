@@ -47,7 +47,7 @@ public class PortalVisitAnalyzer : BackgroundService
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<PortalVisitAnalyzer>>();
 
         using var _ = logger.BeginScope("{BackgroundJob} {CorrelationId}",
-            nameof(CancelExpiredMembershipApplications), Guid.NewGuid());
+            nameof(PortalVisitAnalyzer), Guid.NewGuid());
 
         logger.LogDebug("Starting portal visit analyzer...");
 
