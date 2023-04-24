@@ -19,8 +19,11 @@ public class PortalVisitAnalyzer : BackgroundService
     {
         return Task.Run(async () =>
         {
-            await DoWork(stoppingToken);
-            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                await DoWork(stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+            }
         }, stoppingToken);
     }
 
