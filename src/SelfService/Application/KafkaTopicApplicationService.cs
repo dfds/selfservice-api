@@ -77,10 +77,12 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         using var _ = _logger.BeginScope("{Action} on {ImplementationType} invoked by {ChangedBy}",
             nameof(RegisterMessageContractAsProvisioned), GetType().FullName, changedBy);
 
-        var kafkaTopic = await _kafkaTopicRepository.Get(kafkaTopicId);
-        kafkaTopic.RegisterAsInProgress(_systemTime.Now, changedBy);
-
-        _logger.LogInformation("Kafka topic provisioning for \"{KafkaTopicName}\" is now in progress", kafkaTopic.Name);
+        var kafkaTopic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
+        if (kafkaTopic is not null)
+        {
+            kafkaTopic.RegisterAsInProgress(_systemTime.Now, changedBy);
+            _logger.LogInformation("Kafka topic provisioning for \"{KafkaTopicName}\" is now in progress", kafkaTopic.Name);
+        }
     }
 
     [TransactionalBoundary, Outboxed]
@@ -89,9 +91,12 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         using var _ = _logger.BeginScope("{Action} on {ImplementationType} invoked by {ChangedBy}",
             nameof(RegisterMessageContractAsProvisioned), GetType().FullName, changedBy);
 
-        var kafkaTopic = await _kafkaTopicRepository.Get(kafkaTopicId);
-        kafkaTopic.RegisterAsProvisioned(_systemTime.Now, changedBy);
+        var kafkaTopic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
 
-        _logger.LogInformation("Kafka topic {KafkaTopicName} has now been provisioned", kafkaTopic.Name);
+        if (kafkaTopic is not null)
+        {
+            kafkaTopic.RegisterAsProvisioned(_systemTime.Now, changedBy);
+            _logger.LogInformation("Kafka topic {KafkaTopicName} has now been provisioned", kafkaTopic.Name);
+        }
     }
 }
