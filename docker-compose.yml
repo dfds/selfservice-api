@@ -109,6 +109,8 @@ services:
     volumes:
       - ./fake_dependencies/confluent-gateway/FakeConfluentGateway.App:/app
     environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - DEFAULT_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - DEFAULT_KAFKA_GROUP_ID=selfservice.consumer.fake
+
     ports:
       - 5051:5051
