@@ -15,7 +15,7 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
 
     public async Task<IEnumerable<CapabilityDto>> GetCapabilities()
     {
-        var allCapabilities = await GetAllCapabilities();
+        var allCapabilities = await GetAllActiveCapabilities();
         var allMemberships = await GetAllMembershipByCapability();
         var allAwsAccounts = await GetAllAwsAccountsByCapability();
 
@@ -41,9 +41,9 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
             };
     }
 
-    private async Task<List<Capability>> GetAllCapabilities()
+    private async Task<List<Capability>> GetAllActiveCapabilities()
     {
-        return await _context.Capabilities.ToListAsync();
+        return await _context.Capabilities.Where(x=> x.Deleted==null).ToListAsync();
     }
 
     private async Task<ILookup<CapabilityId, Membership>> GetAllMembershipByCapability()
