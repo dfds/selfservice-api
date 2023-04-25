@@ -8,10 +8,12 @@ namespace SelfService.Infrastructure.Api.System;
 public class SystemController : ControllerBase
 {
     private readonly TopVisitorsRepository _topVisitorsRepository;
+    private readonly IAadAwsSyncCapabilityQuery _aadAwsSyncCapabilityQuery;
 
-    public SystemController(TopVisitorsRepository topVisitorsRepository)
+    public SystemController(TopVisitorsRepository topVisitorsRepository, IAadAwsSyncCapabilityQuery aadAwsSyncCapabilityQuery)
     {
         _topVisitorsRepository = topVisitorsRepository;
+        _aadAwsSyncCapabilityQuery = aadAwsSyncCapabilityQuery;
     }
 
     [HttpGet("stats/topvisitors")]
@@ -29,5 +31,13 @@ public class SystemController : ControllerBase
                     Rank = x.Rank,
                 }),
         });
+    }
+
+    [HttpGet("legacy/aad-aws-sync")]
+    public async Task<IActionResult> GetCapabilitiesForAadAwsSync()
+    {
+        var capabilities = await _aadAwsSyncCapabilityQuery.GetCapabilities();
+        
+        return Ok(capabilities);
     }
 }

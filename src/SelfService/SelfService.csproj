@@ -22,7 +22,6 @@
     <ItemGroup>
       <Folder Include="Domain\Policies\" />
       <Folder Include="Configuration\" />
-      <Folder Include="Infrastructure\Persistence\Queries\" />
     </ItemGroup>
 
 </Project>

@@ -3,6 +3,7 @@ using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
@@ -48,6 +49,9 @@ public static class Domain
         builder.Services.AddTransient<IMembershipQuery, MembershipQuery>();
         builder.Services.AddTransient<ICapabilityMembershipApplicationQuery, CapabilityMembershipApplicationQuery>();
 
+        // aad-aws-sync
+        builder.Services.AddTransient<IAadAwsSyncCapabilityQuery, AadAwsSyncCapabilityQuery>();
+        
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
