@@ -52,6 +52,7 @@ public class MeController : ControllerBase
 
         return Ok(new MyProfileApiResource
         {
+            Id = userId,
             Capabilities = capabilities.Select(_apiResourceFactory.ConvertToListItem), 
             Stats = await ComposeStats(),
             AutoReloadTopics = !_hostEnvironment.IsDevelopment(),
@@ -167,6 +168,7 @@ public class UpdatePersonalInformationRequest
 
 public class MyProfileApiResource
 {
+    public string Id { get; set; } = "";
     public IEnumerable<CapabilityListItemApiResource> Capabilities { get; set; } = Enumerable.Empty<CapabilityListItemApiResource>();
     public IEnumerable<Stat> Stats { get; set; } = Enumerable.Empty<Stat>();
     public bool AutoReloadTopics { get; set; } = true;
