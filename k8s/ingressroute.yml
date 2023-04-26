@@ -7,7 +7,7 @@ spec:
   entryPoints: []
   routes:
     - kind: Rule
-      match: Host(`build.dfds.cloud`) && PathPrefix(`/v2/api`)
+      match: Host(`build.dfds.cloud`) && PathPrefix(`/api`)
       priority: 101
       middlewares:
         - name: selfservice-api
@@ -26,4 +26,4 @@ metadata:
 spec:
   stripPrefix:
     prefixes:
-      - /v2/api
+      - /api
