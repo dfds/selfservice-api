@@ -100,7 +100,7 @@ public class CapabilityController : ControllerBase
             actionName: nameof(GetCapabilityById),
             controllerName: "Capability",
             routeValues: new {id = capability.Id},
-            value: _apiResourceFactory.Convert(capability)
+            value: await _apiResourceFactory.Convert(capability)
         );
 
     }
