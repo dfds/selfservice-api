@@ -328,14 +328,14 @@ public class AwsAccountRequestedHandler : IMessageHandler<AwsAccountRequested>
         _awsAccountApplicationService = awsAccountApplicationService;
     }
 
-    public Task Handle(AwsAccountRequested message, MessageHandlerContext context)
+    public async Task Handle(AwsAccountRequested message, MessageHandlerContext context)
     {
         if (!AwsAccountId.TryParse(message.AccountId, out var id))
         {
             throw new InvalidOperationException($"Invalid AwsAccountId {message.AccountId}");
         }
 
-        return _awsAccountApplicationService.CreateAwsAccountRequestTicket(id);
+        await _awsAccountApplicationService.CreateAwsAccountRequestTicket(id);
     }
 }
 
@@ -362,7 +362,7 @@ public class AwsContextAccountCreatedHandler : IMessageHandler<AwsContextAccount
         _awsAccountApplicationService = awsAccountApplicationService;
     }
 
-    public Task Handle(AwsContextAccountCreated message, MessageHandlerContext context)
+    public async Task Handle(AwsContextAccountCreated message, MessageHandlerContext context)
     {
         if (!AwsAccountId.TryParse(message.ContextId, out var id))
         {
@@ -373,7 +373,7 @@ public class AwsContextAccountCreatedHandler : IMessageHandler<AwsContextAccount
             throw new InvalidOperationException($"Invalid RealAwsAccountId {message.AccountId}");
         }
 
-        return _awsAccountApplicationService.RegisterRealAwsAccount(id, realAwsAccountId, message.RoleEmail);
+        await _awsAccountApplicationService.RegisterRealAwsAccount(id, realAwsAccountId, message.RoleEmail);
     }
 }
 

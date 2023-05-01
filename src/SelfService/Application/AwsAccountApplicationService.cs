@@ -7,14 +7,16 @@ namespace SelfService.Application;
 
 public class AwsAccountApplicationService : IAwsAccountApplicationService
 {
+    private readonly ILogger<AwsAccountApplicationService> _logger;
     private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
     private readonly IHostEnvironment _environment;
 
-    public AwsAccountApplicationService(IAwsAccountRepository awsAccountRepository, ICapabilityRepository capabilityRepository, ITicketingSystem ticketingSystem, SystemTime systemTime, IHostEnvironment environment)
+    public AwsAccountApplicationService(ILogger<AwsAccountApplicationService> logger, IAwsAccountRepository awsAccountRepository, ICapabilityRepository capabilityRepository, ITicketingSystem ticketingSystem, SystemTime systemTime, IHostEnvironment environment)
     {
+        _logger = logger;
         _awsAccountRepository = awsAccountRepository;
         _capabilityRepository = capabilityRepository;
         _ticketingSystem = ticketingSystem;
@@ -37,8 +39,12 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         return account.Id;
     }
 
+    [TransactionalBoundary, Outboxed]
     public async Task CreateAwsAccountRequestTicket(AwsAccountId id)
     {
+        using var _ = _logger.BeginScope("{Action} on {ImplementationType}",
+            nameof(CreateAwsAccountRequestTicket), GetType().FullName);
+
         var account = await _awsAccountRepository.Get(id);
         var capability = await _capabilityRepository.Get(account.CapabilityId);
 

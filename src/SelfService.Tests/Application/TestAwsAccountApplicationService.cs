@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
+using Microsoft.Extensions.Logging.Abstractions;
 using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Models;
@@ -16,6 +17,7 @@ public class TestAwsAccountApplicationService
         var capability = new CapabilityBuilder().Build();
         var awsAccount = new AwsAccountBuilder().Build();
         var sut = new AwsAccountApplicationService(
+            NullLogger<AwsAccountApplicationService>.Instance, 
             awsAccountRepository: new AwsAccountRepositoryStub(awsAccount),
             capabilityRepository: new CapabilityRepositoryStub(capability),
             ticketingSystem: spy,
@@ -46,6 +48,7 @@ public class TestAwsAccountApplicationService
         var capability = new CapabilityBuilder().Build();
         var awsAccount = new AwsAccountBuilder().Build();
         var sut = new AwsAccountApplicationService(
+            NullLogger<AwsAccountApplicationService>.Instance, 
             awsAccountRepository: new AwsAccountRepositoryStub(awsAccount),
             capabilityRepository: new CapabilityRepositoryStub(capability),
             ticketingSystem: spy,
@@ -74,6 +77,7 @@ public class TestAwsAccountApplicationService
         var capability = new CapabilityBuilder().Build();
         var awsAccount = new AwsAccountBuilder().Build();
         var sut = new AwsAccountApplicationService(
+            NullLogger<AwsAccountApplicationService>.Instance, 
             awsAccountRepository: new AwsAccountRepositoryStub(awsAccount),
             capabilityRepository: new CapabilityRepositoryStub(capability),
             ticketingSystem: spy,
