@@ -44,6 +44,7 @@ public class MyCapabilitiesQuery : IMyCapabilitiesQuery
 
         return await query
             .OrderBy(x => x.Name)
+            .Where(x => x.Deleted == null)
             .ToListAsync();
     }
 }
