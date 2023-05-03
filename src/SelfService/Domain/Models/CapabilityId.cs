@@ -44,6 +44,7 @@ public class CapabilityId : ValueObject
         value = value.Replace("å", "aa");
         value = Regex.Replace(value, @"\s+", "-");
         value = Regex.Replace(value, @"_+", "-");
+        value = Regex.Replace(value, @"-+", "-");
         value = Regex.Replace(value, @"-+$", "");
         value = Regex.Replace(value, @"^-+", "");
         value = Regex.Replace(value, @"[^a-zA-Z0-9\-]", "");
@@ -51,12 +52,40 @@ public class CapabilityId : ValueObject
         {
             return false;
         }
-        
-        id = new CapabilityId(value);
+
+        var capabilityRootId = GenerateRootId(value, Guid.NewGuid());
+
+        id = new CapabilityId(capabilityRootId);
         return true;
     }
 
+    private const string ROOTID_SALT = "fvvjaaqpagbb";
 
+    private static string GenerateRootId(string name, Guid id)
+    {
+        const int maxPreservedNameLength = 22;
+
+        if (name.Length < 2)
+            throw new ArgumentException("Value is too short", nameof(name));
+
+        var microHash = new HashidsNet.Hashids(ROOTID_SALT, 5, "abcdefghijklmnopqrstuvwxyz")
+            .EncodeHex(id.ToString("N")).Substring(0, 5);
+            
+        var rootId = $"{name}-{microHash}";
+
+        if (name.Length > maxPreservedNameLength)
+        {
+            rootId = $"{name.Substring(0, maxPreservedNameLength)}-{microHash}";
+
+            if (rootId.Contains("--"))
+            {
+                rootId = rootId.Replace("--", "-");
+            }
+        }
+
+        return rootId.ToLowerInvariant();
+    }
+    
     public static CapabilityId Parse(string? text)
     {
         if (TryParse(text, out var id))

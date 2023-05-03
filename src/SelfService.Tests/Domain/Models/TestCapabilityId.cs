@@ -11,6 +11,7 @@ public class TestCapabilityId
     [InlineData("foo bar", "foo-bar")]
     [InlineData("foo       bar", "foo-bar")]
     [InlineData("foo-", "foo")]
+    [InlineData("foo--bar", "foo-bar")]
     [InlineData("-foo", "foo")]
     [InlineData(" foo", "foo")]
     [InlineData("f99", "f99")]
@@ -23,7 +24,12 @@ public class TestCapabilityId
     public void returns_expected_value(string input, string expected)
     {
         var result = CapabilityId.CreateFrom(input);
-        Assert.Equal(expected, result);
+
+        var namePart = result.ToString()[0..^6];
+        var randomPart = result.ToString()[^6..];
+
+        Assert.Equal(expected, namePart);
+        Assert.Matches("-[a-z]{5}", randomPart);
     }
     
     [Theory]
@@ -35,5 +41,14 @@ public class TestCapabilityId
     public void handles_bad_input(string input)
     {
         Assert.Throws<FormatException>(() => CapabilityId.CreateFrom(input));
+    }
+    
+    [Fact]
+    public void check_uniqueness_of_suffix()
+    {
+        var capabilityIdOne = CapabilityId.CreateFrom("bar");
+        var capabilityIdTwo = CapabilityId.CreateFrom("bar");
+
+        Assert.NotEqual(capabilityIdOne, capabilityIdTwo);
     }
 }
