@@ -65,9 +65,6 @@ public class CapabilityId : ValueObject
     {
         const int maxPreservedNameLength = 22;
 
-        if (name.Length < 2)
-            throw new ArgumentException("Value is too short", nameof(name));
-
         var microHash = new HashidsNet.Hashids(ROOTID_SALT, 5, "abcdefghijklmnopqrstuvwxyz")
             .EncodeHex(id.ToString("N")).Substring(0, 5);
             
