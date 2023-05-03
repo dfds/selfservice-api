@@ -1,5 +1,4 @@
 ﻿using SelfService.Domain.Models;
-using SelfService.Infrastructure.BackgroundJobs;
 
 namespace SelfService.Tests.Domain.Models;
 
@@ -21,6 +20,7 @@ public class TestCapabilityId
     [InlineData("fææ", "faeae")]
     [InlineData("føø", "foeoe")]
     [InlineData("fåå", "faaaa")]
+    [InlineData("thisisaverylongstringwithmorethanalotofcharacters", "thisisaverylongstringw")]
     public void returns_expected_value(string input, string expected)
     {
         var result = CapabilityId.CreateFrom(input);

@@ -5,6 +5,10 @@ namespace SelfService.Domain.Models;
 public class CapabilityId : ValueObject
 {
     private readonly string _value;
+    private static readonly Random Random = new Random();
+
+    private const int SuffixSize = 5;
+    private const int NameCharLimit = 22;
 
     private CapabilityId(string value)
     {
@@ -38,51 +42,44 @@ public class CapabilityId : ValueObject
             return false;
         }
 
-        var value = capabilityName.ToLowerInvariant();
-        value = value.Replace("æ", "ae");
-        value = value.Replace("ø", "oe");
-        value = value.Replace("å", "aa");
-        value = Regex.Replace(value, @"\s+", "-");
-        value = Regex.Replace(value, @"_+", "-");
-        value = Regex.Replace(value, @"-+", "-");
-        value = Regex.Replace(value, @"-+$", "");
-        value = Regex.Replace(value, @"^-+", "");
-        value = Regex.Replace(value, @"[^a-zA-Z0-9\-]", "");
-        if (string.IsNullOrWhiteSpace(value))
+        var name = capabilityName.ToLowerInvariant();
+        name = name.Replace("æ", "ae");
+        name = name.Replace("ø", "oe");
+        name = name.Replace("å", "aa");
+        name = Regex.Replace(name, @"\s+", "-");
+        name = Regex.Replace(name, @"_+", "-");
+        name = Regex.Replace(name, @"-+", "-");
+        name = Regex.Replace(name, @"-+$", "");
+        name = Regex.Replace(name, @"^-+", "");
+        name = Regex.Replace(name, @"[^a-zA-Z0-9\-]", "");
+        if (string.IsNullOrWhiteSpace(name))
         {
             return false;
         }
 
-        var capabilityRootId = GenerateRootId(value, Guid.NewGuid());
+        var preservedNameLength = Math.Min(NameCharLimit, name.Length);
+        var suffix = GenerateSuffix();
+
+        var rootId = $"{name[..preservedNameLength]}-{suffix}";
+        var capabilityRootId = rootId.ToLowerInvariant();
 
         id = new CapabilityId(capabilityRootId);
         return true;
     }
 
-    private const string ROOTID_SALT = "fvvjaaqpagbb";
-
-    private static string GenerateRootId(string name, Guid id)
+    private static string GenerateSuffix()
     {
-        const int maxPreservedNameLength = 22;
+        const string validCharacters = "abcdefghijklmnopqrstuvwxyz";
 
-        var microHash = new HashidsNet.Hashids(ROOTID_SALT, 5, "abcdefghijklmnopqrstuvwxyz")
-            .EncodeHex(id.ToString("N")).Substring(0, 5);
-            
-        var rootId = $"{name}-{microHash}";
-
-        if (name.Length > maxPreservedNameLength)
+        var suffix = new char[SuffixSize];
+        for (var i = 0; i < SuffixSize; i++)
         {
-            rootId = $"{name.Substring(0, maxPreservedNameLength)}-{microHash}";
-
-            if (rootId.Contains("--"))
-            {
-                rootId = rootId.Replace("--", "-");
-            }
+            suffix[i] = validCharacters[Random.Next(validCharacters.Length - 1)];
         }
 
-        return rootId.ToLowerInvariant();
+        return new string(suffix);
     }
-    
+
     public static CapabilityId Parse(string? text)
     {
         if (TryParse(text, out var id))
