@@ -102,6 +102,6 @@ public class CapabilityId : ValueObject
         return false;
     }
 
-    public static implicit operator CapabilityId(string text) => CreateFrom(text);
+    public static implicit operator CapabilityId(string text) => Parse(text);
     public static implicit operator string(CapabilityId id) => id.ToString();
 }
