@@ -520,4 +520,57 @@ public class ApiResourceFactory
             ApprovedAt = approval.ApprovedAt.ToUniversalTime().ToString("O")
         };
     }
+
+    public CapabilityTopicsApiResource Convert(string capabilityId, IEnumerable<CapabilityTopics> capabilityTopics, UserAccessLevelOptions accessLevel)
+    {
+        return new CapabilityTopicsApiResource
+        {
+            Items = capabilityTopics
+                .Select(x => Convert(x, accessLevel))
+                .ToArray(),
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext, 
+                        action: nameof(CapabilityController.GetCapabilityTopics), 
+                        controller: GetNameOf<CapabilityController>(),
+                        values: new { id = capabilityId }) ?? "",
+                    Rel = "self",
+                    Allow = accessLevel switch
+                    {
+                        UserAccessLevelOptions.ReadWrite => new List<string> { "GET", "POST" },
+                        _ => new List<string> { "GET" }
+                    }
+                }
+            }
+        };
+    }
+
+    private CapabilityClusterTopicsApiResource Convert(CapabilityTopics capabilityTopics, UserAccessLevelOptions accessLevel)
+    {
+        return new CapabilityClusterTopicsApiResource
+        {
+            Id = capabilityTopics.Cluster.Id,
+            Name = capabilityTopics.Cluster.Name,
+            Description = capabilityTopics.Cluster.Description,
+            Topics = capabilityTopics.Topics
+                .Select(topic => Convert(topic, accessLevel))
+                .ToArray(),
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaClusterController.GetById),
+                        controller: GetNameOf<KafkaClusterController>(),
+                        values: new {id = capabilityTopics.Cluster.Id}) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
+                }
+            }
+        };
+    }
 }

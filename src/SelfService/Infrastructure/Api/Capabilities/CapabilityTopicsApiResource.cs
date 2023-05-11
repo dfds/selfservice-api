@@ -4,21 +4,29 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class CapabilityTopicsApiResource
 {
-    public KafkaTopicApiResource[] Items { get; set; }
-
-    [JsonPropertyName("_embedded")]
-    public CapabilityTopicsEmbeddedResources Embedded { get; set; } = new();
+    public CapabilityClusterTopicsApiResource[] Items { get; set; }
 
     [JsonPropertyName("_links")]
-    public CapabilityTopicsLinks Links { get; set; } = new();
+    public KafkaClusterListLinks Links { get; set; } = new();
 
-
-    public class CapabilityTopicsEmbeddedResources
+    public class KafkaClusterListLinks
     {
-        public KafkaClusterListApiResource KafkaClusters { get; set; }
+        public ResourceLink Self { get; set; } = new();
     }
+}
 
-    public class CapabilityTopicsLinks
+public class CapabilityClusterTopicsApiResource
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+
+    public KafkaTopicApiResource[] Topics { get; set; }
+
+    [JsonPropertyName("_links")]
+    public KafkaClusterLinks Links { get; set; } = new();
+
+    public class KafkaClusterLinks
     {
         public ResourceLink Self { get; set; } = new();
     }

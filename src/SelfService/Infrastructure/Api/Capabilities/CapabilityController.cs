@@ -23,13 +23,18 @@ public class CapabilityController : ControllerBase
     private readonly ICapabilityApplicationService _capabilityApplicationService;
     private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly IAwsAccountApplicationService _awsAccountApplicationService;
-
     private readonly IMembershipApplicationService _membershipApplicationService;
+    private readonly CapabilityTopicsService _capabilityTopicsService;
 
-    public CapabilityController(LinkGenerator linkGenerator, ICapabilityMembersQuery membersQuery, 
-        ICapabilityRepository capabilityRepository, IKafkaTopicRepository kafkaTopicRepository, ApiResourceFactory apiResourceFactory, 
-        IAuthorizationService authorizationService, IKafkaClusterRepository kafkaClusterRepository, 
-        ICapabilityApplicationService capabilityApplicationService, IAwsAccountRepository awsAccountRepository,
+    public CapabilityController(LinkGenerator linkGenerator,
+        ICapabilityMembersQuery membersQuery,
+        ICapabilityRepository capabilityRepository,
+        IKafkaTopicRepository kafkaTopicRepository,
+        ApiResourceFactory apiResourceFactory,
+        IAuthorizationService authorizationService,
+        IKafkaClusterRepository kafkaClusterRepository,
+        ICapabilityApplicationService capabilityApplicationService,
+        IAwsAccountRepository awsAccountRepository,
         IAwsAccountApplicationService awsAccountApplicationService,
         IMembershipApplicationService membershipApplicationService)
     {
@@ -44,6 +49,7 @@ public class CapabilityController : ControllerBase
         _awsAccountRepository = awsAccountRepository;
         _awsAccountApplicationService = awsAccountApplicationService;
         _membershipApplicationService = membershipApplicationService;
+        _capabilityTopicsService = new CapabilityTopicsService(kafkaTopicRepository, kafkaClusterRepository);
     }
 
     [HttpGet("")]
@@ -203,40 +209,11 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        var topics = await _kafkaTopicRepository.FindBy(capabilityId);
-
         var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
-        if (accessLevel == UserAccessLevelOptions.Read)
-        {
-            // only public topics are allowed if the user only has read access
-            topics = topics.Where(x => x.IsPublic);
-        }
+        var publicOnly = accessLevel == UserAccessLevelOptions.Read;
+        var capabilityTopics = await _capabilityTopicsService.GetCapabilityTopics(capabilityId, publicOnly);
 
-        var clusters = await _kafkaClusterRepository.GetAll();
-
-        return Ok(new CapabilityTopicsApiResource
-        {
-            Items = topics
-                .Select(topic  => _apiResourceFactory.Convert(topic, accessLevel))
-                .ToArray(),
-            Embedded = 
-            {
-                KafkaClusters = _apiResourceFactory.Convert(clusters)
-            },
-            Links =
-            {
-                Self = new ResourceLink
-                {
-                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetCapabilityTopics), values: new {id = id}) ?? "",
-                    Rel = "self",
-                    Allow = accessLevel switch
-                    {
-                        UserAccessLevelOptions.ReadWrite => new List<string> {"GET", "POST"},
-                        _ => new List<string> {"GET"}
-                    }
-                }
-            }
-        });
+        return Ok(_apiResourceFactory.Convert(capabilityId, capabilityTopics, accessLevel));
     }
 
     [HttpGet("{id:required}/awsaccount")]
