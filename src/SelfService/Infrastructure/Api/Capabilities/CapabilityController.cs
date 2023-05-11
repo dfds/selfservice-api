@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
@@ -115,7 +114,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityById(string id)
     {
-        if (!User.TryGetUserId(out var userId))
+        if (!User.TryGetUserId(out _))
         {
             return Unauthorized(new ProblemDetails
             {
@@ -175,9 +174,9 @@ public class CapabilityController : ControllerBase
             {
                 Self = new ResourceLink
                 {
-                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetCapabilityMembers), values: new {id = id}) ?? "",
+                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetCapabilityMembers), values: new { id }) ?? "",
                     Rel = "self",
-                    Allow = {"GET"}
+                    Allow = { "GET" }
                 }
             }
         });
