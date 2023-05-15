@@ -182,4 +182,22 @@ public class MembershipApplicationService : IMembershipApplicationService
     {
         await _membershipApplicationRepository.Remove(applicationId);
     }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task LeaveCapability(CapabilityId capabilityId, UserId userId)
+    {
+        using var _ = _logger.BeginScope("{Action} on {ImplementationType}",
+            nameof(LeaveCapability), GetType().FullName);
+
+        _logger.LogDebug("User {UserId} wants to leave capapbility {CapabilityId}",
+            userId, capabilityId);
+
+        
+
+        Membership membership = await _membershipRepository.Cancel(capabilityId, userId);
+        membership.Cancel();
+
+        _logger.LogDebug("User {UserId} has left capability {CapabilityId}",
+            userId, capabilityId);
+    }
 }

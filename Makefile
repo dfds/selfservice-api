@@ -51,7 +51,7 @@ unittests:
 integrationtest: integrationtests
 
 integrationtests:
-	@cd integrationtest && sh ./run.sh $(CONFIGURATION) $(OUTPUT_DIR_TESTRESULTS)
+	@cd integrationtest && bash ./run.sh $(CONFIGURATION) $(OUTPUT_DIR_TESTRESULTS)
 
 test: tests
 

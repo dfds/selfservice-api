@@ -11,4 +11,5 @@ public interface IMembershipApplicationService
     Task ApproveMembershipApplication(MembershipApplicationId applicationId, UserId approvedBy);
     Task AddCreatorAsInitialMember(CapabilityId capabilityId, UserId creatorId);
     Task RemoveMembershipApplication(MembershipApplicationId applicationId);
+    Task LeaveCapability(CapabilityId capabilityId, UserId userId);
 }

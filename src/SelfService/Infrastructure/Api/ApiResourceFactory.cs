@@ -159,6 +159,35 @@ public class ApiResourceFactory
         };
     }
 
+    private async Task<ResourceLink> CreateLeaveCapabilityLinkFor(Capability capability)
+    {
+        var allowedInteractions = new List<string> {"GET"};
+
+        var authorizationResult = await _authorizationService.AuthorizeAsync(
+            user: HttpContext.User,
+            resource: capability,
+            requirements: new IAuthorizationRequirement[]
+            {
+                new IsMemberOfCapability(),
+            });
+        
+        if (authorizationResult.Succeeded)
+        {
+            allowedInteractions.Add("POST");
+        }
+
+        return new ResourceLink
+        {
+            Href = _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.LeaveCapability),
+                controller: GetNameOf<CapabilityController>(),
+                values: new {id = capability.Id}) ?? "",
+            Rel = "related",
+            Allow = allowedInteractions
+        };
+    }
+
     private async Task<ResourceLink> CreateSelfLinkFor(Capability capability)
     {
         return new ResourceLink
@@ -270,6 +299,7 @@ public class ApiResourceFactory
                 Members = await CreateMembersLinkFor(capability),
                 Topics = await CreateTopicsLinkFor(capability),
                 MembershipApplications = await CreateMembershipApplicationsLinkFor(capability),
+                LeaveCapability = await CreateLeaveCapabilityLinkFor(capability),
                 AwsAccount = await CreateAwsAccountLinkFor(capability),
             },
         };

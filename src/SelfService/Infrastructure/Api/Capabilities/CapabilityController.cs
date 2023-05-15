@@ -25,11 +25,14 @@ public class CapabilityController : ControllerBase
     private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly IAwsAccountApplicationService _awsAccountApplicationService;
 
+    private readonly IMembershipApplicationService _membershipApplicationService;
+
     public CapabilityController(LinkGenerator linkGenerator, ICapabilityMembersQuery membersQuery, 
         ICapabilityRepository capabilityRepository, IKafkaTopicRepository kafkaTopicRepository, ApiResourceFactory apiResourceFactory, 
         IAuthorizationService authorizationService, IKafkaClusterRepository kafkaClusterRepository, 
         ICapabilityApplicationService capabilityApplicationService, IAwsAccountRepository awsAccountRepository,
-        IAwsAccountApplicationService awsAccountApplicationService)
+        IAwsAccountApplicationService awsAccountApplicationService,
+        IMembershipApplicationService membershipApplicationService)
     {
         _linkGenerator = linkGenerator;
         _membersQuery = membersQuery;
@@ -41,6 +44,7 @@ public class CapabilityController : ControllerBase
         _capabilityApplicationService = capabilityApplicationService;
         _awsAccountRepository = awsAccountRepository;
         _awsAccountApplicationService = awsAccountApplicationService;
+        _membershipApplicationService = membershipApplicationService;
     }
 
     [HttpGet("")]
@@ -521,6 +525,48 @@ public class CapabilityController : ControllerBase
             {
                 Title = "Topic already exists",
                 Detail = err.Message,
+            });
+        }
+    }
+
+    [HttpPost("{id}/leave")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> LeaveCapability(string id)
+    {
+        // Verify user and fetch userId
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Unknown user id",
+                Detail = $"User id is not valid and thus cannot leave any capabilities.",
+            });
+        }
+
+        // Check that capability with provided id exists
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Capability not found.",
+                Detail = $"A capability with id \"{id}\" could not be found."
+            });
+        }
+
+        // Leave capability
+        try
+        {
+            await _membershipApplicationService.LeaveCapability(capabilityId, userId);
+            return NoContent();
+        }
+        catch (EntityNotFoundException<Membership>)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Membership not cancelled.",
+                Detail = $"A membership of user \"{userId}\" for capability \"{id}\" could not be found."
             });
         }
     }

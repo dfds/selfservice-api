@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
+using SelfService.Domain.Exceptions;
 
 namespace SelfService.Infrastructure.Persistence;
 
@@ -22,5 +23,19 @@ public class MembershipRepository : IMembershipRepository
         return await _dbContext.Memberships
             .Where(x => x.CapabilityId == capabilityId)
             .ToListAsync();
+    }
+
+    public async Task<Membership> Cancel(CapabilityId capabilityId, UserId userId)
+    {
+        var membership = await _dbContext.Memberships
+            .Where(x => x.CapabilityId == capabilityId && x.UserId == userId)
+            .FirstOrDefaultAsync();
+        if (membership == null)
+        {
+            throw new EntityNotFoundException<Membership>($"No Membership for user \"{userId}\" in capability \"{capabilityId}\"");
+        }
+        _dbContext.Memberships.Remove(membership);
+
+        return membership;
     }
 }

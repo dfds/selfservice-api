@@ -44,6 +44,14 @@ public static class ConsumerConfiguration
                     keySelector: x => x.UserId!
                 )
                 ;
+            
+            options
+                .ForTopic($"{SelfServicePrefix}.membership")
+                .Register<UserHasLeftCapability>(
+                    messageType: "user-has-left-capability",
+                    keySelector: x => x.UserId!
+                )
+                ;
 
             options
                 .ForTopic($"{SelfServicePrefix}.kafkatopic")

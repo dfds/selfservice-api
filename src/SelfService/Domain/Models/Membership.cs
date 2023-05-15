@@ -38,4 +38,15 @@ public class Membership : AggregateRoot<MembershipId>
 
         return instance;
     }
+
+    public void Cancel()
+    {
+        Raise(new UserHasLeftCapability
+        {
+            MembershipId = Id.ToString(),
+            CapabilityId = CapabilityId,
+            UserId = UserId,
+        });
+    }
+
 }
