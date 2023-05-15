@@ -192,8 +192,6 @@ public class MembershipApplicationService : IMembershipApplicationService
         _logger.LogDebug("User {UserId} wants to leave capapbility {CapabilityId}",
             userId, capabilityId);
 
-        
-
         Membership membership = await _membershipRepository.Cancel(capabilityId, userId);
         membership.Cancel();
 

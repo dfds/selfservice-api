@@ -169,6 +169,7 @@ public class ApiResourceFactory
             requirements: new IAuthorizationRequirement[]
             {
                 new IsMemberOfCapability(),
+                new CapabilityHasMultipleMembers(),
             });
         
         if (authorizationResult.Succeeded)

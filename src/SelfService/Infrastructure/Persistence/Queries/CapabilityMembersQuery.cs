@@ -97,6 +97,15 @@ public class MembershipQuery :  IMembershipQuery
 
         return activeMembershipApplications > 0;
     }
+
+    public async Task<bool> HasMultipleMembers(CapabilityId capabilityId)
+    {
+        var members = await _dbContext.Memberships
+            .Where(x => x.CapabilityId == capabilityId)
+            .CountAsync();
+
+        return members > 1;
+    }
 }
 
 public class CapabilityMembershipApplicationQuery : ICapabilityMembershipApplicationQuery

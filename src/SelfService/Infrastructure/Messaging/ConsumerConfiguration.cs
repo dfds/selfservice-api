@@ -43,10 +43,6 @@ public static class ConsumerConfiguration
                     messageType: "user-has-joined-capability",
                     keySelector: x => x.UserId!
                 )
-                ;
-            
-            options
-                .ForTopic($"{SelfServicePrefix}.membership")
                 .Register<UserHasLeftCapability>(
                     messageType: "user-has-left-capability",
                     keySelector: x => x.UserId!
