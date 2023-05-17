@@ -28,6 +28,7 @@ public static class Domain
         // domain services
         builder.Services.AddTransient<MembershipApplicationDomainService>();
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
+        builder.Services.AddTransient<CapabilityTopicsService>();
 
         // domain repositories
         builder.Services.AddTransient<ICapabilityRepository, CapabilityRepository>();

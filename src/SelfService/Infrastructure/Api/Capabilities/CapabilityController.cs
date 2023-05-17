@@ -36,7 +36,8 @@ public class CapabilityController : ControllerBase
         ICapabilityApplicationService capabilityApplicationService,
         IAwsAccountRepository awsAccountRepository,
         IAwsAccountApplicationService awsAccountApplicationService,
-        IMembershipApplicationService membershipApplicationService)
+        IMembershipApplicationService membershipApplicationService,
+        CapabilityTopicsService capabilityTopicsService)
     {
         _linkGenerator = linkGenerator;
         _membersQuery = membersQuery;
@@ -49,7 +50,7 @@ public class CapabilityController : ControllerBase
         _awsAccountRepository = awsAccountRepository;
         _awsAccountApplicationService = awsAccountApplicationService;
         _membershipApplicationService = membershipApplicationService;
-        _capabilityTopicsService = new CapabilityTopicsService(kafkaTopicRepository, kafkaClusterRepository);
+        _capabilityTopicsService = capabilityTopicsService;
     }
 
     [HttpGet("")]
@@ -209,11 +210,9 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
-        var publicOnly = accessLevel == UserAccessLevelOptions.Read;
-        var capabilityTopics = await _capabilityTopicsService.GetCapabilityTopics(capabilityId, publicOnly);
+        var capabilityTopics = await _capabilityTopicsService.GetCapabilityTopics(capabilityId);
 
-        return Ok(_apiResourceFactory.Convert(capabilityId, capabilityTopics, accessLevel));
+        return Ok(await _apiResourceFactory.Convert(capabilityTopics));
     }
 
     [HttpGet("{id:required}/awsaccount")]

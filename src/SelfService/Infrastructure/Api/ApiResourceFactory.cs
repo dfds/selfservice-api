@@ -521,13 +521,16 @@ public class ApiResourceFactory
         };
     }
 
-    public CapabilityTopicsApiResource Convert(string capabilityId, IEnumerable<CapabilityTopics> capabilityTopics, UserAccessLevelOptions accessLevel)
+    public async Task<CapabilityTopicsApiResource> Convert(CapabilityTopics capabilityTopics)
     {
+        var isMemberOfCapability = await IsMemberOfCapability(capabilityTopics.Capability);
+
+        var resources = Convert(capabilityTopics, isMemberOfCapability)
+            .ToArray();
+
         return new CapabilityTopicsApiResource
         {
-            Items = capabilityTopics
-                .Select(x => Convert(x, accessLevel))
-                .ToArray(),
+            Items = resources,
             Links =
             {
                 Self = new ResourceLink
@@ -536,41 +539,51 @@ public class ApiResourceFactory
                         httpContext: HttpContext, 
                         action: nameof(CapabilityController.GetCapabilityTopics), 
                         controller: GetNameOf<CapabilityController>(),
-                        values: new { id = capabilityId }) ?? "",
+                        values: new { id = capabilityTopics.Capability.Id }) ?? "",
                     Rel = "self",
-                    Allow = accessLevel switch
-                    {
-                        UserAccessLevelOptions.ReadWrite => new List<string> { "GET", "POST" },
-                        _ => new List<string> { "GET" }
-                    }
+                    Allow = isMemberOfCapability ? new List<string> { "GET", "POST" } : new List<string> { "GET" }
                 }
             }
         };
     }
 
-    private CapabilityClusterTopicsApiResource Convert(CapabilityTopics capabilityTopics, UserAccessLevelOptions accessLevel)
+    private IEnumerable<CapabilityClusterTopicsApiResource> Convert(CapabilityTopics capabilityTopics, bool isMemberOfCapability)
     {
-        return new CapabilityClusterTopicsApiResource
+        foreach (var clusterTopics in capabilityTopics.Clusters)
         {
-            Id = capabilityTopics.Cluster.Id,
-            Name = capabilityTopics.Cluster.Name,
-            Description = capabilityTopics.Cluster.Description,
-            Topics = capabilityTopics.Topics
-                .Select(topic => Convert(topic, accessLevel))
-                .ToArray(),
-            Links =
+            yield return  new CapabilityClusterTopicsApiResource
             {
-                Self = new ResourceLink
+                Id = clusterTopics.Cluster.Id,
+                Name = clusterTopics.Cluster.Name,
+                Description = clusterTopics.Cluster.Description,
+                Topics = clusterTopics.Topics
+                    .Select(topic => Convert(topic, isMemberOfCapability ? UserAccessLevelOptions.ReadWrite : UserAccessLevelOptions.Read))
+                    .ToArray(),
+                Links =
                 {
-                    Href = _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        action: nameof(KafkaClusterController.GetById),
-                        controller: GetNameOf<KafkaClusterController>(),
-                        values: new {id = capabilityTopics.Cluster.Id}) ?? "",
-                    Rel = "self",
-                    Allow = {"GET"}
+                    Self = new ResourceLink
+                    {
+                        Href = _linkGenerator.GetUriByAction(
+                            httpContext: HttpContext,
+                            action: nameof(KafkaClusterController.GetById),
+                            controller: GetNameOf<KafkaClusterController>(),
+                            values: new {id = clusterTopics.Cluster.Id}) ?? "",
+                        Rel = "self",
+                        Allow = {"GET"}
+                    }
                 }
-            }
+            };
+        }
+    }
+
+    private async Task<bool> IsMemberOfCapability(Capability capability)
+    {
+        var postRequirements = new IAuthorizationRequirement[]
+        {
+            new IsMemberOfCapability()
         };
+
+        var authorizationResult = await _authorizationService.AuthorizeAsync(HttpContext.User, capability, postRequirements);
+        return authorizationResult.Succeeded;
     }
 }
