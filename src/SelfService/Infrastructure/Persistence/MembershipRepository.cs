@@ -25,8 +25,16 @@ public class MembershipRepository : IMembershipRepository
             .ToListAsync();
     }
 
-    public async Task<Membership> Cancel(CapabilityId capabilityId, UserId userId)
+    public async Task<Membership?> Cancel(CapabilityId capabilityId, UserId userId)
     {
+        var membershipCount = await _dbContext.Memberships
+            .Where(x => x.CapabilityId == capabilityId)
+            .CountAsync();
+        if (membershipCount <= 1)
+        {
+            return null;
+        }
+
         var membership = await _dbContext.Memberships
             .Where(x => x.CapabilityId == capabilityId && x.UserId == userId)
             .FirstOrDefaultAsync();

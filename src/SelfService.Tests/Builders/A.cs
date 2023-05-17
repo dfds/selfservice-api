@@ -18,4 +18,5 @@ public static class A
     
     public static CapabilityRepositoryBuilder CapabilityRepository => new();
     public static MembershipApplicationRepositoryBuilder MembershipApplicationRepository => new();
+    public static MembershipRepositoryBuilder MembershipRepository => new();
 }

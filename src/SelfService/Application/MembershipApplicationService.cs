@@ -192,10 +192,16 @@ public class MembershipApplicationService : IMembershipApplicationService
         _logger.LogDebug("User {UserId} wants to leave capapbility {CapabilityId}",
             userId, capabilityId);
 
-        Membership membership = await _membershipRepository.Cancel(capabilityId, userId);
-        membership.Cancel();
+        Membership? membership = await _membershipRepository.Cancel(capabilityId, userId);
+        if (membership != null) {
+            membership.Cancel();
 
-        _logger.LogDebug("User {UserId} has left capability {CapabilityId}",
+            _logger.LogDebug("User {UserId} has left capability {CapabilityId}",
             userId, capabilityId);
+        } else {
+            _logger.LogDebug("User {UserId} could not leave capability {CapabilityId}, being the last member",
+            userId, capabilityId);
+        }
+
     }
 }
