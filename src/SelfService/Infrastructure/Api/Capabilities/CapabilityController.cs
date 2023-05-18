@@ -13,7 +13,6 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 [ApiController]
 public class CapabilityController : ControllerBase
 {
-    private readonly LinkGenerator _linkGenerator;
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
@@ -26,7 +25,7 @@ public class CapabilityController : ControllerBase
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly CapabilityTopicsService _capabilityTopicsService;
 
-    public CapabilityController(LinkGenerator linkGenerator,
+    public CapabilityController(
         ICapabilityMembersQuery membersQuery,
         ICapabilityRepository capabilityRepository,
         IKafkaTopicRepository kafkaTopicRepository,
@@ -39,7 +38,6 @@ public class CapabilityController : ControllerBase
         IMembershipApplicationService membershipApplicationService,
         CapabilityTopicsService capabilityTopicsService)
     {
-        _linkGenerator = linkGenerator;
         _membersQuery = membersQuery;
         _capabilityRepository = capabilityRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
@@ -59,23 +57,9 @@ public class CapabilityController : ControllerBase
     {
         var capabilities = await _capabilityRepository.GetAll();
 
-        return Ok(new CapabilityListApiResource
-        {
-            Items = capabilities
-                .Select(_apiResourceFactory.ConvertToListItem)
-                .ToArray(),
-            Links =
-            {
-                Self = new ResourceLink
-                {
-                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetAllCapabilities)) ?? "",
-                    Rel = "self",
-                    Allow = {"GET"}
-                }
-            }
-        });
+        return Ok(_apiResourceFactory.Convert(capabilities));
     }
-    
+
     [HttpPost("")]
     public async Task<IActionResult> CreateNewCapability([FromBody] NewCapabilityRequest request)
     {
@@ -172,21 +156,7 @@ public class CapabilityController : ControllerBase
 
         var members = await _membersQuery.FindBy(capabilityId);
 
-        return Ok(new CapabilityMembersApiResource
-        {
-            Items = members
-                .Select(_apiResourceFactory.Convert)
-                .ToArray(),
-            Links =
-            {
-                Self = new ResourceLink
-                {
-                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetCapabilityMembers), values: new { id }) ?? "",
-                    Rel = "self",
-                    Allow = { "GET" }
-                }
-            }
-        });
+        return Ok(_apiResourceFactory.Convert(id, members));
     }
 
     [HttpGet("{id:required}/topics")]
@@ -324,30 +294,9 @@ public class CapabilityController : ControllerBase
                 .ToList();
         }
 
-        var allowedInteractions = new List<string> {"GET"};
-        if (accessLevel == UserAccessLevelOptions.Read && applications.Count() == 0)
-        {
-            allowedInteractions.Add("POST");
-        }
+        var resource = _apiResourceFactory.Convert(id, accessLevel, applications, userId);
 
-        return Ok(new MembershipApplicationListApiResource
-        {
-            Items = applications
-                .Select(application => _apiResourceFactory.Convert(application, accessLevel, userId))
-                .ToArray(),
-            Links =
-            {
-                Self = new ResourceLink
-                {
-                    Href = _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        action: nameof(GetCapabilityMembershipApplications),
-                        values: new {id = id}) ?? "",
-                    Rel = "self",
-                    Allow = allowedInteractions
-                }
-            }
-        });
+        return Ok(resource);
     }
 
     [HttpPost("{id:required}/membershipapplications")]

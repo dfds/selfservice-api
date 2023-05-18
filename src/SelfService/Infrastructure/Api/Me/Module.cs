@@ -20,11 +20,9 @@ public class MeController : ControllerBase
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IMemberRepository _memberRepository;
     private readonly IMemberApplicationService _memberApplicationService;
-    private readonly LinkGenerator _linkGenerator;
 
     public MeController(IMyCapabilitiesQuery myCapabilitiesQuery, SelfServiceDbContext dbContext, IHostEnvironment hostEnvironment, 
-        ApiResourceFactory apiResourceFactory, IMemberRepository memberRepository, IMemberApplicationService memberApplicationService,
-        LinkGenerator linkGenerator)
+        ApiResourceFactory apiResourceFactory, IMemberRepository memberRepository, IMemberApplicationService memberApplicationService)
     {
         _myCapabilitiesQuery = myCapabilitiesQuery;
         _dbContext = dbContext;
@@ -32,7 +30,6 @@ public class MeController : ControllerBase
         _apiResourceFactory = apiResourceFactory;
         _memberRepository = memberRepository;
         _memberApplicationService = memberApplicationService;
-        _linkGenerator = linkGenerator;
     }
 
     [HttpGet("")]
@@ -50,47 +47,7 @@ public class MeController : ControllerBase
         var capabilities = await _myCapabilitiesQuery.FindBy(userId);
         var member = await _memberRepository.FindBy(userId);
 
-        return Ok(new MyProfileApiResource
-        {
-            Id = userId,
-            Capabilities = capabilities.Select(_apiResourceFactory.ConvertToListItem), 
-            Stats = await ComposeStats(),
-            AutoReloadTopics = !_hostEnvironment.IsDevelopment(),
-            PersonalInformation = member != null
-                ? new PersonalInformationApiResource
-                {
-                    Name = member.DisplayName ?? "",
-                    Email = member.Email
-                }
-                : PersonalInformationApiResource.Empty,
-            Links =
-            {
-                Self =
-                {
-                    Href = _linkGenerator.GetUriByAction(HttpContext, "GetMe") ?? "",
-                    Rel = "self",
-                    Allow = { "GET" }
-                },
-                PersonalInformation =
-                {
-                    Href = _linkGenerator.GetUriByAction(HttpContext, "UpdatePersonalInformation") ?? "",
-                    Rel = "related",
-                    Allow = {"PUT"}
-                },
-                PortalVisits =
-                {
-                    Href = _linkGenerator.GetUriByAction(HttpContext, "RegisterVisit", "PortalVisit") ?? "",
-                    Rel = "related",
-                    Allow = {"POST"}
-                },
-                TopVisitors =
-                {
-                    Href = _linkGenerator.GetUriByAction(HttpContext, "GetTopVisitors", "System") ?? "",
-                    Rel = "related",
-                    Allow = {"GET"}
-                }
-            }
-        });
+        return Ok(_apiResourceFactory.Convert(userId, capabilities, member, _hostEnvironment.IsDevelopment(), await ComposeStats()));
     }
 
     [HttpPut("personalinformation")]

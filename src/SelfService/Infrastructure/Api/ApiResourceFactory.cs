@@ -4,7 +4,9 @@ using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Authorization;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.Kafka;
+using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
+using SelfService.Infrastructure.Api.System;
 
 namespace SelfService.Infrastructure.Api;
 
@@ -94,6 +96,28 @@ public class ApiResourceFactory
         };
     }
 
+    public CapabilityMembersApiResource Convert(string id, IEnumerable<Member> members)
+    {
+        return new CapabilityMembersApiResource
+        {
+            Items = members
+                .Select(Convert)
+                .ToArray(),
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<CapabilityController>(),
+                        action: nameof(CapabilityController.GetCapabilityMembers), values: new { id }) ?? "",
+                    Rel = "self",
+                    Allow = { "GET" }
+                }
+            }
+        };
+    }
+
     public MemberApiResource Convert(Member member)
     {
         return new MemberApiResource
@@ -103,6 +127,28 @@ public class ApiResourceFactory
             Email = member.Email,
 
             // Note: [jandr] current design does not include the need for links
+        };
+    }
+
+    public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
+    {
+        return new CapabilityListApiResource
+        {
+            Items = capabilities
+                .Select(ConvertToListItem)
+                .ToArray(),
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<CapabilityController>(),
+                        action: nameof(CapabilityController.GetAllCapabilities)) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
+                }
+            }
         };
     }
 
@@ -585,5 +631,120 @@ public class ApiResourceFactory
 
         var authorizationResult = await _authorizationService.AuthorizeAsync(HttpContext.User, capability, postRequirements);
         return authorizationResult.Succeeded;
+    }
+
+    public MembershipApplicationListApiResource Convert(string id, UserAccessLevelOptions accessLevel, IEnumerable<MembershipApplication> applications, UserId userId)
+    {
+        var allowedInteractions = new List<string> { "GET" };
+        if (accessLevel == UserAccessLevelOptions.Read && applications.Count() == 0)
+        {
+            allowedInteractions.Add("POST");
+        }
+
+        var resource = new MembershipApplicationListApiResource
+        {
+            Items = applications
+                .Select(application => Convert(application, accessLevel, userId))
+                .ToArray(),
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                               httpContext: HttpContext,
+                               controller: GetNameOf<CapabilityController>(),
+                               action: nameof(CapabilityController.GetCapabilityMembershipApplications),
+                               values: new { id = id }) ??
+                           "",
+                    Rel = "self",
+                    Allow = allowedInteractions
+                }
+            }
+        };
+        return resource;
+    }
+
+    public KafkaTopicListApiResource Convert(IEnumerable<KafkaTopic> topics, IEnumerable<KafkaCluster> clusters)
+    {
+        return new KafkaTopicListApiResource
+        {
+            Items = topics
+                .Select(topic => Convert(topic, UserAccessLevelOptions.Read)) // NOTE [jandr@2023-03-20]: Hardcoding access level to read - change that!
+                .ToArray(),
+            Embedded =
+            {
+                KafkaClusters = Convert(clusters)
+            },
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<KafkaTopicController>(),
+                        action: nameof(KafkaTopicController.GetAllTopics)) ?? "",
+                    Rel = "self",
+                    Allow = {"GET"}
+                }
+            }
+        };
+    }
+
+    public MyProfileApiResource Convert(UserId userId, IEnumerable<Capability> capabilities, Member? member, bool isDevelopment, IEnumerable<Stat> stats)
+    {
+
+        return new MyProfileApiResource
+        {
+            Id = userId,
+            Capabilities = capabilities.Select(ConvertToListItem), 
+            Stats = stats,
+            AutoReloadTopics = !isDevelopment,
+            PersonalInformation = member != null
+                ? new PersonalInformationApiResource
+                {
+                    Name = member.DisplayName ?? "",
+                    Email = member.Email
+                }
+                : PersonalInformationApiResource.Empty,
+            Links =
+            {
+                Self =
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<MeController>(),
+                        action: nameof(MeController.GetMe)) ?? "",
+                    Rel = "self",
+                    Allow = { "GET" }
+                },
+                PersonalInformation =
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<MeController>(),
+                        action: nameof(MeController.UpdatePersonalInformation)) ?? "",
+                    Rel = "related",
+                    Allow = {"PUT"}
+                },
+                PortalVisits =
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<PortalVisitController>(),
+                        action: nameof(PortalVisitController.RegisterVisit)) ?? "",
+                    Rel = "related",
+                    Allow = {"POST"}
+                },
+                TopVisitors =
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<SystemController>(),
+                        action: nameof(SystemController.GetTopVisitors)) ?? "",
+                    Rel = "related",
+                    Allow = {"GET"}
+                }
+            }
+        };
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using Moq;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api;
+using SelfService.Infrastructure.Api.Me;
 
 namespace SelfService.Tests.Infrastructure.Api;
 
@@ -28,6 +29,18 @@ public class TestApiResourceFactory
 
     [Fact]
     public void convert_capability_list()
+    {
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        httpContextAccessorMock.SetupGet(x => x.HttpContext).Returns(new DefaultHttpContext());
+        var sut = new ApiResourceFactory(httpContextAccessorMock.Object, Mock.Of<LinkGenerator>(), Mock.Of<IAuthorizationService>());
+
+        var result = sut.Convert(new[] { A.Capability.Build() });
+
+        Assert.Equal(new[] { "GET" }, result.Links.Self.Allow);
+    }
+
+    [Fact]
+    public void convert_capability_list_item()
     {
         var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         httpContextAccessorMock.SetupGet(x => x.HttpContext).Returns(new DefaultHttpContext());
@@ -177,6 +190,73 @@ public class TestApiResourceFactory
 
         Assert.Equal(expectedAllowed, result.Links.Self.Allow);
     }
+    
+    [Theory]
+    [InlineData(UserAccessLevelOptions.Read, new[] { "GET", "POST" })]
+    [InlineData(UserAccessLevelOptions.ReadWrite, new[] { "GET" })]
+    public void convert_membership_application_list_no_applications(UserAccessLevelOptions accessLevel, string[] expectedAllowed)
+    {
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        httpContextAccessorMock.SetupGet(x => x.HttpContext).Returns(new DefaultHttpContext());
+        var sut = new ApiResourceFactory(httpContextAccessorMock.Object, Mock.Of<LinkGenerator>(), Mock.Of<IAuthorizationService>());
+
+        var result = sut.Convert("some-capability", accessLevel, new MembershipApplication[0], "some-user");
+
+        Assert.Equal(expectedAllowed, result.Links.Self.Allow);
+    }
+
+    [Theory]
+    [InlineData(UserAccessLevelOptions.Read)]
+    [InlineData(UserAccessLevelOptions.ReadWrite)]
+    public void convert_membership_application_list(UserAccessLevelOptions accessLevel)
+    {
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        httpContextAccessorMock.SetupGet(x => x.HttpContext).Returns(new DefaultHttpContext());
+        var sut = new ApiResourceFactory(httpContextAccessorMock.Object, Mock.Of<LinkGenerator>(), Mock.Of<IAuthorizationService>());
+
+        var result = sut.Convert("some-capability", accessLevel, new MembershipApplication[] { A.MembershipApplication }, "some-user");
+
+        Assert.Equal(new[] { "GET" }, result.Links.Self.Allow);
+    }
+
+    [Fact]
+    public void convert_capability_member_list()
+    {
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        httpContextAccessorMock.SetupGet(x => x.HttpContext).Returns(new DefaultHttpContext());
+        var sut = new ApiResourceFactory(httpContextAccessorMock.Object, Mock.Of<LinkGenerator>(), Mock.Of<IAuthorizationService>());
+
+        var result = sut.Convert("some-capability", new[] { A.Member.Build() });
+
+        Assert.Equal(new[] { "GET" }, result.Links.Self.Allow);
+    }
+
+    [Fact]
+    public void convert_public_topic_list()
+    {
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        httpContextAccessorMock.SetupGet(x => x.HttpContext).Returns(new DefaultHttpContext());
+        var sut = new ApiResourceFactory(httpContextAccessorMock.Object, Mock.Of<LinkGenerator>(), Mock.Of<IAuthorizationService>());
+
+        var result = sut.Convert(new[] { A.KafkaTopic.Build() }, new[] { A.KafkaCluster.Build() });
+
+        Assert.Equal(new[] { "GET" }, result.Links.Self.Allow);
+    }
+
+    [Fact]
+    public void convert_me()
+    {
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        httpContextAccessorMock.SetupGet(x => x.HttpContext).Returns(new DefaultHttpContext());
+        var sut = new ApiResourceFactory(httpContextAccessorMock.Object, Mock.Of<LinkGenerator>(), Mock.Of<IAuthorizationService>());
+
+        var result = sut.Convert("some-user", new Capability[0], A.Member, true, new Stat[0]);
+
+        Assert.Equal(new[] { "GET" }, result.Links.Self.Allow);
+        Assert.Equal(new[] { "PUT" }, result.Links.PersonalInformation.Allow);
+        Assert.Equal(new[] { "POST" }, result.Links.PortalVisits.Allow);
+        Assert.Equal(new[] { "GET" }, result.Links.TopVisitors.Allow);
+    }
 
     private static class A
     {
@@ -186,5 +266,6 @@ public class TestApiResourceFactory
         public static KafkaClusterBuilder KafkaCluster => new();
         public static MessageContractBuilder MessageContract => new();
         public static MembershipApplicationBuilder MembershipApplication => new();
+        public static MemberBuilder Member => new();
     }
 }

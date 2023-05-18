@@ -16,7 +16,6 @@ public class KafkaTopicController : ControllerBase
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IMessageContractRepository _messageContractRepository;
     private readonly IMembershipQuery _membershipQuery;
-    private readonly LinkGenerator _linkGenerator;
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IAuthorizationService _authorizationService;
     private readonly IKafkaClusterRepository _clusterRepository;
@@ -24,14 +23,13 @@ public class KafkaTopicController : ControllerBase
 
     public KafkaTopicController(ILogger<KafkaTopicController> logger, IKafkaTopicRepository kafkaTopicRepository, 
         IMessageContractRepository messageContractRepository, IMembershipQuery membershipQuery, 
-        LinkGenerator linkGenerator, ApiResourceFactory apiResourceFactory, IAuthorizationService authorizationService, 
+        ApiResourceFactory apiResourceFactory, IAuthorizationService authorizationService, 
         IKafkaClusterRepository clusterRepository, IKafkaTopicApplicationService kafkaTopicApplicationService)
     {
         _logger = logger;
         _kafkaTopicRepository = kafkaTopicRepository;
         _messageContractRepository = messageContractRepository;
         _membershipQuery = membershipQuery;
-        _linkGenerator = linkGenerator;
         _apiResourceFactory = apiResourceFactory;
         _authorizationService = authorizationService;
         _clusterRepository = clusterRepository;
@@ -45,25 +43,7 @@ public class KafkaTopicController : ControllerBase
         var topics = await _kafkaTopicRepository.GetAllPublic();
         var clusters = await _clusterRepository.GetAll();
 
-        return Ok(new KafkaTopicListApiResource
-        {
-            Items = topics
-                .Select(topic => _apiResourceFactory.Convert(topic, UserAccessLevelOptions.Read)) // NOTE [jandr@2023-03-20]: Hardcoding access level to read - change that!
-                .ToArray(),
-            Embedded =
-            {
-                KafkaClusters = _apiResourceFactory.Convert(clusters)
-            },
-            Links =
-            {
-                Self = new ResourceLink
-                {
-                    Href = _linkGenerator.GetUriByAction(HttpContext, nameof(GetAllTopics)) ?? "",
-                    Rel = "self",
-                    Allow = {"GET"}
-                }
-            }
-        });
+        return Ok(_apiResourceFactory.Convert(topics, clusters));
     }
 
     [HttpGet("{id:required}")]
