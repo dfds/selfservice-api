@@ -119,7 +119,7 @@ public class ApiResourceFactory
         };
     }
 
-    public MemberApiResource Convert(Member member)
+    private static MemberApiResource Convert(Member member)
     {
         return new MemberApiResource
         {
@@ -236,7 +236,7 @@ public class ApiResourceFactory
         };
     }
 
-    private async Task<ResourceLink> CreateSelfLinkFor(Capability capability)
+    private ResourceLink CreateSelfLinkFor(Capability capability)
     {
         return new ResourceLink
         {
@@ -342,7 +342,7 @@ public class ApiResourceFactory
             Description = capability.Description,
             Links =
             {
-                Self = await CreateSelfLinkFor(capability),
+                Self = CreateSelfLinkFor(capability),
                 Members = await CreateMembersLinkFor(capability),
                 Topics = await CreateTopicsLinkFor(capability),
                 MembershipApplications = await CreateMembershipApplicationsLinkFor(capability),
@@ -534,7 +534,7 @@ public class ApiResourceFactory
         };
     }
 
-    public MembershipApprovalListApiResource Convert(IEnumerable<MembershipApproval> approvals, MembershipApplicationId parentApplicationId, Allow allowedInteractions)
+    private MembershipApprovalListApiResource Convert(IEnumerable<MembershipApproval> approvals, MembershipApplicationId parentApplicationId, Allow allowedInteractions)
     {
         return new MembershipApprovalListApiResource
         {
@@ -557,7 +557,7 @@ public class ApiResourceFactory
         };
     }
 
-    public MembershipApprovalApiResource Convert(MembershipApproval approval)
+    private static MembershipApprovalApiResource Convert(MembershipApproval approval)
     {
         return new MembershipApprovalApiResource
         {
