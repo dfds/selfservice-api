@@ -7,6 +7,7 @@ using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
 using SelfService.Infrastructure.Api.System;
+using static SelfService.Infrastructure.Api.Method;
 
 namespace SelfService.Infrastructure.Api;
 
@@ -40,7 +41,7 @@ public class ApiResourceFactory
         if (accessLevel == UserAccessLevelOptions.Read && topic.IsPrivate)
         {
             // remove all access if the topic is private and user just as read access
-            messageContractsAccessLevel.Clear();
+            messageContractsAccessLevel = Allow.None;
         }
 
         var result = new KafkaTopicApiResource
@@ -69,7 +70,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<KafkaTopicController>(),
                         values: new {id = topic.Id}) ?? "",
                     Rel = "self",
-                    Allow = {"GET"}
+                    Allow = { Get }
                 },
                 MessageContracts = new ResourceLink
                 {
@@ -87,12 +88,12 @@ public class ApiResourceFactory
         return result;
     }
 
-    private static List<string> Convert(UserAccessLevelOptions accessLevel)
+    private static Allow Convert(UserAccessLevelOptions accessLevel)
     {
         return accessLevel switch
         {
-            UserAccessLevelOptions.ReadWrite => new List<string> {"GET", "POST"},
-            _ => new List<string> {"GET"},
+            UserAccessLevelOptions.ReadWrite => new Allow { Get, Post },
+            _ => Allow.Get
         };
     }
 
@@ -112,7 +113,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<CapabilityController>(),
                         action: nameof(CapabilityController.GetCapabilityMembers), values: new { id }) ?? "",
                     Rel = "self",
-                    Allow = { "GET" }
+                    Allow = { Get }
                 }
             }
         };
@@ -146,7 +147,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<CapabilityController>(),
                         action: nameof(CapabilityController.GetAllCapabilities)) ?? "",
                     Rel = "self",
-                    Allow = {"GET"}
+                    Allow = { Get }
                 }
             }
         };
@@ -169,7 +170,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<CapabilityController>(),
                         values: new {id = capability.Id}) ?? "",
                     Rel = "self",
-                    Allow = {"GET"}
+                    Allow = { Get }
                 },
             },
         };
@@ -177,7 +178,7 @@ public class ApiResourceFactory
 
     private async Task<ResourceLink> CreateMembershipApplicationsLinkFor(Capability capability)
     {
-        var allowedInteractions = new List<string> {"GET"};
+        var allowedInteractions = Allow.Get;
 
         var authorizationResult = await _authorizationService.AuthorizeAsync(
             user: HttpContext.User,
@@ -190,7 +191,7 @@ public class ApiResourceFactory
         
         if (authorizationResult.Succeeded)
         {
-            allowedInteractions.Add("POST");
+            allowedInteractions += Post;
         }
 
         return new ResourceLink
@@ -207,7 +208,7 @@ public class ApiResourceFactory
 
     private async Task<ResourceLink> CreateLeaveCapabilityLinkFor(Capability capability)
     {
-        var allowedInteractions = new List<string> {"GET"};
+        var allowedInteractions = Allow.Get;
 
         var authorizationResult = await _authorizationService.AuthorizeAsync(
             user: HttpContext.User,
@@ -220,7 +221,7 @@ public class ApiResourceFactory
         
         if (authorizationResult.Succeeded)
         {
-            allowedInteractions.Add("POST");
+            allowedInteractions += Post;
         }
 
         return new ResourceLink
@@ -245,7 +246,7 @@ public class ApiResourceFactory
                 controller: GetNameOf<CapabilityController>(),
                 values: new {id = capability.Id}) ?? "",
             Rel = "self",
-            Allow = {"GET"}
+            Allow = { Get }
         };
     }
 
@@ -259,14 +260,13 @@ public class ApiResourceFactory
                 controller: GetNameOf<CapabilityController>(),
                 values: new { id = capability.Id }) ?? "",
             Rel = "related",
-            Allow = { "GET" }
+            Allow = { Get }
         };
     }
 
     private async Task<ResourceLink> CreateTopicsLinkFor(Capability capability)
     {
-        var allowedInteractions = new List<string>();
-        allowedInteractions.Add("GET");
+        var allowedInteractions = Allow.Get;
 
         var postRequirements = new IAuthorizationRequirement[]
         {
@@ -276,7 +276,7 @@ public class ApiResourceFactory
         var authorizationResult = await _authorizationService.AuthorizeAsync(HttpContext.User, capability, postRequirements);
         if (authorizationResult.Succeeded)
         {
-            allowedInteractions.Add("POST");
+            allowedInteractions += Post;
         }
 
         return new ResourceLink
@@ -293,7 +293,7 @@ public class ApiResourceFactory
 
     private async Task<ResourceLink> CreateAwsAccountLinkFor(Capability capability)
     {
-        var allowedInteractions = new List<string>();
+        var allowedInteractions = Allow.None;
 
         var authorizationResult = await _authorizationService.AuthorizeAsync(
             user: HttpContext.User,
@@ -305,7 +305,7 @@ public class ApiResourceFactory
 
         if (authorizationResult.Succeeded)
         {
-            allowedInteractions.Add("GET");
+            allowedInteractions += Get;
 
             authorizationResult = await _authorizationService.AuthorizeAsync(
                 user: HttpContext.User,
@@ -317,7 +317,7 @@ public class ApiResourceFactory
 
             if (authorizationResult.Succeeded)
             {
-                allowedInteractions.Add("POST");
+                allowedInteractions += Post;
             }
         }
 
@@ -354,10 +354,10 @@ public class ApiResourceFactory
 
     public AwsAccountApiResource Convert(AwsAccount account, UserAccessLevelOptions accessLevel)
     {
-        var allowedInteractions = new List<string> {"GET"};
+        var allowedInteractions = Allow.Get;
         if (accessLevel == UserAccessLevelOptions.ReadWrite)
         {
-            allowedInteractions.Add("POST");
+            allowedInteractions += Post;
         }
 
         return new AwsAccountApiResource
@@ -404,7 +404,7 @@ public class ApiResourceFactory
                 controller: GetNameOf<KafkaClusterController>(),
                 values: new {id = cluster.Id}) ?? "",
             Rel = "self",
-            Allow = {"GET"}
+            Allow = { Get }
         };
 
         return new KafkaClusterApiResource
@@ -435,7 +435,7 @@ public class ApiResourceFactory
                         action: nameof(KafkaClusterController.GetAllClusters),
                         controller: GetNameOf<KafkaClusterController>()) ?? "",
                     Rel = "self",
-                    Allow = {"GET"}
+                    Allow = { Get }
                 }
             }
         };
@@ -462,7 +462,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<KafkaTopicController>(),
                         values: new {id = messageContract.KafkaTopicId, contractId = messageContract.Id}) ?? "",
                     Rel = "self",
-                    Allow = {"GET"}
+                    Allow = { Get }
                 }
             }
         };
@@ -501,13 +501,13 @@ public class ApiResourceFactory
             ? Enumerable.Empty<MembershipApproval>()
             : application.Approvals;
 
-        var allowedApprovalInteractions = new List<string>();
+        var allowedApprovalInteractions = Allow.None;
         if (!isCurrentUserTheApplicant)
         {
-            allowedApprovalInteractions.Add("GET");
+            allowedApprovalInteractions += Get;
             if (!application.HasApproved(currentUser))
             {
-                allowedApprovalInteractions.Add("POST");
+                allowedApprovalInteractions += Post;
             }
         }
 
@@ -528,13 +528,13 @@ public class ApiResourceFactory
                         controller: GetNameOf<MembershipApplicationController>(),
                         values: new { id = application.Id.ToString() }) ?? "",
                     Rel = "self",
-                    Allow = {"GET"}
+                    Allow = { Get }
                 }
             }
         };
     }
 
-    public MembershipApprovalListApiResource Convert(IEnumerable<MembershipApproval> approvals, MembershipApplicationId parentApplicationId, List<string> allowedInteractions)
+    public MembershipApprovalListApiResource Convert(IEnumerable<MembershipApproval> approvals, MembershipApplicationId parentApplicationId, Allow allowedInteractions)
     {
         return new MembershipApprovalListApiResource
         {
@@ -574,6 +574,12 @@ public class ApiResourceFactory
         var resources = Convert(capabilityTopics, isMemberOfCapability)
             .ToArray();
 
+        var allow = Allow.Get;
+        if (isMemberOfCapability)
+        {
+            allow += Post;
+        }
+
         return new CapabilityTopicsApiResource
         {
             Items = resources,
@@ -587,7 +593,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<CapabilityController>(),
                         values: new { id = capabilityTopics.Capability.Id }) ?? "",
                     Rel = "self",
-                    Allow = isMemberOfCapability ? new List<string> { "GET", "POST" } : new List<string> { "GET" }
+                    Allow = allow
                 }
             }
         };
@@ -615,7 +621,7 @@ public class ApiResourceFactory
                             controller: GetNameOf<KafkaClusterController>(),
                             values: new {id = clusterTopics.Cluster.Id}) ?? "",
                         Rel = "self",
-                        Allow = {"GET"}
+                        Allow = { Get }
                     }
                 }
             };
@@ -635,10 +641,10 @@ public class ApiResourceFactory
 
     public MembershipApplicationListApiResource Convert(string id, UserAccessLevelOptions accessLevel, IEnumerable<MembershipApplication> applications, UserId userId)
     {
-        var allowedInteractions = new List<string> { "GET" };
+        var allowedInteractions = Allow.Get;
         if (accessLevel == UserAccessLevelOptions.Read && applications.Count() == 0)
         {
-            allowedInteractions.Add("POST");
+            allowedInteractions += Post;
         }
 
         var resource = new MembershipApplicationListApiResource
@@ -684,7 +690,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<KafkaTopicController>(),
                         action: nameof(KafkaTopicController.GetAllTopics)) ?? "",
                     Rel = "self",
-                    Allow = {"GET"}
+                    Allow = { Get }
                 }
             }
         };
@@ -715,7 +721,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<MeController>(),
                         action: nameof(MeController.GetMe)) ?? "",
                     Rel = "self",
-                    Allow = { "GET" }
+                    Allow = { Get }
                 },
                 PersonalInformation =
                 {
@@ -724,7 +730,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<MeController>(),
                         action: nameof(MeController.UpdatePersonalInformation)) ?? "",
                     Rel = "related",
-                    Allow = {"PUT"}
+                    Allow = { Put }
                 },
                 PortalVisits =
                 {
@@ -733,7 +739,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<PortalVisitController>(),
                         action: nameof(PortalVisitController.RegisterVisit)) ?? "",
                     Rel = "related",
-                    Allow = {"POST"}
+                    Allow = { Post }
                 },
                 TopVisitors =
                 {
@@ -742,7 +748,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<SystemController>(),
                         action: nameof(SystemController.GetTopVisitors)) ?? "",
                     Rel = "related",
-                    Allow = {"GET"}
+                    Allow = { Get }
                 }
             }
         };
