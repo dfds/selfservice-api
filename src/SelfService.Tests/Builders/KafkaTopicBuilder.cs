@@ -33,6 +33,12 @@ public class KafkaTopicBuilder
         _modifiedBy = null;
     }
 
+    public KafkaTopicBuilder WithName(string name)
+    {
+        _name = name;
+        return this;
+    }
+
     public KafkaTopic Build()
     {
         return new KafkaTopic(
