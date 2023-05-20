@@ -1,8 +1,6 @@
 ﻿using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
-using SelfService.Legacy.Models;
-using Capability = SelfService.Domain.Models.Capability;
 
 namespace SelfService.Application;
 
@@ -59,7 +57,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         if (await _kafkaTopicRepository.Exists(name, kafkaClusterId))
         {
             _logger.LogError("Topic with name {KafkaTopicName} already exist in cluster {KafkaClusterId}", name, kafkaClusterId);
-            throw EntityAlreadyExistsException<Topic>.WithProperty(x => x.Name, name);
+            throw EntityAlreadyExistsException<KafkaTopic>.WithProperty(x => x.Name, name);
         }
 
         var topic = KafkaTopic.RequestNew(
