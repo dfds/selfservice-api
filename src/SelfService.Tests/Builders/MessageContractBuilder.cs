@@ -31,6 +31,18 @@ public class MessageContractBuilder
         _modifiedBy = null;
     }
 
+    public MessageContractBuilder WithId(MessageContractId id)
+    {
+        _id = id;
+        return this;
+    }
+
+    public MessageContractBuilder WithKafkaTopicId(KafkaTopicId kafkaTopicId)
+    {
+        _kafkaTopicId = kafkaTopicId;
+        return this;
+    }
+
     public MessageContract Build()
     {
         return new MessageContract(
