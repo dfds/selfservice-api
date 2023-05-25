@@ -3,6 +3,7 @@ using SelfService.Configuration;
 using SelfService.Infrastructure.Api;
 using SelfService.Infrastructure.Api.Configuration;
 using SelfService.Infrastructure.Messaging;
+using SelfService.Infrastructure.Messaging.Legacy;
 using SelfService.Infrastructure.Metrics;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Legacy;
@@ -23,6 +24,7 @@ try
     builder.AddLegacy();
     builder.AddDatabase();
     builder.AddMessaging();
+    builder.AddLegacyMessaging();
     builder.AddDomain();
     builder.AddApi();
     builder.AddSecurity();

@@ -1,7 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-using Dafda.Configuration;
+﻿using Dafda.Configuration;
 using Dafda.Consuming;
 using SelfService.Application;
 using SelfService.Domain;
@@ -146,77 +143,6 @@ public static class ConsumerConfiguration
             #endregion
 
         });
-
-        builder.Services.AddConsumer(options =>
-        {
-            options.WithConfigurationSource(builder.Configuration);
-            options.WithEnvironmentStyle("DEFAULT_KAFKA");
-            options.WithGroupId("selfservice.consumer.legacy");
-
-            options.WithIncomingMessageFactory(_ => new LegacyIncomingMessageFactory());
-
-            options.ForTopic("build.selfservice.events.capabilities")
-                .RegisterMessageHandler<AwsContextAccountCreated, AwsContextAccountCreatedHandler>(AwsContextAccountCreated.EventType)
-                .RegisterMessageHandler<K8sNamespaceCreatedAndAwsArnConnected, K8sNamespaceCreatedAndAwsArnConnectedHandler>(K8sNamespaceCreatedAndAwsArnConnected.EventType)
-                ;
-            
-            options.WithUnconfiguredMessageHandlingStrategy<UseNoOpHandler>();
-        });
-
-    }
-
-    public class LegacyIncomingMessageFactory : IIncomingMessageFactory
-    {
-        private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions()
-        {
-            PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            NumberHandling = JsonNumberHandling.AllowReadingFromString
-        };
-
-        public TransportLevelMessage Create(string rawMessage)
-        {
-            var jsonDocument = JsonDocument.Parse(rawMessage);
-            var envelope = jsonDocument.Deserialize<LegacyEventEnvelope>(JsonSerializerOptions);
-            if (envelope == null)
-            {
-                throw new InvalidOperationException($"Unable to deserialize {nameof(LegacyEventEnvelope)}");
-            }
-
-            var dict = new Dictionary<string, string?>
-            {
-                ["type"] = envelope.EventName,
-                ["messageId"] = envelope.CorrelationId,
-                ["correlationId"] = envelope.CorrelationId,
-                ["causationId"] = envelope.CorrelationId,
-                ["version"] = envelope.Version,
-                ["sender"] = envelope.Sender,
-            };
-
-            var metadata = new Metadata(dict);
-
-            return new TransportLevelMessage(metadata, type =>
-            {
-                using (jsonDocument)
-                {
-                    return envelope.Payload.Deserialize(type, JsonSerializerOptions);
-                }
-            });
-        }
-    }
-
-    private class LegacyEventEnvelope
-    {
-        public string? Version { get; set; }
-        public string? EventName { get; set; }
-
-        [JsonPropertyName("x-correlationId")]
-        public string? CorrelationId { get; set; }
-
-        [JsonPropertyName("x-sender")]
-        public string? Sender { get; set; }
-
-        public JsonObject Payload { get; set; }
     }
 }
 
@@ -341,72 +267,4 @@ public class AwsAccountRequestedHandler : IMessageHandler<AwsAccountRequested>
 
         await _awsAccountApplicationService.CreateAwsAccountRequestTicket(id);
     }
-}
-
-public class AwsContextAccountCreated
-{
-    public const string EventType = "aws_context_account_created";
-
-    public string? ContextId { get; set; }
-    public string? CapabilityId { get; set; }
-    public string? CapabilityName { get; set; }
-    public string? CapabilityRootId { get; set; }
-    public string? ContextName { get; set; }
-    public string? AccountId { get; set; }
-    public string? RoleArn { get; set; }
-    public string? RoleEmail { get; set; }
-}
-
-public class AwsContextAccountCreatedHandler : IMessageHandler<AwsContextAccountCreated>
-{
-    private readonly IAwsAccountApplicationService _awsAccountApplicationService;
-
-    public AwsContextAccountCreatedHandler(IAwsAccountApplicationService awsAccountApplicationService)
-    {
-        _awsAccountApplicationService = awsAccountApplicationService;
-    }
-
-    public async Task Handle(AwsContextAccountCreated message, MessageHandlerContext context)
-    {
-        if (!AwsAccountId.TryParse(message.ContextId, out var id))
-        {
-            throw new InvalidOperationException($"Invalid AwsAccountId {message.ContextId}");
-        }
-        if (!RealAwsAccountId.TryParse(message.AccountId, out var realAwsAccountId))
-        {
-            throw new InvalidOperationException($"Invalid RealAwsAccountId {message.AccountId}");
-        }
-
-        await _awsAccountApplicationService.RegisterRealAwsAccount(id, realAwsAccountId, message.RoleEmail);
-    }
-}
-
-public class K8sNamespaceCreatedAndAwsArnConnected
-{
-    public const string EventType = "k8s_namespace_created_and_aws_arn_connected";
-
-    public string? CapabilityId { get; set; }
-    public string? ContextId { get; set; }
-    public string? NamespaceName { get; set; }
-}
-
-public class K8sNamespaceCreatedAndAwsArnConnectedHandler : IMessageHandler<K8sNamespaceCreatedAndAwsArnConnected>
-{
-    private readonly IAwsAccountApplicationService _awsAccountApplicationService;
-
-    public K8sNamespaceCreatedAndAwsArnConnectedHandler(IAwsAccountApplicationService awsAccountApplicationService)
-    {
-        _awsAccountApplicationService = awsAccountApplicationService;
-    }
-
-    public Task Handle(K8sNamespaceCreatedAndAwsArnConnected message, MessageHandlerContext context)
-    {
-        if (!AwsAccountId.TryParse(message.ContextId, out var id))
-        {
-            throw new InvalidOperationException($"Invalid AwsAccountId {message.ContextId}");
-        }
-
-        return _awsAccountApplicationService.LinkKubernetesNamespace(id, message.NamespaceName);
-    }
-
 }
