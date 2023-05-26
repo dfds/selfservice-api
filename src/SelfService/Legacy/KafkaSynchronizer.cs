@@ -41,8 +41,9 @@ public class KafkaSynchronizer
                     id: KafkaClusterId.Parse(legacyCluster.ClusterId),
                     name: legacyCluster.Name ?? "",
                     description: legacyCluster.Description ?? "",
-                    enabled: legacyCluster.Enabled
-                );
+                    enabled: legacyCluster.Enabled, 
+                    bootstrapServers: "localhost:9092", 
+                    schemaRegistryUrl: "localhost");
 
                 await _selfServiceDbContext.KafkaClusters.AddAsync(kafkaCluster, stoppingToken);
             }

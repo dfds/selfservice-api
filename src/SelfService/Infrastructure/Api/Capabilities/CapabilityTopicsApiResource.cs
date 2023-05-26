@@ -29,5 +29,6 @@ public class CapabilityClusterTopicsApiResource
     public class KafkaClusterLinks
     {
         public ResourceLink Self { get; set; } = new();
+        public ResourceLink Access { get; set; } = new();
     }
 }

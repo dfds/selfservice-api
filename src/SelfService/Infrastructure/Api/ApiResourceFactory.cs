@@ -572,6 +572,7 @@ public class ApiResourceFactory
         var isMemberOfCapability = await IsMemberOfCapability(capabilityTopics.Capability);
 
         var resources = Convert(capabilityTopics, isMemberOfCapability)
+            .ToBlockingEnumerable()
             .ToArray();
 
         var allow = Allow.Get;
@@ -599,10 +600,22 @@ public class ApiResourceFactory
         };
     }
 
-    private IEnumerable<CapabilityClusterTopicsApiResource> Convert(CapabilityTopics capabilityTopics, bool isMemberOfCapability)
+    private async IAsyncEnumerable<CapabilityClusterTopicsApiResource> Convert(CapabilityTopics capabilityTopics, bool isMemberOfCapability)
     {
         foreach (var clusterTopics in capabilityTopics.Clusters)
         {
+            var capabilityHasKafkaClusterAccess = await CapabilityHasKafkaClusterAccess(capabilityTopics.Capability, clusterTopics.Cluster);
+
+            var allow = Allow.None;
+            if (isMemberOfCapability)
+            {
+                allow += Get;
+                if (!capabilityHasKafkaClusterAccess)
+                {
+                    allow += Post;
+                }
+            }
+
             yield return  new CapabilityClusterTopicsApiResource
             {
                 Id = clusterTopics.Cluster.Id,
@@ -622,7 +635,17 @@ public class ApiResourceFactory
                             values: new {id = clusterTopics.Cluster.Id}) ?? "",
                         Rel = "self",
                         Allow = { Get }
-                    }
+                    },
+                    Access = new ResourceLink
+                    {
+                        Href = _linkGenerator.GetUriByAction(
+                            httpContext: HttpContext,
+                            action: nameof(CapabilityController.GetKafkaClusterAccess),
+                            controller: GetNameOf<CapabilityController>(),
+                            values: new {id = capabilityTopics.Capability.Id, clusterId = clusterTopics.Cluster.Id}) ?? "",
+                        Rel = "self",
+                        Allow = allow
+                    } 
                 }
             };
         }
@@ -636,6 +659,18 @@ public class ApiResourceFactory
         };
 
         var authorizationResult = await _authorizationService.AuthorizeAsync(HttpContext.User, capability, postRequirements);
+        return authorizationResult.Succeeded;
+    }
+
+    private async Task<bool> CapabilityHasKafkaClusterAccess(Capability capability, KafkaCluster kafkaCluster)
+    {
+        var requirements = new IAuthorizationRequirement[]
+        {
+            new CapabilityHasKafkaClusterAccess()
+        };
+
+        var kafkaClusterAccess = new CapabilityKafkaCluster(capability, kafkaCluster);
+        var authorizationResult = await _authorizationService.AuthorizeAsync(HttpContext.User, kafkaClusterAccess, requirements);
         return authorizationResult.Succeeded;
     }
 

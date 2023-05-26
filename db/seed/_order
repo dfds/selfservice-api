@@ -3,6 +3,7 @@ Capability.csv
 Member.csv
 Membership.csv
 KafkaCluster.csv
+KafkaClusterAccess.csv
 KafkaTopic.csv
 MessageContract.csv
 MembershipApplication.csv

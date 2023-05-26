@@ -1,3 +1,3 @@
-Id;Name;Description;Enabled
-dev1;Development;A development cluster special for you;1
-prod1;Production;This is production;1
+Id;Name;Description;Enabled;BootstrapServers;SchemaRegistryUrl
+dev1;Development;A development cluster special for you;1;localhost:9092;localhost
+prod1;Production;This is production;1;localhost:9092;localhost

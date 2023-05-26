@@ -1,9 +1,11 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Moq;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api;
+using SelfService.Infrastructure.Api.Authorization;
 using SelfService.Infrastructure.Api.Me;
 
 namespace SelfService.Tests.Infrastructure.Api;
@@ -175,22 +177,33 @@ public class TestApiResourceFactory
     }
 
     [Theory]
-    [InlineData(false, new[] { "GET" })]
-    [InlineData(true, new[] { "GET", "POST" })]
-    public async Task convert_capability_topics(bool authorized, string[] expectedAllowed)
+    [InlineData(false, false, new[] { "GET" }, new string[0])]
+    [InlineData(false, true, new[] { "GET" }, new string[0])]
+    [InlineData(true, true, new[] { "GET", "POST" }, new[] { "GET" })]
+    [InlineData(true, false, new[] { "GET", "POST" }, new[] { "GET", "POST" })]
+    public async Task convert_capability_topics(bool isMember, bool hasAccess, string[] expectedAllowed, string[] expectedAccessAllowed)
     {
         var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         httpContextAccessorMock.SetupGet(x => x.HttpContext).Returns(new DefaultHttpContext());
         var authorizationServiceMock = new Mock<IAuthorizationService>();
-        authorizationServiceMock.SetReturnsDefault(Task.FromResult(authorized ? AuthorizationResult.Success() : AuthorizationResult.Failed()));
+        authorizationServiceMock
+            .Setup(x => x.AuthorizeAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<Capability>(), It.IsAny<IAuthorizationRequirement[]>()))
+            .ReturnsAsync(isMember ? AuthorizationResult.Success() : AuthorizationResult.Failed());
+
+        authorizationServiceMock
+            .Setup(x => x.AuthorizeAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<CapabilityKafkaCluster>(), It.IsAny<IAuthorizationRequirement[]>()))
+            .ReturnsAsync(hasAccess ? AuthorizationResult.Success() : AuthorizationResult.Failed());
+
         var sut = new ApiResourceFactory(httpContextAccessorMock.Object, Mock.Of<LinkGenerator>(), authorizationServiceMock.Object);
         var capabilityTopics = new CapabilityTopics(A.Capability, new[] { new ClusterTopics(A.KafkaCluster, new KafkaTopic[] { A.KafkaTopic }) });
 
         var result = await sut.Convert(capabilityTopics);
 
         Assert.Equal(expectedAllowed, result.Links.Self.Allow);
+        Assert.Equal(new[] { "GET" }, result.Items.First().Links.Self.Allow);
+        Assert.Equal(expectedAccessAllowed, result.Items.First().Links.Access.Allow);
     }
-    
+
     [Theory]
     [InlineData(UserAccessLevelOptions.Read, new[] { "GET", "POST" })]
     [InlineData(UserAccessLevelOptions.ReadWrite, new[] { "GET" })]

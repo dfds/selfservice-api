@@ -45,6 +45,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<AwsAccount> AwsAccounts { get; set; } = null!;
 
     public DbSet<KafkaCluster> KafkaClusters { get; set; } = null!;
+    public DbSet<KafkaClusterAccess> KafkaClusterAccess { get; set; } = null!;
     public DbSet<KafkaTopic> KafkaTopics { get; set; } = null!;
     public DbSet<MessageContract> MessageContracts { get; set; } = null!;
 
@@ -242,6 +243,20 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Name);
             cfg.Property(x => x.Description);
             cfg.Property(x => x.Enabled);
+            cfg.Property(x => x.BootstrapServers);
+            cfg.Property(x => x.SchemaRegistryUrl);
+        });
+
+        modelBuilder.Entity<KafkaClusterAccess>(cfg =>
+        {
+            cfg.ToTable("KafkaClusterAccess");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CapabilityId);
+            cfg.Property(x => x.KafkaClusterId);
+            cfg.Property(x => x.GrantedAt);
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.CreatedBy);
         });
 
         modelBuilder.Entity<KafkaTopic>(cfg =>
