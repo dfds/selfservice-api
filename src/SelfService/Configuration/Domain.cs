@@ -8,6 +8,7 @@ using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Infrastructure.Ticketing;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace SelfService.Configuration;
 
@@ -48,7 +49,16 @@ public static class Domain
         builder.Services.AddTransient<ICapabilityKafkaTopicsQuery, CapabilityKafkaTopicsQuery>();
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
+
+        
         builder.Services.AddTransient<IMembershipQuery, MembershipQuery>();
+        //builder.Services.AddTransient<MembershipQuery>();
+        //builder.Services.AddScoped<IMembershipQuery, CachedMembershipQueryDecorator>(provider =>
+        //{
+        //    var inner = provider.GetRequiredService<MembershipQuery>();
+        //    return new CachedMembershipQueryDecorator(inner);
+        //});
+        
         builder.Services.AddTransient<ICapabilityMembershipApplicationQuery, CapabilityMembershipApplicationQuery>();
 
         // aad-aws-sync

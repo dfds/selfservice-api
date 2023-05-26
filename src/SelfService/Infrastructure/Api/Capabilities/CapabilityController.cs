@@ -458,7 +458,7 @@ public class CapabilityController : ControllerBase
                 actionName: "GetTopic",
                 controllerName: "KafkaTopic",
                 routeValues: new {id = topic.Id},
-                value: _apiResourceFactory.Convert(topic, UserAccessLevelOptions.ReadWrite)
+                value: await _apiResourceFactory.Convert(topic)
             );
         }
         catch (EntityAlreadyExistsException err)

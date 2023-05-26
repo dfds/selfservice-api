@@ -2,9 +2,14 @@
 
 namespace SelfService.Domain.Services;
 
-[Obsolete]
 public interface IAuthorizationService
 {
     [Obsolete]
     Task<UserAccessLevelOptions> GetUserAccessLevelForCapability(UserId userId, CapabilityId capabilityId);
+
+    Task<bool> CanRead(PortalUser portalUser, KafkaTopic kafkaTopic);
+    Task<bool> CanChange(PortalUser portalUser, KafkaTopic kafkaTopic);
+    Task<bool> CanDelete(PortalUser portalUser, KafkaTopic kafkaTopic);
+    Task<bool> CanReadMessageContracts(PortalUser portalUser, KafkaTopic kafkaTopic);
+    Task<bool> CanAddMessageContract(PortalUser portalUser, KafkaTopic kafkaTopic);
 }

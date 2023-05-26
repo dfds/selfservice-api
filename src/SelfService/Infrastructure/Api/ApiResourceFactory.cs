@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Authorization;
@@ -6,6 +6,7 @@ using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
+using System.Data;
 using SelfService.Infrastructure.Api.System;
 using static SelfService.Infrastructure.Api.Method;
 
@@ -16,15 +17,32 @@ public class ApiResourceFactory
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly LinkGenerator _linkGenerator;
     private readonly IAuthorizationService _authorizationService;
+    private readonly Domain.Services.IAuthorizationService _domainAuthorizationService;
 
-    public ApiResourceFactory(IHttpContextAccessor httpContextAccessor, LinkGenerator linkGenerator, IAuthorizationService authorizationService)
+    public ApiResourceFactory(IHttpContextAccessor httpContextAccessor, LinkGenerator linkGenerator, IAuthorizationService authorizationService, Domain.Services.IAuthorizationService domainAuthorizationService)
     {
         _httpContextAccessor = httpContextAccessor;
         _linkGenerator = linkGenerator;
         _authorizationService = authorizationService;
+        _domainAuthorizationService = domainAuthorizationService;
     }
 
     private HttpContext HttpContext => _httpContextAccessor.HttpContext ?? throw new ApplicationException("Not in a http request context!");
+
+    private UserId CurrentUser
+    {
+        get
+        {
+            if (HttpContext.User.TryGetUserId(out var userId))
+            {
+                return userId;
+            }
+
+            throw new ApplicationException("Current user not available from http request context!");
+        }
+    }
+
+    private PortalUser PortalUser => HttpContext.User.ToPortalUser();
 
     /// <summary>
     /// This returns a name for a controller that complies with the naming convention in ASP.NET where
@@ -35,13 +53,25 @@ public class ApiResourceFactory
     private static string GetNameOf<TController>()  where TController : ControllerBase 
         => typeof(TController).Name.Replace("Controller", "");
 
-    public KafkaTopicApiResource Convert(KafkaTopic topic, UserAccessLevelOptions accessLevel)
+    public async Task<KafkaTopicApiResource> Convert(KafkaTopic topic)
     {
-        var messageContractsAccessLevel = Convert(accessLevel);
-        if (accessLevel == UserAccessLevelOptions.Read && topic.IsPrivate)
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowOnSelf = new List<string> { "GET" };
+        if (await _domainAuthorizationService.CanDelete(portalUser, topic))
         {
-            // remove all access if the topic is private and user just as read access
-            messageContractsAccessLevel = Allow.None;
+            allowOnSelf.Add("DELETE");
+        }
+
+        var messageContractsAccessLevel = new List<string>();
+        if (await _domainAuthorizationService.CanReadMessageContracts(portalUser, topic))
+        {
+            messageContractsAccessLevel.Add("GET");
+        }
+
+        if (await _domainAuthorizationService.CanAddMessageContract(portalUser, topic))
+        {
+            messageContractsAccessLevel.Add("POST");
         }
 
         var result = new KafkaTopicApiResource
@@ -70,7 +100,7 @@ public class ApiResourceFactory
                         controller: GetNameOf<KafkaTopicController>(),
                         values: new {id = topic.Id}) ?? "",
                     Rel = "self",
-                    Allow = { Get }
+                    Allow = allowOnSelf
                 },
                 MessageContracts = new ResourceLink
                 {
@@ -81,7 +111,18 @@ public class ApiResourceFactory
                         values: new {id = topic.Id}) ?? "?",
                     Rel = "related",
                     Allow = messageContractsAccessLevel
+                },
+                UpdateDescription = await _domainAuthorizationService.CanChange(portalUser, topic)
+                    ? new ResourceActionLink
+                    {
+                        Href = _linkGenerator.GetUriByAction(
+                            httpContext: HttpContext,
+                            action: nameof(KafkaTopicController.ChangeTopicDescription),
+                            controller: GetNameOf<KafkaTopicController>(),
+                            values: new {id = topic.Id}) ?? "",
+                        Method = "PUT",
                 }
+                    : null
             }
         };
 
@@ -468,9 +509,15 @@ public class ApiResourceFactory
         };
     }
 
-    public MessageContractListApiResource Convert(IEnumerable<MessageContract> contracts, 
-        KafkaTopicId kafkaTopicId, UserAccessLevelOptions accessLevel)
+    public async Task<MessageContractListApiResource> Convert(IEnumerable<MessageContract> contracts, 
+        KafkaTopic parentKafkaTopic)
     {
+        var allowedInteractions = new List<string> { "GET" };
+        if (await _domainAuthorizationService.CanAddMessageContract(PortalUser, parentKafkaTopic))
+    {
+            allowedInteractions.Add("POST");
+        }
+
         return new MessageContractListApiResource
         {
             Items = contracts
@@ -484,9 +531,9 @@ public class ApiResourceFactory
                         httpContext: HttpContext,
                         action: nameof(KafkaTopicController.GetMessageContracts),
                         controller: GetNameOf<KafkaTopicController>(),
-                        values: new {id = kafkaTopicId}) ?? "",
+                        values: new {id = parentKafkaTopic.Id}) ?? "",
                     Rel = "self",
-                    Allow = Convert(accessLevel)
+                    Allow = allowedInteractions
                 }
             }
         };

@@ -2,6 +2,7 @@ namespace SelfService.Domain.Models;
 
 public class KafkaTopicId : ValueObject
 {
+    public static readonly KafkaTopicId None = new(Guid.Empty);
     private readonly Guid _value;
 
     private KafkaTopicId(Guid value)

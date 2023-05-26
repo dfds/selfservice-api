@@ -108,6 +108,48 @@ public class MembershipQuery :  IMembershipQuery
     }
 }
 
+public class CachedMembershipQueryDecorator : IMembershipQuery
+{
+    private readonly IMembershipQuery _inner;
+    private readonly Dictionary<string, bool> _cache = new();
+
+    public CachedMembershipQueryDecorator(IMembershipQuery inner)
+    {
+        _inner = inner;
+    }
+
+    public async Task<bool> HasActiveMembership(UserId userId, CapabilityId capabilityId)
+    {
+        var key = $"HAM:{userId}:{capabilityId}";
+        
+        if (_cache.TryGetValue(key, out var result))
+        {
+            return result;
+        }
+
+        var innerResult = await _inner.HasActiveMembership(userId, capabilityId);
+        _cache.Add(key, innerResult);
+
+        return innerResult;
+    }
+
+    public async Task<bool> HasActiveMembershipApplication(UserId userId, CapabilityId capabilityId)
+    {
+        var key = $"HAMA:{userId}:{capabilityId}";
+
+        if (_cache.TryGetValue(key, out var result))
+        {
+            return result;
+        }
+
+        var innerResult = await _inner.HasActiveMembershipApplication(userId, capabilityId);
+        _cache.Add(key, innerResult);
+
+        return innerResult;
+    }
+}
+
+
 public class CapabilityMembershipApplicationQuery : ICapabilityMembershipApplicationQuery
 {
     private readonly SelfServiceDbContext _dbContext;

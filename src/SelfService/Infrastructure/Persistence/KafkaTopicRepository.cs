@@ -64,4 +64,10 @@ public class KafkaTopicRepository : IKafkaTopicRepository
             .SingleOrDefaultAsync();
 
     }
+
+    public Task Delete(KafkaTopic topic)
+    {
+        _dbContext.KafkaTopics.Remove(topic);
+        return Task.CompletedTask;
+    }
 }
