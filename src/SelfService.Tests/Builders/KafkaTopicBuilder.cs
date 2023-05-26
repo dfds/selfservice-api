@@ -41,7 +41,13 @@ public class KafkaTopicBuilder
 
     public KafkaTopicBuilder WithName(string name)
     {
-        _name = name;
+        _name = KafkaTopicName.Parse(name);
+        return this;
+    }
+
+    public KafkaTopicBuilder WithDescription(string description)
+    {
+        _description = description;
         return this;
     }
 

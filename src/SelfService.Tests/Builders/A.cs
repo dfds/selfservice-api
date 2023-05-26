@@ -1,4 +1,5 @@
 ﻿using SelfService.Domain.Models;
+using SelfService.Tests.Application.KafkaTopicApplicationService;
 
 namespace SelfService.Tests.Builders;
 
@@ -18,5 +19,7 @@ public static class A
     
     public static CapabilityRepositoryBuilder CapabilityRepository => new();
     public static MembershipApplicationRepositoryBuilder MembershipApplicationRepository => new();
+
+    public static KafkaTopicApplicationServiceBuilder KafkaTopicApplicationService => new();
     public static MembershipRepositoryBuilder MembershipRepository => new();
 }

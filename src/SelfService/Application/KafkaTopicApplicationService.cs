@@ -99,4 +99,50 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             _logger.LogInformation("Kafka topic {KafkaTopicName} has now been provisioned", kafkaTopic.Name);
         }
     }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task ChangeKafkaTopicDescription(KafkaTopicId kafkaTopicId, string newDescription, string changedBy)
+    { 
+        using var _ = _logger.BeginScope("{Action} on {ImplementationType} invoked by {ChangedBy}",
+            nameof(ChangeKafkaTopicDescription), GetType().FullName, changedBy);
+
+        var kafkaTopic = await _kafkaTopicRepository.Get(kafkaTopicId);
+        kafkaTopic.ChangeDescription(newDescription, _systemTime.Now, changedBy);
+
+        _logger.LogDebug("Description of kafka topic {KafkaTopicName} has now been changed", kafkaTopic.Name);
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task DeleteKafkaTopic(KafkaTopicId kafkaTopicId, string requestedBy)
+    { 
+        using var _ = _logger.BeginScope("{Action} on {ImplementationType} invoked by {ChangedBy}",
+            nameof(DeleteKafkaTopic), GetType().FullName, requestedBy);
+
+        var kafkaTopic = await _kafkaTopicRepository.Get(kafkaTopicId);
+        kafkaTopic.Delete();
+
+        await _kafkaTopicRepository.Delete(kafkaTopic);
+
+        _logger.LogInformation("Kafka topic (#{KafkaTopicId}) {KafkaTopicName} has now been deleted by {UserId}",
+            kafkaTopic.Id, kafkaTopic.Name, requestedBy);
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task DeleteAssociatedMessageContracts(KafkaTopicId kafkaTopicId, string requestedBy)
+    {
+        using var _ = _logger.BeginScope("{Action} on {ImplementationType} invoked by {ChangedBy}",
+            nameof(DeleteAssociatedMessageContracts), GetType().FullName, requestedBy);
+
+        var messageContracts = await _messageContractRepository.FindBy(kafkaTopicId);
+        foreach (var contract in messageContracts)
+        {
+            await _messageContractRepository.Delete(contract);
+            
+            _logger.LogInformation("Deleted message contract (#{MessageContractId}) {MessageContractType} on topic {KafkaTopicId}", 
+                contract.Id, contract.MessageType, kafkaTopicId);
+        }
+
+        _logger.LogInformation("All message contracts for Kafka topic (#{KafkaTopicId}) has now been deleted by {UserId}",
+            kafkaTopicId, requestedBy);
+    }
 }

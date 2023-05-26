@@ -64,6 +64,14 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
     public void RegisterAsProvisioned(DateTime modifiedAt, string modifiedBy) 
         => ChangeStatus(KafkaTopicStatusType.Provisioned, modifiedAt, modifiedBy);
 
+    public void Delete()
+    {
+        Raise(new KafkaTopicHasBeenDeleted
+        {
+            KafkaTopicId = Id.ToString()
+        });
+    }
+
     public KafkaTopicPartitions Partitions { get; private set; }
     public KafkaTopicRetention Retention { get; private set; }
 

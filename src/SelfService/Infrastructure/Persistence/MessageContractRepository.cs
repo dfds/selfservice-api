@@ -48,4 +48,10 @@ public class MessageContractRepository : IMessageContractRepository
             .Where(x => x.KafkaTopicId == topicId && x.MessageType == messageType)
             .AnyAsync();
     }
+
+    public Task Delete(MessageContract messageContract)
+    {
+        _dbContext.MessageContracts.Remove(messageContract);
+        return Task.CompletedTask;
+    }
 }

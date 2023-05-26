@@ -52,6 +52,10 @@ public static class ConsumerConfiguration
                     messageType: "topic-requested",
                     keySelector: x => x.KafkaTopicId!
                 )
+                .Register<KafkaTopicHasBeenDeleted>(
+                    messageType: "topic-deleted",
+                    keySelector: x => x.KafkaTopicId!
+                )
                 ;
 
             options
@@ -114,6 +118,7 @@ public static class ConsumerConfiguration
             options
                 .ForTopic($"{SelfServicePrefix}.kafkatopic")
                 .Ignore("topic-requested")
+                .RegisterMessageHandler<KafkaTopicHasBeenDeleted, DeleteAssociatedMessageContracts>("topic-deleted")
                 ;
 
             options

@@ -10,4 +10,6 @@ public interface IKafkaTopicRepository
     Task<KafkaTopic?> FindBy(KafkaTopicId id);
     Task<IEnumerable<KafkaTopic>> FindBy(CapabilityId capabilityId);
     Task<KafkaTopic?> FindBy(KafkaTopicName name, KafkaClusterId clusterId);
+
+    Task Delete(KafkaTopic topic);
 }

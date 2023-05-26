@@ -4,7 +4,7 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class KafkaTopicListApiResource
 {
-    public KafkaTopicApiResource[] Items { get; set; }
+    public KafkaTopicApiResource[] Items { get; set; } = Array.Empty<KafkaTopicApiResource>();
 
     [JsonPropertyName("_embedded")]
     public KafkaTopicListEmbeddedResources Embedded { get; set; } = new();

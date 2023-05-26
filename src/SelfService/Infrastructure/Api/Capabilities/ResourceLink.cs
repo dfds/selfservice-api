@@ -6,3 +6,9 @@ public class ResourceLink
     public string Rel { get; set; }
     public Allow Allow { get; set; } = new();
 }
+
+public class ResourceActionLink
+{
+    public string Href { get; set; }
+    public string Method { get; set; }
+}
