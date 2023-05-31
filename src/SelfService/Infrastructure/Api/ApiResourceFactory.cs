@@ -18,9 +18,11 @@ public class ApiResourceFactory
     private readonly LinkGenerator _linkGenerator;
     private readonly IAuthorizationService _authorizationService;
     private readonly Domain.Services.IAuthorizationService _domainAuthorizationService;
+    private IAuthorizationService _authorizationService1;
 
     public ApiResourceFactory(IHttpContextAccessor httpContextAccessor, LinkGenerator linkGenerator, IAuthorizationService authorizationService, Domain.Services.IAuthorizationService domainAuthorizationService)
     {
+        _authorizationService1 = authorizationService;
         _httpContextAccessor = httpContextAccessor;
         _linkGenerator = linkGenerator;
         _authorizationService = authorizationService;
@@ -57,21 +59,21 @@ public class ApiResourceFactory
     {
         var portalUser = HttpContext.User.ToPortalUser();
 
-        var allowOnSelf = new List<string> { "GET" };
+        var allowOnSelf = Allow.Get;
         if (await _domainAuthorizationService.CanDelete(portalUser, topic))
         {
-            allowOnSelf.Add("DELETE");
+            allowOnSelf += Delete;
         }
 
-        var messageContractsAccessLevel = new List<string>();
+        var messageContractsAccessLevel = Allow.None;
         if (await _domainAuthorizationService.CanReadMessageContracts(portalUser, topic))
         {
-            messageContractsAccessLevel.Add("GET");
+            messageContractsAccessLevel += Get;
         }
 
         if (await _domainAuthorizationService.CanAddMessageContract(portalUser, topic))
         {
-            messageContractsAccessLevel.Add("POST");
+            messageContractsAccessLevel += Post;
         }
 
         var result = new KafkaTopicApiResource
@@ -512,10 +514,10 @@ public class ApiResourceFactory
     public async Task<MessageContractListApiResource> Convert(IEnumerable<MessageContract> contracts, 
         KafkaTopic parentKafkaTopic)
     {
-        var allowedInteractions = new List<string> { "GET" };
+        var allowedInteractions = Allow.Get;
         if (await _domainAuthorizationService.CanAddMessageContract(PortalUser, parentKafkaTopic))
-    {
-            allowedInteractions.Add("POST");
+        {
+            allowedInteractions += Post;
         }
 
         return new MessageContractListApiResource
@@ -663,14 +665,19 @@ public class ApiResourceFactory
                 }
             }
 
+            var topicApiResources = new List<KafkaTopicApiResource>();
+            foreach (var topic in clusterTopics.Topics)
+            {
+                var apiResource = await Convert(topic);
+                topicApiResources.Add(apiResource);
+            }
+
             yield return  new CapabilityClusterTopicsApiResource
             {
                 Id = clusterTopics.Cluster.Id,
                 Name = clusterTopics.Cluster.Name,
                 Description = clusterTopics.Cluster.Description,
-                Topics = clusterTopics.Topics
-                    .Select(topic => Convert(topic, isMemberOfCapability ? UserAccessLevelOptions.ReadWrite : UserAccessLevelOptions.Read))
-                    .ToArray(),
+                Topics = topicApiResources.ToArray(),
                 Links =
                 {
                     Self = new ResourceLink
@@ -752,13 +759,18 @@ public class ApiResourceFactory
         return resource;
     }
 
-    public KafkaTopicListApiResource Convert(IEnumerable<KafkaTopic> topics, IEnumerable<KafkaCluster> clusters)
+    public async Task<KafkaTopicListApiResource> Convert(IEnumerable<KafkaTopic> topics, IEnumerable<KafkaCluster> clusters)
     {
+        var list = new List<KafkaTopicApiResource>();
+        foreach (var topic in topics)
+        {
+            var apiResource = await Convert(topic);
+            list.Add(apiResource);
+        }
+
         return new KafkaTopicListApiResource
         {
-            Items = topics
-                .Select(topic => Convert(topic, UserAccessLevelOptions.Read)) // NOTE [jandr@2023-03-20]: Hardcoding access level to read - change that!
-                .ToArray(),
+            Items = list.ToArray(),
             Embedded =
             {
                 KafkaClusters = Convert(clusters)

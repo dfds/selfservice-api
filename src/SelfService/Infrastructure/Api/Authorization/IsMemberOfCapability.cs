@@ -5,6 +5,7 @@ using SelfService.Infrastructure.Api.Capabilities;
 
 namespace SelfService.Infrastructure.Api.Authorization;
 
+[Obsolete]
 public class IsMemberOfCapability : IAuthorizationRequirement
 {
 

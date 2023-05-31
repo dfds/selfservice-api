@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api;
+using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Api;
 
@@ -49,17 +50,21 @@ public class TestLinkGenerationController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult GetAllRoutes()
+    public async Task<IActionResult> GetAllRoutes()
     {
         // mock security as that doesn't affect link URLs
         var mock = new Mock<IAuthorizationService>();
         mock.SetReturnsDefault(Task.FromResult(AuthorizationResult.Success()));
-        var factory = new ApiResourceFactory(_contextAccessor, _linkGenerator, mock.Object);
+        var factory = new ApiResourceFactory(_contextAccessor, _linkGenerator, mock.Object, Dummy.Of<SelfService.Domain.Services.IAuthorizationService>());
+
+        var topic = A.KafkaTopic
+            .WithId(TestLinkGeneration.KafkaTopicId)
+            .Build();
 
         var links = new[]
         {
             factory.Convert(Array.Empty<Capability>()).Links.Self.Href,
-            factory.Convert(A.KafkaTopic.WithId(TestLinkGeneration.KafkaTopicId), UserAccessLevelOptions.ReadWrite).Links.Self.Href,
+            (await factory.Convert(topic)).Links.Self.Href,
             factory.Convert(A.MessageContract.WithId(TestLinkGeneration.MessageContractId).WithKafkaTopicId(TestLinkGeneration.KafkaTopicId)).Links.Self.Href
         };
 

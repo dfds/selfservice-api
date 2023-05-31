@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Net;
+using System.Text.Json;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Tests.TestDoubles;
@@ -34,6 +35,12 @@ public class when_getting_topics_for_a_capability_as_a_cloud_engineer : IAsyncLi
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/capabilities/foo/topics");
+    }
+
+    [Fact]
+    public async Task then_response_status_code_is_expected()
+    {
+        Assert.Equal((HttpStatusCode) 200, _response.StatusCode);
     }
 
     [Fact]

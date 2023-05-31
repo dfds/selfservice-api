@@ -187,7 +187,7 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        var capabilityTopics = await _capabilityTopicsService.GetCapabilityTopics(capabilityId);
+        var capabilityTopics = await _capabilityTopicsService.GetCapabilityTopics(userId, capabilityId);
 
         return Ok(await _apiResourceFactory.Convert(capabilityTopics));
     }

@@ -15,7 +15,7 @@ public class TestCapabilityMembershipsRoutes
         await using var application = new ApiApplication();
         application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
         application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new MembershipQueryStub(hasActiveMembership: true, hasMultipleMembers: true));
+        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true, hasMultipleMembers: true));
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -39,7 +39,7 @@ public class TestCapabilityMembershipsRoutes
         await using var application = new ApiApplication();
         application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
         application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new MembershipQueryStub(hasActiveMembership: true));
+        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
