@@ -1,37 +1,31 @@
-using Microsoft.AspNetCore.Authorization;
 using SelfService.Domain.Models;
-using SelfService.Infrastructure.Api.Authorization;
+using SelfService.Domain.Queries;
 
 namespace SelfService.Domain.Services;
 
-public class CapabilityTopicsService
+public class CapabilityTopicsService // NOTE [jandr@2023-05-31]: this is not a domain service - seems more like a query...?
 {
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IKafkaClusterRepository _kafkaClusterRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly Microsoft.AspNetCore.Authorization.IAuthorizationService _authorizationService;
+    private readonly IMembershipQuery _membershipQuery;
 
     public CapabilityTopicsService(
         ICapabilityRepository capabilityRepository,
         IKafkaTopicRepository kafkaTopicRepository,
         IKafkaClusterRepository kafkaClusterRepository,
-        IHttpContextAccessor httpContextAccessor,
-        Microsoft.AspNetCore.Authorization.IAuthorizationService authorizationService)
+        IMembershipQuery membershipQuery)
     {
         _capabilityRepository = capabilityRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
         _kafkaClusterRepository = kafkaClusterRepository;
-        _httpContextAccessor = httpContextAccessor;
-        _authorizationService = authorizationService;
+        _membershipQuery = membershipQuery;
     }
 
-    private HttpContext HttpContext => _httpContextAccessor.HttpContext ?? throw new ApplicationException("Not in a http request context!");
-
-    public async Task<CapabilityTopics> GetCapabilityTopics(CapabilityId capabilityId)
+    public async Task<CapabilityTopics> GetCapabilityTopics(UserId userId, CapabilityId capabilityId)
     {
         var capability = await GetCapability(capabilityId);
-        var topics = await GetTopicsForCapabilityByMembership(capability);
+        var topics = await GetTopicsForCapabilityByMembership(userId, capability);
         var clusters = await GetAllClusters();
         var topicsByCluster = GroupTopicsByCluster(topics, clusters);
 
@@ -43,13 +37,11 @@ public class CapabilityTopicsService
         return await _capabilityRepository.Get(capabilityId);
     }
 
-    private async Task<IEnumerable<KafkaTopic>> GetTopicsForCapabilityByMembership(Capability capability)
+    private async Task<IEnumerable<KafkaTopic>> GetTopicsForCapabilityByMembership(UserId userId, Capability capability)
     {
-        var isMemberOfCapability = await IsMemberOfCapability(capability);
-
         var allCapabilityTopics = await GetAllTopicsForCapability(capability);
 
-        if (isMemberOfCapability)
+        if (await IsMemberOfCapability(userId, capability))
         {
             return allCapabilityTopics;
         }
@@ -58,16 +50,9 @@ public class CapabilityTopicsService
         return allCapabilityTopics.Where(x => x.IsPublic);
     }
 
-    private async Task<bool> IsMemberOfCapability(Capability capability)
+    private async Task<bool> IsMemberOfCapability(UserId userId, Capability capability)
     {
-        var postRequirements = new IAuthorizationRequirement[]
-        {
-            new IsMemberOfCapability()
-        };
-
-        var authorizationResult = await _authorizationService.AuthorizeAsync(HttpContext.User, capability, postRequirements);
-
-        return authorizationResult.Succeeded;
+        return await _membershipQuery.HasActiveMembership(userId, capability.Id);
     }
 
     private async Task<IEnumerable<KafkaTopic>> GetAllTopicsForCapability(Capability capability)

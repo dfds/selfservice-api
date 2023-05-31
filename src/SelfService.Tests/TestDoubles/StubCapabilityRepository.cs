@@ -13,7 +13,7 @@ public class StubCapabilityRepository : ICapabilityRepository
 
     public Task<Capability> Get(CapabilityId id)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(_capability!);
     }
 
     public Task<Capability?> FindBy(CapabilityId id)

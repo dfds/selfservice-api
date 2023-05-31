@@ -43,7 +43,7 @@ public class KafkaTopicController : ControllerBase
         var topics = await _kafkaTopicRepository.GetAllPublic();
         var clusters = await _clusterRepository.GetAll();
 
-        return Ok(_apiResourceFactory.Convert(topics, clusters));
+        return Ok(await _apiResourceFactory.Convert(topics, clusters));
     }
 
     [HttpGet("{id:required}")]
