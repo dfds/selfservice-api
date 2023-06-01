@@ -21,6 +21,12 @@ public class KafkaClusterBuilder
         _schemaRegistryUrl = "schema-registry.com";
     }
 
+    public KafkaClusterBuilder WithId(KafkaClusterId id)
+    {
+        _id = id;
+        return this;
+    }
+
     public KafkaCluster Build()
     {
         return new KafkaCluster(

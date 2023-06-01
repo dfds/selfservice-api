@@ -6,15 +6,42 @@ using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Api.CapabilityTopicsRoutes;
 
+public class StubKafkaClusterRepository : IKafkaClusterRepository
+{
+    private readonly KafkaCluster[] _clusters;
+
+    public StubKafkaClusterRepository(params KafkaCluster[] clusters)
+    {
+        _clusters = clusters;
+    }
+    public Task<bool> Exists(KafkaClusterId id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<KafkaCluster?> FindBy(KafkaClusterId id)
+    {
+        return Task.FromResult(_clusters.SingleOrDefault());
+    }
+
+    public Task<IEnumerable<KafkaCluster>> GetAll()
+    {
+        return Task.FromResult(_clusters.AsEnumerable());
+    }
+}
+
+
 public class when_getting_topics_for_a_capability_as_a_cloud_engineer : IAsyncLifetime
 {
     private readonly KafkaTopic _aPrivateTopic = A.KafkaTopic
         .WithId(KafkaTopicId.New())
+        .WithKafkaClusterId("foo")
         .WithName("im-private")
         .Build();
 
     private readonly KafkaTopic _aPublicTopic = A.KafkaTopic
         .WithId(KafkaTopicId.New())
+        .WithKafkaClusterId("foo")
         .WithName("pub.im-public")
         .Build();
 
@@ -25,8 +52,9 @@ public class when_getting_topics_for_a_capability_as_a_cloud_engineer : IAsyncLi
         await using var application = new ApiApplication();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
         application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(A.Capability));
-        application.ReplaceService<IKafkaClusterRepository>(Dummy.Of<IKafkaClusterRepository>());
+        application.ReplaceService<IKafkaClusterRepository>(new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo")));
         application.ReplaceService<IKafkaTopicRepository>(new StubKafkaTopicRepository(_aPrivateTopic, _aPublicTopic));
+        application.ReplaceService<IKafkaClusterAccessRepository>(Dummy.Of<IKafkaClusterAccessRepository>());
 
         application.ConfigureFakeAuthentication(options =>
         {
