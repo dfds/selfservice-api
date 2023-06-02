@@ -15,19 +15,22 @@ public class when_getting_topics_for_a_capability_as_NON_member : IAsyncLifetime
     {
         var stubPublicTopic = A.KafkaTopic
             .WithId(KafkaTopicId.New())
+            .WithKafkaClusterId("foo")
             .WithName("pub.im-public")
             .Build();
 
         var stubPrivateTopic = A.KafkaTopic
             .WithId(KafkaTopicId.New())
+            .WithKafkaClusterId("foo")
             .WithName("im-private")
             .Build();
 
         await using var application = new ApiApplication();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
         application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(_aCapability));
-        application.ReplaceService<IKafkaClusterRepository>(Dummy.Of<IKafkaClusterRepository>());
+        application.ReplaceService<IKafkaClusterRepository>(new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo")));
         application.ReplaceService<IKafkaTopicRepository>(new StubKafkaTopicRepository(stubPublicTopic, stubPrivateTopic));
+        application.ReplaceService<IKafkaClusterAccessRepository>(Dummy.Of<IKafkaClusterAccessRepository>());
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/capabilities/{_aCapability.Id}/topics");
@@ -63,6 +66,7 @@ public class when_getting_topics_for_a_capability_as_NON_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var nameValues = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
             .Select(x => x.SelectElement("name"))
             .Select(x => x?.GetString() ?? "");
             
@@ -75,7 +79,9 @@ public class when_getting_topics_for_a_capability_as_NON_member : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var topicItem = document?.SelectElements("items").Single();
+        var topicItem = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
+            .Single();
         var values = topicItem?
             .SelectElements("_links/self/allow")?
             .Select(x => x.GetString())
@@ -90,7 +96,10 @@ public class when_getting_topics_for_a_capability_as_NON_member : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var topicItem = document?.SelectElements("items").Single();
+        var topicItem = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
+            .Single();
+
         var value = topicItem?.SelectElement("_links/update-description");
 
         if (value?.ValueKind == JsonValueKind.Null)
