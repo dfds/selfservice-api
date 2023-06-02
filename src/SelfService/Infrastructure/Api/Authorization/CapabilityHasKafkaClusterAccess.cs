@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
-using SelfService.Domain;
 using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Api.Authorization;
 
+[Obsolete]
 public class CapabilityHasKafkaClusterAccess : IAuthorizationRequirement
 {
 }
 
+[Obsolete]
 public class CapabilityKafkaCluster
 {
     public CapabilityKafkaCluster(Capability capability, KafkaCluster cluster)
@@ -20,6 +21,7 @@ public class CapabilityKafkaCluster
     public KafkaCluster Cluster { get; }
 }
 
+[Obsolete]
 public class CapabilityHasKafkaClusterAccessHandler : AuthorizationHandler<CapabilityHasKafkaClusterAccess, CapabilityKafkaCluster>
 {
     private readonly IKafkaClusterAccessRepository _repository;

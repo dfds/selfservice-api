@@ -7,6 +7,7 @@ using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
 using System.Data;
+using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Api.System;
 using static SelfService.Infrastructure.Api.Method;
 
@@ -18,15 +19,15 @@ public class ApiResourceFactory
     private readonly LinkGenerator _linkGenerator;
     private readonly IAuthorizationService _authorizationService;
     private readonly Domain.Services.IAuthorizationService _domainAuthorizationService;
-    private IAuthorizationService _authorizationService1;
+    private readonly IMembershipQuery _membershipQuery;
 
-    public ApiResourceFactory(IHttpContextAccessor httpContextAccessor, LinkGenerator linkGenerator, IAuthorizationService authorizationService, Domain.Services.IAuthorizationService domainAuthorizationService)
+    public ApiResourceFactory(IHttpContextAccessor httpContextAccessor, LinkGenerator linkGenerator, IAuthorizationService authorizationService, Domain.Services.IAuthorizationService domainAuthorizationService, IMembershipQuery membershipQuery)
     {
-        _authorizationService1 = authorizationService;
         _httpContextAccessor = httpContextAccessor;
         _linkGenerator = linkGenerator;
         _authorizationService = authorizationService;
         _domainAuthorizationService = domainAuthorizationService;
+        _membershipQuery = membershipQuery;
     }
 
     private HttpContext HttpContext => _httpContextAccessor.HttpContext ?? throw new ApplicationException("Not in a http request context!");
@@ -707,25 +708,12 @@ public class ApiResourceFactory
 
     private async Task<bool> IsMemberOfCapability(Capability capability)
     {
-        var postRequirements = new IAuthorizationRequirement[]
-        {
-            new IsMemberOfCapability()
-        };
-
-        var authorizationResult = await _authorizationService.AuthorizeAsync(HttpContext.User, capability, postRequirements);
-        return authorizationResult.Succeeded;
+        return await _membershipQuery.HasActiveMembership(this.CurrentUser, capability.Id);
     }
 
     private async Task<bool> CapabilityHasKafkaClusterAccess(Capability capability, KafkaCluster kafkaCluster)
     {
-        var requirements = new IAuthorizationRequirement[]
-        {
-            new CapabilityHasKafkaClusterAccess()
-        };
-
-        var kafkaClusterAccess = new CapabilityKafkaCluster(capability, kafkaCluster);
-        var authorizationResult = await _authorizationService.AuthorizeAsync(HttpContext.User, kafkaClusterAccess, requirements);
-        return authorizationResult.Succeeded;
+        return await _domainAuthorizationService.HasAccess(capability.Id, kafkaCluster.Id);
     }
 
     public MembershipApplicationListApiResource Convert(string id, UserAccessLevelOptions accessLevel, IEnumerable<MembershipApplication> applications, UserId userId)

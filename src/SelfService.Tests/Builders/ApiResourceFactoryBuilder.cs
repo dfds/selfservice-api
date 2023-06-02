@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Moq;
+using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Api;
 using SelfService.Tests.TestDoubles;
 
@@ -12,11 +13,13 @@ public class ApiResourceFactoryBuilder
 {
     private IAuthorizationService _authorizationService;
     private SelfService.Domain.Services.IAuthorizationService _domainAuthorizationService;
+    private IMembershipQuery _membershipQuery;
 
     public ApiResourceFactoryBuilder()
     {
         _authorizationService = Mock.Of<IAuthorizationService>();
         _domainAuthorizationService = Dummy.Of<SelfService.Domain.Services.IAuthorizationService>();
+        _membershipQuery = Dummy.Of<IMembershipQuery>();
     }
 
     public ApiResourceFactoryBuilder WithAuthorizationService(IAuthorizationService authorizationService)
@@ -48,7 +51,8 @@ public class ApiResourceFactoryBuilder
             httpContextAccessor: httpContextAccessorMock.Object,
             linkGenerator: Mock.Of<LinkGenerator>(),
             authorizationService: _authorizationService,
-            domainAuthorizationService: _domainAuthorizationService
+            domainAuthorizationService: _domainAuthorizationService,
+            membershipQuery: _membershipQuery
         );
     }
 

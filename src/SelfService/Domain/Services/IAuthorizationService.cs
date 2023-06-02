@@ -12,4 +12,6 @@ public interface IAuthorizationService
     Task<bool> CanDelete(PortalUser portalUser, KafkaTopic kafkaTopic);
     Task<bool> CanReadMessageContracts(PortalUser portalUser, KafkaTopic kafkaTopic);
     Task<bool> CanAddMessageContract(PortalUser portalUser, KafkaTopic kafkaTopic);
+
+    Task<bool> HasAccess(CapabilityId capabilityId, KafkaClusterId kafkaClusterId);
 }

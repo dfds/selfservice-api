@@ -7,11 +7,14 @@ public class AuthorizationService : IAuthorizationService
 {
     private readonly ILogger<AuthorizationService> _logger;
     private readonly IMembershipQuery _membershipQuery;
+    private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
 
-    public AuthorizationService(ILogger<AuthorizationService> logger, IMembershipQuery membershipQuery)
+    public AuthorizationService(ILogger<AuthorizationService> logger, IMembershipQuery membershipQuery, 
+        IKafkaClusterAccessRepository kafkaClusterAccessRepository)
     {
         _logger = logger;
         _membershipQuery = membershipQuery;
+        _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
     }
 
     [Obsolete]
@@ -85,5 +88,11 @@ public class AuthorizationService : IAuthorizationService
         }
 
         return false;
+    }
+
+    public async Task<bool> HasAccess(CapabilityId capabilityId, KafkaClusterId kafkaClusterId)
+    {
+        var access = await _kafkaClusterAccessRepository.FindBy(capabilityId, kafkaClusterId);
+        return access?.IsAccessGranted ?? false;
     }
 }
