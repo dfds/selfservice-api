@@ -78,6 +78,7 @@ public class when_getting_topics_for_a_capability_as_a_cloud_engineer : IAsyncLi
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var nameValues = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
             .Select(x => x.SelectElement("name"))
             .Select(x => x?.GetString() ?? "");
 
@@ -90,7 +91,9 @@ public class when_getting_topics_for_a_capability_as_a_cloud_engineer : IAsyncLi
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var topicItem = document?.SelectElements("items").Single();
+        var topicItem = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
+            .Single();
 
         var values = topicItem?
             .SelectElements("_links/self/allow")?

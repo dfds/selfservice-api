@@ -11,11 +11,13 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
 
     private readonly KafkaTopic _aPrivateTopic = A.KafkaTopic
         .WithId(KafkaTopicId.New())
+        .WithKafkaClusterId("foo")
         .WithName("im-private")
         .Build();
 
     private readonly KafkaTopic _aPublicTopic = A.KafkaTopic
         .WithId(KafkaTopicId.New())
+        .WithKafkaClusterId("foo")
         .WithName("pub.im-public")
         .Build();
 
@@ -26,8 +28,10 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
         await using var application = new ApiApplication();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
         application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(_aCapability));
-        application.ReplaceService<IKafkaClusterRepository>(Dummy.Of<IKafkaClusterRepository>());
+        application.ReplaceService<IKafkaClusterRepository>(new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo")));
         application.ReplaceService<IKafkaTopicRepository>(new StubKafkaTopicRepository(_aPrivateTopic, _aPublicTopic));
+        application.ReplaceService<IKafkaClusterAccessRepository>(Dummy.Of<IKafkaClusterAccessRepository>());
+
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/capabilities/{_aCapability.Id}/topics");
@@ -63,6 +67,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var values = document?.SelectElements("items")?
+            .SelectMany(x => x.SelectElements("topics"))
             .Select(x => x.GetProperty("id").GetString())
             .ToArray();
 
@@ -83,6 +88,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var topicItem = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
             .Where(x => x.SelectElement("id")?.GetString() == _aPublicTopic.Id)
             .Single();
 
@@ -101,6 +107,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var topicItem = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
             .Where(x => x.SelectElement("id")?.GetString() == _aPrivateTopic.Id)
             .Single();
 
@@ -119,6 +126,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var topicItem = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
             .Where(x => x.SelectElement("id")?.GetString() == _aPublicTopic.Id)
             .Single();
 
@@ -134,6 +142,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var topicItem = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
             .Where(x => x.SelectElement("id")?.GetString() == _aPublicTopic.Id)
             .Single();
 
@@ -149,6 +158,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var topicItem = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
             .Where(x => x.SelectElement("id")?.GetString() == _aPrivateTopic.Id)
             .Single();
 
@@ -164,6 +174,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var topicItem = document?.SelectElements("items")
+            .SelectMany(x => x.SelectElements("topics"))
             .Where(x => x.SelectElement("id")?.GetString() == _aPrivateTopic.Id)
             .Single();
 
