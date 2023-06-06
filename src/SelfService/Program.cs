@@ -7,7 +7,6 @@ using SelfService.Infrastructure.Messaging;
 using SelfService.Infrastructure.Messaging.Legacy;
 using SelfService.Infrastructure.Metrics;
 using SelfService.Infrastructure.Persistence;
-using SelfService.Legacy;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 Log.Logger = new LoggerConfiguration()
@@ -22,7 +21,6 @@ try
     builder.AddHealthCheck();
     builder.AddMetrics();
     builder.AddSwagger();
-    builder.AddLegacy();
     builder.AddDatabase();
     builder.AddMessaging();
     builder.AddLegacyMessaging();
