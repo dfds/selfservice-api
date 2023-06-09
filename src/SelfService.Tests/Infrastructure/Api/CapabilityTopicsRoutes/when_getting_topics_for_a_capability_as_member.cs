@@ -130,7 +130,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
             .Where(x => x.SelectElement("id")?.GetString() == _aPublicTopic.Id)
             .Single();
 
-        var value = topicItem?.SelectElement("_links/update-description/href")?.GetString();
+        var value = topicItem?.SelectElement("_links/updateDescription/href")?.GetString();
 
         Assert.EndsWith($"/kafkatopics/{_aPublicTopic.Id}/description", value);
     }
@@ -146,7 +146,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
             .Where(x => x.SelectElement("id")?.GetString() == _aPublicTopic.Id)
             .Single();
 
-        var value = topicItem?.SelectElement("_links/update-description/method")?.GetString();
+        var value = topicItem?.SelectElement("_links/updateDescription/method")?.GetString();
 
         Assert.Equal("PUT", value);
     }
@@ -162,7 +162,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
             .Where(x => x.SelectElement("id")?.GetString() == _aPrivateTopic.Id)
             .Single();
 
-        var value = topicItem?.SelectElement("_links/update-description/href")?.GetString();
+        var value = topicItem?.SelectElement("_links/updateDescription/href")?.GetString();
 
         Assert.EndsWith($"/kafkatopics/{_aPrivateTopic.Id}/description", value);
     }
@@ -178,7 +178,7 @@ public class when_getting_topics_for_a_capability_as_member : IAsyncLifetime
             .Where(x => x.SelectElement("id")?.GetString() == _aPrivateTopic.Id)
             .Single();
 
-        var value = topicItem?.SelectElement("_links/update-description/method")?.GetString();
+        var value = topicItem?.SelectElement("_links/updateDescription/method")?.GetString();
 
         Assert.Equal("PUT", value);
     }
