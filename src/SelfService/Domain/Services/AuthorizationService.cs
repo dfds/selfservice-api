@@ -107,4 +107,9 @@ public class AuthorizationService : IAuthorizationService
 
         return application.Applicant == userId;
     }
+
+    public async Task<bool> CanApprove(UserId userId, MembershipApplication application)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, application.CapabilityId);
+    }
 }

@@ -140,8 +140,7 @@ public class MembershipApplicationService : IMembershipApplicationService
 
         var application = await _membershipApplicationRepository.Get(applicationId);
 
-        var accessLevelForCapability = await _authorizationService.GetUserAccessLevelForCapability(approvedBy, application.CapabilityId);
-        if (accessLevelForCapability != UserAccessLevelOptions.ReadWrite)
+        if (await _authorizationService.CanApprove(approvedBy, application))
         {
             _logger.LogError("User \"{UserId}\" is not authorized to approve membership application \"{MembershipApplicationId}\" for capability \"{CapabilityId}\".",
                 approvedBy, application.Id, application.CapabilityId);
