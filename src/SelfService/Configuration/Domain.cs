@@ -49,7 +49,7 @@ public static class Domain
         builder.Services.AddTransient<ICapabilityKafkaTopicsQuery, CapabilityKafkaTopicsQuery>();
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
-
+        builder.Services.AddTransient<IMembershipApplicationQuery, MembershipApplicationQuery>();
         
         builder.Services.AddTransient<IMembershipQuery, MembershipQuery>();
         //builder.Services.AddTransient<MembershipQuery>();

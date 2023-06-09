@@ -342,7 +342,7 @@ public class CapabilityController : ControllerBase
                 actionName: "GetById",
                 controllerName: "MembershipApplication",
                 routeValues: new {id = applicationId.ToString()},
-                value: _apiResourceFactory.Convert(membershipApplication, UserAccessLevelOptions.ReadWrite, userId)
+                value: _apiResourceFactory.Convert(membershipApplication, userId)
             );
         }
         catch (EntityNotFoundException<Capability>)

@@ -542,7 +542,7 @@ public class ApiResourceFactory
         };
     }
 
-    public MembershipApplicationApiResource Convert(MembershipApplication application, UserAccessLevelOptions initialAccessLevel, UserId currentUser)
+    public MembershipApplicationApiResource Convert(MembershipApplication application, UserId currentUser)
     {
         var isCurrentUserTheApplicant = application.Applicant == currentUser;
 
@@ -727,7 +727,7 @@ public class ApiResourceFactory
         var resource = new MembershipApplicationListApiResource
         {
             Items = applications
-                .Select(application => Convert(application, accessLevel, userId))
+                .Select(application => Convert(application, userId))
                 .ToArray(),
             Links =
             {
