@@ -20,8 +20,6 @@ public class KafkaTopicApiResource
     {
         public ResourceLink Self { get; set; } = new();
         public ResourceLink MessageContracts { get; set; } = new();
-
-        [JsonPropertyName("update-description")]
         public ResourceActionLink? UpdateDescription { get; set; }
     }
 }

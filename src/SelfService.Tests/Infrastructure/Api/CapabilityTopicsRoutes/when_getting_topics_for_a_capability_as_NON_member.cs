@@ -100,7 +100,7 @@ public class when_getting_topics_for_a_capability_as_NON_member : IAsyncLifetime
             .SelectMany(x => x.SelectElements("topics"))
             .Single();
 
-        var value = topicItem?.SelectElement("_links/update-description");
+        var value = topicItem?.SelectElement("_links/updateDescription");
 
         if (value?.ValueKind == JsonValueKind.Null)
         {
