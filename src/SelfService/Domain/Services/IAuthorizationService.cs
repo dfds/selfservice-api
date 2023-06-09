@@ -16,4 +16,5 @@ public interface IAuthorizationService
     Task<bool> HasAccess(CapabilityId capabilityId, KafkaClusterId kafkaClusterId);
 
     Task<bool> CanRead(UserId userId, MembershipApplication application);
+    Task<bool> CanApprove(UserId userId, MembershipApplication application);
 }
