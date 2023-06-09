@@ -67,66 +67,6 @@ public class MembershipApplicationController : ControllerBase
 
         return Ok(_apiResourceFactory.Convert(application, userId));
     }
-    
-    //[HttpPost("")]
-    //[ProducesResponseType(typeof(MembershipApplicationApiResource), StatusCodes.Status201Created)]
-    //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
-    //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
-    //public async Task<IActionResult> SubmitMembershipApplication([FromBody] NewMembershipApplicationRequest newMembershipApplication)
-    //{
-    //    if (!User.TryGetUserId(out var userId))
-    //    {
-    //        return Unauthorized();
-    //    }
-
-    //    if (!CapabilityId.TryParse(newMembershipApplication.CapabilityId, out var capabilityId))
-    //    {
-    //        ModelState.AddModelError(nameof(newMembershipApplication.CapabilityId), "Invalid capability id.");
-    //    }
-
-    //    if (!ModelState.IsValid)
-    //    {
-    //        return ValidationProblem();
-    //    }
-
-    //    try
-    //    {
-    //        var applicationId = await _membershipApplicationService.SubmitMembershipApplication(capabilityId, userId);
-    //        var membershipApplication = await _membershipApplicationRepository.Get(applicationId);
-
-    //        return CreatedAtRoute(
-    //            routeName: nameof(GetById),
-    //            routeValues: new {id = applicationId.ToString()},
-    //            value: _apiResourceFactory.Convert(membershipApplication, UserAccessLevelOptions.ReadWrite, userId)
-    //        );
-    //    }
-    //    catch (EntityNotFoundException<Capability>)
-    //    {
-    //        return NotFound(new ProblemDetails
-    //        {
-    //            Title = "Capability not found",
-    //            Detail = $"Capability \"{capabilityId}\" is unknown by the system."
-    //        });
-    //    }
-    //    catch (PendingMembershipApplicationAlreadyExistsException)
-    //    {
-    //        return Conflict(new ProblemDetails
-    //        {
-    //            Title = "Already has pending membership application",
-    //            Detail = $"User \"{userId}\" already has a pending membership application for capability \"{capabilityId}\"."
-    //        });
-    //    }
-    //    catch (AlreadyHasActiveMembershipException)
-    //    {
-    //        return Conflict(new ProblemDetails
-    //        {
-    //            Title = "Already member",
-    //            Detail = $"User \"{userId}\" is already member of capability \"{capabilityId}\"."
-    //        });
-    //    }
-    //}
 
     [HttpGet("{id}/approvals")]
     [ProducesResponseType(typeof(MembershipApprovalListApiResource), StatusCodes.Status200OK)]
