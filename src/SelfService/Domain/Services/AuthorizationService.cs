@@ -95,4 +95,16 @@ public class AuthorizationService : IAuthorizationService
         var access = await _kafkaClusterAccessRepository.FindBy(capabilityId, kafkaClusterId);
         return access?.IsAccessGranted ?? false;
     }
+
+    public async Task<bool> CanRead(UserId userId, MembershipApplication application)
+    {
+        var hasActiveMembership = await _membershipQuery.HasActiveMembership(userId, application.CapabilityId);
+
+        if (hasActiveMembership)
+        {
+            return true;
+        }
+
+        return application.Applicant == userId;
+    }
 }

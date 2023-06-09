@@ -14,4 +14,6 @@ public interface IAuthorizationService
     Task<bool> CanAddMessageContract(PortalUser portalUser, KafkaTopic kafkaTopic);
 
     Task<bool> HasAccess(CapabilityId capabilityId, KafkaClusterId kafkaClusterId);
+
+    Task<bool> CanRead(UserId userId, MembershipApplication application);
 }

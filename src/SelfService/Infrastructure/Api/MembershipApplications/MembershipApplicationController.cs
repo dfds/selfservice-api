@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
-using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.MembershipApplications;
 
@@ -14,27 +13,31 @@ namespace SelfService.Infrastructure.Api.MembershipApplications;
 [ApiController]
 public class MembershipApplicationController : ControllerBase
 {
+    private readonly ILogger<MembershipApplicationController> _logger;
     private readonly IAuthorizationService _authorizationService;
     private readonly IMembershipApplicationService _membershipApplicationService;
-    private readonly IMembershipApplicationRepository _membershipApplicationRepository;
-    private readonly ILogger<MembershipApplicationController> _logger;
+    private readonly IMembershipApplicationQuery _membershipApplicationQuery;
     private readonly ApiResourceFactory _apiResourceFactory;
 
-    public MembershipApplicationController(ILogger<MembershipApplicationController> logger, ApiResourceFactory apiResourceFactory, IAuthorizationService authorizationService, 
-        IMembershipApplicationService membershipApplicationService, IMembershipApplicationRepository membershipApplicationRepository)
+    public MembershipApplicationController(
+        ILogger<MembershipApplicationController> logger,
+        IAuthorizationService authorizationService,
+        IMembershipApplicationService membershipApplicationService,
+        IMembershipApplicationQuery membershipApplicationQuery,
+        ApiResourceFactory apiResourceFactory)
     {
-        _logger = logger;
-        _apiResourceFactory = apiResourceFactory;
         _authorizationService = authorizationService;
         _membershipApplicationService = membershipApplicationService;
-        _membershipApplicationRepository = membershipApplicationRepository;
+        _membershipApplicationQuery = membershipApplicationQuery;
+        _logger = logger;
+        _apiResourceFactory = apiResourceFactory;
     }
 
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(MembershipApplicationApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetById(string id, [FromServices] SelfServiceDbContext dbContext)
+    public async Task<IActionResult> GetById(string id)
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -46,22 +49,25 @@ public class MembershipApplicationController : ControllerBase
             return NotFound();
         }
 
-        var application = await dbContext.MembershipApplications.SingleOrDefaultAsync(x => x.Id == membershipApplicationId);
+        var application = await _membershipApplicationQuery.FindById(membershipApplicationId);
         if (application is null)
         {
-            return NotFound();
+            return NotFound(new ProblemDetails
+            {
+                Title = "MembershipApplication not found",
+                Detail = $"MembershipApplication \"{membershipApplicationId}\" is unknown by the system."
+            });
         }
 
-        var accessLevelForCapability = await _authorizationService.GetUserAccessLevelForCapability(userId, application.CapabilityId);
-        if (accessLevelForCapability == UserAccessLevelOptions.Read && application.Applicant != userId)
+        if (!await _authorizationService.CanRead(userId, application))
         {
             // user is not member of capability and the membership application does not belong to THIS user
             return Unauthorized();
         }
 
-        return Ok(_apiResourceFactory.Convert(application, accessLevelForCapability, userId));
+        return Ok(_apiResourceFactory.Convert(application, userId));
     }
-
+    
     //[HttpPost("")]
     //[ProducesResponseType(typeof(MembershipApplicationApiResource), StatusCodes.Status201Created)]
     //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
@@ -146,27 +152,8 @@ public class MembershipApplicationController : ControllerBase
             });
         }
 
-        try
-        {
-            var application = await _membershipApplicationRepository.Get(membershipApplicationId);
-            var accessLevelForCapability = await _authorizationService.GetUserAccessLevelForCapability(userId, application.CapabilityId);
-
-            _logger.LogDebug("access level: {AccessLevel}", accessLevelForCapability);
-
-            if (accessLevelForCapability == UserAccessLevelOptions.Read)
-            {
-                // user is not member of capability and the membership application does not belong to the user
-                return Unauthorized(new ProblemDetails
-                {
-                    Title = "Access denied!",
-                    Detail = $"User \"{userId}\" is not authorized to access membership application \"{membershipApplicationId}\"."
-                });
-            }
-
-            var parent = _apiResourceFactory.Convert(application,accessLevelForCapability, userId);
-            return Ok(parent.Approvals);
-        }
-        catch (EntityNotFoundException<MembershipApplication>)
+        var application = await _membershipApplicationQuery.FindById(membershipApplicationId);
+        if (application == null)
         {
             return NotFound(new ProblemDetails
             {
@@ -174,6 +161,19 @@ public class MembershipApplicationController : ControllerBase
                 Detail = $"Membership application \"{membershipApplicationId}\" is unknown by the system."
             });
         }
+
+        if (!await _authorizationService.CanRead(userId, application))
+        {
+            // user is not member of capability and the membership application does not belong to THIS user
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied!",
+                Detail = $"User \"{userId}\" is not authorized to access membership application \"{membershipApplicationId}\"."
+            });
+        }
+        
+        var parent = _apiResourceFactory.Convert(application, userId);
+        return Ok(parent.Approvals);
     }
 
     [HttpPost("{id}/approvals")]
