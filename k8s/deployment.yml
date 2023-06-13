@@ -50,6 +50,8 @@ spec:
                 name: kafka-credentials
             - secretRef:
                 name: selfservice-api-topdesk
+            - secretRef:
+                name: selfservice-api-msgraph
           resources:
             requests:
               memory: "50Mi"
