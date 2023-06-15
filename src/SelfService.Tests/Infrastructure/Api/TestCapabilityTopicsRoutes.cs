@@ -23,9 +23,9 @@ public class TestCapabilityTopicsRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var hrefValue = document?.SelectElement("/_links/topics/href")?.GetString();
+        var hrefValue = document?.SelectElement("/_links/clusters/href")?.GetString();
 
-        Assert.EndsWith($"/capabilities/{stubCapability.Id}/topics", hrefValue);
+        Assert.EndsWith($"/capabilities/{stubCapability.Id}/kafkaclusteraccess", hrefValue);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class TestCapabilityTopicsRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/topics/allow")?
+        var allowValues = document?.SelectElement("/_links/clusters/allow")?
             .EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
@@ -68,12 +68,12 @@ public class TestCapabilityTopicsRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/topics/allow")?
+        var allowValues = document?.SelectElement("/_links/clusters/allow")?
             .EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
-        Assert.Equal(new[] { "GET", "POST" }, allowValues);
+        Assert.Equal(new[] { "GET" }, allowValues);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class TestCapabilityTopicsRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/topics/allow")?
+        var allowValues = document?.SelectElement("/_links/clusters/allow")?
             .EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();

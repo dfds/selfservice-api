@@ -13,6 +13,7 @@ public interface IAuthorizationService
     Task<bool> CanReadMessageContracts(PortalUser portalUser, KafkaTopic kafkaTopic);
     Task<bool> CanAddMessageContract(PortalUser portalUser, KafkaTopic kafkaTopic);
 
+    Task<bool> CanViewAccess(UserId userId, CapabilityId capabilityId);
     Task<bool> HasAccess(CapabilityId capabilityId, KafkaClusterId kafkaClusterId);
 
     Task<bool> CanRead(UserId userId, MembershipApplication application);

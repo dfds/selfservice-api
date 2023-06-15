@@ -90,6 +90,11 @@ public class AuthorizationService : IAuthorizationService
         return false;
     }
 
+    public async Task<bool> CanViewAccess(UserId userId, CapabilityId capabilityId)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
+    }
+
     public async Task<bool> HasAccess(CapabilityId capabilityId, KafkaClusterId kafkaClusterId)
     {
         var access = await _kafkaClusterAccessRepository.FindBy(capabilityId, kafkaClusterId);

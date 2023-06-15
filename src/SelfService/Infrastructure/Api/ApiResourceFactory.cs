@@ -6,7 +6,6 @@ using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
-using System.Data;
 using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Api.System;
 using static SelfService.Infrastructure.Api.Method;
@@ -308,30 +307,17 @@ public class ApiResourceFactory
         };
     }
 
-    private async Task<ResourceLink> CreateTopicsLinkFor(Capability capability)
+    private ResourceLink CreateClusterAccessLinkFor(Capability capability)
     {
-        var allowedInteractions = Allow.Get;
-
-        var postRequirements = new IAuthorizationRequirement[]
-        {
-            new IsMemberOfCapability()
-        };
-
-        var authorizationResult = await _authorizationService.AuthorizeAsync(HttpContext.User, capability, postRequirements);
-        if (authorizationResult.Succeeded)
-        {
-            allowedInteractions += Post;
-        }
-
         return new ResourceLink
         {
             Href = _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
-                action: nameof(CapabilityController.GetCapabilityTopics),
+                action: nameof(CapabilityController.GetKafkaClusterAccessList),
                 controller: GetNameOf<CapabilityController>(),
                 values: new { id = capability.Id }) ?? "",
             Rel = "related",
-            Allow = allowedInteractions
+            Allow = { Get }
         };
     }
 
@@ -388,7 +374,7 @@ public class ApiResourceFactory
             {
                 Self = CreateSelfLinkFor(capability),
                 Members = await CreateMembersLinkFor(capability),
-                Topics = await CreateTopicsLinkFor(capability),
+                Clusters = CreateClusterAccessLinkFor(capability),
                 MembershipApplications = await CreateMembershipApplicationsLinkFor(capability),
                 LeaveCapability = await CreateLeaveCapabilityLinkFor(capability),
                 AwsAccount = await CreateAwsAccountLinkFor(capability),
@@ -617,103 +603,91 @@ public class ApiResourceFactory
         };
     }
 
-    public async Task<CapabilityTopicsApiResource> Convert(CapabilityTopics capabilityTopics)
+    public async Task<KafkaClusterAccessListApiResource> Convert(CapabilityId capabilityId, IEnumerable<KafkaCluster> clusters)
     {
-        var isMemberOfCapability = await IsMemberOfCapability(capabilityTopics.Capability);
+        IList<KafkaClusterAccessListItemApiResource> items = new List<KafkaClusterAccessListItemApiResource>();
 
-        var resources = Convert(capabilityTopics, isMemberOfCapability)
-            .ToBlockingEnumerable()
-            .ToArray();
-
-        var allow = Allow.Get;
-        if (isMemberOfCapability)
+        foreach (var cluster in clusters)
         {
-            allow += Post;
-        }
-
-        return new CapabilityTopicsApiResource
-        {
-            Items = resources,
-            Links =
-            {
-                Self = new ResourceLink
-                {
-                    Href = _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext, 
-                        action: nameof(CapabilityController.GetCapabilityTopics), 
-                        controller: GetNameOf<CapabilityController>(),
-                        values: new { id = capabilityTopics.Capability.Id }) ?? "",
-                    Rel = "self",
-                    Allow = allow
-                }
-            }
-        };
-    }
-
-    private async IAsyncEnumerable<CapabilityClusterTopicsApiResource> Convert(CapabilityTopics capabilityTopics, bool isMemberOfCapability)
-    {
-        foreach (var clusterTopics in capabilityTopics.Clusters)
-        {
-            var capabilityHasKafkaClusterAccess = await CapabilityHasKafkaClusterAccess(capabilityTopics.Capability, clusterTopics.Cluster);
-
-            var allow = Allow.None;
+            var isMemberOfCapability = await _membershipQuery.HasActiveMembership(CurrentUser, capabilityId);
+            var capabilityHasKafkaClusterAccess = await _domainAuthorizationService.HasAccess(capabilityId, cluster.Id);
+            
+            var accessAllow = Allow.None;
+            var requestAccessAllow = Allow.None;
+            var createTopicAllow = Allow.None;
+            
             if (isMemberOfCapability)
             {
-                allow += Get;
-                if (!capabilityHasKafkaClusterAccess)
+                if (capabilityHasKafkaClusterAccess)
                 {
-                    allow += Post;
+                    createTopicAllow += Post;
+                    accessAllow += Get;
+                }
+                else
+                {
+                    requestAccessAllow += Post;
                 }
             }
-
-            var topicApiResources = new List<KafkaTopicApiResource>();
-            foreach (var topic in clusterTopics.Topics)
+            
+            items.Add(new KafkaClusterAccessListItemApiResource
             {
-                var apiResource = await Convert(topic);
-                topicApiResources.Add(apiResource);
-            }
-
-            yield return  new CapabilityClusterTopicsApiResource
-            {
-                Id = clusterTopics.Cluster.Id,
-                Name = clusterTopics.Cluster.Name,
-                Description = clusterTopics.Cluster.Description,
-                Topics = topicApiResources.ToArray(),
+                Id = cluster.Id,
+                Name = cluster.Name,
+                Description = cluster.Description,
                 Links =
                 {
-                    Self = new ResourceLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            action: nameof(KafkaClusterController.GetById),
-                            controller: GetNameOf<KafkaClusterController>(),
-                            values: new {id = clusterTopics.Cluster.Id}) ?? "",
-                        Rel = "self",
-                        Allow = { Get }
-                    },
-                    Access = new ResourceLink
+                    Access = 
                     {
                         Href = _linkGenerator.GetUriByAction(
                             httpContext: HttpContext,
                             action: nameof(CapabilityController.GetKafkaClusterAccess),
                             controller: GetNameOf<CapabilityController>(),
-                            values: new {id = capabilityTopics.Capability.Id, clusterId = clusterTopics.Cluster.Id}) ?? "",
+                            values: new { id = capabilityId, clusterId = cluster.Id }) ?? "",
+                        Rel = "related",
+                        Allow = accessAllow
+                    },
+                    Topics =
+                    {
+                        Href = _linkGenerator.GetUriByAction(
+                            httpContext: HttpContext,
+                            action: nameof(KafkaTopicController.GetAllTopics),
+                            controller: GetNameOf<KafkaTopicController>(),
+                            values: new { capabilityId, clusterId = cluster.Id, includePrivate = true }) ?? "",
+                        Rel = "related",
+                        Allow = { Get }
+                    },
+                    CreateTopic = 
+                    {
+                        Href = _linkGenerator.GetUriByAction(
+                            httpContext: HttpContext,
+                            action: nameof(CapabilityController.AddCapabilityTopic),
+                            controller: GetNameOf<CapabilityController>(),
+                            values: new { id = capabilityId }) ?? "",
                         Rel = "self",
-                        Allow = allow
-                    } 
+                        Allow = createTopicAllow
+                    }
                 }
-            };
+            });
         }
-    }
 
-    private async Task<bool> IsMemberOfCapability(Capability capability)
-    {
-        return await _membershipQuery.HasActiveMembership(this.CurrentUser, capability.Id);
-    }
-
-    private async Task<bool> CapabilityHasKafkaClusterAccess(Capability capability, KafkaCluster kafkaCluster)
-    {
-        return await _domainAuthorizationService.HasAccess(capability.Id, kafkaCluster.Id);
+        var resource = new KafkaClusterAccessListApiResource
+        {
+            Items = items.ToArray(),
+            Links =
+            {
+                Self =
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(MembershipApplicationController.GetMembershipApplicationApprovals),
+                        controller: GetNameOf<MembershipApplicationController>(),
+                        values: new { id = capabilityId }) ?? "",
+                    Rel = "self",
+                    Allow = { Get }
+                }
+            }
+        };
+        return resource;
     }
 
     public MembershipApplicationListApiResource Convert(string id, UserAccessLevelOptions accessLevel, IEnumerable<MembershipApplication> applications, UserId userId)
