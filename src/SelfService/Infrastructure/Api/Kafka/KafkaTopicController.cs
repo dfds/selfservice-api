@@ -20,11 +20,18 @@ public class KafkaTopicController : ControllerBase
     private readonly IAuthorizationService _authorizationService;
     private readonly IKafkaClusterRepository _clusterRepository;
     private readonly IKafkaTopicApplicationService _kafkaTopicApplicationService;
+    private readonly IKafkaTopicQuery _kafkaTopicQuery;
 
-    public KafkaTopicController(ILogger<KafkaTopicController> logger, IKafkaTopicRepository kafkaTopicRepository, 
-        IMessageContractRepository messageContractRepository, IMembershipQuery membershipQuery, 
-        ApiResourceFactory apiResourceFactory, IAuthorizationService authorizationService, 
-        IKafkaClusterRepository clusterRepository, IKafkaTopicApplicationService kafkaTopicApplicationService)
+    public KafkaTopicController(
+        ILogger<KafkaTopicController> logger,
+        IKafkaTopicRepository kafkaTopicRepository,
+        IMessageContractRepository messageContractRepository,
+        IMembershipQuery membershipQuery,
+        ApiResourceFactory apiResourceFactory,
+        IAuthorizationService authorizationService,
+        IKafkaClusterRepository clusterRepository,
+        IKafkaTopicApplicationService kafkaTopicApplicationService,
+        IKafkaTopicQuery kafkaTopicQuery)
     {
         _logger = logger;
         _kafkaTopicRepository = kafkaTopicRepository;
@@ -34,16 +41,27 @@ public class KafkaTopicController : ControllerBase
         _authorizationService = authorizationService;
         _clusterRepository = clusterRepository;
         _kafkaTopicApplicationService = kafkaTopicApplicationService;
+        _kafkaTopicQuery = kafkaTopicQuery;
     }
 
     [HttpGet("")]
     [ProducesResponseType(typeof(KafkaTopicListApiResource), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAllTopics()
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    public async Task<IActionResult> GetAllTopics([FromQuery] KafkaTopicQueryParams queryParams)
     {
-        var topics = await _kafkaTopicRepository.GetAllPublic();
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"User is unknown to the system."
+            });
+        }
+
+        var topics = await _kafkaTopicQuery.Query(queryParams, userId);
         var clusters = await _clusterRepository.GetAll();
 
-        return Ok(await _apiResourceFactory.Convert(topics, clusters));
+        return Ok(await _apiResourceFactory.Convert(topics, clusters, queryParams));
     }
 
     [HttpGet("{id:required}")]

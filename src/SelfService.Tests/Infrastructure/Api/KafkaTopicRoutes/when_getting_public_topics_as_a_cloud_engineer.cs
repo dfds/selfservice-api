@@ -4,34 +4,9 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Tests.TestDoubles;
 
-namespace SelfService.Tests.Infrastructure.Api.CapabilityTopicsRoutes;
+namespace SelfService.Tests.Infrastructure.Api.KafkaTopicRoutes;
 
-public class StubKafkaClusterRepository : IKafkaClusterRepository
-{
-    private readonly KafkaCluster[] _clusters;
-
-    public StubKafkaClusterRepository(params KafkaCluster[] clusters)
-    {
-        _clusters = clusters;
-    }
-    public Task<bool> Exists(KafkaClusterId id)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<KafkaCluster?> FindBy(KafkaClusterId id)
-    {
-        return Task.FromResult(_clusters.SingleOrDefault());
-    }
-
-    public Task<IEnumerable<KafkaCluster>> GetAll()
-    {
-        return Task.FromResult(_clusters.AsEnumerable());
-    }
-}
-
-
-public class when_getting_topics_for_a_capability_as_a_cloud_engineer : IAsyncLifetime
+public class when_getting_public_topics_as_a_cloud_engineer : IAsyncLifetime
 {
     private readonly KafkaTopic _aPrivateTopic = A.KafkaTopic
         .WithId(KafkaTopicId.New())
@@ -51,10 +26,8 @@ public class when_getting_topics_for_a_capability_as_a_cloud_engineer : IAsyncLi
     {
         await using var application = new ApiApplication();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(A.Capability));
         application.ReplaceService<IKafkaClusterRepository>(new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo")));
-        application.ReplaceService<IKafkaTopicRepository>(new StubKafkaTopicRepository(_aPrivateTopic, _aPublicTopic));
-        application.ReplaceService<IKafkaClusterAccessRepository>(Dummy.Of<IKafkaClusterAccessRepository>());
+        application.ReplaceService<IKafkaTopicQuery>(new StubKafkaTopicQuery(_aPublicTopic));
 
         application.ConfigureFakeAuthentication(options =>
         {
@@ -62,7 +35,7 @@ public class when_getting_topics_for_a_capability_as_a_cloud_engineer : IAsyncLi
         });
 
         using var client = application.CreateClient();
-        _response = await client.GetAsync($"/capabilities/foo/topics");
+        _response = await client.GetAsync($"/kafkatopics");
     }
 
     [Fact]
@@ -72,13 +45,12 @@ public class when_getting_topics_for_a_capability_as_a_cloud_engineer : IAsyncLi
     }
 
     [Fact]
-    public async Task then_items_only_include_public_topics()
+    public async Task then_items_contains_expected_topics()
     {
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var nameValues = document?.SelectElements("items")
-            .SelectMany(x => x.SelectElements("topics"))
             .Select(x => x.SelectElement("name"))
             .Select(x => x?.GetString() ?? "");
 
@@ -92,7 +64,6 @@ public class when_getting_topics_for_a_capability_as_a_cloud_engineer : IAsyncLi
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var topicItem = document?.SelectElements("items")
-            .SelectMany(x => x.SelectElements("topics"))
             .Single();
 
         var values = topicItem?

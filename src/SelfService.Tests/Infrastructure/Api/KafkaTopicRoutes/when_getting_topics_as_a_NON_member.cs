@@ -3,37 +3,30 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Tests.TestDoubles;
 
-namespace SelfService.Tests.Infrastructure.Api.CapabilityTopicsRoutes;
+namespace SelfService.Tests.Infrastructure.Api.KafkaTopicRoutes;
 
-public class when_getting_topics_for_a_capability_as_NON_member : IAsyncLifetime
+public class when_getting_topics_as_a_NON_member : IAsyncLifetime
 {
     private readonly Capability _aCapability = A.Capability.Build();
+
+    private readonly KafkaTopic _aTopic = A.KafkaTopic
+        .WithId(KafkaTopicId.New())
+        .WithKafkaClusterId("foo")
+        .WithName("pub.im-public")
+        .Build();
 
     private HttpResponseMessage _response = null!;
 
     public async Task InitializeAsync()
     {
-        var stubPublicTopic = A.KafkaTopic
-            .WithId(KafkaTopicId.New())
-            .WithKafkaClusterId("foo")
-            .WithName("pub.im-public")
-            .Build();
-
-        var stubPrivateTopic = A.KafkaTopic
-            .WithId(KafkaTopicId.New())
-            .WithKafkaClusterId("foo")
-            .WithName("im-private")
-            .Build();
 
         await using var application = new ApiApplication();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(_aCapability));
         application.ReplaceService<IKafkaClusterRepository>(new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo")));
-        application.ReplaceService<IKafkaTopicRepository>(new StubKafkaTopicRepository(stubPublicTopic, stubPrivateTopic));
-        application.ReplaceService<IKafkaClusterAccessRepository>(Dummy.Of<IKafkaClusterAccessRepository>());
+        application.ReplaceService<IKafkaTopicQuery>(new StubKafkaTopicQuery(_aTopic));
 
         using var client = application.CreateClient();
-        _response = await client.GetAsync($"/capabilities/{_aCapability.Id}/topics");
+        _response = await client.GetAsync($"/kafkatopics?capabilityId={_aCapability.Id}");
     }
 
     [Fact]
@@ -43,7 +36,7 @@ public class when_getting_topics_for_a_capability_as_NON_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var value = document?.SelectElement("/_links/self/href")?.GetString();
-        Assert.EndsWith($"/capabilities/{_aCapability.Id}/topics", value);
+        Assert.EndsWith($"/kafkatopics?CapabilityId={_aCapability.Id}", value);
     }
 
     [Fact]
@@ -66,11 +59,10 @@ public class when_getting_topics_for_a_capability_as_NON_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var nameValues = document?.SelectElements("items")
-            .SelectMany(x => x.SelectElements("topics"))
             .Select(x => x.SelectElement("name"))
             .Select(x => x?.GetString() ?? "");
             
-        Assert.Equal(new[] { "pub.im-public" }, nameValues!);
+        Assert.Equal(new[] { _aTopic.Name.ToString() }, nameValues!);
     }
 
     [Fact]
@@ -80,7 +72,6 @@ public class when_getting_topics_for_a_capability_as_NON_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var topicItem = document?.SelectElements("items")
-            .SelectMany(x => x.SelectElements("topics"))
             .Single();
         var values = topicItem?
             .SelectElements("_links/self/allow")?
@@ -97,7 +88,6 @@ public class when_getting_topics_for_a_capability_as_NON_member : IAsyncLifetime
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var topicItem = document?.SelectElements("items")
-            .SelectMany(x => x.SelectElements("topics"))
             .Single();
 
         var value = topicItem?.SelectElement("_links/updateDescription");

@@ -46,6 +46,7 @@ public static class Domain
         builder.Services.AddTransient<TopVisitorsRepository>();
 
         // domain queries
+        builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();
         builder.Services.AddTransient<ICapabilityKafkaTopicsQuery, CapabilityKafkaTopicsQuery>();
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();

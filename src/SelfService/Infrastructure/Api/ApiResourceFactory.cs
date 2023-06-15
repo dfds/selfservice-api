@@ -747,7 +747,7 @@ public class ApiResourceFactory
         return resource;
     }
 
-    public async Task<KafkaTopicListApiResource> Convert(IEnumerable<KafkaTopic> topics, IEnumerable<KafkaCluster> clusters)
+    public async Task<KafkaTopicListApiResource> Convert(IEnumerable<KafkaTopic> topics, IEnumerable<KafkaCluster> clusters, KafkaTopicQueryParams queryParams)
     {
         var list = new List<KafkaTopicApiResource>();
         foreach (var topic in topics)
@@ -770,7 +770,8 @@ public class ApiResourceFactory
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         controller: GetNameOf<KafkaTopicController>(),
-                        action: nameof(KafkaTopicController.GetAllTopics)) ?? "",
+                        action: nameof(KafkaTopicController.GetAllTopics),
+                        values: queryParams) ?? "",
                     Rel = "self",
                     Allow = { Get }
                 }
