@@ -184,8 +184,7 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
-        if (accessLevel == UserAccessLevelOptions.Read)
+        if (!await _authorizationService.CanViewAwsAccount(userId, capabilityId) )
         {
             return Unauthorized();
         }
@@ -196,7 +195,7 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        return Ok(_apiResourceFactory.Convert(account, UserAccessLevelOptions.Read));
+        return Ok(_apiResourceFactory.Convert(account));
     }
 
     [HttpPost("{id:required}/awsaccount")]
@@ -221,8 +220,7 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
-        if (accessLevel != UserAccessLevelOptions.ReadWrite)
+        if (!await _authorizationService.CanRequestAwsAccount(userId, capabilityId))
         {
             return Unauthorized();
         }
@@ -233,7 +231,7 @@ public class CapabilityController : ControllerBase
             
             var account = await _awsAccountRepository.Get(awsAccountId);
 
-            return Ok(_apiResourceFactory.Convert(account, UserAccessLevelOptions.Read));
+            return Ok(_apiResourceFactory.Convert(account));
         }
         catch (AlreadyHasAwsAccountException)
         {
@@ -263,9 +261,8 @@ public class CapabilityController : ControllerBase
         }
 
         var applications = await query.FindPendingBy(capabilityId);
-        
-        var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
-        if (accessLevel == UserAccessLevelOptions.Read)
+
+        if (!await _authorizationService.CanViewAllApplications(userId, capabilityId))
         {
             // only allow the current users own application(s)
             applications = applications
@@ -273,7 +270,7 @@ public class CapabilityController : ControllerBase
                 .ToList();
         }
 
-        var resource = _apiResourceFactory.Convert(id, accessLevel, applications, userId);
+        var resource = await _apiResourceFactory.Convert(capabilityId, applications, userId);
 
         return Ok(resource);
     }
@@ -364,13 +361,7 @@ public class CapabilityController : ControllerBase
         {
             return NotFound();
         }
-
-        var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, capabilityId);
-        if (accessLevel == UserAccessLevelOptions.Read)
-        {
-            return Unauthorized();
-        }
-
+        
         if (!KafkaClusterId.TryParse(topicRequest.KafkaClusterId, out var kafkaClusterId))
         {
             ModelState.AddModelError(nameof(topicRequest.KafkaClusterId), $"Value \"{topicRequest.KafkaClusterId}\" is not a valid kafka cluster id.");
@@ -401,16 +392,11 @@ public class CapabilityController : ControllerBase
             return ValidationProblem();
         }
 
-        var clusterAccess = await _kafkaClusterAccessRepository.FindBy(capabilityId, kafkaClusterId);
-        if (clusterAccess == null)
+        if (!await _authorizationService.CanAdd(userId, capabilityId, kafkaClusterId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Kafka cluster access not found.",
-                Detail = $"Access to Kafka cluster \"{kafkaClusterId}\" for capability \"{capabilityId}\" has not been requested."
-            });
+            return Unauthorized();
         }
-        
+
         try
         {
             var topicId = await _capabilityApplicationService.RequestNewTopic(

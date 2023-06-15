@@ -11,26 +11,24 @@ namespace SelfService.Tests.Builders;
 
 public class ApiResourceFactoryBuilder
 {
-    private IAuthorizationService _authorizationService;
-    private SelfService.Domain.Services.IAuthorizationService _domainAuthorizationService;
+    private SelfService.Domain.Services.IAuthorizationService _authorizationService;
     private IMembershipQuery _membershipQuery;
 
     public ApiResourceFactoryBuilder()
     {
-        _authorizationService = Mock.Of<IAuthorizationService>();
-        _domainAuthorizationService = Dummy.Of<SelfService.Domain.Services.IAuthorizationService>();
+        Mock.Of<IAuthorizationService>();
+        _authorizationService = Dummy.Of<SelfService.Domain.Services.IAuthorizationService>();
         _membershipQuery = Dummy.Of<IMembershipQuery>();
     }
 
     public ApiResourceFactoryBuilder WithAuthorizationService(IAuthorizationService authorizationService)
     {
-        _authorizationService = authorizationService;
         return this;
     }
 
     public ApiResourceFactoryBuilder WithDomainAuthorizationService(SelfService.Domain.Services.IAuthorizationService domainAuthorizationService)
     {
-        _domainAuthorizationService = domainAuthorizationService;
+        _authorizationService = domainAuthorizationService;
         return this;
     }
 
@@ -51,7 +49,6 @@ public class ApiResourceFactoryBuilder
             httpContextAccessor: httpContextAccessorMock.Object,
             linkGenerator: Mock.Of<LinkGenerator>(),
             authorizationService: _authorizationService,
-            domainAuthorizationService: _domainAuthorizationService,
             membershipQuery: _membershipQuery
         );
     }

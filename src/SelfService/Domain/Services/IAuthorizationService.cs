@@ -4,9 +4,7 @@ namespace SelfService.Domain.Services;
 
 public interface IAuthorizationService
 {
-    [Obsolete]
-    Task<UserAccessLevelOptions> GetUserAccessLevelForCapability(UserId userId, CapabilityId capabilityId);
-
+    Task<bool> CanAdd(UserId userId, CapabilityId capabilityId, KafkaClusterId clusterId);
     Task<bool> CanRead(PortalUser portalUser, KafkaTopic kafkaTopic);
     Task<bool> CanChange(PortalUser portalUser, KafkaTopic kafkaTopic);
     Task<bool> CanDelete(PortalUser portalUser, KafkaTopic kafkaTopic);
@@ -18,4 +16,9 @@ public interface IAuthorizationService
 
     Task<bool> CanRead(UserId userId, MembershipApplication application);
     Task<bool> CanApprove(UserId userId, MembershipApplication application);
+    Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId);
+    Task<bool> CanRequestAwsAccount(UserId userId, CapabilityId capabilityId);
+    Task<bool> CanLeave(UserId userId, CapabilityId capabilityId);
+    Task<bool> CanApply(UserId userId, CapabilityId capabilityId);
+    Task<bool> CanViewAllApplications(UserId userId, CapabilityId capabilityId);
 }

@@ -8,23 +8,29 @@ public class AuthorizationService : IAuthorizationService
     private readonly ILogger<AuthorizationService> _logger;
     private readonly IMembershipQuery _membershipQuery;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
+    private readonly IAwsAccountRepository _awsAccountRepository;
 
-    public AuthorizationService(ILogger<AuthorizationService> logger, IMembershipQuery membershipQuery, 
-        IKafkaClusterAccessRepository kafkaClusterAccessRepository)
+    public AuthorizationService(
+        ILogger<AuthorizationService> logger, 
+        IMembershipQuery membershipQuery, 
+        IKafkaClusterAccessRepository kafkaClusterAccessRepository,
+        IAwsAccountRepository awsAccountRepository)
     {
         _logger = logger;
         _membershipQuery = membershipQuery;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
+        _awsAccountRepository = awsAccountRepository;
     }
 
-    [Obsolete]
-    public async Task<UserAccessLevelOptions> GetUserAccessLevelForCapability(UserId userId, CapabilityId capabilityId)
+    public async Task<bool> CanAdd(UserId userId, CapabilityId capabilityId, KafkaClusterId clusterId)
     {
-        var hasActiveMembership = await _membershipQuery.HasActiveMembership(userId, capabilityId);
-        
-        return hasActiveMembership
-            ? UserAccessLevelOptions.ReadWrite
-            : UserAccessLevelOptions.Read;
+        if (!await _membershipQuery.HasActiveMembership(userId, capabilityId))
+        {
+            return false;
+        }
+
+        var kafkaClusterAccess = await _kafkaClusterAccessRepository.FindBy(capabilityId, clusterId);
+        return kafkaClusterAccess?.IsAccessGranted ?? false;
     }
 
     public async Task<bool> CanRead(PortalUser portalUser, KafkaTopic kafkaTopic)
@@ -116,5 +122,34 @@ public class AuthorizationService : IAuthorizationService
     public async Task<bool> CanApprove(UserId userId, MembershipApplication application)
     {
         return await _membershipQuery.HasActiveMembership(userId, application.CapabilityId);
+    }
+
+    public async Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
+    }
+
+    public async Task<bool> CanRequestAwsAccount(UserId userId, CapabilityId capabilityId)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId) &&
+               !await _awsAccountRepository.Exists(capabilityId);
+
+    }
+
+    public async Task<bool> CanLeave(UserId userId, CapabilityId capabilityId)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId) &&
+               await _membershipQuery.HasMultipleMembers(capabilityId);
+    }
+
+    public async Task<bool> CanApply(UserId userId, CapabilityId capabilityId)
+    {
+        return !await _membershipQuery.HasActiveMembership(userId, capabilityId) &&
+               !await _membershipQuery.HasActiveMembershipApplication(userId, capabilityId);
+    }
+
+    public async Task<bool> CanViewAllApplications(UserId userId, CapabilityId capabilityId)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
     }
 }

@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
-using SelfService.Infrastructure.Api.Authorization;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
 using SelfService.Domain.Queries;
+using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.System;
 using static SelfService.Infrastructure.Api.Method;
 
@@ -17,15 +16,13 @@ public class ApiResourceFactory
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly LinkGenerator _linkGenerator;
     private readonly IAuthorizationService _authorizationService;
-    private readonly Domain.Services.IAuthorizationService _domainAuthorizationService;
     private readonly IMembershipQuery _membershipQuery;
 
-    public ApiResourceFactory(IHttpContextAccessor httpContextAccessor, LinkGenerator linkGenerator, IAuthorizationService authorizationService, Domain.Services.IAuthorizationService domainAuthorizationService, IMembershipQuery membershipQuery)
+    public ApiResourceFactory(IHttpContextAccessor httpContextAccessor, LinkGenerator linkGenerator, IAuthorizationService authorizationService, IMembershipQuery membershipQuery)
     {
         _httpContextAccessor = httpContextAccessor;
         _linkGenerator = linkGenerator;
         _authorizationService = authorizationService;
-        _domainAuthorizationService = domainAuthorizationService;
         _membershipQuery = membershipQuery;
     }
 
@@ -60,18 +57,18 @@ public class ApiResourceFactory
         var portalUser = HttpContext.User.ToPortalUser();
 
         var allowOnSelf = Allow.Get;
-        if (await _domainAuthorizationService.CanDelete(portalUser, topic))
+        if (await _authorizationService.CanDelete(portalUser, topic))
         {
             allowOnSelf += Delete;
         }
 
         var messageContractsAccessLevel = Allow.None;
-        if (await _domainAuthorizationService.CanReadMessageContracts(portalUser, topic))
+        if (await _authorizationService.CanReadMessageContracts(portalUser, topic))
         {
             messageContractsAccessLevel += Get;
         }
 
-        if (await _domainAuthorizationService.CanAddMessageContract(portalUser, topic))
+        if (await _authorizationService.CanAddMessageContract(portalUser, topic))
         {
             messageContractsAccessLevel += Post;
         }
@@ -114,7 +111,7 @@ public class ApiResourceFactory
                     Rel = "related",
                     Allow = messageContractsAccessLevel
                 },
-                UpdateDescription = await _domainAuthorizationService.CanChange(portalUser, topic)
+                UpdateDescription = await _authorizationService.CanChange(portalUser, topic)
                     ? new ResourceActionLink
                     {
                         Href = _linkGenerator.GetUriByAction(
@@ -129,15 +126,6 @@ public class ApiResourceFactory
         };
 
         return result;
-    }
-
-    private static Allow Convert(UserAccessLevelOptions accessLevel)
-    {
-        return accessLevel switch
-        {
-            UserAccessLevelOptions.ReadWrite => new Allow { Get, Post },
-            _ => Allow.Get
-        };
     }
 
     public CapabilityMembersApiResource Convert(string id, IEnumerable<Member> members)
@@ -223,16 +211,7 @@ public class ApiResourceFactory
     {
         var allowedInteractions = Allow.Get;
 
-        var authorizationResult = await _authorizationService.AuthorizeAsync(
-            user: HttpContext.User,
-            resource: capability,
-            requirements: new IAuthorizationRequirement[]
-            {
-                new IsNotMemberOfCapability(),
-                new NotHasPendingMembershipApplication(), 
-            });
-        
-        if (authorizationResult.Succeeded)
+        if (await _authorizationService.CanApply(CurrentUser, capability.Id))
         {
             allowedInteractions += Post;
         }
@@ -253,16 +232,7 @@ public class ApiResourceFactory
     {
         var allowedInteractions = Allow.Get;
 
-        var authorizationResult = await _authorizationService.AuthorizeAsync(
-            user: HttpContext.User,
-            resource: capability,
-            requirements: new IAuthorizationRequirement[]
-            {
-                new IsMemberOfCapability(),
-                new CapabilityHasMultipleMembers(),
-            });
-        
-        if (authorizationResult.Succeeded)
+        if (await _authorizationService.CanLeave(CurrentUser, capability.Id))
         {
             allowedInteractions += Post;
         }
@@ -324,28 +294,12 @@ public class ApiResourceFactory
     private async Task<ResourceLink> CreateAwsAccountLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
-
-        var authorizationResult = await _authorizationService.AuthorizeAsync(
-            user: HttpContext.User,
-            resource: capability,
-            requirements: new[]
-            {
-                new IsMemberOfCapability()
-            });
-
-        if (authorizationResult.Succeeded)
+        
+        if (await _authorizationService.CanViewAwsAccount(CurrentUser, capability.Id))
         {
             allowedInteractions += Get;
 
-            authorizationResult = await _authorizationService.AuthorizeAsync(
-                user: HttpContext.User,
-                resource: capability,
-                requirements: new[]
-                {
-                    new HasNoAwsAccount()
-                });
-
-            if (authorizationResult.Succeeded)
+            if (await _authorizationService.CanRequestAwsAccount(CurrentUser, capability.Id))
             {
                 allowedInteractions += Post;
             }
@@ -382,12 +336,12 @@ public class ApiResourceFactory
         };
     }
 
-    public AwsAccountApiResource Convert(AwsAccount account, UserAccessLevelOptions accessLevel)
+    public async Task<AwsAccountApiResource> Convert(AwsAccount account)
     {
-        var allowedInteractions = Allow.Get;
-        if (accessLevel == UserAccessLevelOptions.ReadWrite)
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanViewAwsAccount(CurrentUser, account.CapabilityId))
         {
-            allowedInteractions += Post;
+            allowedInteractions += Get;
         }
 
         return new AwsAccountApiResource
@@ -502,7 +456,7 @@ public class ApiResourceFactory
         KafkaTopic parentKafkaTopic)
     {
         var allowedInteractions = Allow.Get;
-        if (await _domainAuthorizationService.CanAddMessageContract(PortalUser, parentKafkaTopic))
+        if (await _authorizationService.CanAddMessageContract(PortalUser, parentKafkaTopic))
         {
             allowedInteractions += Post;
         }
@@ -610,7 +564,7 @@ public class ApiResourceFactory
         foreach (var cluster in clusters)
         {
             var isMemberOfCapability = await _membershipQuery.HasActiveMembership(CurrentUser, capabilityId);
-            var capabilityHasKafkaClusterAccess = await _domainAuthorizationService.HasAccess(capabilityId, cluster.Id);
+            var capabilityHasKafkaClusterAccess = await _authorizationService.HasAccess(capabilityId, cluster.Id);
             
             var accessAllow = Allow.None;
             var requestAccessAllow = Allow.None;
@@ -690,10 +644,10 @@ public class ApiResourceFactory
         return resource;
     }
 
-    public MembershipApplicationListApiResource Convert(string id, UserAccessLevelOptions accessLevel, IEnumerable<MembershipApplication> applications, UserId userId)
+    public async Task<MembershipApplicationListApiResource> Convert(CapabilityId capabilityId, IEnumerable<MembershipApplication> applications, UserId userId)
     {
         var allowedInteractions = Allow.Get;
-        if (accessLevel == UserAccessLevelOptions.Read && applications.Count() == 0)
+        if (await _authorizationService.CanApply(CurrentUser, capabilityId))
         {
             allowedInteractions += Post;
         }
@@ -711,7 +665,7 @@ public class ApiResourceFactory
                                httpContext: HttpContext,
                                controller: GetNameOf<CapabilityController>(),
                                action: nameof(CapabilityController.GetCapabilityMembershipApplications),
-                               values: new { id = id }) ??
+                               values: new { id = capabilityId }) ??
                            "",
                     Rel = "self",
                     Allow = allowedInteractions
