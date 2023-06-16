@@ -679,8 +679,8 @@ public class ApiResourceFactory
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
-                        action: nameof(MembershipApplicationController.GetMembershipApplicationApprovals),
-                        controller: GetNameOf<MembershipApplicationController>(),
+                        action: nameof(CapabilityController.GetKafkaClusterAccessList),
+                        controller: GetNameOf<CapabilityController>(),
                         values: new { id = capabilityId }) ?? "",
                     Rel = "self",
                     Allow = { Get }

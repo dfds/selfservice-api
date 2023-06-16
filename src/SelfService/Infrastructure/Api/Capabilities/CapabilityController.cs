@@ -512,7 +512,7 @@ public class CapabilityController : ControllerBase
 
     }
 
-    [HttpGet("{id:required}/kafkacluster/{clusterId:required}/access")]
+    [HttpGet("{id:required}/kafkaclusteraccess/{clusterId:required}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
