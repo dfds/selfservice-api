@@ -561,17 +561,10 @@ public class CapabilityController : ControllerBase
         
         if (clusterAccess.IsAccessGranted)
         {
-
-            // TODO -- lookup credentials in AWS Parameter Store
-
             return Ok(new KafkaClusterAccessApiResource
             {
                 BootstrapServers = kafkaCluster.BootstrapServers,
-                Username = "kafka-user-name",
-                Password = "kafka-password",
                 SchemaRegistryUrl = kafkaCluster.SchemaRegistryUrl,
-                SchemaRegistryUsername = "sr-user-name",
-                SchemaRegistryPassword = "sr-password"
             });
         }
 
@@ -582,4 +575,46 @@ public class CapabilityController : ControllerBase
             value: new { status = "Requested"}
         );
     }
+    
+    [HttpPost("{id:required}/kafkaclusteraccess/{clusterId:required}")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> RequestKafkaClusterAccess(string id, string clusterId)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Unknown user id",
+                Detail = $"User id is not valid and thus cannot leave any capabilities.",
+            });
+        }
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Capability not found.",
+                Detail = $"A capability with id \"{id}\" could not be found."
+            });
+        }
+        if (!KafkaClusterId.TryParse(clusterId, out var kafkaClusterId))
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Kafka cluster not found.",
+                Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found."
+            });
+        }
+
+        await _capabilityApplicationService.RequestKafkaClusterAccess(capabilityId, kafkaClusterId, userId);
+
+        return AcceptedAtAction(
+            actionName: nameof(GetCapabilityById),
+            controllerName: "Capability",
+            routeValues: new {id, clusterId},
+            value: new { status = "Requested"}
+        );
+    }
+
 }

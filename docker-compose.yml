@@ -74,14 +74,14 @@ services:
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.member && \
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.membershipapplication && \
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.awsaccount && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.kafkacluster && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.kafkaclusteraccess && \
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.kafkatopic && \
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.messagecontract && \
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.portalvisit && \
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.confluentgateway.provisioning && \
                       kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.confluentgateway.schema && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic build.selfservice.events.capabilities && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic hello'"
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.confluentgateway.access && \
+                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic build.selfservice.events.capabilities'"
 
     environment:
       KAFKA_BROKER_ID: ignored

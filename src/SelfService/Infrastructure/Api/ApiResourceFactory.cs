@@ -610,6 +610,16 @@ public class ApiResourceFactory
                         Rel = "related",
                         Allow = { Get }
                     },
+                    RequestAccess = 
+                    {
+                        Href = _linkGenerator.GetUriByAction(
+                            httpContext: HttpContext,
+                            action: nameof(CapabilityController.RequestKafkaClusterAccess),
+                            controller: GetNameOf<CapabilityController>(),
+                            values: new { id = capabilityId, clusterId = cluster.Id }) ?? "",
+                        Rel = "self",
+                        Allow = requestAccessAllow
+                    },
                     CreateTopic = 
                     {
                         Href = _linkGenerator.GetUriByAction(

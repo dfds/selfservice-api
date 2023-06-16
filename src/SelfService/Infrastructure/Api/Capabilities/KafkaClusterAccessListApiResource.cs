@@ -28,6 +28,7 @@ public class KafkaClusterAccessListItemApiResource
     {
         public ResourceLink Topics { get; set; } = new();
         public ResourceLink Access { get; set; } = new();
+        public ResourceLink RequestAccess { get; set; } = new();
         public ResourceLink CreateTopic { get; set; } = new();
     }
 }

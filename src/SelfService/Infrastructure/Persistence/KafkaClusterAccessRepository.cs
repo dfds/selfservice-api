@@ -12,6 +12,11 @@ public class KafkaClusterAccessRepository : IKafkaClusterAccessRepository
         _context = context;
     }
 
+    public async Task Add(KafkaClusterAccess kafkaClusterAccess)
+    {
+        await _context.KafkaClusterAccess.AddAsync(kafkaClusterAccess);
+    }
+
     public async Task<KafkaClusterAccess?> FindBy(CapabilityId capabilityId, KafkaClusterId kafkaClusterId)
     {
         var kafkaClusterAccess = await _context.KafkaClusterAccess

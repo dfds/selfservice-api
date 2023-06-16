@@ -9,16 +9,23 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly ILogger<CapabilityApplicationService> _logger;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
+    private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
     private readonly SystemTime _systemTime;
 
-    public CapabilityApplicationService(ILogger<CapabilityApplicationService> logger, ICapabilityRepository capabilityRepository,
-        IKafkaTopicRepository kafkaTopicRepository, SystemTime systemTime)
+    public CapabilityApplicationService(
+        ILogger<CapabilityApplicationService> logger,
+        ICapabilityRepository capabilityRepository,
+        IKafkaTopicRepository kafkaTopicRepository,
+        IKafkaClusterAccessRepository kafkaClusterAccessRepository,
+        SystemTime systemTime)
     {
         _logger = logger;
         _capabilityRepository = capabilityRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
+        _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _systemTime = systemTime;
     }
+    
     [TransactionalBoundary, Outboxed]
     public async Task<CapabilityId> CreateNewCapability(CapabilityId capabilityId, string name, string description,
         string requestedBy)
@@ -77,5 +84,32 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             topic.Name, capabilityId, requestedBy);
 
         return topic.Id;
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task RequestKafkaClusterAccess(CapabilityId capabilityId, KafkaClusterId kafkaClusterId, UserId requestedBy)
+    {
+        var kafkaClusterAccess = await _kafkaClusterAccessRepository.FindBy(capabilityId, kafkaClusterId);
+        if (kafkaClusterAccess is not null)
+        {
+            // there's already a cluster access request - ignore for now
+            return;
+        }
+
+        kafkaClusterAccess = KafkaClusterAccess.RequestAccess(capabilityId, kafkaClusterId, _systemTime.Now, requestedBy);
+
+        await _kafkaClusterAccessRepository.Add(kafkaClusterAccess);
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task RegisterKafkaClusterAccessGranted(CapabilityId capabilityId, KafkaClusterId kafkaClusterId)
+    {
+        var kafkaClusterAccess = await _kafkaClusterAccessRepository.FindBy(capabilityId, kafkaClusterId);
+        if (kafkaClusterAccess is null)
+        {
+            throw new InvalidOperationException($"Unable to find Kafka access request for {capabilityId} on cluster {kafkaClusterId}");
+        }
+
+        kafkaClusterAccess.RegisterAsGranted(_systemTime.Now);
     }
 }
