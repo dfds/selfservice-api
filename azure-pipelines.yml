@@ -1,10 +1,6 @@
-trigger:
-  branches:
-    include:
-      - master
-
 variables:
   agent-pool: "Docker-pool"
+  isPrimary: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
 
 stages:
   - stage: CD
@@ -38,6 +34,7 @@ stages:
 
   - stage: Deploy
     dependsOn: CD
+    condition: and(succeeded(), eq(variables.isPrimary, true)) 
     displayName: "Deployments"
     jobs:
       - job: Production
