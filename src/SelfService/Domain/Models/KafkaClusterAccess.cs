@@ -19,6 +19,11 @@ public class KafkaClusterAccess : AggregateRoot<Guid>
 
     public void RegisterAsGranted(DateTime timestamp)
     {
+        if (IsAccessGranted)
+        {
+            return;
+        }
+
         GrantedAt = timestamp;
     }
 
