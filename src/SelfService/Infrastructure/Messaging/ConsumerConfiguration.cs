@@ -289,7 +289,7 @@ public class AwsAccountRequestedHandler : IMessageHandler<AwsAccountRequested>
 public class KafkaClusterAccessGranted
 {
     public string? CapabilityId { get; set; }
-    public string? ClusterId { get; set; }
+    public string? KafkaClusterId { get; set; }
 }
 
 public class KafkaClusterAccessGrantedHandler :
@@ -314,9 +314,9 @@ public class KafkaClusterAccessGrantedHandler :
             throw new InvalidOperationException($"Invalid CapabilityId {message.CapabilityId}");
         }
 
-        if (!KafkaClusterId.TryParse(message.ClusterId, out var kafkaClusterId))
+        if (!KafkaClusterId.TryParse(message.KafkaClusterId, out var kafkaClusterId))
         {
-            throw new InvalidOperationException($"Invalid KafkaClusterId {message.ClusterId}");
+            throw new InvalidOperationException($"Invalid KafkaClusterId {message.KafkaClusterId}");
         }
 
         await _clusterApplicationService.RegisterKafkaClusterAccessGranted(capabilityId, kafkaClusterId);
