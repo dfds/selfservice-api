@@ -195,7 +195,7 @@ public class CapabilityController : ControllerBase
             return NotFound();
         }
 
-        return Ok(_apiResourceFactory.Convert(account));
+        return Ok(await _apiResourceFactory.Convert(account));
     }
 
     [HttpPost("{id:required}/awsaccount")]
