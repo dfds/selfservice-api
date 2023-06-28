@@ -231,7 +231,7 @@ public class CapabilityController : ControllerBase
             
             var account = await _awsAccountRepository.Get(awsAccountId);
 
-            return Ok(_apiResourceFactory.Convert(account));
+            return Ok(await _apiResourceFactory.Convert(account));
         }
         catch (AlreadyHasAwsAccountException)
         {
