@@ -63,8 +63,7 @@ services:
   kafka-setup:
     image: confluentinc/cp-kafka:7.0.0
     depends_on:
-      kafka:
-        condition: service_healthy
+      - kafka
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
                       sleep 5 && \
                       cub kafka-ready -b kafka:29092 1 20 && \
