@@ -5,10 +5,10 @@ services:
   database:
     image: postgres:latest
     ports:
-    - 5432:5432
+      - 5432:5432
     environment:
-    - POSTGRES_USER=postgres
-    - POSTGRES_PASSWORD=p
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=p
     healthcheck:
       test: "pg_isready -h localhost -p 5432 -U postgres"
       interval: 2s
@@ -24,14 +24,14 @@ services:
     # volumes:
     # - ${PWD}/db/export:/tmp
     environment:
-    # - DEBUG=1                     # enable script debugging
-    - SEED_CSV_SEPARATOR=;          # NOTE: csv delimiter overwritten
-    - LOCAL_DEVELOPMENT=1           # will CREATE DATABASE ${PGDATABASE} every time
-    - PGDATABASE=db                 # database name
-    - PGHOST=database               # docker-compose service name
-    - PGUSER=postgres               # same as above
-    - PGPASSWORD=p                  # same as above
-    - PGSSLMODE=disable             # ignore SSLMODE for local development
+      # - DEBUG=1                     # enable script debugging
+      - SEED_CSV_SEPARATOR=;          # NOTE: csv delimiter overwritten
+      - LOCAL_DEVELOPMENT=1           # will CREATE DATABASE ${PGDATABASE} every time
+      - PGDATABASE=db                 # database name
+      - PGHOST=database               # docker-compose service name
+      - PGUSER=postgres               # same as above
+      - PGPASSWORD=p                  # same as above
+      - PGSSLMODE=disable             # ignore SSLMODE for local development
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.0.0
@@ -48,7 +48,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092 
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -63,25 +63,47 @@ services:
   kafka-setup:
     image: confluentinc/cp-kafka:7.0.0
     depends_on:
-      - kafka
-    command: "bash -c 'echo Waiting for Kafka to be ready... && \
-                      sleep 5 && \
-                      cub kafka-ready -b kafka:29092 1 20 && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.apispecs && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.capability && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.membership && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.member && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.membershipapplication && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.awsaccount && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.kafkaclusteraccess && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.kafkatopic && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.messagecontract && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.selfservice.portalvisit && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.confluentgateway.provisioning && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.confluentgateway.schema && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic cloudengineering.confluentgateway.access && \
-                      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic build.selfservice.events.capabilities'"
+      kafka:
+        condition: service_healthy
+    command: >
+      sh -c '
+      # Blocks until kafka is reachable
+      echo -e "Waiting for kafka to be reachable"
+      kafka-topics --bootstrap-server kafka:29092 --list > /dev/null
 
+      declare -a topics=(
+        "cloudengineering.selfservice.apispecs"
+        "cloudengineering.selfservice.capability"
+        "cloudengineering.selfservice.membership"
+        "cloudengineering.selfservice.member"
+        "cloudengineering.selfservice.membershipapplication"
+        "cloudengineering.selfservice.awsaccount"
+        "cloudengineering.selfservice.kafkaclusteraccess"
+        "cloudengineering.selfservice.kafkatopic"
+        "cloudengineering.selfservice.messagecontract"
+        "cloudengineering.selfservice.portalvisit"
+        "cloudengineering.confluentgateway.provisioning"
+        "cloudengineering.confluentgateway.schema"
+        "cloudengineering.confluentgateway.access"
+        "build.selfservice.events.capabilities"
+      )
+      
+      total_topics=$${#topics[@]}
+      completed_topics=0
+      
+      for topic in $${topics[@]}; do
+        ((completed_topics++))
+        echo -e "Creating topic: $$topic ($$completed_topics/$$total_topics)"
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic $$topic
+        if [ $$? -eq 0 ]; then
+          echo -e "Successfully created topic: $$topic"
+        else
+          echo -e "Failed to create topic: $$topic"
+        fi
+      done
+
+      echo -e "Success!"
+      '
     environment:
       KAFKA_BROKER_ID: ignored
       KAFKA_ZOOKEEPER_CONNECT: ignored
