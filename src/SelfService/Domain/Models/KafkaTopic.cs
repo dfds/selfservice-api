@@ -5,7 +5,7 @@ namespace SelfService.Domain.Models;
 public class KafkaTopic : AggregateRoot<KafkaTopicId>
 {
     public KafkaTopic(KafkaTopicId id, KafkaClusterId kafkaClusterId, CapabilityId capabilityId, KafkaTopicName name, string description,
-        KafkaTopicStatusType status, KafkaTopicPartitions partitions, KafkaTopicRetention retention, DateTime createdAt, string createdBy, DateTime? modifiedAt, string? modifiedBy) : base(id)
+        KafkaTopicStatus status, KafkaTopicPartitions partitions, KafkaTopicRetention retention, DateTime createdAt, string createdBy, DateTime? modifiedAt, string? modifiedBy) : base(id)
     {
         KafkaClusterId = kafkaClusterId;
         CapabilityId = capabilityId;
@@ -47,9 +47,9 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
         ModifiedBy = modifiedBy;
     }
         
-    public KafkaTopicStatusType Status { get; private set; }
+    public KafkaTopicStatus Status { get; private set; }
 
-    private void ChangeStatus(KafkaTopicStatusType newStatus, DateTime modifiedAt, string modifiedBy)
+    private void ChangeStatus(KafkaTopicStatus newStatus, DateTime modifiedAt, string modifiedBy)
     {
         Status = newStatus;
         ModifiedAt = modifiedAt;
@@ -59,10 +59,10 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
     }
 
     public void RegisterAsInProgress(DateTime modifiedAt, string modifiedBy) 
-        => ChangeStatus(KafkaTopicStatusType.InProgress, modifiedAt, modifiedBy);
+        => ChangeStatus(KafkaTopicStatus.InProgress, modifiedAt, modifiedBy);
 
     public void RegisterAsProvisioned(DateTime modifiedAt, string modifiedBy) 
-        => ChangeStatus(KafkaTopicStatusType.Provisioned, modifiedAt, modifiedBy);
+        => ChangeStatus(KafkaTopicStatus.Provisioned, modifiedAt, modifiedBy);
 
     public void Delete()
     {
@@ -90,7 +90,7 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
             capabilityId: capabilityId,
             name: name,
             description: description,
-            status: KafkaTopicStatusType.Requested,
+            status: KafkaTopicStatus.Requested,
             partitions: partitions,
             retention: retention,
             createdAt: createdAt,
