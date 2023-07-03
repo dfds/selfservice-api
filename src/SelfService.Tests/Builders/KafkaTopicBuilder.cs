@@ -9,7 +9,7 @@ public class KafkaTopicBuilder
     private CapabilityId _capabilityId;
     private KafkaTopicName _name;
     private string _description;
-    private KafkaTopicStatusType _status;
+    private KafkaTopicStatus _status;
     private KafkaTopicPartitions _partitions;
     private KafkaTopicRetention _retention;
     private DateTime _createdAt;
@@ -24,7 +24,7 @@ public class KafkaTopicBuilder
         _capabilityId = CapabilityId.Parse("foo");
         _name = KafkaTopicName.Parse("bar");
         _description = "baz";
-        _status = KafkaTopicStatusType.Provisioned;
+        _status = KafkaTopicStatus.Provisioned;
         _partitions = KafkaTopicPartitions.One;
         _retention = KafkaTopicRetention.OneDay;
         _createdAt = new DateTime(2000, 1, 1);

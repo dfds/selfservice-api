@@ -98,8 +98,8 @@ public class SelfServiceDbContext : DbContext
             .HaveConversion<KafkaTopicNameConverter>();
 
         configurationBuilder
-            .Properties<KafkaTopicStatusType>()
-            .HaveConversion<string>();
+            .Properties<KafkaTopicStatus>()
+            .HaveConversion<KafkaTopicStatusConverter>();
 
         configurationBuilder
             .Properties<MembershipApplicationId>()
