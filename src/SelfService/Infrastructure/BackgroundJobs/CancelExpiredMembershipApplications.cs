@@ -10,7 +10,7 @@ public class CancelExpiredMembershipApplications : BackgroundService
     {
         _serviceProvider = serviceProvider;
     }
-    
+
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         return Task.Run(async () =>
@@ -22,7 +22,7 @@ public class CancelExpiredMembershipApplications : BackgroundService
             }
         }, stoppingToken);
     }
-    
+
     private async Task DoWork(CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
@@ -30,9 +30,9 @@ public class CancelExpiredMembershipApplications : BackgroundService
 
         using var _ = logger.BeginScope("{BackgroundJob} {CorrelationId}",
             nameof(CancelExpiredMembershipApplications), Guid.NewGuid());
-        
+
         var applicationService = scope.ServiceProvider.GetRequiredService<IMembershipApplicationService>();
-        
+
         logger.LogDebug("Cancelling any expired membership applications...");
         await applicationService.CancelExpiredMembershipApplications();
     }

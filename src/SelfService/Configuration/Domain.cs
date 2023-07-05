@@ -25,7 +25,7 @@ public static class Domain
         builder.Services.AddTransient<IKafkaTopicApplicationService, KafkaTopicApplicationService>();
         builder.Services.AddTransient<IMemberApplicationService, MemberApplicationService>();
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
-
+        //builder.Services.AddTransient<IRemoveInactiveMembership, RemoveInactiveMemberships>();
         // domain services
         builder.Services.AddTransient<MembershipApplicationDomainService>();
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
@@ -50,7 +50,6 @@ public static class Domain
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
         builder.Services.AddTransient<IMembershipApplicationQuery, MembershipApplicationQuery>();
-        
         builder.Services.AddTransient<IMembershipQuery, MembershipQuery>();
         //builder.Services.AddTransient<MembershipQuery>();
         //builder.Services.AddScoped<IMembershipQuery, CachedMembershipQueryDecorator>(provider =>
@@ -58,19 +57,19 @@ public static class Domain
         //    var inner = provider.GetRequiredService<MembershipQuery>();
         //    return new CachedMembershipQueryDecorator(inner);
         //});
-        
+
         builder.Services.AddTransient<ICapabilityMembershipApplicationQuery, CapabilityMembershipApplicationQuery>();
 
         // aad-aws-sync
         builder.Services.AddTransient<IAadAwsSyncCapabilityQuery, AadAwsSyncCapabilityQuery>();
-        
+
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
-        //builder.Services.AddHostedService<RemoveInactiveMemberships>();
+        builder.Services.AddHostedService<RemoveInactiveMemberships>();
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
-
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
+        builder.Services.AddTransient<InactiveMembershipCleaner>();
 
         var endpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
         var apiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
@@ -81,3 +80,5 @@ public static class Domain
         });
     }
 }
+
+
