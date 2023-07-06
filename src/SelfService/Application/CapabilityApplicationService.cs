@@ -28,7 +28,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     
     [TransactionalBoundary, Outboxed]
     public async Task<CapabilityId> CreateNewCapability(CapabilityId capabilityId, string name, string description,
-        string requestedBy)
+        string requestedBy, string isCritical, string containsPII)
     {
         if (await _capabilityRepository.Exists(capabilityId))
         {
@@ -36,7 +36,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             throw EntityAlreadyExistsException<Capability>.WithProperty(x => x.Name, name);
         }
         var creationTime = _systemTime.Now;
-        var capability = Capability.CreateCapability(capabilityId, name,description, creationTime, requestedBy);
+        var capability = Capability.CreateCapability(capabilityId, name,description, creationTime, requestedBy, isCritical, containsPII );
         await _capabilityRepository.Add(capability);
         
             // TODO [paulseghers & thfis]: check if capability already exists in db
