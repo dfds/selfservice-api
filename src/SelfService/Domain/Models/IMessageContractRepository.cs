@@ -8,4 +8,5 @@ public interface IMessageContractRepository
     Task<IEnumerable<MessageContract>> FindBy(KafkaTopicId topicId);
     
     Task<bool> Exists(KafkaTopicId topicId, MessageType messageType);
+    Task Delete(MessageContract messageContract);
 }

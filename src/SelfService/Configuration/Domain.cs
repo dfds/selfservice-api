@@ -8,6 +8,7 @@ using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Infrastructure.Ticketing;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace SelfService.Configuration;
 
@@ -28,7 +29,6 @@ public static class Domain
         // domain services
         builder.Services.AddTransient<MembershipApplicationDomainService>();
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
-        builder.Services.AddTransient<CapabilityTopicsService>();
 
         // domain repositories
         builder.Services.AddTransient<ICapabilityRepository, CapabilityRepository>();
@@ -45,10 +45,20 @@ public static class Domain
         builder.Services.AddTransient<TopVisitorsRepository>();
 
         // domain queries
+        builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();
         builder.Services.AddTransient<ICapabilityKafkaTopicsQuery, CapabilityKafkaTopicsQuery>();
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
+        builder.Services.AddTransient<IMembershipApplicationQuery, MembershipApplicationQuery>();
+        
         builder.Services.AddTransient<IMembershipQuery, MembershipQuery>();
+        //builder.Services.AddTransient<MembershipQuery>();
+        //builder.Services.AddScoped<IMembershipQuery, CachedMembershipQueryDecorator>(provider =>
+        //{
+        //    var inner = provider.GetRequiredService<MembershipQuery>();
+        //    return new CachedMembershipQueryDecorator(inner);
+        //});
+        
         builder.Services.AddTransient<ICapabilityMembershipApplicationQuery, CapabilityMembershipApplicationQuery>();
 
         // aad-aws-sync
@@ -56,6 +66,7 @@ public static class Domain
         
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
+        //builder.Services.AddHostedService<RemoveInactiveMemberships>();
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
 
         // misc

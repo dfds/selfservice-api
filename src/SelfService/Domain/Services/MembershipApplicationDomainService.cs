@@ -16,31 +16,11 @@ public class MembershipApplicationDomainService
 
     public async Task<bool> CanBeFinalized(MembershipApplication application)
     {
-        var memberships = await _membershipRepository.FindBy(application.CapabilityId);
-
-        var currentMemberCount = memberships.Count();
         var approvalCount = application.Approvals.Count();
 
-        if (currentMemberCount == 1)
+        if (approvalCount >= 1)
         {
-            if (approvalCount == 1)
-            {
-                return true;
-            }
-        }
-        else if (currentMemberCount == 2)
-        {
-            if (approvalCount >= 1)
-            {
-                return true;
-            }
-        }
-        else if (currentMemberCount > 2)
-        {
-            if (approvalCount >= 2)
-            {
-                return true;
-            }
+            return true;
         }
 
         return false;

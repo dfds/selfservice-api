@@ -220,7 +220,7 @@ public class KafkaTopicComparer : IEqualityComparer<KafkaTopic?>
         hashCode.Add(obj.KafkaClusterId);
         hashCode.Add(obj.Name);
         hashCode.Add(obj.Description);
-        hashCode.Add((int) obj.Status);
+        hashCode.Add(obj.Status);
         hashCode.Add(obj.Partitions);
         hashCode.Add(obj.Retention);
         hashCode.Add(obj.CreatedAt);

@@ -11,4 +11,8 @@ public interface IKafkaTopicApplicationService
 
     Task RegisterKafkaTopicAsInProgress(KafkaTopicId kafkaTopicId, string changedBy);
     Task RegisterKafkaTopicAsProvisioned(KafkaTopicId kafkaTopicId, string changedBy);
+
+    Task ChangeKafkaTopicDescription(KafkaTopicId kafkaTopicId, string newDescription, string changedBy);
+    Task DeleteKafkaTopic(KafkaTopicId kafkaTopicId, string requestedBy);
+    Task DeleteAssociatedMessageContracts(KafkaTopicId kafkaTopicId, string requestedBy);
 }

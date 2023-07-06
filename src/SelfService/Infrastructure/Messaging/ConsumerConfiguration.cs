@@ -52,6 +52,18 @@ public static class ConsumerConfiguration
                     messageType: "topic-requested",
                     keySelector: x => x.KafkaTopicId!
                 )
+                .Register<KafkaTopicHasBeenDeleted>(
+                    messageType: "topic-deleted",
+                    keySelector: x => x.KafkaTopicId!
+                )
+                ;
+
+            options
+                .ForTopic($"{SelfServicePrefix}.kafkaclusteraccess")
+                .Register<KafkaClusterAccessRequested>(
+                    messageType: "cluster-access-requested",
+                    keySelector: x => x.CapabilityId!
+                )
                 ;
 
             options
@@ -114,6 +126,7 @@ public static class ConsumerConfiguration
             options
                 .ForTopic($"{SelfServicePrefix}.kafkatopic")
                 .Ignore("topic-requested")
+                .RegisterMessageHandler<KafkaTopicHasBeenDeleted, DeleteAssociatedMessageContracts>("topic-deleted")
                 ;
 
             options
@@ -140,8 +153,12 @@ public static class ConsumerConfiguration
                 .RegisterMessageHandler<KafkaTopicProvisioningHasCompleted, UpdateKafkaTopicProvisioningProgress>("topic_provisioned") // NOTE [jandr@2023-03-29]: double registration due to underscore/dash confusion - we should be using dashes
                 ;
 
-            #endregion
+            options
+                .ForTopic($"{ConfluentGatewayPrefix}.access")
+                .RegisterMessageHandler<KafkaClusterAccessGranted, KafkaClusterAccessGrantedHandler>("cluster-access-granted")
+                ;
 
+            #endregion
         });
     }
 }
@@ -266,5 +283,42 @@ public class AwsAccountRequestedHandler : IMessageHandler<AwsAccountRequested>
         }
 
         await _awsAccountApplicationService.CreateAwsAccountRequestTicket(id);
+    }
+}
+
+public class KafkaClusterAccessGranted
+{
+    public string? CapabilityId { get; set; }
+    public string? KafkaClusterId { get; set; }
+}
+
+public class KafkaClusterAccessGrantedHandler :
+    IMessageHandler<KafkaClusterAccessGranted>
+{
+    private readonly ILogger<KafkaClusterAccessGrantedHandler> _logger;
+    private readonly ICapabilityApplicationService _clusterApplicationService;
+
+    public KafkaClusterAccessGrantedHandler(ILogger<KafkaClusterAccessGrantedHandler> logger, ICapabilityApplicationService clusterApplicationService)
+    {
+        _logger = logger;
+        _clusterApplicationService = clusterApplicationService;
+    }
+
+    public async Task Handle(KafkaClusterAccessGranted message, MessageHandlerContext context)
+    {
+        using var _ = _logger.BeginScope("Handling {MessageType} on {ImplementationType} with {CorrelationId} and {CausationId}",
+            context.MessageType, GetType().Name, context.CorrelationId, context.CausationId);
+
+        if (!CapabilityId.TryParse(message.CapabilityId, out var capabilityId))
+        {
+            throw new InvalidOperationException($"Invalid CapabilityId {message.CapabilityId}");
+        }
+
+        if (!KafkaClusterId.TryParse(message.KafkaClusterId, out var kafkaClusterId))
+        {
+            throw new InvalidOperationException($"Invalid KafkaClusterId {message.KafkaClusterId}");
+        }
+
+        await _clusterApplicationService.RegisterKafkaClusterAccessGranted(capabilityId, kafkaClusterId);
     }
 }

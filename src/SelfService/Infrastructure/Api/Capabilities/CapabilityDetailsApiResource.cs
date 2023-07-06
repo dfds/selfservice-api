@@ -15,7 +15,7 @@ public class CapabilityDetailsApiResource
     {
         public ResourceLink Self { get; set; } = new();
         public ResourceLink Members { get; set; } = new();
-        public ResourceLink Topics { get; set; } = new();
+        public ResourceLink Clusters { get; set; } = new();
         public ResourceLink MembershipApplications { get; set; } = new();
         public ResourceLink LeaveCapability { get; set; } = new();
         public ResourceLink AwsAccount { get; set; } = new();

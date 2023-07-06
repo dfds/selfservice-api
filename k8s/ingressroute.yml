@@ -17,6 +17,17 @@ spec:
           name: selfservice-api
           namespace: selfservice
           port: external
+    - kind: Rule
+      match: Host(`api.hellman.oxygen.dfds.cloud`) && PathPrefix(`/ssu/api`)
+      priority: 101
+      middlewares:
+        - name: selfservice-api-pub
+          namespace: selfservice
+      services:
+        - kind: Service
+          name: selfservice-api
+          namespace: selfservice
+          port: external
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
@@ -27,3 +38,13 @@ spec:
   stripPrefix:
     prefixes:
       - /api
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: selfservice-api-pub
+  namespace: selfservice
+spec:
+  stripPrefix:
+    prefixes:
+      - /ssu/api

@@ -36,11 +36,6 @@ spec:
                 secretKeyRef:
                   name: selfservice-api-postgres
                   key: PGCONNSTRING
-            - name: SS_LEGACY_CONNECTION_STRING
-              valueFrom:
-                secretKeyRef:
-                  name: capability-service-db
-                  key: connection-string
             - name: DEFAULT_KAFKA_GROUP_ID
               value: build.selfservice.selfservice-api
             - name: SS_APISPECS_TOPIC
@@ -50,6 +45,8 @@ spec:
                 name: kafka-credentials
             - secretRef:
                 name: selfservice-api-topdesk
+            - secretRef:
+                name: selfservice-api-msgraph
           resources:
             requests:
               memory: "50Mi"

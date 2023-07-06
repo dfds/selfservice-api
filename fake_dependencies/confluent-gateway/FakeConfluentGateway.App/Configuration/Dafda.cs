@@ -25,8 +25,12 @@ public static class Dafda
 
             options
                 .ForTopic($"{SelfServicePrefix}.kafkatopic")
-                .Ignore("new-kafka-topic-has-been-requested")
+                .Ignore("topic-deleted")
+                .Ignore("cluster-access-requested")
+                .RegisterMessageHandler<NewKafkaTopicHasBeenRequestedMessage, NewKafkaTopicHasBeenRequestedHandler>(
+                    "topic-requested")
                 ;
+
 
             options
                 .ForTopic($"{SelfServicePrefix}.messagecontract")
@@ -50,21 +54,14 @@ public static class Dafda
                 ;
 
             #endregion
-
         });
 
         builder.Services.AddProducerFor<ConfluentGateway>(options =>
         {
             options.WithConfigurationSource(builder.Configuration);
             options.WithEnvironmentStyle("DEFAULT_KAFKA");
-
-            // options
-            //     .ForTopic($"{ConfluentGatewayPrefix}.provisioning")
-            //     .RegisterMessageHandler<KafkaTopicProvisioningHasBegun, UpdateKafkaTopicProvisioningProgress>("topic-provisioning-begun")
-            //     .RegisterMessageHandler<KafkaTopicProvisioningHasBegun, UpdateKafkaTopicProvisioningProgress>("topic_provisioning_begun") // NOTE [jandr@2023-03-29]: double registration due to underscore/dash confusion - we should be using dashes
-            //     .RegisterMessageHandler<KafkaTopicProvisioningHasCompleted, UpdateKafkaTopicProvisioningProgress>("topic-provisioned")
-            //     .RegisterMessageHandler<KafkaTopicProvisioningHasCompleted, UpdateKafkaTopicProvisioningProgress>("topic_provisioned") // NOTE [jandr@2023-03-29]: double registration due to underscore/dash confusion - we should be using dashes
-            //     ;
+            options.Register<KafkaTopicProvisioningHasCompleted>($"{ConfluentGatewayPrefix}.provisioning",
+                "topic-provisioned", (msg) => msg.TopicId);
         });
 
         builder.Services.AddProducerFor<LegacyProducer>(options =>
@@ -86,7 +83,6 @@ public static class Dafda
                 K8sNamespaceCreatedAndAwsArnConnected.EventType, x => x.ContextId);
 
             #endregion
-
         });
     }
 
@@ -95,11 +91,9 @@ public static class Dafda
         public string? Version { get; set; }
         public string? EventName { get; set; }
 
-        [JsonPropertyName("x-correlationId")]
-        public string? CorrelationId { get; set; }
+        [JsonPropertyName("x-correlationId")] public string? CorrelationId { get; set; }
 
-        [JsonPropertyName("x-sender")]
-        public string? Sender { get; set; }
+        [JsonPropertyName("x-sender")] public string? Sender { get; set; }
 
         public object? Payload { get; set; }
     }
@@ -134,6 +128,20 @@ public static class Dafda
 
 public class ConfluentGateway
 {
+    private readonly Producer _producer;
+
+    public ConfluentGateway(Producer producer)
+    {
+        _producer = producer;
+    }
+
+    public async Task ProduceKafkaTopicProvisioningHasCompletedMessage(string topicId)
+    {
+        await _producer.Produce(new KafkaTopicProvisioningHasCompleted()
+        {
+            TopicId = topicId
+        });
+    }
 }
 
 public class LegacyProducer
@@ -214,4 +222,31 @@ public class K8sNamespaceCreatedAndAwsArnConnected
     public string? CapabilityId { get; set; }
     public string? ContextId { get; set; }
     public string? NamespaceName { get; set; }
+}
+
+public class KafkaTopicProvisioningHasCompleted
+{
+    public string? TopicId { get; set; }
+}
+
+public class NewKafkaTopicHasBeenRequestedMessage
+{
+    public string KafkaTopicId { get; set; }
+}
+
+public class NewKafkaTopicHasBeenRequestedHandler : IMessageHandler<NewKafkaTopicHasBeenRequestedMessage>
+{
+    private readonly ConfluentGateway _gateway;
+
+    public NewKafkaTopicHasBeenRequestedHandler(ConfluentGateway gateway)
+    {
+        _gateway = gateway;
+    }
+
+
+    public async Task Handle(NewKafkaTopicHasBeenRequestedMessage message, MessageHandlerContext context)
+    {
+        await Task.Delay(1000);
+        await _gateway.ProduceKafkaTopicProvisioningHasCompletedMessage(message.KafkaTopicId);
+    }
 }

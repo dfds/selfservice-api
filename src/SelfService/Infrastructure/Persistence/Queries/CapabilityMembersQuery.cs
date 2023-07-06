@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 
@@ -69,6 +70,7 @@ public class CapabilityKafkaTopicsQuery : ICapabilityKafkaTopicsQuery
 
 public class MembershipQuery :  IMembershipQuery
 {
+    private readonly ConcurrentDictionary<UserId, Lazy<Task<List<Membership>>>> _membershipCache = new();
     private readonly SelfServiceDbContext _dbContext;
 
     public MembershipQuery(SelfServiceDbContext dbContext)
@@ -82,11 +84,11 @@ public class MembershipQuery :  IMembershipQuery
         // members leave a capability - but it would be better if the membership became
         // inactive instead (maybe with a termination date on the entity)
 
-        var activeMemberships = await _dbContext.Memberships
-            .Where(x => x.UserId == userId && x.CapabilityId == capabilityId)
-            .CountAsync();
+        var memberships = await _membershipCache.GetOrAdd(userId, id => new Lazy<Task<List<Membership>>>(
+            () => _dbContext.Memberships.Where(x => x.UserId==id).ToListAsync()
+        )).Value;
 
-        return activeMemberships > 0;
+        return memberships.Any(x => x.CapabilityId == capabilityId);
     }
 
     public async Task<bool> HasActiveMembershipApplication(UserId userId, CapabilityId capabilityId)
@@ -107,6 +109,48 @@ public class MembershipQuery :  IMembershipQuery
         return members > 1;
     }
 }
+
+//public class CachedMembershipQueryDecorator : IMembershipQuery
+//{
+//    private readonly IMembershipQuery _inner;
+//    private readonly Dictionary<string, bool> _cache = new();
+
+//    public CachedMembershipQueryDecorator(IMembershipQuery inner)
+//    {
+//        _inner = inner;
+//    }
+
+//    public async Task<bool> HasActiveMembership(UserId userId, CapabilityId capabilityId)
+//    {
+//        var key = $"HAM:{userId}:{capabilityId}";
+        
+//        if (_cache.TryGetValue(key, out var result))
+//        {
+//            return result;
+//        }
+
+//        var innerResult = await _inner.HasActiveMembership(userId, capabilityId);
+//        _cache.Add(key, innerResult);
+
+//        return innerResult;
+//    }
+
+//    public async Task<bool> HasActiveMembershipApplication(UserId userId, CapabilityId capabilityId)
+//    {
+//        var key = $"HAMA:{userId}:{capabilityId}";
+
+//        if (_cache.TryGetValue(key, out var result))
+//        {
+//            return result;
+//        }
+
+//        var innerResult = await _inner.HasActiveMembershipApplication(userId, capabilityId);
+//        _cache.Add(key, innerResult);
+
+//        return innerResult;
+//    }
+//}
+
 
 public class CapabilityMembershipApplicationQuery : ICapabilityMembershipApplicationQuery
 {

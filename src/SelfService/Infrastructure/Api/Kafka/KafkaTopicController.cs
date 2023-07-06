@@ -20,11 +20,18 @@ public class KafkaTopicController : ControllerBase
     private readonly IAuthorizationService _authorizationService;
     private readonly IKafkaClusterRepository _clusterRepository;
     private readonly IKafkaTopicApplicationService _kafkaTopicApplicationService;
+    private readonly IKafkaTopicQuery _kafkaTopicQuery;
 
-    public KafkaTopicController(ILogger<KafkaTopicController> logger, IKafkaTopicRepository kafkaTopicRepository, 
-        IMessageContractRepository messageContractRepository, IMembershipQuery membershipQuery, 
-        ApiResourceFactory apiResourceFactory, IAuthorizationService authorizationService, 
-        IKafkaClusterRepository clusterRepository, IKafkaTopicApplicationService kafkaTopicApplicationService)
+    public KafkaTopicController(
+        ILogger<KafkaTopicController> logger,
+        IKafkaTopicRepository kafkaTopicRepository,
+        IMessageContractRepository messageContractRepository,
+        IMembershipQuery membershipQuery,
+        ApiResourceFactory apiResourceFactory,
+        IAuthorizationService authorizationService,
+        IKafkaClusterRepository clusterRepository,
+        IKafkaTopicApplicationService kafkaTopicApplicationService,
+        IKafkaTopicQuery kafkaTopicQuery)
     {
         _logger = logger;
         _kafkaTopicRepository = kafkaTopicRepository;
@@ -34,16 +41,27 @@ public class KafkaTopicController : ControllerBase
         _authorizationService = authorizationService;
         _clusterRepository = clusterRepository;
         _kafkaTopicApplicationService = kafkaTopicApplicationService;
+        _kafkaTopicQuery = kafkaTopicQuery;
     }
 
     [HttpGet("")]
     [ProducesResponseType(typeof(KafkaTopicListApiResource), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAllTopics()
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    public async Task<IActionResult> GetAllTopics([FromQuery] KafkaTopicQueryParams queryParams)
     {
-        var topics = await _kafkaTopicRepository.GetAllPublic();
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"User is unknown to the system."
+            });
+        }
+
+        var topics = await _kafkaTopicQuery.Query(queryParams, userId);
         var clusters = await _clusterRepository.GetAll();
 
-        return Ok(_apiResourceFactory.Convert(topics, clusters));
+        return Ok(await _apiResourceFactory.Convert(topics, clusters, queryParams));
     }
 
     [HttpGet("{id:required}")]
@@ -54,27 +72,148 @@ public class KafkaTopicController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"User is unknown to the system."
+            });
         }
 
         if (!KafkaTopicId.TryParse(id, out var kafkaTopicId))
         {
-            return NotFound();
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
         }
 
         var topic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
         if (topic is null)
         {
-            return NotFound();
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
         }
 
-        var accessLevel = await _authorizationService.GetUserAccessLevelForCapability(userId, topic.CapabilityId);
-        if (accessLevel == UserAccessLevelOptions.Read && !topic.IsPublic)
+        if (await _authorizationService.CanRead(User.ToPortalUser(), topic))
         {
-            return Unauthorized($"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to.");
+            return Ok(await _apiResourceFactory.Convert(topic));
         }
 
-        return Ok(_apiResourceFactory.Convert(topic, accessLevel));
+        return Unauthorized(new ProblemDetails
+        {
+            Title = "Access denied",
+            Detail = $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+        });
+    }
+
+    [HttpPut("{id:required}/description")]
+    [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> ChangeTopicDescription(string id, [FromBody] ChangeKafkaTopicDescriptionRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"User is unknown to the system."
+            });
+        }
+
+        if (!KafkaTopicId.TryParse(id, out var kafkaTopicId))
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Description))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid topic description",
+                Detail = $"The value \"{request.Description}\" is not a valid topic description."
+            });
+        }
+
+        var topic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
+        if (topic is null)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
+        }
+
+        if (!await _authorizationService.CanChange(User.ToPortalUser(), topic))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail =
+                    $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+            });
+        }
+
+        await _kafkaTopicApplicationService.ChangeKafkaTopicDescription(kafkaTopicId, request.Description, userId);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:required}")]
+    [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> DeleteTopic(string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"User is unknown to the system."
+            });
+        }
+
+        if (!KafkaTopicId.TryParse(id, out var kafkaTopicId))
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
+        }
+
+        var topic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
+        if (topic is null)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
+        }
+
+        if (!await _authorizationService.CanDelete(User.ToPortalUser(), topic))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail =
+                    $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+            });
+        }
+
+        await _kafkaTopicApplicationService.DeleteKafkaTopic(kafkaTopicId, userId);
+        return NoContent();
     }
 
     [HttpGet("{id:required}/messagecontracts")]
@@ -83,37 +222,46 @@ public class KafkaTopicController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetMessageContracts(string id)
     {
-        if (!User.TryGetUserId(userId: out var userId))
+        if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"User is unknown to the system."
+            });
         }
 
-        if (!KafkaTopicId.TryParse(text: id, id: out var kafkaTopicId))
+        if (!KafkaTopicId.TryParse(id, out var kafkaTopicId))
         {
-            return NotFound();
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
         }
 
-        var topic = await _kafkaTopicRepository.FindBy(id: kafkaTopicId);
+        var topic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
         if (topic is null)
         {
-            return NotFound();
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
         }
 
-        var hasAccess = await _membershipQuery.HasActiveMembership(userId: userId, capabilityId: topic.CapabilityId);
-        if (topic.IsPrivate && !hasAccess)
+        if (!await _authorizationService.CanReadMessageContracts(User.ToPortalUser(), topic))
         {
-            return Unauthorized(value: $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to.");
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+            });
         }
 
-        var contracts = await _messageContractRepository.FindBy(topicId: kafkaTopicId);
+        var contracts = await _messageContractRepository.FindBy(kafkaTopicId);
 
-        return Ok(_apiResourceFactory.Convert(
-            contracts: contracts,
-            kafkaTopicId: kafkaTopicId,
-            accessLevel: hasAccess 
-                ? UserAccessLevelOptions.ReadWrite 
-                : UserAccessLevelOptions.Read)
-        );
+        return Ok(await _apiResourceFactory.Convert(contracts, topic));
     }
 
     [HttpGet("{id:required}/messagecontracts/{contractId:required}")] // NOTE [jandr@2023-03-16]: consider moving this to a root resource instead e.g. /messagecontracts/{id}
