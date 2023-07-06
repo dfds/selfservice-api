@@ -10,7 +10,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+
 
 namespace SelfService.Infrastructure.BackgroundJobs;
 
@@ -32,7 +32,7 @@ public class RemoveInactiveMemberships : BackgroundService
             while (!stoppingToken.IsCancellationRequested)
             {
                 await DoWork(stoppingToken);
-                await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(3), stoppingToken);
             }
         }, stoppingToken);
     }
