@@ -1,3 +1,4 @@
-Id;Name;Description;Deleted;CreatedAt;CreatedBy
-cloudengineering-xxx;CloudEngineering-xxx;This is cloud stuff;;2023-02-10T08:00:00;SeedScript
-marketing-department-xxx;Marketing-Department;We send emails;;2023-02-10T08:00:00;SeedScript
+Id;Name;Description;Deleted;CreatedAt;CreatedBy;IsCritical;ContainsPII;
+cloudengineering-xxx;CloudEngineering-xxx;This is cloud stuff;;2023-02-10T08:00:00;true;false;SeedScript
+cloudengineering-xxx;CloudEngineering-xxx;This is cloud stuff;;2023-02-10T08:00:00;false;false;SeedScript
+cloudengineering-xxx;CloudEngineering-xxx;This is cloud stuff;;2023-02-10T08:00:00;true;true;SeedScript

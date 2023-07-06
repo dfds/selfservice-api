@@ -54,7 +54,9 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
             CapabilityName = capability.Name,
             CapabilityRootId = capability.Id,
             ContextId = account.Id,
-            ContextName = "default"
+            ContextName = "default",
+            IsCritical = capability.IsCritical,
+            ContainsPII = capability.ContainsPII
         });
 
         var headers = new Dictionary<string, string>();
@@ -92,6 +94,8 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
     private static string CreateMessage(string xCorrelationId, ContextAddedToCapabilityData payload)
     {
         var message = "*New capability context created*\n" +
+                      $"Will contain PII: \"{payload.ContainsPII}\" \\\n" +
+                      $"Will be a critical system: \"{payload.IsCritical}\" \\\n" +
                       "\nRun the following command from github.com/dfds/aws-account-manifests:\n" +
                       "\n```\n" +
                       $"CORRELATION_ID=\"{xCorrelationId}\" \\\n" +
@@ -114,5 +118,7 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         public string CapabilityRootId { get; set; }
         public string ContextId { get; set; }
         public string ContextName { get; set; }
+        public bool IsCritical {get; set;}
+        public bool ContainsPII {get; set;}
     }
 }
