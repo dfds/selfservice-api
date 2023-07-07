@@ -20,21 +20,27 @@ public class InactiveMembershipCleaner
     {
         // fetch all members list
         var members = await FetchAllMembers(); // Task<thing> is a promise of thing, await it to get thing
+        List<Member> deactivatedMembers = new List<Member>();
         foreach (var m in members)
         {
             _logger.LogDebug($"member: {m}");
-            //if (IsDeactivated(m.Id)){
-            //    _logger.LogDebug($"user {m.Id} is deactivated");
-            //}
-            //take membership's name/email
-            //check deactivated/ not found
-            // IF deactivated
-            // THEN :
-                // [within a transaction: ]
-                // - delete membership
-            // _context.Memberships.where(x => x.UserId == m.UserId)
+            if (IsDeactivated(m.Id)){
+               _logger.LogDebug($"user {m.Id} is deactivated"); //TODO: remove
+               deactivatedMembers.Add(m);
+            }
         }
-        _logger.LogDebug("made it through the end of members list");
+
+        foreach (var m in deactivatedMembers){
+            var impactedMemberships = _context.Memberships.Where(x => x.UserId == m.Id);
+            foreach (var membership in impactedMemberships){
+                _logger.LogDebug($"removing membership {membership.Id} of deactivated user {membership.UserId}"); //TODO: remove
+                _context.Remove(membership);
+            }
+        }
+        _logger.LogDebug("pushing changes to db...");
+        _context.SaveChanges(); // TODO: find out if should be async (?)
+        _logger.LogDebug("Done.");
+
     }
 
     private Task<List<Member>> FetchAllMembers()
@@ -45,8 +51,7 @@ public class InactiveMembershipCleaner
 
     private bool IsDeactivated(string userId){
         bool b;
-        string r;
-        (b, r) = userStatusCheck.MakeUserRequest(userId);
+        (b, _) = userStatusCheck.MakeUserRequest(userId);
         return b;
     }
 

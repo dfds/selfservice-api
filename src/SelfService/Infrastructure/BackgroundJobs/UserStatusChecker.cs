@@ -98,7 +98,6 @@ public class UserStatusChecker
                 if (tokenValue == null){
                    _logger.LogDebug("got null ms-graph access token. check credentials or request");
                 }
-                _logger.LogDebug($"Value of 'access_token': {tokenValue}"); //TODO: remove line before push
                 authToken = tokenValue;
             }
             else
