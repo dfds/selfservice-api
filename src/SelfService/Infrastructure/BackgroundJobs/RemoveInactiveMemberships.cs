@@ -14,12 +14,12 @@ using System.Collections.Generic;
 
 namespace SelfService.Infrastructure.BackgroundJobs;
 
-public class RemoveInactiveMemberships : BackgroundService
+public class RemoveDeactivatedMemberships : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<RemoveInactiveMemberships> _logger;
+    private readonly ILogger<RemoveDeactivatedMemberships> _logger;
 
-    public RemoveInactiveMemberships(IServiceProvider serviceProvider, ILogger<RemoveInactiveMemberships> logger)
+    public RemoveDeactivatedMemberships(IServiceProvider serviceProvider, ILogger<RemoveDeactivatedMemberships> logger)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -42,11 +42,11 @@ public class RemoveInactiveMemberships : BackgroundService
         using var scope = _serviceProvider.CreateScope();
 
         using var _ = _logger.BeginScope("{BackgroundJob} {CorrelationId}",
-            nameof(RemoveInactiveMemberships), Guid.NewGuid());
+            nameof(RemoveDeactivatedMemberships), Guid.NewGuid());
 
-        var membershipCleaner = scope.ServiceProvider.GetRequiredService<InactiveMembershipCleaner>();
+        var membershipCleaner = scope.ServiceProvider.GetRequiredService<DeactivatedMembershipCleaner>();
 
         _logger.LogDebug("Removing inactive/deleted users' memberships...");
-        await membershipCleaner.CleanupMemberships();
+        await membershipCleaner.RemoveDeactivatedMemberships();
     }
 }

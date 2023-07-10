@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http.Headers;
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using SelfService.Infrastructure.Persistence;
 
-using System.Collections.Generic;
 
 namespace SelfService.Infrastructure.BackgroundJobs;
 //TODO: make nullable where needed
@@ -43,117 +44,143 @@ public class Identity //TODO: refactor out
     public string? IssuerAssignedId { get; set; }
 }
 
+public class AuthTokenResponse
+{
+    [JsonPropertyName("token_type")]
+    public string? TokenType { get; set; }
+
+    [JsonPropertyName("expires_in")]
+    public int ExpiresIn { get; set; }
+
+    [JsonPropertyName("ext_expires_in")]
+    public int ExternalExpiresIn { get; set; }
+
+    [JsonPropertyName("access_token")]
+    public string? AccessToken { get; set; }
+}
+
 public class UserStatusChecker
 {
-    private readonly ILogger<RemoveInactiveMemberships> _logger; //depends on that background job
+    private readonly ILogger<RemoveDeactivatedMemberships> _logger; //depends on that background job
     private readonly SelfServiceDbContext _context;
-    private string? authToken;
+    private string? _authToken;
 
-    public UserStatusChecker(SelfServiceDbContext context, ILogger<RemoveInactiveMemberships> logger)
+    public UserStatusChecker(SelfServiceDbContext context, ILogger<RemoveDeactivatedMemberships> logger)
     {
         _context = context;
         _logger = logger;
-        setAuthToken();
+        SetAuthToken();
     }
-    public void setAuthToken(){
-    /*
-        makes an MS-Graph request to get the temporary creds
-        to be able to view users
-    */
-         // Get the values from environment variables
+    private async void SetAuthToken()
+    {
+        /*
+            makes an MS-Graph request to get the temporary creds
+            to be able to view users
+        */
+        // Get the values from environment variables
         string? tenant_id = Environment.GetEnvironmentVariable("SS_MSGRAPH_TENANT_ID");
         string? client_id = Environment.GetEnvironmentVariable("SS_MSGRAPH_CLIENT_ID");
         string? client_secret = Environment.GetEnvironmentVariable("SS_MSGRAPH_CLIENT_SECRET");
+        if (client_secret == null)
+        {
+            _logger.LogError("[UserStatusChecker] `client_secret` not found in environment");
+            return;
+        }
+        if (client_id == null)
+        {
+            _logger.LogError("[UserStatusChecker] `client_id` not found in environment");
+            return;
+        }
+        if (tenant_id == null)
+        {
+            _logger.LogError("[UserStatusChecker] `tenant_id` not found in environment");
+            return;
+        }
 
         //setup request
         string url = $"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token ";
-        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-        request.Method = "POST";
+        HttpClient client = new HttpClient();
 
-        //create the form data with the values from above
         string formData = $"client_id={client_id}&grant_type=client_credentials&scope=https://graph.microsoft.com/.default&client_secret={client_secret}";
-        byte[] formDataBytes = System.Text.Encoding.UTF8.GetBytes(formData);
 
-        // Write the form data to the request stream
-        using (Stream requestStream = request.GetRequestStream())
-        {
-            requestStream.Write(formDataBytes, 0, formDataBytes.Length);
-        }
+        HttpContent content = new StringContent(formData, System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
 
-         _logger.LogDebug("URL: " + request.RequestUri);
-
-
-        // Send the request and get the response
         try
         {
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            StreamReader reader = new StreamReader(response.GetResponseStream());
-            string responseText = reader.ReadToEnd();
+            HttpResponseMessage response = await client.PostAsync(url, content);
 
-             _logger.LogDebug(responseText);
-            JsonDocument jsonDocument = JsonDocument.Parse(responseText);
-            if (jsonDocument.RootElement.TryGetProperty("access_token", out JsonElement tokenElement))
+            if (response.IsSuccessStatusCode)
             {
-                string? tokenValue = tokenElement.GetString();
-                if (tokenValue == null){
-                   _logger.LogDebug("got null ms-graph access token. check credentials or request");
+                string responseText = await response.Content.ReadAsStringAsync();
+                AuthTokenResponse? authTokenResponse = JsonSerializer.Deserialize<AuthTokenResponse>(responseText);
+                if (authTokenResponse != null)
+                {
+                    _authToken = authTokenResponse.AccessToken;
                 }
-                authToken = tokenValue;
+                else
+                {
+                    _logger.LogError($"[UserStatusChecker] Unable to deserialize AuthTokenReponse. Got: {responseText}");
+                }
             }
             else
             {
-                 _logger.LogDebug("Attribute 'access_token' not found in the JSON, or malformed json given in");
+                _logger.LogError($"[UserStatusChecker] Unable to request AccessToken, failed with {response.StatusCode}");
             }
         }
-        catch (WebException ex)
+        catch (Exception ex)
         {
-            // Handle any exceptions or error responses here
-             _logger.LogDebug(ex.Message);
+            _logger.LogError($"[UserStatusChecker] Got exception when trying to request accessToken: {ex.Message} with {ex.InnerException}");
         }
-        _logger.LogDebug("ms-graph authToken has been set");
-        return;
+
+        _logger.LogDebug("[UserStatusChecker] ms-graph authToken has been set");
     }
 
-    public (bool, string) MakeUserRequest(string userId){
+    public async Task<(bool, string)> MakeUserRequest(string userId)
+    {
+        if (_authToken == null)
+        {
+            _logger.LogError("[UserStatusChecker] cannot make user request, `authToken` is not set");
+            throw new Exception("No token set");
+        }
+
         string url = $"https://graph.microsoft.com/v1.0/users/{userId}?%24select=displayName,accountEnabled,id,identities,mail";
 
-        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-        request.Headers["Authorization"] = "Bearer " + authToken;
-        request.Method = "GET";
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authToken);
 
         try
         {
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            HttpResponseMessage response = await client.GetAsync(url);
+
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                using (StreamReader sr = new StreamReader(response.GetResponseStream()))
+                string result = await response.Content.ReadAsStringAsync();
+                User? user = JsonSerializer.Deserialize<User>(result);
+                if (user != null)
                 {
-                    string result = sr.ReadToEnd();
-                    Console.WriteLine(result);
-                    var usrJson = JsonSerializer.Deserialize<User>(result);
-                    Console.WriteLine(usrJson.DisplayName+"\n");
-                    if (!usrJson.AccountEnabled)
+                    if (!user.AccountEnabled)
                     {
                         return (true, "deactivated");
                     }
                 }
+                else
+                {
+                    _logger.LogError($"failed to deserialize response for user with id {userId}");
+                }
+            }
+            else if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return (true, "404");
+            }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _logger.LogError("Bad users (ms-graph) authorization token, exiting");
+                throw new Exception("Bad token");
             }
         }
-        catch (WebException e)
+        catch (Exception e)
         {
-            if (e.Status == WebExceptionStatus.ProtocolError)
-            {
-                HttpWebResponse httpResponse = (HttpWebResponse)e.Response;
-                if (httpResponse.StatusCode == HttpStatusCode.NotFound)
-                {
-                    return (true, "404");
-                }
-                else if (httpResponse.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    Console.WriteLine("Bad users (ms-graph) authorization token, exiting");
-                    throw new Exception("Bad token");
-                }
-            }
+            Console.WriteLine(e.Message);
         }
         return (false, "");
     }

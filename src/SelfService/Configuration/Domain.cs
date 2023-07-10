@@ -65,11 +65,11 @@ public static class Domain
 
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
-        builder.Services.AddHostedService<RemoveInactiveMemberships>();
+        builder.Services.AddHostedService<RemoveDeactivatedMemberships>();
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
-        builder.Services.AddTransient<InactiveMembershipCleaner>();
+        builder.Services.AddTransient<DeactivatedMembershipCleaner>();
 
         var endpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
         var apiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
