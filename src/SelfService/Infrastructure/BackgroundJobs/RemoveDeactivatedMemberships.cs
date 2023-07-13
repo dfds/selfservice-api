@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +9,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
+using SelfService.Domain.Services;
 
 
 namespace SelfService.Infrastructure.BackgroundJobs;
@@ -19,7 +19,8 @@ public class RemoveDeactivatedMemberships : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<RemoveDeactivatedMemberships> _logger;
 
-    public RemoveDeactivatedMemberships(IServiceProvider serviceProvider, ILogger<RemoveDeactivatedMemberships> logger)
+    public RemoveDeactivatedMemberships(IServiceProvider serviceProvider,
+        ILogger<RemoveDeactivatedMemberships> logger)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -44,9 +45,8 @@ public class RemoveDeactivatedMemberships : BackgroundService
         using var _ = _logger.BeginScope("{BackgroundJob} {CorrelationId}",
             nameof(RemoveDeactivatedMemberships), Guid.NewGuid());
         UserStatusChecker userStatusChecker = new UserStatusChecker(_logger);
-        var membershipCleaner = scope.ServiceProvider.GetRequiredService<DeactivatedMembershipCleaner>();
-        membershipCleaner.setChecker(userStatusChecker);
-        _logger.LogDebug("Removing inactive/deleted users' memberships...");
-        await membershipCleaner.RemoveDeactivatedMemberships();
+        var membershipCleaner = scope.ServiceProvider.GetRequiredService<DeactivatedMemberCleanerService>();
+
+        await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
     }
 }

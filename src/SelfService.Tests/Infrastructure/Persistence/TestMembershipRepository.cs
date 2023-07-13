@@ -31,7 +31,7 @@ public class TestMembershipRepository
         Assert.Contains(memberA, inserted, new MembershipComparer());
         Assert.Contains(memberB, inserted, new MembershipComparer());
 
-        await repo.Cancel(memberA.CapabilityId, memberA.UserId);
+        await repo.CancelWithCapabilityId(memberA.CapabilityId, memberA.UserId);
         await dbContext.SaveChangesAsync();
 
         var remaining = await dbContext.Memberships.ToListAsync();
@@ -62,7 +62,7 @@ public class TestMembershipRepository
         var inserted = await dbContext.Memberships.ToListAsync();
         Assert.Contains(member, inserted, new MembershipComparer());
 
-        await repo.Cancel(member.CapabilityId, member.UserId);
+        await repo.CancelWithCapabilityId(member.CapabilityId, member.UserId);
         await dbContext.SaveChangesAsync();
 
         var remaining = await dbContext.Memberships.ToListAsync();

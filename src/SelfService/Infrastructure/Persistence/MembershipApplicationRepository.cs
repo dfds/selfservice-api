@@ -15,7 +15,7 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
         _dbContext = dbContext;
         _systemTime = systemTime;
     }
-    
+
     public async Task Add(MembershipApplication application)
     {
         await _dbContext.MembershipApplications.AddAsync(application);
@@ -56,7 +56,8 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
     {
         return await _dbContext.MembershipApplications
             .Include(x => x.Approvals)
-            .Where(x => x.Status == MembershipApplicationStatusOptions.PendingApprovals && x.CapabilityId == capabilityId && x.Applicant == userId)
+            .Where(x => x.Status == MembershipApplicationStatusOptions.PendingApprovals &&
+                        x.CapabilityId == capabilityId && x.Applicant == userId)
             .SingleOrDefaultAsync();
     }
 
@@ -73,5 +74,19 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
     {
         _dbContext.MembershipApplications.Remove(application);
         return Task.CompletedTask;
+    }
+
+    public async Task<List<MembershipApplication>> RemoveAllWithUserId(UserId userId)
+    {
+        var applications =  await _dbContext.MembershipApplications
+            .Include(x => x.Applicant == userId)
+            .ToListAsync();
+
+        foreach (var membershipApplication in applications)
+        {
+            Remove(membershipApplication);
+        }
+
+        return applications;
     }
 }

@@ -25,7 +25,7 @@ public class MembershipRepository : IMembershipRepository
             .ToListAsync();
     }
 
-    public async Task<Membership?> Cancel(CapabilityId capabilityId, UserId userId)
+    public async Task<Membership?> CancelWithCapabilityId(CapabilityId capabilityId, UserId userId)
     {
         var membershipCount = await _dbContext.Memberships
             .Where(x => x.CapabilityId == capabilityId)
@@ -40,10 +40,30 @@ public class MembershipRepository : IMembershipRepository
             .FirstOrDefaultAsync();
         if (membership == null)
         {
-            throw new EntityNotFoundException<Membership>($"No Membership for user \"{userId}\" in capability \"{capabilityId}\"");
+            throw new EntityNotFoundException<Membership>(
+                $"No Membership for user \"{userId}\" in capability \"{capabilityId}\"");
         }
+
         _dbContext.Memberships.Remove(membership);
 
         return membership;
+    }
+
+    public async Task<List<Membership>> CancelAllMembershipsWithUserId(UserId userId)
+    {
+        var memberships = await _dbContext.Memberships
+            .Where(x => x.UserId == userId)
+            .ToListAsync();
+
+        if (memberships != null)
+        {
+            foreach (var membership in memberships)
+            {
+                _dbContext.Memberships.Remove(membership);
+            }
+        }
+
+
+        return memberships;
     }
 }

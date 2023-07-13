@@ -1,4 +1,6 @@
-﻿using SelfService.Domain.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using SelfService.Domain.Exceptions;
+using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Persistence;
 
@@ -19,5 +21,24 @@ public class MemberRepository : IMemberRepository
     public async Task<Member?> FindBy(UserId userId)
     {
         return await _dbContext.Members.FindAsync(userId);
+    }
+
+    public async Task<Member> Remove(UserId userId)
+    {
+        var member = await _dbContext.Members.FindAsync(userId);
+
+        if (member is null)
+        {
+            throw EntityNotFoundException<MembershipApplication>.UsingId(userId);
+        }
+
+        _dbContext.Members.Remove(member);
+
+        return member;
+    }
+
+    public Task<List<Member>> GetAll()
+    {
+        return _dbContext.Members.ToListAsync();
     }
 }
