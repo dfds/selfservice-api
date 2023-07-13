@@ -69,7 +69,7 @@ public static class Domain
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
-        builder.Services.AddTransient<DeactivatedMemberCleanerService>();
+        builder.Services.AddTransient<DeactivatedMemberCleanerApplicationService>();
 
         var endpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
         var apiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];

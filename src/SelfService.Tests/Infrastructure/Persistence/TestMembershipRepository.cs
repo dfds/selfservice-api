@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using SelfService.Application;
+using SelfService.Domain.Services;
 using SelfService.Tests.Comparers;
 
 namespace SelfService.Tests.Infrastructure.Persistence;
@@ -67,5 +69,33 @@ public class TestMembershipRepository
 
         var remaining = await dbContext.Memberships.ToListAsync();
         Assert.Contains(member, remaining, new MembershipComparer());
+    }
+    
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task deactivated_membership_cleaner_removes_deactivated_users(){
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext();
+
+        var capability = A.Capability.Build();
+        var memberA = A.Membership.WithCapabilityId(capability.Id).WithUserId("userdeactivated@dfds.com").Build();
+        var memberB = A.Membership.WithCapabilityId(capability.Id).WithUserId("useractive@dfds.com").Build();
+
+        var repo = A.MembershipRepository
+            .WithDbContext(dbContext)
+            .Build();
+
+        await repo.Add(memberA);
+        await repo.Add(memberB);
+
+        await dbContext.SaveChangesAsync();
+
+        // create stub/mock
+
+        DeactivatedMemberCleanerApplicationService m = new DeactivatedMemberCleanerApplicationService();
+
+        IDeactivatedMembershipCleaner membershipCleaner = new SelfService.Domain.Services.DeactivatedMembershipCleaner
+        //membershipCleaner.setChecker(userStatusChecker);
+
     }
 }

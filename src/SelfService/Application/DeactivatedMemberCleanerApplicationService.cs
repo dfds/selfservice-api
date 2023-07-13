@@ -1,21 +1,19 @@
 using System.Text;
-using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.BackgroundJobs;
-using SelfService.Infrastructure.Persistence;
 
-namespace SelfService.Domain.Services;
+namespace SelfService.Application;
 
-public class DeactivatedMemberCleanerService
+public class DeactivatedMemberCleanerApplicationService
 {
     private readonly IMembershipRepository _membershipRepository;
     private readonly IMemberRepository _memberRepository;
     private readonly IMembershipApplicationRepository _membershipApplicationRepository;
 
-    private readonly ILogger<DeactivatedMemberCleanerService> _logger;
+    private readonly ILogger<DeactivatedMemberCleanerApplicationService> _logger;
 
-    public DeactivatedMemberCleanerService(
-        ILogger<DeactivatedMemberCleanerService> logger,
+    public DeactivatedMemberCleanerApplicationService(
+        ILogger<DeactivatedMemberCleanerApplicationService> logger,
         IMembershipRepository membershipRepository,
         IMemberRepository memberRepository,
         IMembershipApplicationRepository membershipApplicationRepository)

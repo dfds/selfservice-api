@@ -45,7 +45,7 @@ public class RemoveDeactivatedMemberships : BackgroundService
         using var _ = _logger.BeginScope("{BackgroundJob} {CorrelationId}",
             nameof(RemoveDeactivatedMemberships), Guid.NewGuid());
         UserStatusChecker userStatusChecker = new UserStatusChecker(_logger);
-        var membershipCleaner = scope.ServiceProvider.GetRequiredService<DeactivatedMemberCleanerService>();
+        var membershipCleaner = scope.ServiceProvider.GetRequiredService<DeactivatedMemberCleanerApplicationService>();
 
         await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
     }
