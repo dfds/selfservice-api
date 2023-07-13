@@ -92,9 +92,9 @@ public class TestMembershipRepository
 
         // create stub/mock
 
-        DeactivatedMemberCleanerApplicationService m = new DeactivatedMemberCleanerApplicationService();
+        //DeactivatedMemberCleanerApplicationService m = new DeactivatedMemberCleanerApplicationService();
 
-        IDeactivatedMembershipCleaner membershipCleaner = new SelfService.Domain.Services.DeactivatedMembershipCleaner
+        //IDeactivatedMembershipCleaner membershipCleaner = new SelfService.Domain.Services.DeactivatedMembershipCleaner
         //membershipCleaner.setChecker(userStatusChecker);
 
     }
