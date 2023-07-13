@@ -216,6 +216,58 @@ public class KafkaTopicController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id:required}/consumers")]
+    [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+
+    public async Task<IActionResult> GetConsumers(string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"User is unknown to the system."
+            });
+        }
+
+        if (!KafkaTopicId.TryParse(id, out var kafkaTopicId))
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
+        }
+
+        var topic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
+        if (topic is null)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
+        }
+
+        // Note: Currently consumers can only be seen by members of the capability to which the topic belongs.
+        if (!await _authorizationService.CanReadConsumers(User.ToPortalUser(), topic))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+            });
+        }
+
+        // TODO: perform actual call to Confluent GateWay
+        // example: var contracts = await _messageContractRepository.FindBy(kafkaTopicId);
+        // topic.KafkaClusterAccess
+        var consumers = new List<string>();
+        return Ok(await _apiResourceFactory.Convert(consumers, topic));
+    }
+
     [HttpGet("{id:required}/messagecontracts")]
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]

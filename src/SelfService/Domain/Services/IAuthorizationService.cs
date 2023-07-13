@@ -9,6 +9,7 @@ public interface IAuthorizationService
     Task<bool> CanChange(PortalUser portalUser, KafkaTopic kafkaTopic);
     Task<bool> CanDelete(PortalUser portalUser, KafkaTopic kafkaTopic);
     Task<bool> CanReadMessageContracts(PortalUser portalUser, KafkaTopic kafkaTopic);
+    Task<bool> CanReadConsumers(PortalUser portalUser, KafkaTopic kafkaTopic);
     Task<bool> CanAddMessageContract(PortalUser portalUser, KafkaTopic kafkaTopic);
 
     Task<bool> CanViewAccess(UserId userId, CapabilityId capabilityId);
