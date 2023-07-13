@@ -8,12 +8,16 @@ public class DeactivatedMembershipCleaner
 {
     private readonly SelfServiceDbContext _context;
     private readonly ILogger<RemoveDeactivatedMemberships> _logger;
-    private UserStatusChecker _userStatusChecker;
+    private IUserStatusChecker? _userStatusChecker; // is this okay?
     public DeactivatedMembershipCleaner(SelfServiceDbContext context, ILogger<RemoveDeactivatedMemberships> logger)
     {
         _context = context;
         _logger = logger;
-        _userStatusChecker = new UserStatusChecker(_context, _logger);
+        //_userStatusChecker = new UserStatusChecker(_context, _logger);
+    }
+
+    public void setChecker(IUserStatusChecker userStatusChecker){
+        _userStatusChecker = userStatusChecker;
     }
 
     public async Task RemoveDeactivatedMemberships()
@@ -23,7 +27,6 @@ public class DeactivatedMembershipCleaner
         List<Member> deactivatedMembers = new List<Member>();
         foreach (var m in members)
         {
-            _logger.LogDebug($"member: {m}");
             if (await IsDeactivated(m.Id))
             {
                 _logger.LogDebug($"user {m.Id} is deactivated"); //TODO: remove
@@ -52,12 +55,15 @@ public class DeactivatedMembershipCleaner
         return _context.Members.ToListAsync();
     }
 
-    private async Task<bool> IsDeactivated(string userId)
-    {
+    private async Task<bool> IsDeactivated(string userId){
+        if (_userStatusChecker == null){
+            _logger.LogError("[DeactivatedMembershipCleaner] attempted to get a user's status while _userStatusChecker not set");
+            throw new Exception("_userStatusChecker not set");
+        }
+
         bool b;
         (b, _) = await _userStatusChecker.MakeUserRequest(userId);
         return b;
     }
-
 
 }

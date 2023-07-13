@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Http.Headers;
 
@@ -10,7 +7,7 @@ using SelfService.Infrastructure.Persistence;
 
 
 namespace SelfService.Infrastructure.BackgroundJobs;
-//TODO: make nullable where needed
+
 public class User //TODO: refactor out
 {
     [JsonPropertyName("@odata.context")]
@@ -59,15 +56,14 @@ public class AuthTokenResponse
     public string? AccessToken { get; set; }
 }
 
-public class UserStatusChecker
+public class UserStatusChecker : IUserStatusChecker
 {
     private readonly ILogger<RemoveDeactivatedMemberships> _logger; //depends on that background job
-    private readonly SelfServiceDbContext _context;
+    //private readonly SelfServiceDbContext _context;
     private string? _authToken;
 
-    public UserStatusChecker(SelfServiceDbContext context, ILogger<RemoveDeactivatedMemberships> logger)
+    public UserStatusChecker(ILogger<RemoveDeactivatedMemberships> logger)
     {
-        _context = context;
         _logger = logger;
         SetAuthToken();
     }
@@ -100,11 +96,11 @@ public class UserStatusChecker
         //setup request
         string url = $"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token ";
         HttpClient client = new HttpClient();
-
         string formData = $"client_id={client_id}&grant_type=client_credentials&scope=https://graph.microsoft.com/.default&client_secret={client_secret}";
 
         HttpContent content = new StringContent(formData, System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
 
+        //make request and handle response
         try
         {
             HttpResponseMessage response = await client.PostAsync(url, content);
@@ -137,6 +133,13 @@ public class UserStatusChecker
 
     public async Task<(bool, string)> MakeUserRequest(string userId)
     {
+        /*
+            if the authToken attribute is set, attempts an ms-graph/AzureAD
+            request to determine a member's status from the org's PoV
+            [!] returns True if a user is DEactivated or not found in AD
+
+            string part of return value is left in for debugging if/when needed
+        */
         if (_authToken == null)
         {
             _logger.LogError("[UserStatusChecker] cannot make user request, `authToken` is not set");
@@ -182,7 +185,7 @@ public class UserStatusChecker
         {
             Console.WriteLine(e.Message);
         }
-        return (false, "");
+        return (false, $"{userId}");
     }
 }
 
