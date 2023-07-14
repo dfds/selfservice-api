@@ -1,16 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
-using SelfService.Domain.Models;
-using SelfService.Infrastructure.Persistence;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Collections.Generic;
-using SelfService.Domain.Services;
-
 
 namespace SelfService.Infrastructure.BackgroundJobs;
 

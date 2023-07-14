@@ -24,7 +24,7 @@ public class DeactivatedMemberCleanerApplicationService
         _logger = logger;
     }
 
-    public async Task RemoveDeactivatedMemberships(UserStatusChecker userStatusChecker)
+    public async Task RemoveDeactivatedMemberships(IUserStatusChecker userStatusChecker)
     {
         _logger.LogDebug("Started looking for deactivated users");
         var members = await _memberRepository.GetAll();
