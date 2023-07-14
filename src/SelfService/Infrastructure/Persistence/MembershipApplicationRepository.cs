@@ -79,7 +79,7 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
     public async Task<List<MembershipApplication>> RemoveAllWithUserId(UserId userId)
     {
         var applications =  await _dbContext.MembershipApplications
-            .Include(x => x.Applicant == userId)
+            .Where(x => x.Applicant == userId)
             .ToListAsync();
 
         foreach (var membershipApplication in applications)
