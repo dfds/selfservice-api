@@ -33,11 +33,12 @@ public class DeactivatedMemberCleanerApplicationService
         foreach (var member in members)
         {
             var (isDeactivated,reason) = await userStatusChecker.MakeUserRequest(member.Id);
-            if(isDeactivated)
-                continue;
+            if(isDeactivated){
+                deactivatedMembers.Add(member);
+                sb.AppendLine(member.Id);
+            }
             // TODO: print something nice with reason in case of weird state
-            deactivatedMembers.Add(member);
-            sb.AppendLine(member.Id);
+
         }
 
         if (deactivatedMembers.Count <= 0)
@@ -72,5 +73,5 @@ public class DeactivatedMemberCleanerApplicationService
 
         _logger.LogDebug("Successfully removed users");
     }
-    
+
 }
