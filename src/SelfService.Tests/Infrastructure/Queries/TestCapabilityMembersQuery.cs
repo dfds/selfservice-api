@@ -58,9 +58,10 @@ public class TestCapabilityMembersQuery
             .WithUserId(expectedMember.Id)
             .Build();
 
+        await dbContext.Capabilities.AddAsync(stubCapability, cancellationTokenSource.Token);
         await dbContext.Members.AddAsync(expectedMember, cancellationTokenSource.Token);
         await dbContext.Members.AddAsync(stubOtherMember, cancellationTokenSource.Token);
-        await dbContext.Capabilities.AddAsync(stubCapability, cancellationTokenSource.Token);
+        await dbContext.SaveChangesAsync(cancellationTokenSource.Token);
         await dbContext.Memberships.AddAsync(stubMembership, cancellationTokenSource.Token);
         await dbContext.SaveChangesAsync(cancellationTokenSource.Token);
 
