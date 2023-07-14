@@ -57,21 +57,21 @@ public class DeactivatedMemberCleanerApplicationService
             await _membershipRepository.CancelAllMembershipsWithUserId(deactivatedMember.Id);
         }
 
-        _logger.LogDebug("Successfully cancelled memberships of users");
+        _logger.LogDebug("Successfully cancelled memberships of users with deactivated accounts");
 
         foreach (var deactivatedMember in deactivatedMembers)
         {
             await _membershipApplicationRepository.RemoveAllWithUserId(deactivatedMember.Id);
         }
 
-        _logger.LogDebug("Successfully removed pending applications for users");
+        _logger.LogDebug("Successfully removed pending applications of users with deactivated accounts");
 
         foreach (var deactivatedMember in deactivatedMembers)
         {
             await _memberRepository.Remove(deactivatedMember.Id);
         }
 
-        _logger.LogDebug("Successfully removed users");
+        _logger.LogDebug("Successfully removed deactivated members with deactivated accounts");
     }
 
 }

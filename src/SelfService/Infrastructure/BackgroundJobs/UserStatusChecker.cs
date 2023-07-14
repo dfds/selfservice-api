@@ -143,7 +143,12 @@ public class UserStatusChecker : IUserStatusChecker
         if (_authToken == null)
         {
             _logger.LogError("[UserStatusChecker] cannot make user request, `authToken` is not set");
-            throw new Exception("No token set");
+            _logger.LogDebug("[UserStatusChecker] re-attempting to set `authToken`");
+            SetAuthToken();
+            if (_authToken == null){ //TODO: throw the right exceptions so this can be a try/catch
+                throw new Exception("No token set");
+            }
+
         }
 
         string url = $"https://graph.microsoft.com/v1.0/users/{userId}?%24select=displayName,accountEnabled,id,identities,mail";
