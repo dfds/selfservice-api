@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http;
+using Microsoft.AspNetCore.Http;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
+using SelfService.Infrastructure.Api.Apis;
 
 namespace SelfService.Infrastructure.Api.Kafka;
 
@@ -223,6 +226,7 @@ public class KafkaTopicController : ControllerBase
 
     public async Task<IActionResult> GetConsumers(string id)
     {
+
         if (!User.TryGetUserId(out var userId))
         {
             return Unauthorized(new ProblemDetails
@@ -251,7 +255,7 @@ public class KafkaTopicController : ControllerBase
             });
         }
 
-        // Note: Currently consumers can only be seen by members of the capability to which the topic belongs.
+        // Note: Currently consumers can only be seen by members of the capability to which they topic belongs.
         if (!await _authorizationService.CanReadConsumers(User.ToPortalUser(), topic))
         {
             return Unauthorized(new ProblemDetails
@@ -261,10 +265,14 @@ public class KafkaTopicController : ControllerBase
             });
         }
 
-        // TODO: perform actual call to Confluent GateWay
-        // example: var contracts = await _messageContractRepository.FindBy(kafkaTopicId);
-        // topic.KafkaClusterAccess
-        var consumers = new List<string>{"dummy-consumer-1", "dummy-consumer-2"};
+        (IEnumerable<string> consumers, string? result) = await ConfluentGatewayClient.GetConsumersForKafkaTopic(topic.KafkaClusterId, topic.Name);
+        if (result is not null) {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Consumers not found",
+                Detail = $"Error from server {result}."
+            });
+        };
         return Ok(await _apiResourceFactory.Convert(consumers, topic));
     }
 

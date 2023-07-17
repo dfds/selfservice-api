@@ -50,7 +50,7 @@ unittests:
 
 integrationtest: integrationtests
 
-integrationtests:
+integrationtests: build
 	@cd integrationtest && bash ./run.sh $(CONFIGURATION) $(OUTPUT_DIR_TESTRESULTS)
 
 test: tests
