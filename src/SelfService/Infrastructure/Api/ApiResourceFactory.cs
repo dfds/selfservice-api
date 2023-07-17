@@ -497,7 +497,11 @@ public class ApiResourceFactory
     public async Task<ConsumersListApiResource> Convert(IEnumerable<string> consumers,
         KafkaTopic topic)
     {
-        var allowedInteractions = Allow.Get;
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanReadConsumers(PortalUser, topic))
+        {
+            allowedInteractions += Get;
+        }
 
         return new ConsumersListApiResource
         {
