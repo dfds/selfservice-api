@@ -264,7 +264,7 @@ public class KafkaTopicController : ControllerBase
         // TODO: perform actual call to Confluent GateWay
         // example: var contracts = await _messageContractRepository.FindBy(kafkaTopicId);
         // topic.KafkaClusterAccess
-        var consumers = new List<string>();
+        var consumers = new List<string>{"dummy-consumer-1", "dummy-consumer-2"};
         return Ok(await _apiResourceFactory.Convert(consumers, topic));
     }
 
