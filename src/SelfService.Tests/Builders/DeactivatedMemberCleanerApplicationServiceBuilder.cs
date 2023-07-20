@@ -13,7 +13,7 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
 {
     public NullLogger<SelfService.Application.DeactivatedMemberCleanerApplicationService> logger;
     private SystemTime _systemTime;
-    private MembershipRepository _membershipRepository ;
+    private IMembershipRepository _membershipRepository ;
     private IMemberRepository _memberRepository;
     private IMembershipApplicationRepository _membershipApplicationRepository;
     private Task<SelfServiceDbContext> _dbContext;
@@ -22,7 +22,7 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
     public DeactivatedMemberCleanerApplicationServiceBuilder()
     {
 
-        _membershipRepository = Dummy.Of<MembershipRepository>();
+        _membershipRepository = Dummy.Of<IMembershipRepository>();
         _memberRepository = Dummy.Of<IMemberRepository>();
         _membershipApplicationRepository = Dummy.Of<IMembershipApplicationRepository>();
         _logger = Dummy.Of<ILogger<DeactivatedMemberCleanerApplicationService>>();
@@ -30,7 +30,7 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         _dbContext = Dummy.Of<Task<SelfServiceDbContext>>();
     }
 
-    public DeactivatedMemberCleanerApplicationServiceBuilder WithMembershipRepository(MembershipRepository membershipRepository)
+    public DeactivatedMemberCleanerApplicationServiceBuilder WithMembershipRepository(IMembershipRepository membershipRepository)
     {
         _membershipRepository = membershipRepository;
         return this;
