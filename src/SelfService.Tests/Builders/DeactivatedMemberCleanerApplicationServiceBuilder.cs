@@ -16,6 +16,7 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
     private MembershipRepository _membershipRepository ;
     private IMemberRepository _memberRepository;
     private IMembershipApplicationRepository _membershipApplicationRepository;
+    private Task<SelfServiceDbContext> _dbContext;
     // add fields we need, logger, dbContext, userStatusChecker, etc
     private ILogger<DeactivatedMemberCleanerApplicationService> _logger; //make correct logger
     public DeactivatedMemberCleanerApplicationServiceBuilder()
@@ -26,7 +27,7 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         _membershipApplicationRepository = Dummy.Of<IMembershipApplicationRepository>();
         _logger = Dummy.Of<ILogger<DeactivatedMemberCleanerApplicationService>>();
         _systemTime = SystemTime.Default;
-        //_kafkaTopicRepository = Dummy.Of<IKafkaTopicRepository>();
+        _dbContext = Dummy.Of<Task<SelfServiceDbContext>>();
     }
 
     public DeactivatedMemberCleanerApplicationServiceBuilder WithMembershipRepository(MembershipRepository membershipRepository)

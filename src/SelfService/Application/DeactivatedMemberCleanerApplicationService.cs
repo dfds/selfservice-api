@@ -58,7 +58,7 @@ public class DeactivatedMemberCleanerApplicationService
         }
 
         _logger.LogDebug(
-            "[TRIAL] following {NotFoundmembersCount} users not found in Azure AD:\\n{notfoundUsers}, not deleting for now",
+            "[TRIAL] following {NotFoundmembersCount} users not found in Azure AD:\\n{notfoundUsers}\\n not deleting for now",
             notFoundMembers.Count, sb1.ToString());
 
         _logger.LogDebug(
