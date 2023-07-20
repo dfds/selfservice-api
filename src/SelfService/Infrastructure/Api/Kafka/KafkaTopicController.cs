@@ -7,7 +7,7 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
-using SelfService.Infrastructure.Api.Apis;
+using SelfService.Infrastructure.Api.Prometheus;
 
 namespace SelfService.Infrastructure.Api.Kafka;
 
@@ -265,7 +265,7 @@ public class KafkaTopicController : ControllerBase
             });
         }
 
-        (IEnumerable<string> consumers, string? result) = await ConfluentGatewayClient.GetConsumersForKafkaTopic(topic.KafkaClusterId, topic.Name);
+        (IEnumerable<string> consumers, string? result) = await PrometheusClient.GetConsumersForKafkaTopic(topic.Name);
         if (result is not null) {
             return NotFound(new ProblemDetails
             {
