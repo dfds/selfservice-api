@@ -87,7 +87,8 @@ public class TestKafkaTopicName
     [InlineData("foo.BAR")]
     public void try_parse_returns_expected_instance_when_parsing_valid_input(string validInput)
     {
-        KafkaTopicName.TryParse(validInput, out var result);
+        var valid = KafkaTopicName.TryParse(validInput, out var result);
+        Assert.True(valid);
         Assert.Equal("foo.bar", result);
     }
 
@@ -101,8 +102,9 @@ public class TestKafkaTopicName
     [Fact]
     public void try_parse_returns_expected_instance_when_parsing_invalid_input()
     {
-        KafkaTopicName.TryParse("foo bar", out var result);
-        Assert.Null(result);
+        var valid = KafkaTopicName.TryParse("foo bar", out var result);
+        Assert.False(valid);
+        Assert.Equal("foo bar", result);
     }
 
     [Fact]

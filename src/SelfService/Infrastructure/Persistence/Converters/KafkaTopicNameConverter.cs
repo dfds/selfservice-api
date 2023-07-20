@@ -10,7 +10,12 @@ public class KafkaTopicNameConverter : ValueConverter<KafkaTopicName, string>
     {
             
     }
-
     private static Expression<Func<KafkaTopicName, string>> ToDatabaseType => id => id.ToString();
-    private static Expression<Func<string, KafkaTopicName>> FromDatabaseType => value => KafkaTopicName.Parse(value);
+    private static Expression<Func<string, KafkaTopicName>> FromDatabaseType => value => Parse(value);
+    
+    private static KafkaTopicName Parse(string value)
+    {
+        KafkaTopicName.TryParse(value, out var payload); // TODO: Consider adding additional logging if validation fails
+        return payload;
+    }
 }

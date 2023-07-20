@@ -88,14 +88,8 @@ public class KafkaTopicName : ValueObject
 
     public static bool TryParse(string? text, out KafkaTopicName topicName)
     {
-        if (IsValid(text))
-        {
-            topicName = new KafkaTopicName(text!.ToLowerInvariant());
-            return true;
-        }
-
-        topicName = null!;
-        return false;
+        topicName = new KafkaTopicName(text!.ToLowerInvariant());
+        return IsValid(text);
     }
 
     public CapabilityId ExtractCapabilityId()
