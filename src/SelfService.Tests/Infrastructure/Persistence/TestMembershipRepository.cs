@@ -99,9 +99,6 @@ public class TestMembershipRepository
 
         var logger = sp.GetService<ILogger<RemoveDeactivatedMemberships>>();
 
-
-
-
         var capability = A.Capability.Build();
 
         var member_active = A.Membership.WithCapabilityId(capability.Id).WithUserId("useractive@dfds.com").Build();
