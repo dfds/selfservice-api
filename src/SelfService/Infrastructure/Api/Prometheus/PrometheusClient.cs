@@ -6,13 +6,16 @@ namespace SelfService.Infrastructure.Api.Prometheus;
 
 public static class PrometheusClient
 {    
-    private static IEnumerable<string> GetConsumersFromResponse(Response? response, string topic)
+    public static IEnumerable<string> GetConsumersFromResponse(Response? response, string topic)
     {
         List<string> consumers = new List<string>();
-        if (response == null) {
+        if (response == null || response.data == null || response.data.result == null) {
             return new List<string>();
         }
         foreach (Result result in response.data.result) {
+            if (result.metric == null || result.metric.topic == null || result.metric.consumergroup == null) {
+                continue;
+            }
             if (result.metric.topic == topic)
             {
                 consumers.Add(result.metric.consumergroup);
