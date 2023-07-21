@@ -1,25 +1,25 @@
 namespace SelfService.Infrastructure.Api.Prometheus;
 
 
-class Response
+public class Response
 {
     //public string status;
     public Data data;
 }
 
-class Data
+public class Data
 {
     //public string resultType;
     public Result[] result;
 }
 
-class Result
+public class Result
 {
     public Metric metric;
     //public string[] value;
 }
 
-class Metric
+public class Metric
 {
     //public string __name__;
     public string consumergroup;
@@ -27,7 +27,7 @@ class Metric
     //public string instance;
     //public string job;
     //public string namespace;
-    //public string partition;
+    public string partition;
     //public string pod;
     //public string service;
     public string topic;
