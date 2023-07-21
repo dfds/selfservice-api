@@ -31,8 +31,11 @@ stages:
               AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
               AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
               ALLOW_PUSH_CONTAINER: $(ALLOW_PUSH_CONTAINER)
-            displayName: "Push Docker Image"
+            displayName: "Push Docker Images"
             condition: succeeded()
+          - bash: |
+              make manifests BUILD_NUMBER="$(Build.BuildNumber)"
+            displayName: 'Create k8s manifests'
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: manifests"
             inputs:

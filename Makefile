@@ -99,4 +99,4 @@ newmigration:
 nm: newmigration
 
 clean-restore-build: clean restore build
-docker-build-push: publish container deliver
+docker-build-push: publish containers deliver
