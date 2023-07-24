@@ -69,15 +69,7 @@ public class DeactivatedMemberCleanerApplicationService
 
         // membersToBeDeleted = deactivatedMembers
         //     .Concat(notFoundMembers)
-        //     .GroupBy(m => m.Id)
-        //     .Select(group => group.First()) //removal of duplicates if an Id is in both lists, thoug hthis shouldn't happen
-        //     .ToList();
-
-        Console.WriteLine("membersToBeDeleted: " + membersToBeDeleted.Count);
-        foreach (var member in membersToBeDeleted)
-        {
-            Console.WriteLine(member.Id);
-        }
+        //     .ToHashSet().ToList(); //removal of duplicates if an Id is in both lists, though this shouldn't happen
 
         foreach (var member in membersToBeDeleted)
         {
