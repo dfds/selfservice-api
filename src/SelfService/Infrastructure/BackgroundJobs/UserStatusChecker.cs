@@ -8,58 +8,9 @@ using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.BackgroundJobs;
 
-public class User //TODO: refactor out
-{
-    [JsonPropertyName("@odata.context")]
-    public string? OdataContext { get; set; }
-
-    [JsonPropertyName("displayName")]
-    public string? DisplayName { get; set; }
-
-    [JsonPropertyName("accountEnabled")]
-    public bool AccountEnabled { get; set; }
-
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    [JsonPropertyName("mail")]
-    public string? Mail { get; set; }
-
-    [JsonPropertyName("identities")]
-    public List<Identity>? Identities { get; set; }
-}
-
-public class Identity //TODO: refactor out
-{
-    [JsonPropertyName("signInType")]
-    public string? SignInType { get; set; }
-
-    [JsonPropertyName("issuer")]
-    public string? Issuer { get; set; }
-
-    [JsonPropertyName("issuerAssignedId")]
-    public string? IssuerAssignedId { get; set; }
-}
-
-public class AuthTokenResponse
-{
-    [JsonPropertyName("token_type")]
-    public string? TokenType { get; set; }
-
-    [JsonPropertyName("expires_in")]
-    public int ExpiresIn { get; set; }
-
-    [JsonPropertyName("ext_expires_in")]
-    public int ExternalExpiresIn { get; set; }
-
-    [JsonPropertyName("access_token")]
-    public string? AccessToken { get; set; }
-}
-
 public class UserStatusChecker : IUserStatusChecker
 {
-    private readonly ILogger<RemoveDeactivatedMemberships> _logger; //depends on that background job
-    //private readonly SelfServiceDbContext _context;
+    private readonly ILogger<RemoveDeactivatedMemberships> _logger;
     private string? _authToken;
 
     public UserStatusChecker(ILogger<RemoveDeactivatedMemberships> logger)
