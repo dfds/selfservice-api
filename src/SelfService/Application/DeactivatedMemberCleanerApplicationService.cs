@@ -30,61 +30,74 @@ public class DeactivatedMemberCleanerApplicationService
         var members = await _memberRepository.GetAll();
         List<Member> deactivatedMembers = new List<Member>();
         List<Member> notFoundMembers = new List<Member>();
-        StringBuilder sb0 = new StringBuilder();
-        StringBuilder sb1 = new StringBuilder();
+        StringBuilder deactivatedMembersStringBuilder = new StringBuilder();
+        StringBuilder notFoundMembersStringBuilder = new StringBuilder();
         foreach (var member in members)
         {
-            var (isDeactivated,reason) = await userStatusChecker.MakeUserRequest(member.Id);
+            var (isDeactivated,reason) = await userStatusChecker.CheckUserStatus(member.Id);
             if(isDeactivated){
                 if (reason == "NotFound")
                 {
                     notFoundMembers.Add(member);
-                    sb1.AppendLine(member.Id);
-                }else{
+                    notFoundMembersStringBuilder.AppendLine(member.Id);
+                }
+                if (reason == "Deactivated")
+                {
                     deactivatedMembers.Add(member);
-                    sb0.AppendLine(member.Id);
+                    deactivatedMembersStringBuilder.AppendLine(member.Id);
                 }
             }
         }
         if (notFoundMembers.Count <= 0)
         {
             _logger.LogDebug("no users were completely unfound in Azure AD (yay)");
-            return;
         }
         if (deactivatedMembers.Count <= 0)
         {
-            _logger.LogDebug("Found no deactivated users");
-            return;
+            _logger.LogDebug("Found no members with deactivated/disabled accounts");
         }
 
         _logger.LogWarning(
-            "[TRIAL] following {NotFoundmembersCount} users not found in Azure AD:\\n{notfoundUsers}\\n not deleting for now",
-            notFoundMembers.Count, sb1.ToString());
+            "[TRIAL] following {NotFoundmembersCount} members not found in Azure AD:\n{notfoundMembers}\n NOT deleting for now",
+            notFoundMembers.Count, notFoundMembersStringBuilder.ToString());
 
         _logger.LogDebug(
-            "Removing {DeactivatedMembersCount} users, disabled or not found in Azure AD:\\n{DeactivatedUsers}",
-            deactivatedMembers.Count, sb0.ToString());
+            "Removing {DeactivatedMembersCount} members, disabled or not found in Azure AD:\\n{DeactivatedMembers}",
+            deactivatedMembers.Count, deactivatedMembersStringBuilder.ToString());
 
+        List<Member> membersToBeDeleted = deactivatedMembers;
 
-        foreach (var deactivatedMember in deactivatedMembers)
+        // membersToBeDeleted = deactivatedMembers
+        //     .Concat(notFoundMembers)
+        //     .GroupBy(m => m.Id)
+        //     .Select(group => group.First()) //removal of duplicates if an Id is in both lists, thoug hthis shouldn't happen
+        //     .ToList();
+
+        Console.WriteLine("membersToBeDeleted: " + membersToBeDeleted.Count);
+        foreach (var member in membersToBeDeleted)
         {
-            await _membershipRepository.CancelAllMembershipsWithUserId(deactivatedMember.Id);
+            Console.WriteLine(member.Id);
+        }
+
+        foreach (var member in membersToBeDeleted)
+        {
+            await _membershipRepository.CancelAllMembershipsWithUserId(member.Id);
         }
 
         _logger.LogDebug("Successfully cancelled memberships of users with deactivated accounts");
 
-        foreach (var deactivatedMember in deactivatedMembers)
+        foreach (var member in membersToBeDeleted)
         {
-            await _membershipApplicationRepository.RemoveAllWithUserId(deactivatedMember.Id);
+            await _membershipApplicationRepository.RemoveAllWithUserId(member.Id);
         }
 
-        _logger.LogDebug("Successfully removed pending applications of users with deactivated accounts");
+        _logger.LogDebug("Successfully removed pending membership applications of users with deactivated accounts");
 
-        foreach (var deactivatedMember in deactivatedMembers)
+        foreach (var member in membersToBeDeleted)
         {
-            await _memberRepository.Remove(deactivatedMember.Id);
+            await _memberRepository.Remove(member.Id);
         }
 
-        _logger.LogDebug("Successfully removed deactivated members with deactivated accounts");
+        _logger.LogDebug("Successfully removed member entries of users with deactivated accounts");
     }
 }

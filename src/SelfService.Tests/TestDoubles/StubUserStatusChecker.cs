@@ -21,18 +21,18 @@ public class StubUserStatusChecker : IUserStatusChecker
         return; //so we can await it
     }
 
-    public async Task<(bool, string)> MakeUserRequest(string userId)
+    public async Task<(bool, string)> CheckUserStatus(string userId)
     {
         if (userId == "userdeactivated@dfds.com")
         {
-            return (true, "deactivated");
+            return (true, "Deactivated");
         }
         else if (userId == "useractive@dfds.com")
         {
             return (false, "");
         }
         else{
-            return (false, "undefined for this test");
+            return (true, "NotFound"); //undefined for this test
         }
     }
 }

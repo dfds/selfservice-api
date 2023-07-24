@@ -131,14 +131,14 @@ public class UserStatusChecker : IUserStatusChecker
         _logger.LogDebug("[UserStatusChecker] ms-graph authToken has been set");
     }
 
-    public async Task<(bool, string)> MakeUserRequest(string userId)
+    public async Task<(bool, string)> CheckUserStatus(string userId)
     {
         /*
             if the authToken attribute is set, attempts an ms-graph/AzureAD
             request to determine a member's status from the org's PoV
             [!] returns True if a user is DEactivated or not found in AD
 
-            string part of return value is left in for debugging if/when needed
+            string part of return value is left in for debugging and logging
         */
         if (_authToken == null)
         {
@@ -168,7 +168,7 @@ public class UserStatusChecker : IUserStatusChecker
                 {
                     if (!user.AccountEnabled)
                     {
-                        return (true, "deactivated");
+                        return (true, "Deactivated");
                     }
                 }
                 else
@@ -178,7 +178,7 @@ public class UserStatusChecker : IUserStatusChecker
             }
             else if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                return (true, "404");
+                return (true, "NotFound");
             }
             else if (response.StatusCode == HttpStatusCode.Unauthorized)
             {

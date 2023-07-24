@@ -21,7 +21,6 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
     private ILogger<DeactivatedMemberCleanerApplicationService> _logger; //make correct logger
     public DeactivatedMemberCleanerApplicationServiceBuilder()
     {
-
         _membershipRepository = Dummy.Of<IMembershipRepository>();
         _memberRepository = Dummy.Of<IMemberRepository>();
         _membershipApplicationRepository = Dummy.Of<IMembershipApplicationRepository>();

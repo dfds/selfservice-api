@@ -25,7 +25,7 @@ public static class Domain
         builder.Services.AddTransient<IKafkaTopicApplicationService, KafkaTopicApplicationService>();
         builder.Services.AddTransient<IMemberApplicationService, MemberApplicationService>();
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
-        //builder.Services.AddTransient<IRemoveInactiveMembership, RemoveInactiveMemberships>();
+
         // domain services
         builder.Services.AddTransient<MembershipApplicationDomainService>();
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
