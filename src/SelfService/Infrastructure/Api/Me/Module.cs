@@ -22,7 +22,7 @@ public class MeController : ControllerBase
     private readonly IMemberRepository _memberRepository;
     private readonly IMemberApplicationService _memberApplicationService;
 
-    public MeController(IMyCapabilitiesQuery myCapabilitiesQuery, SelfServiceDbContext dbContext, IHostEnvironment hostEnvironment, 
+    public MeController(IMyCapabilitiesQuery myCapabilitiesQuery, SelfServiceDbContext dbContext, IHostEnvironment hostEnvironment,
         ApiResourceFactory apiResourceFactory, IMemberRepository memberRepository, IMemberApplicationService memberApplicationService)
     {
         _myCapabilitiesQuery = myCapabilitiesQuery;
@@ -49,7 +49,7 @@ public class MeController : ControllerBase
         var member = await _memberRepository.FindBy(userId);
 
         return Ok(_apiResourceFactory.Convert(userId, capabilities, member, _hostEnvironment.IsDevelopment(), await ComposeStats()));
-    }
+    } //TODO: remove ComposeStats
 
     [HttpPut("personalinformation")]
     public async Task<IActionResult> UpdatePersonalInformation([FromBody] UpdatePersonalInformationRequest request)
