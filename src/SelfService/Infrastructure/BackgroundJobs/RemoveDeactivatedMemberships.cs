@@ -21,7 +21,7 @@ public class RemoveDeactivatedMemberships : BackgroundService
             while (!stoppingToken.IsCancellationRequested)
             {
                 await DoWork(stoppingToken);
-                await Task.Delay(TimeSpan.FromMinutes(3), stoppingToken);
+                await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
             }
         }, stoppingToken);
     }
