@@ -51,32 +51,32 @@ public class UserStatusChecker : IUserStatusChecker
 
         HttpContent content = new StringContent(formData, System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
 
-        //make request and handle response
+        // Make request and handle response
         try
         {
             HttpResponseMessage response = await client.PostAsync(url, content);
 
-            if (response.IsSuccessStatusCode)
-            {
-                string responseText = await response.Content.ReadAsStringAsync();
-                AuthTokenResponse? authTokenResponse = JsonSerializer.Deserialize<AuthTokenResponse>(responseText);
-                if (authTokenResponse != null)
-                {
-                    _authToken = authTokenResponse.AccessToken;
-                }
-                else
-                {
-                    _logger.LogError($"[UserStatusChecker] Unable to deserialize AuthTokenReponse. Got: {responseText}");
-                }
-            }
-            else
+            if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError($"[UserStatusChecker] Unable to request AccessToken, failed with {response.StatusCode}");
+                return;
             }
+
+            string responseText = await response.Content.ReadAsStringAsync();
+            AuthTokenResponse? authTokenResponse = JsonSerializer.Deserialize<AuthTokenResponse>(responseText);
+
+            if (authTokenResponse == null)
+            {
+                _logger.LogError($"[UserStatusChecker] Unable to deserialize AuthTokenReponse. Got: {responseText}");
+                return;
+            }
+
+            _authToken = authTokenResponse.AccessToken;
         }
         catch (Exception ex)
         {
             _logger.LogError($"[UserStatusChecker] Got exception when trying to request accessToken: {ex.Message} with {ex.InnerException}");
+            return;
         }
 
         _logger.LogDebug("[UserStatusChecker] ms-graph authToken has been set");
@@ -96,8 +96,9 @@ public class UserStatusChecker : IUserStatusChecker
             _logger.LogError("[UserStatusChecker] cannot make user request, `authToken` is not set");
             _logger.LogDebug("[UserStatusChecker] re-attempting to set `authToken`");
             SetAuthToken();
-            if (_authToken == null){ //TODO: throw the right exceptions so this can be a try/catch
-                throw new Exception("No token set");
+            if (_authToken == null)
+            { //TODO: throw the right exceptions so this can be a try/catch
+                throw new Exception("[UserStatusChecker] Service started with no authToken and attempt to set it has failed, exiting");
             }
 
         }
@@ -111,30 +112,33 @@ public class UserStatusChecker : IUserStatusChecker
         {
             HttpResponseMessage response = await client.GetAsync(url);
 
-            if (response.StatusCode == HttpStatusCode.OK)
+            switch (response.StatusCode)
             {
-                string result = await response.Content.ReadAsStringAsync();
-                User? user = JsonSerializer.Deserialize<User>(result);
-                if (user != null)
-                {
-                    if (!user.AccountEnabled)
+                case HttpStatusCode.OK:
                     {
-                        return (true, "Deactivated");
+                        string result = await response.Content.ReadAsStringAsync();
+                        User? user = JsonSerializer.Deserialize<User>(result);
+                        if (user != null)
+                        {
+                            if (!user.AccountEnabled)
+                            {
+                                return (true, "Deactivated");
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogError($"failed to deserialize response for user with id {userId}");
+                        }
+                        break;
                     }
-                }
-                else
-                {
-                    _logger.LogError($"failed to deserialize response for user with id {userId}");
-                }
-            }
-            else if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                return (true, "NotFound");
-            }
-            else if (response.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                _logger.LogError("Bad users (ms-graph) authorization token, exiting");
-                throw new Exception("Bad token");
+                case HttpStatusCode.NotFound:
+                    return (true, "NotFound");
+                case HttpStatusCode.Unauthorized:
+                    _logger.LogError("Bad users (ms-graph) authorization token, exiting");
+                    throw new Exception("Bad token");
+                default:
+                    _logger.LogError($"Unhandled HttpStatusCode: {response.StatusCode}");
+                    break;
             }
         }
         catch (Exception e)
