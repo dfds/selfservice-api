@@ -16,8 +16,6 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
     private IMembershipRepository _membershipRepository ;
     private IMemberRepository _memberRepository;
     private IMembershipApplicationRepository _membershipApplicationRepository;
-    //private SelfServiceDbContext _dbContext;
-    // add fields we need, logger, dbContext, userStatusChecker, etc
     private ILogger<DeactivatedMemberCleanerApplicationService> _logger; //make correct logger
     public DeactivatedMemberCleanerApplicationServiceBuilder()
     {
@@ -26,7 +24,6 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         _membershipApplicationRepository = Dummy.Of<IMembershipApplicationRepository>();
         _logger = Dummy.Of<ILogger<DeactivatedMemberCleanerApplicationService>>();
         _systemTime = SystemTime.Default;
-        //_dbContext = Dummy.OfWithParameters<SelfServiceDbContext>();
     }
 
     public DeactivatedMemberCleanerApplicationServiceBuilder WithMembershipRepository(IMembershipRepository membershipRepository)
