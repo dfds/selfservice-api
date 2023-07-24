@@ -11,7 +11,6 @@ namespace SelfService.Tests.Builders;
 
 public class DeactivatedMemberCleanerApplicationServiceBuilder
 {
-    public NullLogger<SelfService.Application.DeactivatedMemberCleanerApplicationService> logger;
     private SystemTime _systemTime;
     private IMembershipRepository _membershipRepository ;
     private IMemberRepository _memberRepository;
