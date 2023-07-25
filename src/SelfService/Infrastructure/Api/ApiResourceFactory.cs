@@ -718,13 +718,12 @@ public class ApiResourceFactory
     }
 
     public MyProfileApiResource Convert(UserId userId, IEnumerable<Capability> capabilities, Member? member,
-        bool isDevelopment, IEnumerable<Stat> stats)
+        bool isDevelopment)
     {
         return new MyProfileApiResource
         {
             Id = userId,
             Capabilities = capabilities.Select(ConvertToListItem),
-            Stats = stats,
             AutoReloadTopics = !isDevelopment,
             PersonalInformation = member != null
                 ? new PersonalInformationApiResource

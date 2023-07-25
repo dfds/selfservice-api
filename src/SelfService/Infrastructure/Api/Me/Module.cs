@@ -48,8 +48,8 @@ public class MeController : ControllerBase
         var capabilities = await _myCapabilitiesQuery.FindBy(userId);
         var member = await _memberRepository.FindBy(userId);
 
-        return Ok(_apiResourceFactory.Convert(userId, capabilities, member, _hostEnvironment.IsDevelopment(), await ComposeStats()));
-    } //TODO: remove ComposeStats
+        return Ok(_apiResourceFactory.Convert(userId, capabilities, member, _hostEnvironment.IsDevelopment()));
+    }
 
     [HttpPut("personalinformation")]
     public async Task<IActionResult> UpdatePersonalInformation([FromBody] UpdatePersonalInformationRequest request)
@@ -128,7 +128,6 @@ public class MyProfileApiResource
 {
     public string Id { get; set; } = "";
     public IEnumerable<CapabilityListItemApiResource> Capabilities { get; set; } = Enumerable.Empty<CapabilityListItemApiResource>();
-    public IEnumerable<Stat> Stats { get; set; } = Enumerable.Empty<Stat>();
     public bool AutoReloadTopics { get; set; } = true;
     public PersonalInformationApiResource PersonalInformation { get; set; } = new ();
 
