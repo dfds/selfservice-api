@@ -1,12 +1,24 @@
 using System.Net.Http;
-using Newtonsoft.Json;
+using System.Text.Json;
+using SelfService.Domain.Exceptions;
+using SelfService.Application;
 
 namespace SelfService.Infrastructure.Api.Prometheus;
 
 
-public static class PrometheusClient
-{    
-    public static IEnumerable<string> GetConsumersFromResponse(Response? response, string topic)
+public class PrometheusClient: IKafkaTopicConsumerService
+{
+
+    private readonly ILogger<PrometheusClient> _logger;
+    private readonly HttpClient _httpClient;
+
+    public PrometheusClient(ILogger<PrometheusClient> logger, HttpClient httpClient)
+    {
+        _logger = logger;
+        _httpClient = httpClient;
+    }
+
+    private IEnumerable<string> GetConsumersFromResponse(Response? response, string topic)
     {
         List<string> consumers = new List<string>();
         if (response == null || response.data == null || response.data.result == null) {
@@ -24,32 +36,26 @@ public static class PrometheusClient
         return consumers;
     }
 
-    public static async Task<(IEnumerable<string> consumers, string? errorString)> GetConsumersForKafkaTopic(string topic)
+
+    public async Task<IEnumerable<string>> GetConsumersForKafkaTopic(string topic)
     {
-        HttpClient client = new HttpClient();
-        string? prometheus = Environment.GetEnvironmentVariable("SS_PROMETHEUS_API_ENDPOINT");
-        if (string.IsNullOrEmpty(prometheus))
-        {
-            return (new List<string>(), "SS_PROMETHEUS_API_ENDPOINT is not set");
-        }
-        string url = $"{prometheus}/api/v1/query?query=kafka_consumergroup_lag"; // consider time parameter: "&time=1689844553.339"
-        HttpResponseMessage response = await client.GetAsync(url);
+        string url = $"{_httpClient.BaseAddress}/api/v1/query?query=kafka_consumergroup_lag"; // consider time parameter (e.g "&time=1689844553.339")
+        HttpResponseMessage response = await _httpClient.GetAsync(url);
+
+        string jsonstring = await response.Content.ReadAsStringAsync();
+        _logger.LogDebug("Response was {StatusCode} with body {ResponseBody}", response.StatusCode, jsonstring);
 
         if (response.IsSuccessStatusCode)
         {
-            string jsonstring = await response.Content.ReadAsStringAsync();
             if (jsonstring == null)
             {
-                client.Dispose();
-                return (new List<string>(), "Prometheus response is null");
+                throw new KafkaTopicConsumersUnavailable($"Prometheus response is null");
             }
-            Response? promResponse = JsonConvert.DeserializeObject<Response>(jsonstring);
-            client.Dispose();
-            return (GetConsumersFromResponse(promResponse, topic), null);
+            Response? promResponse = JsonSerializer.Deserialize<Response>(jsonstring);
+            return (GetConsumersFromResponse(promResponse, topic));
         }
         else {
-            client.Dispose();
-            return (new List<string>(), $"Prometheus Statuscode: {response.StatusCode}");
+            throw new KafkaTopicConsumersUnavailable($"Prometheus StatusCode: {response.StatusCode}");
         }   
     }
 }

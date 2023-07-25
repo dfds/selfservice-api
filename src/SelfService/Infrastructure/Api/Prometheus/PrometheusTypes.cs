@@ -1,25 +1,29 @@
 namespace SelfService.Infrastructure.Api.Prometheus;
 
+/*
+ * Contains only the types declarations needed for listing consumers.
+ * Remaining types exists as comments for ease of reference.
+ */
 
-public class Response
+public record Response
 {
     //public string status;
     public Data data;
 }
 
-public class Data
+public record Data
 {
     //public string resultType;
     public Result[] result;
 }
 
-public class Result
+public record Result
 {
     public Metric metric;
     //public string[] value;
 }
 
-public class Metric
+public record Metric
 {
     //public string __name__;
     public string consumergroup;

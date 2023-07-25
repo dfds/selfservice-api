@@ -7,7 +7,6 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
-using SelfService.Infrastructure.Api.Prometheus;
 
 namespace SelfService.Infrastructure.Api.Kafka;
 
@@ -24,6 +23,7 @@ public class KafkaTopicController : ControllerBase
     private readonly IKafkaClusterRepository _clusterRepository;
     private readonly IKafkaTopicApplicationService _kafkaTopicApplicationService;
     private readonly IKafkaTopicQuery _kafkaTopicQuery;
+    private readonly IKafkaTopicConsumerService _consumerService;
 
     public KafkaTopicController(
         ILogger<KafkaTopicController> logger,
@@ -34,7 +34,8 @@ public class KafkaTopicController : ControllerBase
         IAuthorizationService authorizationService,
         IKafkaClusterRepository clusterRepository,
         IKafkaTopicApplicationService kafkaTopicApplicationService,
-        IKafkaTopicQuery kafkaTopicQuery)
+        IKafkaTopicQuery kafkaTopicQuery,
+        IKafkaTopicConsumerService consumerService)
     {
         _logger = logger;
         _kafkaTopicRepository = kafkaTopicRepository;
@@ -45,6 +46,7 @@ public class KafkaTopicController : ControllerBase
         _clusterRepository = clusterRepository;
         _kafkaTopicApplicationService = kafkaTopicApplicationService;
         _kafkaTopicQuery = kafkaTopicQuery;
+        _consumerService = consumerService;
     }
 
     [HttpGet("")]
@@ -223,6 +225,7 @@ public class KafkaTopicController : ControllerBase
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
 
     public async Task<IActionResult> GetConsumers(string id)
     {
@@ -265,15 +268,26 @@ public class KafkaTopicController : ControllerBase
             });
         }
 
-        (IEnumerable<string> consumers, string? result) = await PrometheusClient.GetConsumersForKafkaTopic(topic.Name);
-        if (result is not null) {
+        try {
+            IEnumerable<string> consumers = await _consumerService.GetConsumersForKafkaTopic(topic.Name);
+            return Ok(await _apiResourceFactory.Convert(consumers, topic));
+        }
+        catch (KafkaTopicConsumersUnavailable e) {
             return NotFound(new ProblemDetails
             {
                 Title = "Consumers not found",
-                Detail = $"Error from server {result}."
+                Detail = $"PrometheusClient error: {e.Message}."
             });
-        };
-        return Ok(await _apiResourceFactory.Convert(consumers, topic));
+        }
+        /*
+        catch (Exception e) {
+            return Internal(new ProblemDetails //Internal Server Error 
+            {
+                Title = "Unexpected exception",
+                Detail = $"Details: {e.Message}."
+            });
+        }
+        */
     }
 
     [HttpGet("{id:required}/messagecontracts")]

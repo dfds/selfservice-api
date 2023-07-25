@@ -1,43 +1,79 @@
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
+using System.Net;
 using SelfService.Infrastructure.Api.Prometheus;
+using SelfService.Application;
+using Moq;
+using Moq.Protected;
 
 namespace SelfService.Tests.Infrastructure.Api;
 
 public class TestPrometheusClientResultParsing
 {
+    private HttpClient getMockedHttpClient(string mockResponse) {
+        var mockHttpHandler = new Mock<HttpMessageHandler>();
+        mockHttpHandler
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            )
+            .ReturnsAsync(new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(mockResponse)
+            });
+        
+        var httpClient = new HttpClient(mockHttpHandler.Object);
+        httpClient.BaseAddress = new Uri("http://localhost:9090");
+
+        return httpClient;
+    }
+
+
     [Fact]
     public async Task  parsing_failure_produces_empty_list()
     {
         // create dummy input
-        string mock_response = @"{
+        string mockResponse = @"{
             ""status"": ""failure""
         }";
+
+        var loggerMock = new Mock<ILogger<PrometheusClient>>();
+        var httpClient = getMockedHttpClient(mockResponse);
+
+        IKafkaTopicConsumerService service = new PrometheusClient(loggerMock.Object, httpClient);
 
         // define expectations
         var expected = new List<string>();
 
         // apply parser
-        var actual = PrometheusClient.GetConsumersFromResponse(JsonConvert.DeserializeObject<Response>(mock_response), "topic");
-
-        // verify input
-        Assert.Equal(expected, actual);
+        try
+        {
+            var actual = await service.GetConsumersForKafkaTopic("topic");
+            Assert.Equal(expected, actual);
+        }
+        catch(Exception e)
+        {
+            Assert.Fail("Unexpected exception was thrown: " + e.Message);
+        }
     }
-
+    
     [Fact]
     public async Task  parsing_success_with_incomplete_data_produces_empty_list()
     {
         // create dummy input
-        List<string> mock_responses = new List<string>();
-        mock_responses.Append(@"{
+        List<string> mockResponses = new List<string>();
+        mockResponses.Append(@"{
             ""status"": ""success""
         }");
-        mock_responses.Append(@"{
+        mockResponses.Append(@"{
             ""status"": ""success"",
             ""data"": {
                 ""resultType"": ""vector""
             }
         }");
-        mock_responses.Append(@"{
+        mockResponses.Append(@"{
             ""status"": ""success"",
             ""data"": {
                 ""resultType"": ""vector"",
@@ -50,7 +86,7 @@ public class TestPrometheusClientResultParsing
                     },
             }
         }");
-        mock_responses.Append(@"{
+        mockResponses.Append(@"{
             ""status"": ""success"",
             ""data"": {
                 ""resultType"": ""vector"",
@@ -70,9 +106,23 @@ public class TestPrometheusClientResultParsing
         // define expectations
         var expected = new List<string>();
 
-        foreach (string mock in mock_responses) {
-            var actual = PrometheusClient.GetConsumersFromResponse(JsonConvert.DeserializeObject<Response>(mock), "doesnotmatter");
-            Assert.Equal(expected, actual);
+        foreach (string mockResponse in mockResponses) {
+            var loggerMock = new Mock<ILogger<PrometheusClient>>();
+            var httpClient = getMockedHttpClient(mockResponse);
+
+            IKafkaTopicConsumerService service = new PrometheusClient(loggerMock.Object, httpClient);
+
+
+            // apply parser
+            try
+            {
+                var actual = await service.GetConsumersForKafkaTopic("doesnot matter");
+                Assert.Equal(expected, actual);
+            }
+            catch(Exception e)
+            {
+                Assert.Fail("Unexpected exception was thrown: " + e.Message);
+            }
         }
     }
 
@@ -81,7 +131,7 @@ public class TestPrometheusClientResultParsing
     public async Task  parsing_success_with_legal_result_returns_all_consumers_for_topic_across_partitions()
     {
         // create dummy input
-        string mock_response = @"{
+        string mockResponse = @"{
             ""status"": ""success"",
             ""data"": {
                 ""resultType"": ""vector"",
@@ -118,18 +168,41 @@ public class TestPrometheusClientResultParsing
                             123,
                             ""456""
                         ]
-                    },
+                    }
                 ] 
             }
         }";
 
         // verification
         var expected = new List<string>{"consumer1", "consumer2"};
-        var actual = PrometheusClient.GetConsumersFromResponse(JsonConvert.DeserializeObject<Response>(mock_response), "topic");
-        Assert.Equal(expected, actual);
+
+        var loggerMock = new Mock<ILogger<PrometheusClient>>();
+        var httpClient = getMockedHttpClient(mockResponse);
+
+        IKafkaTopicConsumerService service = new PrometheusClient(loggerMock.Object, httpClient);
+
+        // apply parser
+        try
+        {
+            var actual = await service.GetConsumersForKafkaTopic("topic");
+            Assert.Equal(expected, actual);
+        }
+        catch(Exception e)
+        {
+            Assert.Fail("Unexpected exception was thrown: " + e.Message);
+        }
 
         var expected2 = new List<string>{"consumer3"};
-        var actual2 = PrometheusClient.GetConsumersFromResponse(JsonConvert.DeserializeObject<Response>(mock_response), "topic2");
-        Assert.Equal(expected2, actual2);
+        // apply parser
+        try
+        {
+            var actual2 = await service.GetConsumersForKafkaTopic("topic2");
+            Assert.Equal(expected2, actual2);
+        }
+        catch(Exception e)
+        {
+            Assert.Fail("Unexpected exception was thrown: " + e.Message);
+        }
     }
+    
 }

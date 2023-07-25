@@ -8,10 +8,6 @@ builder.ConfigureDafda();
 
 var app = builder.Build();
 app.MapGet("ping", () => Results.Content("Pong!"));
-
-app.MapGet("cluster/prod1/topic/pub.cloudengineering-xxx.this-is-real/consumers", () => Results.Content("consumer-1, consumer-2"));
-app.MapGet("cluster/dev/topic/abc-123/consumers", () => Results.Content("consumer-3"));
-
 app.MapPost("sendnotification", async (HttpContext context) =>
 {
     // print received request
