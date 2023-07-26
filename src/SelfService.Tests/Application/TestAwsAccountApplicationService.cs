@@ -87,7 +87,7 @@ public class TestAwsAccountApplicationService
 
         await sut.CreateAwsAccountRequestTicket(id: AwsAccountId.New());
 
-        Assert.Empty(spy.Headers);
+        Assert.Empty(spy.Headers!);
     }
 
     #region Test Doubles
@@ -172,7 +172,7 @@ public class TestAwsAccountApplicationService
         }
 
         public string? Message { get; private set; }
-        public IDictionary<string, string> Headers { get; set; }
+        public IDictionary<string, string>? Headers { get; set; }
     }
 
     #endregion
