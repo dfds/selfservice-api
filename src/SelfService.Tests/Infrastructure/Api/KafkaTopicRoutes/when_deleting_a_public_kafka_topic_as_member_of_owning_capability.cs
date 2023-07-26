@@ -27,9 +27,10 @@ public class when_deleting_a_public_kafka_topic_as_member_of_owning_capability :
     }
 
     [Fact]
-    public async Task then_response_has_expected_status_code()
+    public Task then_response_has_expected_status_code()
     {
         Assert.Equal((HttpStatusCode) 401, _response.StatusCode);
+        return Task.CompletedTask;
     }
 
     public Task DisposeAsync()

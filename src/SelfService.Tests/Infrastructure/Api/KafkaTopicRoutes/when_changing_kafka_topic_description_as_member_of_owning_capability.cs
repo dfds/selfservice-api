@@ -35,9 +35,10 @@ public class when_changing_kafka_topic_description_as_member_of_owning_capabilit
     }
 
     [Fact]
-    public async Task then_response_has_expected_status_code()
+    public Task then_response_has_expected_status_code()
     {
         Assert.Equal((HttpStatusCode) 204, _response.StatusCode);
+        return Task.CompletedTask;
     }
 
     public Task DisposeAsync()

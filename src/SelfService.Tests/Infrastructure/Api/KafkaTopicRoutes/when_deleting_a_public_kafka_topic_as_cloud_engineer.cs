@@ -32,9 +32,10 @@ public class when_deleting_a_public_kafka_topic_as_cloud_engineer: IAsyncLifetim
     }
 
     [Fact]
-    public async Task then_response_has_expected_status_code()
+    public Task then_response_has_expected_status_code()
     {
         Assert.Equal((HttpStatusCode) 204, _response.StatusCode);
+        return Task.CompletedTask;
     }
 
     public Task DisposeAsync()
