@@ -11,6 +11,12 @@ public class TestPrometheusClientResultParsing
 {
     private HttpClient getMockedHttpClient(string mockResponse) {
         var mockHttpHandler = new Mock<HttpMessageHandler>();
+        var response = new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK,
+            Content = new StringContent(mockResponse)
+        };
+
         mockHttpHandler
             .Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -18,18 +24,13 @@ public class TestPrometheusClientResultParsing
                 ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>()
             )
-            .ReturnsAsync(new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(mockResponse)
-            });
+            .ReturnsAsync(response);
         
         var httpClient = new HttpClient(mockHttpHandler.Object);
         httpClient.BaseAddress = new Uri("http://localhost:9090");
 
         return httpClient;
     }
-
 
     [Fact]
     public async Task  parsing_failure_produces_empty_list()
@@ -58,7 +59,7 @@ public class TestPrometheusClientResultParsing
             Assert.Fail("Unexpected exception was thrown: " + e.Message);
         }
     }
-    
+
     [Fact]
     public async Task  parsing_success_with_incomplete_data_produces_empty_list()
     {
@@ -112,8 +113,6 @@ public class TestPrometheusClientResultParsing
 
             IKafkaTopicConsumerService service = new PrometheusClient(loggerMock.Object, httpClient);
 
-
-            // apply parser
             try
             {
                 var actual = await service.GetConsumersForKafkaTopic("doesnot matter");
@@ -173,15 +172,13 @@ public class TestPrometheusClientResultParsing
             }
         }";
 
-        // verification
-        var expected = new List<string>{"consumer1", "consumer2"};
-
         var loggerMock = new Mock<ILogger<PrometheusClient>>();
         var httpClient = getMockedHttpClient(mockResponse);
 
         IKafkaTopicConsumerService service = new PrometheusClient(loggerMock.Object, httpClient);
 
-        // apply parser
+        // verification
+        var expected = new List<string>{"consumer1", "consumer2"};
         try
         {
             var actual = await service.GetConsumersForKafkaTopic("topic");
@@ -193,7 +190,6 @@ public class TestPrometheusClientResultParsing
         }
 
         var expected2 = new List<string>{"consumer3"};
-        // apply parser
         try
         {
             var actual2 = await service.GetConsumersForKafkaTopic("topic2");
@@ -204,5 +200,4 @@ public class TestPrometheusClientResultParsing
             Assert.Fail("Unexpected exception was thrown: " + e.Message);
         }
     }
-    
 }

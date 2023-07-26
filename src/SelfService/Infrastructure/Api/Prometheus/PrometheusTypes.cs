@@ -1,38 +1,48 @@
+using System.Text.Json.Serialization;
+
 namespace SelfService.Infrastructure.Api.Prometheus;
+
 
 /*
  * Contains only the types declarations needed for listing consumers.
  * Remaining types exists as comments for ease of reference.
  */
 
-public record Response
+public class Response
 {
-    //public string status;
-    public Data data;
+    [JsonPropertyName("status")]
+    public string status { get; set; }
+    [JsonPropertyName("data")]
+    public Data data { get; set; }
 }
 
-public record Data
+public class Data
 {
     //public string resultType;
-    public Result[] result;
+    [JsonPropertyName("result")]
+    public Result[] result { get; set; }
 }
 
-public record Result
+public class Result
 {
-    public Metric metric;
+    [JsonPropertyName("metric")]
+    public Metric metric { get; set; }
     //public string[] value;
 }
 
-public record Metric
+public class Metric
 {
     //public string __name__;
-    public string consumergroup;
+    [JsonPropertyName("consumergroup")]
+    public string consumergroup { get; set; }
     //public string endpoint;
     //public string instance;
     //public string job;
     //public string namespace;
-    public string partition;
+    [JsonPropertyName("partition")]
+    public string partition { get; set; }
     //public string pod;
     //public string service;
-    public string topic;
+    [JsonPropertyName("topic")]
+    public string topic { get; set; }
 }
