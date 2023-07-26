@@ -97,3 +97,6 @@ newmigration:
 		echo "-- $(shell date +'%4Y-%m-%d %H:%M:%S') : $$REPLY" > db/migrations/$(shell date +'%4Y%m%d%H%M%S')_$$REPLY.sql
 
 nm: newmigration
+
+clean-restore-build: clean restore build
+docker-build-push: publish containers deliver
