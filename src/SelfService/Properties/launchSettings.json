@@ -13,7 +13,8 @@
         "DEFAULT_KAFKA_GROUP_ID": "selfservice.consumer",
         "SS_APISPECS_TOPIC": "cloudengineering.selfservice.apispecs",
         "SS_TOPDESK_API_GATEWAY_ENDPOINT": "http://localhost:5051",
-        "SS_TOPDESK_API_GATEWAY_API_KEY": "dummy"
+        "SS_TOPDESK_API_GATEWAY_API_KEY": "dummy",
+        "SS_PROMETHEUS_API_ENDPOINT": "http://localhost:9090"
       }
     }
   }
