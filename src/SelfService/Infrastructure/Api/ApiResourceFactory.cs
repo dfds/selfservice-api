@@ -64,6 +64,12 @@ public class ApiResourceFactory
             allowOnSelf += Delete;
         }
 
+        var consumerAccessLevel = Allow.None;
+        if (await _authorizationService.CanReadConsumers(portalUser, topic))
+        {
+            consumerAccessLevel += Get;
+        }
+
         var messageContractsAccessLevel = Allow.None;
         if (await _authorizationService.CanReadMessageContracts(portalUser, topic))
         {
@@ -107,6 +113,16 @@ public class ApiResourceFactory
                     Rel = "related",
                     Allow = messageContractsAccessLevel
                 },
+                Consumers = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaTopicController.GetConsumers),
+                        controller: GetNameOf<KafkaTopicController>(),
+                        values: new { id = topic.Id }) ?? "?",
+                    Rel = "related",
+                    Allow = consumerAccessLevel
+                },
                 UpdateDescription = await _authorizationService.CanChange(portalUser, topic)
                     ? new ResourceActionLink
                     {
@@ -114,7 +130,7 @@ public class ApiResourceFactory
                             httpContext: HttpContext,
                             action: nameof(KafkaTopicController.ChangeTopicDescription),
                             controller: GetNameOf<KafkaTopicController>(),
-                            values: new { id = topic.Id }) ?? "",
+                            values: new { id = topic.Id }) ?? "?",
                         Method = "PUT",
                     }
                     : null
@@ -471,6 +487,35 @@ public class ApiResourceFactory
                         action: nameof(KafkaTopicController.GetMessageContracts),
                         controller: GetNameOf<KafkaTopicController>(),
                         values: new { id = parentKafkaTopic.Id }) ?? "",
+                    Rel = "self",
+                    Allow = allowedInteractions
+                }
+            }
+        };
+    }
+
+    public async Task<ConsumersListApiResource> Convert(IEnumerable<string> consumers,
+        KafkaTopic topic)
+    {
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanReadConsumers(PortalUser, topic))
+        {
+            allowedInteractions += Get;
+        }
+
+        return new ConsumersListApiResource
+        {
+            Items = consumers
+                .ToArray(),
+            Links =
+            {
+                Self = new ResourceLink
+                {
+                    Href = _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaTopicController.GetConsumers),
+                        controller: GetNameOf<KafkaTopicController>(),
+                        values: new { topicId = topic.Id, clusterId = topic.KafkaClusterId }) ?? "",
                     Rel = "self",
                     Allow = allowedInteractions
                 }

@@ -76,6 +76,15 @@ public class AuthorizationService : IAuthorizationService
         return false;
     }
 
+    public async Task<bool> CanReadConsumers(PortalUser portalUser, KafkaTopic kafkaTopic)
+    {
+        if (await _membershipQuery.HasActiveMembership(portalUser.Id, kafkaTopic.CapabilityId))
+        {
+            return true;
+        }
+        return false;
+    }
+
     public async Task<bool> CanReadMessageContracts(PortalUser portalUser, KafkaTopic kafkaTopic)
     {
         if (kafkaTopic.IsPublic || await _membershipQuery.HasActiveMembership(portalUser.Id, kafkaTopic.CapabilityId))
