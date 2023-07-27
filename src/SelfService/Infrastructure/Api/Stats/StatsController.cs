@@ -41,39 +41,52 @@ public class StatsController : ControllerBase
 
     private async Task<Stat[]> ComposeStats()
     {
+        //first fetch/compute the values:
+        int capabilitiesStat = await _dbContext.Capabilities
+                    .Where(x => x.Deleted == null)
+                    .CountAsync();
+
+        int awsAccountsStat =  await _dbContext.AwsAccounts.CountAsync();
+
+        int kubernetesClustersStat = 1; //don't ask
+
+        int kafkaClustersStat = await _dbContext.KafkaClusters
+                    .Where(x => x.Enabled)
+                    .CountAsync();
+
+        int publicTopicsStat = await _dbContext.KafkaTopics
+                    .Where(x => ((string) x.Name).StartsWith("pub."))
+                    .CountAsync();
+
+        int privateTopicsStat = await _dbContext.KafkaTopics
+                    .Where(x => !((string) x.Name).StartsWith("pub."))
+                    .CountAsync();
+
         return new Stat[]
         {
             new Stat(
                 Title: "Capabilities",
-                Value: await _dbContext.Capabilities
-                    .Where(x => x.Deleted == null)
-                    .CountAsync()
+                Value: capabilitiesStat
             ),
             new Stat(
                 Title: "AWS Accounts",
-                Value: await _dbContext.AwsAccounts.CountAsync()
+                Value: awsAccountsStat
             ),
             new Stat(
                 Title: "Kubernetes Clusters",
-                Value: 1
+                Value: kubernetesClustersStat
             ),
             new Stat(
                 Title: "Kafka Clusters",
-                Value: await _dbContext.KafkaClusters
-                    .Where(x => x.Enabled)
-                    .CountAsync()
+                Value: kafkaClustersStat
             ),
             new Stat(
                 Title: "Public Topics",
-                Value: await _dbContext.KafkaTopics
-                    .Where(x => ((string) x.Name).StartsWith("pub."))
-                    .CountAsync()
+                Value: publicTopicsStat
             ),
             new Stat(
                 Title: "Private Topics",
-                Value: await _dbContext.KafkaTopics
-                    .Where(x => !((string) x.Name).StartsWith("pub."))
-                    .CountAsync()
+                Value: privateTopicsStat
             ),
         };
     }
