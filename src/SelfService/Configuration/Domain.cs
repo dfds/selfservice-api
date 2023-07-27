@@ -1,4 +1,5 @@
-﻿using SelfService.Application;
+﻿using AspNetCore.Proxy;
+using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
@@ -73,18 +74,26 @@ public static class Domain
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
 
-        var endpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
-        var apiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
+        var topdeskEndpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
+        var topdeskApiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
         builder.Services.AddHttpClient<ITicketingSystem, TopDesk>(client =>
         {
-            client.BaseAddress = endpoint;
-            client.DefaultRequestHeaders.Add("x-api-key", apiKey);
+            client.BaseAddress = topdeskEndpoint;
+            client.DefaultRequestHeaders.Add("x-api-key", topdeskApiKey);
         });
 
         var prometheusEndpoint = new Uri(builder.Configuration["SS_PROMETHEUS_API_ENDPOINT"] ?? "");
         builder.Services.AddHttpClient<IKafkaTopicConsumerService, PrometheusClient>(client => 
         {
             client.BaseAddress = prometheusEndpoint;
+        });
+        
+        var dataPlatformEndpoint = new Uri(builder.Configuration["SS_DATA_PLATFORM_API_ENDPOINT"] ?? "");
+        var dataPlatformApiKey = builder.Configuration["SS_DATA_PLATFORM_API_KEY"];
+        builder.Services.AddProxies(client =>
+        {
+            client.BaseAddress = dataPlatformEndpoint;
+            client.DefaultRequestHeaders.Add("x-api-key",dataPlatformApiKey);
         });
     }
 }

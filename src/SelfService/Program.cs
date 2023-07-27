@@ -51,15 +51,9 @@ try
     app.MapControllers().RequireAuthorization();
 
     app.MapEndpoints();
+    app.MapProxies();
 
     app.UseHttpMetrics();
-
-    app.UseProxies(proxies =>
-    {
-        proxies.Map("/api/data/timeseries/finout",
-            proxy => proxy.UseHttp((_, args) =>
-                $"http://localhost:8070/api/data/timeseries/finout"));
-    });
 
     app.UseSerilogRequestLogging();
 
