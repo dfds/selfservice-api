@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http;
+using Microsoft.AspNetCore.Http;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
@@ -21,6 +23,7 @@ public class KafkaTopicController : ControllerBase
     private readonly IKafkaClusterRepository _clusterRepository;
     private readonly IKafkaTopicApplicationService _kafkaTopicApplicationService;
     private readonly IKafkaTopicQuery _kafkaTopicQuery;
+    private readonly IKafkaTopicConsumerService _consumerService;
 
     public KafkaTopicController(
         ILogger<KafkaTopicController> logger,
@@ -31,7 +34,8 @@ public class KafkaTopicController : ControllerBase
         IAuthorizationService authorizationService,
         IKafkaClusterRepository clusterRepository,
         IKafkaTopicApplicationService kafkaTopicApplicationService,
-        IKafkaTopicQuery kafkaTopicQuery)
+        IKafkaTopicQuery kafkaTopicQuery,
+        IKafkaTopicConsumerService consumerService)
     {
         _logger = logger;
         _kafkaTopicRepository = kafkaTopicRepository;
@@ -42,6 +46,7 @@ public class KafkaTopicController : ControllerBase
         _clusterRepository = clusterRepository;
         _kafkaTopicApplicationService = kafkaTopicApplicationService;
         _kafkaTopicQuery = kafkaTopicQuery;
+        _consumerService = consumerService;
     }
 
     [HttpGet("")]
@@ -214,6 +219,75 @@ public class KafkaTopicController : ControllerBase
 
         await _kafkaTopicApplicationService.DeleteKafkaTopic(kafkaTopicId, userId);
         return NoContent();
+    }
+
+    [HttpGet("{id:required}/consumers")]
+    [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+
+    public async Task<IActionResult> GetConsumers(string id)
+    {
+
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"User is unknown to the system."
+            });
+        }
+
+        if (!KafkaTopicId.TryParse(id, out var kafkaTopicId))
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
+        }
+
+        var topic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
+        if (topic is null)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Topic not found",
+                Detail = $"Topic with id \"{id}\" could not be found."
+            });
+        }
+
+        // Note: Currently consumers can only be seen by members of the capability to which they topic belongs.
+        if (!await _authorizationService.CanReadConsumers(User.ToPortalUser(), topic))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Access denied",
+                Detail = $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+            });
+        }
+
+        try {
+            IEnumerable<string> consumers = await _consumerService.GetConsumersForKafkaTopic(topic.Name);
+            return Ok(await _apiResourceFactory.Convert(consumers, topic));
+        }
+        catch (KafkaTopicConsumersUnavailable e) {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Consumers not found",
+                Detail = $"PrometheusClient error: {e.Message}."
+            });
+        }
+        /*
+        catch (Exception e) {
+            return Internal(new ProblemDetails //Internal Server Error 
+            {
+                Title = "Unexpected exception",
+                Detail = $"Details: {e.Message}."
+            });
+        }
+        */
     }
 
     [HttpGet("{id:required}/messagecontracts")]
