@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
-using SelfService.Domain.Queries;
-using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
+using SelfService.Domain.Queries;
+using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.System;
 using static SelfService.Infrastructure.Api.Method;
 
