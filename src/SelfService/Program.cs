@@ -1,3 +1,4 @@
+using AspNetCore.Proxy;
 using Prometheus;
 using SelfService;
 using SelfService.Configuration;
@@ -9,6 +10,7 @@ using SelfService.Infrastructure.Metrics;
 using SelfService.Infrastructure.Persistence;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(theme: AnsiConsoleTheme.Code)
     .CreateBootstrapLogger();
@@ -47,11 +49,17 @@ try
     app.UseAuthorization();
 
     app.MapControllers().RequireAuthorization();
-    
+
     app.MapEndpoints();
 
     app.UseHttpMetrics();
-    
+
+    app.UseProxies(proxies =>
+    {
+        proxies.Map("/api/data/timeseries/finout",
+            proxy => proxy.UseHttp((_, args) =>
+                $"http://localhost:8070/api/data/timeseries/finout"));
+    });
 
     app.UseSerilogRequestLogging();
 

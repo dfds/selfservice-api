@@ -1,4 +1,5 @@
-﻿using SelfService.Application;
+﻿using AspNetCore.Proxy;
+using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
@@ -79,5 +80,7 @@ public static class Domain
             client.BaseAddress = endpoint;
             client.DefaultRequestHeaders.Add("x-api-key", apiKey);
         });
+
+        builder.Services.AddProxies();
     }
 }
