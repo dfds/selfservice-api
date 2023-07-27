@@ -9,6 +9,7 @@ using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Infrastructure.Ticketing;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using SelfService.Infrastructure.Api.Prometheus;
 
 namespace SelfService.Configuration;
 
@@ -78,6 +79,12 @@ public static class Domain
         {
             client.BaseAddress = endpoint;
             client.DefaultRequestHeaders.Add("x-api-key", apiKey);
+        });
+
+        var prometheusEndpoint = new Uri(builder.Configuration["SS_PROMETHEUS_API_ENDPOINT"] ?? "");
+        builder.Services.AddHttpClient<IKafkaTopicConsumerService, PrometheusClient>(client => 
+        {
+            client.BaseAddress = prometheusEndpoint;
         });
     }
 }
