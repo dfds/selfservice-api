@@ -627,13 +627,13 @@ public class ApiResourceFactory
             }
 
             items.Add(new KafkaClusterAccessListItemApiResource
-            {
-                Id = cluster.Id,
-                Name = cluster.Name,
-                Description = cluster.Description,
-                Links =
-                {
-                    Access =
+            (
+                id: cluster.Id,
+                name: cluster.Name,
+                description: cluster.Description,
+                links: new KafkaClusterAccessListItemApiResource.KafkaClusterAccessListItem
+                (
+                    access: new ResourceLink
                     {
                         Href = _linkGenerator.GetUriByAction(
                             httpContext: HttpContext,
@@ -643,7 +643,7 @@ public class ApiResourceFactory
                         Rel = "related",
                         Allow = accessAllow
                     },
-                    Topics =
+                    topics: new ResourceLink
                     {
                         Href = _linkGenerator.GetUriByAction(
                             httpContext: HttpContext,
@@ -653,7 +653,7 @@ public class ApiResourceFactory
                         Rel = "related",
                         Allow = { Get }
                     },
-                    RequestAccess =
+                    requestAccess: new ResourceLink
                     {
                         Href = _linkGenerator.GetUriByAction(
                             httpContext: HttpContext,
@@ -663,7 +663,7 @@ public class ApiResourceFactory
                         Rel = "self",
                         Allow = requestAccessAllow
                     },
-                    CreateTopic =
+                    createTopic: new ResourceLink
                     {
                         Href = _linkGenerator.GetUriByAction(
                             httpContext: HttpContext,
@@ -673,16 +673,16 @@ public class ApiResourceFactory
                         Rel = "self",
                         Allow = createTopicAllow
                     }
-                }
-            });
+                )
+            ));
         }
 
         var resource = new KafkaClusterAccessListApiResource
-        {
-            Items = items.ToArray(),
-            Links =
-            {
-                Self =
+        (
+            items: items.ToArray(),
+            links: new KafkaClusterAccessListApiResource.KafkaClusterAccessList
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -692,8 +692,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = { Get }
                 }
-            }
-        };
+            )
+        );
         return resource;
     }
 
@@ -740,15 +740,15 @@ public class ApiResourceFactory
         }
 
         return new KafkaTopicListApiResource
-        {
-            Items = list.ToArray(),
-            Embedded =
-            {
-                KafkaClusters = Convert(clusters)
-            },
-            Links =
-            {
-                Self = new ResourceLink
+        (
+            items: list.ToArray(),
+            embedded: new KafkaTopicListApiResource.KafkaTopicListEmbeddedResources
+            (
+                kafkaClusters: Convert(clusters)
+            ),
+            links: new KafkaTopicListApiResource.KafkaTopicListLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -758,8 +758,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = { Get }
                 }
-            }
-        };
+            )
+        );
     }
 
     public MyProfileApiResource Convert(UserId userId, IEnumerable<Capability> capabilities, Member? member,
