@@ -82,18 +82,18 @@ public class ApiResourceFactory
         }
 
         var result = new KafkaTopicApiResource
-        {
-            Id = topic.Id,
-            Name = topic.Name,
-            Description = topic.Description,
-            CapabilityId = topic.CapabilityId,
-            KafkaClusterId = topic.KafkaClusterId,
-            Partitions = topic.Partitions,
-            Retention = topic.Retention,
-            Status = topic.Status.ToString(),
-            Links =
-            {
-                Self = new ResourceLink
+        (
+            id: topic.Id,
+            name: topic.Name,
+            description: topic.Description,
+            capabilityId: topic.CapabilityId,
+            kafkaClusterId: topic.KafkaClusterId,
+            partitions: topic.Partitions,
+            retention: topic.Retention,
+            status: topic.Status.ToString(),
+            links: new KafkaTopicApiResource.KafkaTopicLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -103,7 +103,7 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = allowOnSelf
                 },
-                MessageContracts = new ResourceLink
+                messageContracts: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -113,7 +113,7 @@ public class ApiResourceFactory
                     Rel = "related",
                     Allow = messageContractsAccessLevel
                 },
-                Consumers = new ResourceLink
+                consumers: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -123,7 +123,7 @@ public class ApiResourceFactory
                     Rel = "related",
                     Allow = consumerAccessLevel
                 },
-                UpdateDescription = await _authorizationService.CanChange(portalUser, topic)
+                updateDescription: await _authorizationService.CanChange(portalUser, topic)
                     ? new ResourceActionLink
                     {
                         Href = _linkGenerator.GetUriByAction(
@@ -134,8 +134,8 @@ public class ApiResourceFactory
                         Method = "PUT",
                     }
                     : null
-            }
-        };
+            )
+        );
 
         return result;
     }
