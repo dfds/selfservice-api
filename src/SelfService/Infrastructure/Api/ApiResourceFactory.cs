@@ -569,13 +569,13 @@ public class ApiResourceFactory
         MembershipApplicationId parentApplicationId, Allow allowedInteractions)
     {
         return new MembershipApprovalListApiResource
-        {
-            Items = approvals
+        (
+            items: approvals
                 .Select(Convert)
                 .ToArray(),
-            Links =
-            {
-                Self =
+            links: new MembershipApprovalListApiResource.MembershipApprovalListLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -585,8 +585,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = allowedInteractions
                 }
-            }
-        };
+            )
+        );
     }
 
     private static MembershipApprovalApiResource Convert(MembershipApproval approval)
