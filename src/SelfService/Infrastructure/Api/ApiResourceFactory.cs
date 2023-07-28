@@ -592,11 +592,11 @@ public class ApiResourceFactory
     private static MembershipApprovalApiResource Convert(MembershipApproval approval)
     {
         return new MembershipApprovalApiResource
-        {
-            Id = approval.Id.ToString("N"),
-            ApprovedBy = approval.ApprovedBy,
-            ApprovedAt = approval.ApprovedAt.ToUniversalTime().ToString("O")
-        };
+        (
+            id: approval.Id.ToString("N"),
+            approvedBy: approval.ApprovedBy,
+            approvedAt: approval.ApprovedAt.ToUniversalTime().ToString("O")
+        );
     }
 
     public async Task<KafkaClusterAccessListApiResource> Convert(CapabilityId capabilityId,
