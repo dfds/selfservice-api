@@ -165,13 +165,13 @@ public class ApiResourceFactory
     private static MemberApiResource Convert(Member member)
     {
         return new MemberApiResource
-        {
-            Id = member.Id.ToString(),
-            Name = member.DisplayName,
-            Email = member.Email,
+        (
+            id: member.Id.ToString(),
+            name: member.DisplayName,
+            email: member.Email
 
             // Note: [jandr] current design does not include the need for links
-        };
+        );
     }
 
     public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
