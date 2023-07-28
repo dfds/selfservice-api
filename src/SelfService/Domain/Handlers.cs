@@ -40,13 +40,13 @@ public class PlaceholderHandler : IMessageHandler<Placeholder>
         else
         {
             serviceDescription = new ServiceDescription
-            {
-                Id = Guid.NewGuid(),
-                Name = message.Name,
-                Namespace = message.Namespace,
-                Spec = message.OpenApiSpec,
-                CreatedAt = DateTime.UtcNow
-            };
+            (
+                id: Guid.NewGuid(),
+                name: message.Name,
+                @namespace: message.Namespace,
+                spec: message.OpenApiSpec,
+                createdAt: DateTime.UtcNow
+            );
 
             await _dbContext.AddAsync(serviceDescription);
         }
