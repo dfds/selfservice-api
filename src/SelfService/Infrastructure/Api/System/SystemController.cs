@@ -17,7 +17,7 @@ public class SystemController : ControllerBase
     }
 
     [HttpGet("stats/topvisitors")]
-    public async Task<IActionResult> GetTopVisitors()
+    public IActionResult GetTopVisitors()
     {
         var visitorRecords = _topVisitorsRepository.GetAll();
         return Ok(new
