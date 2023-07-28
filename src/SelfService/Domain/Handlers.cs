@@ -12,6 +12,13 @@ public class Placeholder
     public string Name { get; set; }
     public string Namespace { get; set; }
     public string OpenApiSpec { get; set; }
+
+    public Placeholder(string name, string @namespace, string openApiSpec)
+    {
+        Name = name;
+        Namespace = @namespace;
+        OpenApiSpec = openApiSpec;
+    }
 }
 
 public class PlaceholderHandler : IMessageHandler<Placeholder>
