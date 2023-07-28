@@ -107,7 +107,7 @@ public class SelfServiceDbContext : DbContext
 
         configurationBuilder
             .Properties<MembershipApplicationStatusOptions>()
-            .HaveConversion<string>();
+            .HaveConversion<MembershipApplicationStatusOptionsConverter>();
 
         configurationBuilder
             .Properties<KafkaTopicPartitions>()
