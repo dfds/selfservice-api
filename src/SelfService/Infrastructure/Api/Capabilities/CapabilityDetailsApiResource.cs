@@ -9,16 +9,35 @@ public class CapabilityDetailsApiResource
     public string Description { get; set; }
 
     [JsonPropertyName("_links")]
-    public CapabilityDetailsLinks Links { get; set; } = new();
+    public CapabilityDetailsLinks Links { get; set; }
 
     public class CapabilityDetailsLinks
     {
-        public ResourceLink Self { get; set; } = new();
-        public ResourceLink Members { get; set; } = new();
-        public ResourceLink Clusters { get; set; } = new();
-        public ResourceLink MembershipApplications { get; set; } = new();
-        public ResourceLink LeaveCapability { get; set; } = new();
-        public ResourceLink AwsAccount { get; set; } = new();
+        public ResourceLink Self { get; set; }
+        public ResourceLink Members { get; set; }
+        public ResourceLink Clusters { get; set; }
+        public ResourceLink MembershipApplications { get; set; }
+        public ResourceLink LeaveCapability { get; set; }
+        public ResourceLink AwsAccount { get; set; }
+
+        public CapabilityDetailsLinks(ResourceLink self, ResourceLink members, ResourceLink clusters, ResourceLink membershipApplications, ResourceLink leaveCapability, ResourceLink awsAccount)
+        {
+            Self = self;
+            Members = members;
+            Clusters = clusters;
+            MembershipApplications = membershipApplications;
+            LeaveCapability = leaveCapability;
+            AwsAccount = awsAccount;
+        }
+
+    }
+
+    public CapabilityDetailsApiResource(string id, string name, string description, CapabilityDetailsLinks links)
+    {
+        Id = id;
+        Name = name;
+        Description = description;
+        Links = links;
     }
 }
 

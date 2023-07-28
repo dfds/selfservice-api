@@ -332,20 +332,20 @@ public class ApiResourceFactory
     public async Task<CapabilityDetailsApiResource> Convert(Capability capability)
     {
         return new CapabilityDetailsApiResource
-        {
-            Id = capability.Id,
-            Name = capability.Name,
-            Description = capability.Description,
-            Links =
-            {
-                Self = CreateSelfLinkFor(capability),
-                Members = CreateMembersLinkFor(capability),
-                Clusters = CreateClusterAccessLinkFor(capability),
-                MembershipApplications = await CreateMembershipApplicationsLinkFor(capability),
-                LeaveCapability = await CreateLeaveCapabilityLinkFor(capability),
-                AwsAccount = await CreateAwsAccountLinkFor(capability),
-            },
-        };
+        (
+            id: capability.Id,
+            name: capability.Name,
+            description: capability.Description,
+            links: new CapabilityDetailsApiResource.CapabilityDetailsLinks
+            (
+                self: CreateSelfLinkFor(capability),
+                members: CreateMembersLinkFor(capability),
+                clusters: CreateClusterAccessLinkFor(capability),
+                membershipApplications: await CreateMembershipApplicationsLinkFor(capability),
+                leaveCapability: await CreateLeaveCapabilityLinkFor(capability),
+                awsAccount: await CreateAwsAccountLinkFor(capability)
+            )
+        );
     }
 
     public async Task<AwsAccountApiResource> Convert(AwsAccount account)
