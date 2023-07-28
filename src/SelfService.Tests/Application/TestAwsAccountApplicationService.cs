@@ -172,7 +172,7 @@ public class TestAwsAccountApplicationService
         }
 
         public string? Message { get; private set; }
-        public IDictionary<string, string> Headers { get; set; }
+        public IDictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
     }
 
     #endregion
