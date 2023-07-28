@@ -199,13 +199,13 @@ public class ApiResourceFactory
     public CapabilityListItemApiResource ConvertToListItem(Capability capability)
     {
         return new CapabilityListItemApiResource
-        {
-            Id = capability.Id,
-            Name = capability.Name,
-            Description = capability.Description,
-            Links =
-            {
-                Self =
+        (
+            id: capability.Id,
+            name: capability.Name,
+            description: capability.Description,
+            links: new CapabilityListItemApiResource.CapabilityListItemLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -214,9 +214,9 @@ public class ApiResourceFactory
                         values: new { id = capability.Id }) ?? "",
                     Rel = "self",
                     Allow = { Get }
-                },
-            },
-        };
+                }
+            )
+        );
     }
 
     private async Task<ResourceLink> CreateMembershipApplicationsLinkFor(Capability capability)

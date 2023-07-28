@@ -48,10 +48,24 @@ public class CapabilityListItemApiResource
     public string Description { get; set; }
 
     [JsonPropertyName("_links")]
-    public CapabilityListItemLinks Links { get; set; } = new();
+    public CapabilityListItemLinks Links { get; set; }
 
     public class CapabilityListItemLinks
     {
-        public ResourceLink Self { get; set; } = new();
+        public ResourceLink Self { get; set; }
+
+        public CapabilityListItemLinks(ResourceLink self)
+        {
+            Self = self;
+        }
     }
+
+    public CapabilityListItemApiResource(string id, string name, string description, CapabilityListItemLinks links)
+    {
+        Id = id;
+        Name = name;
+        Description = description;
+        Links = links;
+    }
+
 }
