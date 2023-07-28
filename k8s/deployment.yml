@@ -47,6 +47,8 @@ spec:
                 name: selfservice-api-topdesk
             - secretRef:
                 name: selfservice-api-msgraph
+            - secretRef:
+                name: selfservice-api-dataplatform
           resources:
             requests:
               memory: "50Mi"
