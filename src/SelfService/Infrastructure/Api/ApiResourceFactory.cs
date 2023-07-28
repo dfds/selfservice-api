@@ -143,13 +143,13 @@ public class ApiResourceFactory
     public CapabilityMembersApiResource Convert(string id, IEnumerable<Member> members)
     {
         return new CapabilityMembersApiResource
-        {
-            Items = members
+        (
+            items: members
                 .Select(Convert)
                 .ToArray(),
-            Links =
-            {
-                Self = new ResourceLink
+            links: new CapabilityMembersApiResource.CapabilityMembersLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -158,8 +158,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = { Get }
                 }
-            }
-        };
+            )
+        );
     }
 
     private static MemberApiResource Convert(Member member)
@@ -504,12 +504,12 @@ public class ApiResourceFactory
         }
 
         return new ConsumersListApiResource
-        {
-            Items = consumers
+        (
+            items: consumers
                 .ToArray(),
-            Links =
-            {
-                Self = new ResourceLink
+            links: new ConsumersListApiResource.ConsumersListLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -519,8 +519,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = allowedInteractions
                 }
-            }
-        };
+            )
+        );
     }
 
     public MembershipApplicationApiResource Convert(MembershipApplication application, UserId currentUser)
