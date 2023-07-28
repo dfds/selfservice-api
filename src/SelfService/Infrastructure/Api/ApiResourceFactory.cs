@@ -177,13 +177,13 @@ public class ApiResourceFactory
     public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
     {
         return new CapabilityListApiResource
-        {
-            Items = capabilities
+        (
+            items: capabilities
                 .Select(ConvertToListItem)
                 .ToArray(),
-            Links =
-            {
-                Self = new ResourceLink
+            links: new CapabilityListApiResource.CapabilityListLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -192,8 +192,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = { Get }
                 }
-            }
-        };
+            )
+        );
     }
 
     public CapabilityListItemApiResource ConvertToListItem(Capability capability)
