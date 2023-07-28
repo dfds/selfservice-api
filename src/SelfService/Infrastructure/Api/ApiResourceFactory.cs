@@ -418,13 +418,13 @@ public class ApiResourceFactory
     public KafkaClusterListApiResource Convert(IEnumerable<KafkaCluster> clusters)
     {
         return new KafkaClusterListApiResource
-        {
-            Items = clusters
+        (
+            items: clusters
                 .Select(Convert)
                 .ToArray(),
-            Links =
-            {
-                Self = new ResourceLink
+            links: new KafkaClusterListApiResource.KafkaClusterListLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -433,8 +433,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = { Get }
                 }
-            }
-        };
+            )
+        );
     }
 
     public MessageContractApiResource Convert(MessageContract messageContract)
