@@ -49,13 +49,13 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         var capability = await _capabilityRepository.Get(account.CapabilityId);
 
         var message = CreateMessage("", new ContextAddedToCapabilityData
-        {
-            CapabilityId = capability.Id,
-            CapabilityName = capability.Name,
-            CapabilityRootId = capability.Id,
-            ContextId = account.Id,
-            ContextName = "default"
-        });
+        (
+            capabilityId: capability.Id,
+            capabilityName: capability.Name,
+            capabilityRootId: capability.Id,
+            contextId: account.Id,
+            contextName: "default"
+        ));
 
         var headers = new Dictionary<string, string>();
 
@@ -114,5 +114,14 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         public string CapabilityRootId { get; set; }
         public string ContextId { get; set; }
         public string ContextName { get; set; }
+
+        public ContextAddedToCapabilityData(string capabilityId, string capabilityName, string capabilityRootId, string contextId, string contextName)
+        {
+            CapabilityId = capabilityId;
+            CapabilityName = capabilityName;
+            CapabilityRootId = capabilityRootId;
+            ContextId = contextId;
+            ContextName = contextName;
+        }
     }
 }

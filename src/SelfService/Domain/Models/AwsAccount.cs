@@ -47,9 +47,9 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
             requestedBy: requestedBy);
 
         account.Raise(new AwsAccountRequested
-        {
-            AccountId = account.Id
-        });
+        (
+            accountId: account.Id
+        ));
 
         return account;
     }
