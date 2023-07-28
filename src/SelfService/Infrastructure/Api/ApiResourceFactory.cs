@@ -707,13 +707,13 @@ public class ApiResourceFactory
         }
 
         var resource = new MembershipApplicationListApiResource
-        {
-            Items = applications
+        (
+            items: applications
                 .Select(application => Convert(application, userId))
                 .ToArray(),
-            Links =
-            {
-                Self = new ResourceLink
+            links: new MembershipApplicationListApiResource.MembershipApplicationListLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                                httpContext: HttpContext,
@@ -724,8 +724,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = allowedInteractions
                 }
-            }
-        };
+            )
+        );
         return resource;
     }
 
