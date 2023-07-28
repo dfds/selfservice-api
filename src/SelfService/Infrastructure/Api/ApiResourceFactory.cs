@@ -404,15 +404,15 @@ public class ApiResourceFactory
         };
 
         return new KafkaClusterApiResource
-        {
-            Id = cluster.Id,
-            Name = cluster.Name,
-            Description = cluster.Description,
-            Links =
-            {
-                Self = resourceLink
-            }
-        };
+        (
+            id: cluster.Id,
+            name: cluster.Name,
+            description: cluster.Description,
+            links: new KafkaClusterApiResource.KafkaClusterLinks
+            (
+                self: resourceLink
+            )
+        );
     }
 
     public KafkaClusterListApiResource Convert(IEnumerable<KafkaCluster> clusters)
