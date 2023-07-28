@@ -543,15 +543,15 @@ public class ApiResourceFactory
         }
 
         return new MembershipApplicationApiResource
-        {
-            Id = application.Id.ToString(),
-            Applicant = application.Applicant,
-            SubmittedAt = application.SubmittedAt.ToUniversalTime().ToString("O"),
-            ExpiresOn = application.ExpiresOn.ToUniversalTime().ToString("O"),
-            Approvals = Convert(approvals, application.Id, allowedApprovalInteractions),
-            Links =
-            {
-                Self =
+        (
+            id: application.Id.ToString(),
+            applicant: application.Applicant,
+            submittedAt: application.SubmittedAt.ToUniversalTime().ToString("O"),
+            expiresOn: application.ExpiresOn.ToUniversalTime().ToString("O"),
+            approvals: Convert(approvals, application.Id, allowedApprovalInteractions),
+            links: new MembershipApplicationApiResource.MembershipApplicationLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -561,8 +561,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = { Get }
                 }
-            }
-        };
+            )
+        );
     }
 
     private MembershipApprovalListApiResource Convert(IEnumerable<MembershipApproval> approvals,
