@@ -115,7 +115,7 @@ public class MembershipApplicationService : IMembershipApplicationService
 
         var application = await _membershipApplicationRepository.Get(applicationId);
 
-        if (await _membershipApplicationDomainService.CanBeFinalized(application))
+        if (_membershipApplicationDomainService.CanBeFinalized(application))
         {
             application.FinalizeApprovals();
 

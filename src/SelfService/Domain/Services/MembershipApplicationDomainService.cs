@@ -14,7 +14,7 @@ public class MembershipApplicationDomainService
         _membershipQuery = membershipQuery;
     }
 
-    public async Task<bool> CanBeFinalized(MembershipApplication application)
+    public bool CanBeFinalized(MembershipApplication application)
     {
         var approvalCount = application.Approvals.Count();
 
