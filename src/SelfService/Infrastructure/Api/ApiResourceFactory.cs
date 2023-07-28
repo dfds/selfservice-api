@@ -474,13 +474,13 @@ public class ApiResourceFactory
         }
 
         return new MessageContractListApiResource
-        {
-            Items = contracts
+        (
+            items: contracts
                 .Select(Convert)
                 .ToArray(),
-            Links =
-            {
-                Self = new ResourceLink
+            links: new MessageContractListApiResource.MessageContractListLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -490,8 +490,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = allowedInteractions
                 }
-            }
-        };
+            )
+        );
     }
 
     public async Task<ConsumersListApiResource> Convert(IEnumerable<string> consumers,
