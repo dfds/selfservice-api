@@ -357,15 +357,15 @@ public class ApiResourceFactory
         }
 
         return new AwsAccountApiResource
-        {
-            Id = account.Id,
-            AccountId = account.Registration.AccountId?.ToString(),
-            RoleEmail = account.Registration.RoleEmail,
-            Namespace = account.KubernetesLink.Namespace,
-            Status = Convert(account.Status),
-            Links =
-            {
-                Self = new ResourceLink
+        (
+            id: account.Id,
+            accountId: account.Registration.AccountId?.ToString(),
+            roleEmail: account.Registration.RoleEmail,
+            @namespace: account.KubernetesLink.Namespace,
+            status: Convert(account.Status),
+            links: new AwsAccountApiResource.AwsAccountLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -375,8 +375,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = allowedInteractions
                 }
-            }
-        };
+            )
+        );
     }
 
     private static string Convert(AwsAccountStatus accountStatus)
