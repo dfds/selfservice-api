@@ -39,7 +39,7 @@ public class when_getting_public_topics_as_a_cloud_engineer : IAsyncLifetime
     }
 
     [Fact]
-    public async Task then_response_status_code_is_expected()
+    public void then_response_status_code_is_expected()
     {
         Assert.Equal((HttpStatusCode) 200, _response.StatusCode);
     }

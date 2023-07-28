@@ -275,7 +275,7 @@ public class ApiResourceFactory
         };
     }
 
-    private async Task<ResourceLink> CreateMembersLinkFor(Capability capability)
+    private ResourceLink CreateMembersLinkFor(Capability capability)
     {
         return new ResourceLink
         {
@@ -339,7 +339,7 @@ public class ApiResourceFactory
             Links =
             {
                 Self = CreateSelfLinkFor(capability),
-                Members = await CreateMembersLinkFor(capability),
+                Members = CreateMembersLinkFor(capability),
                 Clusters = CreateClusterAccessLinkFor(capability),
                 MembershipApplications = await CreateMembershipApplicationsLinkFor(capability),
                 LeaveCapability = await CreateLeaveCapabilityLinkFor(capability),

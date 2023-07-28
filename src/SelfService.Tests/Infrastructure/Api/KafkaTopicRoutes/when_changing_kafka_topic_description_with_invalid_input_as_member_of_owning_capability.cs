@@ -35,13 +35,13 @@ public class when_changing_kafka_topic_description_with_invalid_input_as_member_
     }
 
     [Fact]
-    public async Task then_response_has_expected_status_code()
+    public void then_response_has_expected_status_code()
     {
         Assert.Equal((HttpStatusCode) 400, _response.StatusCode);
     }
 
     [Fact]
-    public async Task then_response_payload_is_problem_details()
+    public void then_response_payload_is_problem_details()
     {
         Assert.Equal("application/problem+json", _response.Content.Headers.ContentType?.MediaType);
     }
