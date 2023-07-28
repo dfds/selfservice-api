@@ -440,17 +440,17 @@ public class ApiResourceFactory
     public MessageContractApiResource Convert(MessageContract messageContract)
     {
         return new MessageContractApiResource
-        {
-            Id = messageContract.Id,
-            MessageType = messageContract.MessageType,
-            Description = messageContract.Description,
-            Example = messageContract.Example,
-            Schema = messageContract.Schema,
-            KafkaTopicId = messageContract.KafkaTopicId,
-            Status = messageContract.Status,
-            Links =
-            {
-                Self = new ResourceLink
+        (
+            id: messageContract.Id,
+            messageType: messageContract.MessageType,
+            description: messageContract.Description,
+            example: messageContract.Example,
+            schema: messageContract.Schema,
+            kafkaTopicId: messageContract.KafkaTopicId,
+            status: messageContract.Status,
+            links: new MessageContractApiResource.MessageContractLinks
+            (
+                self: new ResourceLink
                 {
                     Href = _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -460,8 +460,8 @@ public class ApiResourceFactory
                     Rel = "self",
                     Allow = { Get }
                 }
-            }
-        };
+            )
+        );
     }
 
     public async Task<MessageContractListApiResource> Convert(IEnumerable<MessageContract> contracts,
