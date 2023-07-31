@@ -17,6 +17,8 @@ public class Allow : IEnumerable<string>
 {
     public static Allow None => new();
     public static Allow Get => new() { Method.Get };
+    public static Allow Post => new() { Method.Post };
+    public static Allow Put => new() { Method.Put };
 
     private readonly HashSet<string> _allowed = new();
 

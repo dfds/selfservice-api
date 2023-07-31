@@ -562,10 +562,11 @@ public class CapabilityController : ControllerBase
         if (clusterAccess.IsAccessGranted)
         {
             return Ok(new KafkaClusterAccessApiResource
-            {
-                BootstrapServers = kafkaCluster.BootstrapServers,
-                SchemaRegistryUrl = kafkaCluster.SchemaRegistryUrl,
-            });
+            (
+                bootstrapServers: kafkaCluster.BootstrapServers,
+                schemaRegistryUrl: kafkaCluster.SchemaRegistryUrl,
+                links: null
+            ));
         }
 
         return AcceptedAtAction(
