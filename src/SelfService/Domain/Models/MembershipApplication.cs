@@ -4,12 +4,13 @@ namespace SelfService.Domain.Models;
 
 public class MembershipApplication : AggregateRoot<MembershipApplicationId>
 {
+    // Parameterless constructor required by EntityFramework
     private MembershipApplication() { }
     
-    private readonly IList<MembershipApproval> _approvals = new List<MembershipApproval>();
-    private readonly CapabilityId _capabilityId = null!;
-    private readonly UserId _applicant = null!;
-    private MembershipApplicationStatusOptions _status;
+    private readonly IList<MembershipApproval> _approvals = new List<MembershipApproval>(); // suppress parameterless constructor warning
+    private readonly CapabilityId _capabilityId = null!; // suppress parameterless constructor warning
+    private readonly UserId _applicant = null!; // suppress parameterless constructor warning
+    private MembershipApplicationStatusOptions _status = null!; // suppress parameterless constructor warning
     private readonly DateTime _submittedAt;
     private readonly DateTime _expiresOn;
 
