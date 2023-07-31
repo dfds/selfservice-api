@@ -4,25 +4,19 @@ namespace SelfService.Domain.Models;
 
 public class MembershipApplication : AggregateRoot<MembershipApplicationId>
 {
+    // Parameterless constructor required by EntityFramework
     private MembershipApplication() { }
-
-    private readonly IList<MembershipApproval> _approvals = new List<MembershipApproval>();
-    private readonly CapabilityId _capabilityId = null!;
-    private readonly UserId _applicant = null!;
-    private MembershipApplicationStatusOptions _status;
+    
+    private readonly IList<MembershipApproval> _approvals = new List<MembershipApproval>(); // suppress parameterless constructor warning
+    private readonly CapabilityId _capabilityId = null!; // suppress parameterless constructor warning
+    private readonly UserId _applicant = null!; // suppress parameterless constructor warning
+    private MembershipApplicationStatusOptions _status = null!; // suppress parameterless constructor warning
     private readonly DateTime _submittedAt;
     private readonly DateTime _expiresOn;
 
-    public MembershipApplication(
-        MembershipApplicationId id,
-        CapabilityId capabilityId,
-        UserId applicant,
-        IList<MembershipApproval> approvals,
-        MembershipApplicationStatusOptions status,
-        DateTime submittedAt,
-        DateTime expiresOn
-    )
-        : base(id)
+    public MembershipApplication(MembershipApplicationId id, CapabilityId capabilityId, UserId applicant,
+        IList<MembershipApproval> approvals, MembershipApplicationStatusOptions status, 
+        DateTime submittedAt, DateTime expiresOn) : base(id)
     {
         _capabilityId = capabilityId;
         _applicant = applicant;
@@ -44,7 +38,7 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
 
     public bool HasApproved(UserId userId) => _approvals.Any(x => x.ApprovedBy == userId);
 
-    public void Approve(UserId approvedBy, DateTime approvedAt)
+    public void Approve(UserId approvedBy, DateTime approvedAt) 
     {
         if (approvedBy == Applicant)
         {
@@ -55,13 +49,13 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
         {
             throw new Exception($"User {approvedBy} cannot approve a cancelled membership application {Id}");
         }
-
+        
         if (_status == MembershipApplicationStatusOptions.Finalized)
         {
             // already finalized
             return;
         }
-
+        
         if (HasApproved(approvedBy))
         {
             // already approved by THIS user
@@ -71,25 +65,31 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
         var approval = MembershipApproval.Register(approvedBy, approvedAt);
         _approvals.Add(approval);
 
-        Raise(new MembershipApplicationHasReceivedAnApproval { MembershipApplicationId = Id.ToString() });
+        Raise(new MembershipApplicationHasReceivedAnApproval
+        {
+            MembershipApplicationId = Id.ToString()
+        });
     }
-
+    
     public void FinalizeApprovals()
     {
         if (_status == MembershipApplicationStatusOptions.Cancelled)
         {
             throw new Exception($"Cannot finalize a cancelled membership application {Id}");
         }
-
+        
         if (_status == MembershipApplicationStatusOptions.Finalized)
         {
             return;
         }
-
+        
         if (_status == MembershipApplicationStatusOptions.PendingApprovals)
         {
             _status = MembershipApplicationStatusOptions.Finalized;
-            Raise(new MembershipApplicationHasBeenFinalized { MembershipApplicationId = Id.ToString() });
+            Raise(new MembershipApplicationHasBeenFinalized
+            {
+                MembershipApplicationId = Id.ToString()
+            });
         }
     }
 
@@ -99,34 +99,40 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
         {
             throw new Exception($"Cannot cancel an already finalized membership application {Id}");
         }
-
+        
         if (_status == MembershipApplicationStatusOptions.Cancelled)
         {
             return;
         }
-
+        
         if (_status == MembershipApplicationStatusOptions.PendingApprovals)
         {
             _status = MembershipApplicationStatusOptions.Cancelled;
-            Raise(new MembershipApplicationHasBeenCancelled { MembershipApplicationId = Id.ToString() });
+            Raise(new MembershipApplicationHasBeenCancelled
+            {
+                MembershipApplicationId = Id.ToString()
+            });
         }
     }
-
+    
     public static MembershipApplication New(CapabilityId capabilityId, UserId applicant, DateTime submittedAt)
     {
-        var instance = new MembershipApplication(
+        var instance =  new MembershipApplication(
             id: MembershipApplicationId.New(),
             capabilityId: capabilityId,
             applicant: applicant,
-            approvals: new List<MembershipApproval>(),
+            approvals: new List<MembershipApproval>(), 
             status: MembershipApplicationStatusOptions.PendingApprovals,
             submittedAt: submittedAt,
-            expiresOn: submittedAt.AddDays(15).Subtract(submittedAt.TimeOfDay)
+            expiresOn: submittedAt
+                .AddDays(15)
+                .Subtract(submittedAt.TimeOfDay)
         );
-
-        instance.Raise(
-            new NewMembershipApplicationHasBeenSubmitted { MembershipApplicationId = instance.Id.ToString() }
-        );
+        
+        instance.Raise(new NewMembershipApplicationHasBeenSubmitted
+        {
+            MembershipApplicationId = instance.Id.ToString()
+        });
 
         return instance;
     }

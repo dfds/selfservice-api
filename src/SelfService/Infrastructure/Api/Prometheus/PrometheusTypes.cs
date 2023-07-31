@@ -14,6 +14,12 @@ public class Response
 
     [JsonPropertyName("data")]
     public Data data { get; set; }
+
+    public Response(string status, Data data)
+    {
+        this.status = status;
+        this.data = data;
+    }
 }
 
 public class Data
@@ -21,6 +27,11 @@ public class Data
     //public string resultType;
     [JsonPropertyName("result")]
     public Result[] result { get; set; }
+
+    public Data(Result[] result)
+    {
+        this.result = result;
+    }
 }
 
 public class Result
@@ -28,6 +39,11 @@ public class Result
     [JsonPropertyName("metric")]
     public Metric metric { get; set; }
     //public string[] value;
+
+    public Result(Metric metric)
+    {
+        this.metric = metric;
+    }
 }
 
 public class Metric
@@ -47,4 +63,11 @@ public class Metric
     //public string service;
     [JsonPropertyName("topic")]
     public string topic { get; set; }
+
+    public Metric(string consumergroup, string partition, string topic)
+    {
+        this.consumergroup = consumergroup;
+        this.partition = partition;
+        this.topic = topic;
+    }
 }
