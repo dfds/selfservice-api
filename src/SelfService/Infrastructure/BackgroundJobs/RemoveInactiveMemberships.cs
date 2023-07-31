@@ -18,22 +18,28 @@ public class RemoveInactiveMemberships : BackgroundService
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        return Task.Run(async () =>
-        {
-            while (!stoppingToken.IsCancellationRequested)
+        return Task.Run(
+            async () =>
             {
-                await DoWork(stoppingToken);
-                await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
-            }
-        }, stoppingToken);
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    await DoWork(stoppingToken);
+                    await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
+                }
+            },
+            stoppingToken
+        );
     }
 
     private async Task DoWork(CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
 
-        using var _ = _logger.BeginScope("{BackgroundJob} {CorrelationId}",
-            nameof(RemoveInactiveMemberships), Guid.NewGuid());
+        using var _ = _logger.BeginScope(
+            "{BackgroundJob} {CorrelationId}",
+            nameof(RemoveInactiveMemberships),
+            Guid.NewGuid()
+        );
 
         var membershipCleaner = scope.ServiceProvider.GetRequiredService<MembershipCleaner>();
 
@@ -61,11 +67,10 @@ public class MembershipCleaner
             //check deactivated/ not found
             // IF deactivated
             // THEN :
-                // [within a transaction: ]
-                // - delete membership
+            // [within a transaction: ]
+            // - delete membership
             // _context.Memberships.where(x => x.UserId == m.UserId)
         }
-
     }
 
     private Task<List<Member>> FetchAllMembers()
@@ -73,7 +78,8 @@ public class MembershipCleaner
         return _context.Members.ToListAsync();
     }
 
-    private bool IsDeactivated(string userId){
+    private bool IsDeactivated(string userId)
+    {
         return false;
     }
 }

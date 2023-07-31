@@ -22,8 +22,14 @@ public class MeController : ControllerBase
     private readonly IMemberRepository _memberRepository;
     private readonly IMemberApplicationService _memberApplicationService;
 
-    public MeController(IMyCapabilitiesQuery myCapabilitiesQuery, SelfServiceDbContext dbContext, IHostEnvironment hostEnvironment,
-        ApiResourceFactory apiResourceFactory, IMemberRepository memberRepository, IMemberApplicationService memberApplicationService)
+    public MeController(
+        IMyCapabilitiesQuery myCapabilitiesQuery,
+        SelfServiceDbContext dbContext,
+        IHostEnvironment hostEnvironment,
+        ApiResourceFactory apiResourceFactory,
+        IMemberRepository memberRepository,
+        IMemberApplicationService memberApplicationService
+    )
     {
         _myCapabilitiesQuery = myCapabilitiesQuery;
         _dbContext = dbContext;
@@ -38,11 +44,13 @@ public class MeController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Access Denied!",
-                Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id."
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access Denied!",
+                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id."
+                }
+            );
         }
 
         var capabilities = await _myCapabilitiesQuery.FindBy(userId);
@@ -56,20 +64,24 @@ public class MeController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Access Denied!",
-                Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id."
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access Denied!",
+                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id."
+                }
+            );
         }
 
         if (string.IsNullOrWhiteSpace(request.Email))
         {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "Invalid email",
-                Detail = $"Email \"{request.Email}\" for user \"{userId}\" is not valid."
-            });
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid email",
+                    Detail = $"Email \"{request.Email}\" for user \"{userId}\" is not valid."
+                }
+            );
         }
 
         await _memberApplicationService.RegisterUserProfile(userId, request.Name ?? "", request.Email);
@@ -83,35 +95,18 @@ public class MeController : ControllerBase
         {
             new Stat(
                 Title: "Capabilities",
-                Value: await _dbContext.Capabilities
-                    .Where(x => x.Deleted == null)
-                    .CountAsync()
+                Value: await _dbContext.Capabilities.Where(x => x.Deleted == null).CountAsync()
             ),
-            new Stat(
-                Title: "AWS Accounts",
-                Value: await _dbContext.AwsAccounts.CountAsync()
-            ),
-            new Stat(
-                Title: "Kubernetes Clusters",
-                Value: 1
-            ),
-            new Stat(
-                Title: "Kafka Clusters",
-                Value: await _dbContext.KafkaClusters
-                    .Where(x => x.Enabled)
-                    .CountAsync()
-            ),
+            new Stat(Title: "AWS Accounts", Value: await _dbContext.AwsAccounts.CountAsync()),
+            new Stat(Title: "Kubernetes Clusters", Value: 1),
+            new Stat(Title: "Kafka Clusters", Value: await _dbContext.KafkaClusters.Where(x => x.Enabled).CountAsync()),
             new Stat(
                 Title: "Public Topics",
-                Value: await _dbContext.KafkaTopics
-                    .Where(x => ((string) x.Name).StartsWith("pub."))
-                    .CountAsync()
+                Value: await _dbContext.KafkaTopics.Where(x => ((string)x.Name).StartsWith("pub.")).CountAsync()
             ),
             new Stat(
                 Title: "Private Topics",
-                Value: await _dbContext.KafkaTopics
-                    .Where(x => !((string) x.Name).StartsWith("pub."))
-                    .CountAsync()
+                Value: await _dbContext.KafkaTopics.Where(x => !((string)x.Name).StartsWith("pub.")).CountAsync()
             ),
         };
     }
@@ -123,23 +118,51 @@ public class UpdatePersonalInformationRequest
     public string? Email { get; set; }
 }
 
-
 public class MyProfileApiResource
 {
     public string Id { get; set; } = "";
-    public IEnumerable<CapabilityListItemApiResource> Capabilities { get; set; } = Enumerable.Empty<CapabilityListItemApiResource>();
+    public IEnumerable<CapabilityListItemApiResource> Capabilities { get; set; } =
+        Enumerable.Empty<CapabilityListItemApiResource>();
     public bool AutoReloadTopics { get; set; } = true;
-    public PersonalInformationApiResource PersonalInformation { get; set; } = new ();
+    public PersonalInformationApiResource PersonalInformation { get; set; } = new();
 
     [JsonPropertyName("_links")]
-    public MyProfileLinks Links { get; set; } = new();
+    public MyProfileLinks Links { get; set; }
 
     public class MyProfileLinks
     {
-        public ResourceLink Self { get; set; } = new();
-        public ResourceLink PersonalInformation { get; set; } = new();
-        public ResourceLink PortalVisits { get; set; } = new();
-        public ResourceLink TopVisitors { get; set; } = new();
+        public ResourceLink Self { get; set; }
+        public ResourceLink PersonalInformation { get; set; }
+        public ResourceLink PortalVisits { get; set; }
+        public ResourceLink TopVisitors { get; set; }
+
+        public MyProfileLinks(
+            ResourceLink self,
+            ResourceLink personalInformation,
+            ResourceLink portalVisits,
+            ResourceLink topVisitors
+        )
+        {
+            Self = self;
+            PersonalInformation = personalInformation;
+            PortalVisits = portalVisits;
+            TopVisitors = topVisitors;
+        }
+    }
+
+    public MyProfileApiResource(
+        string id,
+        IEnumerable<CapabilityListItemApiResource> capabilities,
+        bool autoReloadTopics,
+        PersonalInformationApiResource personalInformation,
+        MyProfileLinks links
+    )
+    {
+        Id = id;
+        Capabilities = capabilities;
+        AutoReloadTopics = autoReloadTopics;
+        PersonalInformation = personalInformation;
+        Links = links;
     }
 }
 

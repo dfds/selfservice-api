@@ -27,13 +27,15 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
     {
         await using var application = new ApiApplication();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
-        application.ReplaceService<IKafkaClusterRepository>(new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo")));
+        application.ReplaceService<IKafkaClusterRepository>(
+            new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo"))
+        );
         application.ReplaceService<IKafkaTopicQuery>(new StubKafkaTopicQuery(_aPrivateTopic, _aPublicTopic));
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/kafkatopics?capabilityId={_aCapability.Id}");
     }
-    
+
     [Fact]
     public async Task then_self_link_of_root_has_expected_href()
     {
@@ -50,9 +52,7 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var values = document?.SelectElements("/_links/self/allow")
-            .Select(x => x.GetString())
-            .ToArray();
+        var values = document?.SelectElements("/_links/self/allow").Select(x => x.GetString()).ToArray();
 
         Assert.Equal(new[] { "GET" }, values);
     }
@@ -63,18 +63,9 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var values = document?.SelectElements("items")?
-            .Select(x => x.GetProperty("id").GetString())
-            .ToArray();
+        var values = document?.SelectElements("items")?.Select(x => x.GetProperty("id").GetString()).ToArray();
 
-        Assert.Equal(
-            expected: new[]
-            {
-                _aPrivateTopic.Id.ToString(),
-                _aPublicTopic.Id.ToString(),
-            },
-            actual: values
-        );
+        Assert.Equal(expected: new[] { _aPrivateTopic.Id.ToString(), _aPublicTopic.Id.ToString(), }, actual: values);
     }
 
     [Fact]
@@ -83,13 +74,11 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var topicItem = document?.SelectElements("items")
+        var topicItem = document
+            ?.SelectElements("items")
             .Single(x => x.SelectElement("id")?.GetString() == _aPublicTopic.Id);
 
-        var values = topicItem?
-            .SelectElements("_links/self/allow")?
-            .Select(x => x.GetString())
-            .ToArray();
+        var values = topicItem?.SelectElements("_links/self/allow")?.Select(x => x.GetString()).ToArray();
 
         Assert.Equal(new[] { "GET" }, values);
     }
@@ -100,13 +89,11 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var topicItem = document?.SelectElements("items")
+        var topicItem = document
+            ?.SelectElements("items")
             .Single(x => x.SelectElement("id")?.GetString() == _aPrivateTopic.Id);
 
-        var values = topicItem?
-            .SelectElements("_links/self/allow")?
-            .Select(x => x.GetString())
-            .ToArray();
+        var values = topicItem?.SelectElements("_links/self/allow")?.Select(x => x.GetString()).ToArray();
 
         Assert.Equal(new[] { "GET", "DELETE" }, values);
     }
@@ -117,7 +104,8 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var topicItem = document?.SelectElements("items")
+        var topicItem = document
+            ?.SelectElements("items")
             .Single(x => x.SelectElement("id")?.GetString() == _aPublicTopic.Id);
 
         var value = topicItem?.SelectElement("_links/updateDescription/href")?.GetString();
@@ -131,7 +119,8 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var topicItem = document?.SelectElements("items")
+        var topicItem = document
+            ?.SelectElements("items")
             .Single(x => x.SelectElement("id")?.GetString() == _aPublicTopic.Id);
 
         var value = topicItem?.SelectElement("_links/updateDescription/method")?.GetString();
@@ -145,7 +134,8 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var topicItem = document?.SelectElements("items")
+        var topicItem = document
+            ?.SelectElements("items")
             .Single(x => x.SelectElement("id")?.GetString() == _aPrivateTopic.Id);
 
         var value = topicItem?.SelectElement("_links/updateDescription/href")?.GetString();
@@ -159,7 +149,8 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var topicItem = document?.SelectElements("items")
+        var topicItem = document
+            ?.SelectElements("items")
             .Single(x => x.SelectElement("id")?.GetString() == _aPrivateTopic.Id);
 
         var value = topicItem?.SelectElement("_links/updateDescription/method")?.GetString();

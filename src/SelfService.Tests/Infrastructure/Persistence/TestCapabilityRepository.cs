@@ -14,9 +14,7 @@ public class TestCapabilityRepository
 
         var stub = A.Capability;
 
-        var sut = A.CapabilityRepository
-            .WithDbContext(dbContext)
-            .Build();
+        var sut = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
         await sut.Add(stub);
 

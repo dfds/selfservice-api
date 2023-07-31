@@ -11,9 +11,7 @@ using SelfService.Infrastructure.Persistence;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-    .CreateBootstrapLogger();
+Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Code).CreateBootstrapLogger();
 
 try
 {
@@ -68,7 +66,5 @@ finally
 }
 
 #pragma warning disable CA1050 // Declare types in namespaces
-public partial class Program
-{
-}
+public partial class Program { }
 #pragma warning disable CA1050 // Declare types in namespaces

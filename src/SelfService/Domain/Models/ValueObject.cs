@@ -23,13 +23,17 @@
 
     public override int GetHashCode()
     {
-        return GetEqualityComponents().Aggregate(1, (current, obj) =>
-        {
-            unchecked
-            {
-                return HashCode.Combine(current, obj?.GetHashCode() ?? 0);
-            }
-        });
+        return GetEqualityComponents()
+            .Aggregate(
+                1,
+                (current, obj) =>
+                {
+                    unchecked
+                    {
+                        return HashCode.Combine(current, obj?.GetHashCode() ?? 0);
+                    }
+                }
+            );
     }
 
     public static bool operator ==(ValueObject? a, ValueObject? b)

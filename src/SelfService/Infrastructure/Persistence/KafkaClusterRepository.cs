@@ -20,16 +20,11 @@ public class KafkaClusterRepository : IKafkaClusterRepository
 
     public async Task<KafkaCluster?> FindBy(KafkaClusterId id)
     {
-        return await _dbContext.KafkaClusters
-            .Where(x => x.Enabled)
-            .SingleOrDefaultAsync(x => x.Id == id);
+        return await _dbContext.KafkaClusters.Where(x => x.Enabled).SingleOrDefaultAsync(x => x.Id == id);
     }
 
     public async Task<IEnumerable<KafkaCluster>> GetAll()
     {
-        return await _dbContext.KafkaClusters
-            .Where(x => x.Enabled)
-            .OrderBy(x => x.Name)
-            .ToListAsync();
+        return await _dbContext.KafkaClusters.Where(x => x.Enabled).OrderBy(x => x.Name).ToListAsync();
     }
 }

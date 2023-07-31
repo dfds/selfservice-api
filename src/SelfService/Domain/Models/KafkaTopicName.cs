@@ -63,10 +63,7 @@ public class KafkaTopicName : ValueObject
             throw new ArgumentException($"Value \"{name}\" is not valid.", nameof(name));
         }
 
-        var fullName = string.Join(".",
-            capabilityId, 
-            name
-        );
+        var fullName = string.Join(".", capabilityId, name);
 
         if (isPublic)
         {
@@ -101,5 +98,6 @@ public class KafkaTopicName : ValueObject
     }
 
     public static implicit operator string(KafkaTopicName name) => name.ToString();
+
     public static implicit operator KafkaTopicName(string name) => Parse(name);
 }

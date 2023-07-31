@@ -8,10 +8,7 @@ public class TestAllow
     [Fact]
     public void can_initialize_allowed_methods()
     {
-        var allowed = new Allow
-        {
-            Method.Get, Method.Post, Method.Put, Method.Delete, Method.Patch
-        };
+        var allowed = new Allow { Method.Get, Method.Post, Method.Put, Method.Delete, Method.Patch };
 
         Assert.Equal(new[] { "GET", "POST", "PUT", "DELETE", "PATCH" }, allowed);
     }

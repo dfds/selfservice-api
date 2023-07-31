@@ -22,7 +22,11 @@ public class TransactionalAspect : IAspect
             await next();
             await transaction.Commit();
 
-            _logger.LogTrace("Committed db transaction for {Method} on {Type}", context.Method.Name, context.Method.DeclaringType?.Name);
+            _logger.LogTrace(
+                "Committed db transaction for {Method} on {Type}",
+                context.Method.Name,
+                context.Method.DeclaringType?.Name
+            );
         }
         catch (Exception)
         {

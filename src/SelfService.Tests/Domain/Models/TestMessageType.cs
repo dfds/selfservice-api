@@ -69,24 +69,15 @@ public class TestMessageType
         Assert.Throws<FormatException>(() => MessageType.Parse(invalidInput));
     }
 
-
     #region helpers
 
     public static IEnumerable<object[]> ValidInputValues
     {
         get
         {
-            var values = new object[]
-            {
-                "foo",
-                "bar",
-                "foo-bar",
-                "foo_bar",
-                "1-2",
-                "1_2",
-            };
+            var values = new object[] { "foo", "bar", "foo-bar", "foo_bar", "1-2", "1_2", };
 
-            return values.Select(x => new object[] {x});
+            return values.Select(x => new object[] { x });
         }
     }
 
@@ -114,7 +105,7 @@ public class TestMessageType
                 "f@@",
             };
 
-            return values.Select(x => new object[] {x});
+            return values.Select(x => new object[] { x });
         }
     }
 

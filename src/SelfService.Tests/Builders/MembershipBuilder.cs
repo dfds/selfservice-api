@@ -34,6 +34,5 @@ public class MembershipBuilder
         return new Membership(_id, _capabilityId, _userId, _createdAt);
     }
 
-    public static implicit operator Membership(MembershipBuilder builder)
-        => builder.Build();
+    public static implicit operator Membership(MembershipBuilder builder) => builder.Build();
 }

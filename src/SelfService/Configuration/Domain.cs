@@ -52,7 +52,7 @@ public static class Domain
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
         builder.Services.AddTransient<IMembershipApplicationQuery, MembershipApplicationQuery>();
-        
+
         builder.Services.AddTransient<IMembershipQuery, MembershipQuery>();
         //builder.Services.AddTransient<MembershipQuery>();
         //builder.Services.AddScoped<IMembershipQuery, CachedMembershipQueryDecorator>(provider =>
@@ -60,12 +60,12 @@ public static class Domain
         //    var inner = provider.GetRequiredService<MembershipQuery>();
         //    return new CachedMembershipQueryDecorator(inner);
         //});
-        
+
         builder.Services.AddTransient<ICapabilityMembershipApplicationQuery, CapabilityMembershipApplicationQuery>();
 
         // aad-aws-sync
         builder.Services.AddTransient<IAadAwsSyncCapabilityQuery, AadAwsSyncCapabilityQuery>();
-        
+
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
         //builder.Services.AddHostedService<RemoveInactiveMemberships>();
@@ -83,7 +83,7 @@ public static class Domain
         });
         
         var prometheusEndpoint = new Uri(builder.Configuration["SS_PROMETHEUS_API_ENDPOINT"] ?? "");
-        builder.Services.AddHttpClient<IKafkaTopicConsumerService, PrometheusClient>(client => 
+        builder.Services.AddHttpClient<IKafkaTopicConsumerService, PrometheusClient>(client =>
         {
             client.BaseAddress = prometheusEndpoint;
         });

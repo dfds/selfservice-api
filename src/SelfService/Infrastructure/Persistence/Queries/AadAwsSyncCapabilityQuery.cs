@@ -28,22 +28,28 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
                 Name = capability.Name,
                 RootId = capability.Id,
                 Description = capability.Description,
-                Members = memberships.Select<Membership, MemberDto>(member => new MemberDto { Email = member.UserId }).ToArray(),
-                Contexts = awsAccounts.Select<AwsAccount, ContextDto>(context => new ContextDto
-                    {
-                        Id = context.Id,
-                        Name = "default",
-                        AWSRoleArn = "",
-                        AWSAccountId = context.Registration.AccountId?.ToString(),
-                        AWSRoleEmail = context.Registration.RoleEmail
-                    })
+                Members = memberships
+                    .Select<Membership, MemberDto>(member => new MemberDto { Email = member.UserId })
+                    .ToArray(),
+                Contexts = awsAccounts
+                    .Select<AwsAccount, ContextDto>(
+                        context =>
+                            new ContextDto
+                            {
+                                Id = context.Id,
+                                Name = "default",
+                                AWSRoleArn = "",
+                                AWSAccountId = context.Registration.AccountId?.ToString(),
+                                AWSRoleEmail = context.Registration.RoleEmail
+                            }
+                    )
                     .ToArray(),
             };
     }
 
     private async Task<List<Capability>> GetAllActiveCapabilities()
     {
-        return await _context.Capabilities.Where(x=> x.Deleted==null).ToListAsync();
+        return await _context.Capabilities.Where(x => x.Deleted == null).ToListAsync();
     }
 
     private async Task<ILookup<CapabilityId, Membership>> GetAllMembershipByCapability()

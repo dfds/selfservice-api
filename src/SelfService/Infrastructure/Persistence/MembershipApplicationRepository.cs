@@ -15,7 +15,7 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
         _dbContext = dbContext;
         _systemTime = systemTime;
     }
-    
+
     public async Task Add(MembershipApplication application)
     {
         await _dbContext.MembershipApplications.AddAsync(application);
@@ -37,9 +37,7 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
 
     public async Task<MembershipApplication?> FindBy(MembershipApplicationId id)
     {
-        return await _dbContext.MembershipApplications
-            .Include(x => x.Approvals)
-            .FirstOrDefaultAsync(x => x.Id == id);
+        return await _dbContext.MembershipApplications.Include(x => x.Approvals).FirstOrDefaultAsync(x => x.Id == id);
     }
 
     public async Task<IEnumerable<MembershipApplication>> FindExpiredApplications()
@@ -56,7 +54,12 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
     {
         return await _dbContext.MembershipApplications
             .Include(x => x.Approvals)
-            .Where(x => x.Status == MembershipApplicationStatusOptions.PendingApprovals && x.CapabilityId == capabilityId && x.Applicant == userId)
+            .Where(
+                x =>
+                    x.Status == MembershipApplicationStatusOptions.PendingApprovals
+                    && x.CapabilityId == capabilityId
+                    && x.Applicant == userId
+            )
             .SingleOrDefaultAsync();
     }
 

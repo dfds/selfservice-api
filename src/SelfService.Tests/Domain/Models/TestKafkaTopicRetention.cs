@@ -42,17 +42,9 @@ public class TestKafkaTopicRetention
     {
         get
         {
-            var validValues = new object[]
-            {
-                "1d",
-                "1D",
-                "forever",
-                "FOREVER",
-                "FoReVeR",
-                "fOrEvEr",
-            };
+            var validValues = new object[] { "1d", "1D", "forever", "FOREVER", "FoReVeR", "fOrEvEr", };
 
-            return validValues.Select(x => new object[] {x});
+            return validValues.Select(x => new object[] { x });
         }
     }
 
@@ -81,10 +73,9 @@ public class TestKafkaTopicRetention
                 "1-5d",
             };
 
-            return invalidValues.Select(x => new object[] {x});
+            return invalidValues.Select(x => new object[] { x });
         }
     }
 
     #endregion
-
 }

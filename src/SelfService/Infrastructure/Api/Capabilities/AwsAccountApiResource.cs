@@ -11,10 +11,32 @@ public class AwsAccountApiResource
     public string? Status { get; set; }
 
     [JsonPropertyName("_links")]
-    public AwsAccountLinks Links { get; set; } = new();
+    public AwsAccountLinks Links { get; set; }
 
     public class AwsAccountLinks
     {
-        public ResourceLink Self { get; set; } = new();
+        public ResourceLink Self { get; set; }
+
+        public AwsAccountLinks(ResourceLink self)
+        {
+            Self = self;
+        }
+    }
+
+    public AwsAccountApiResource(
+        string id,
+        string? accountId,
+        string? roleEmail,
+        string? @namespace,
+        string? status,
+        AwsAccountLinks links
+    )
+    {
+        Id = id;
+        AccountId = accountId;
+        RoleEmail = roleEmail;
+        Namespace = @namespace;
+        Status = status;
+        Links = links;
     }
 }

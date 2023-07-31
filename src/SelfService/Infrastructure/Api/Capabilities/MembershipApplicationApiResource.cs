@@ -11,10 +11,32 @@ public class MembershipApplicationApiResource
     public MembershipApprovalListApiResource Approvals { get; set; }
 
     [JsonPropertyName("_links")]
-    public MembershipApplicationLinks Links { get; set; } = new();
+    public MembershipApplicationLinks Links { get; set; }
 
     public class MembershipApplicationLinks
     {
-        public ResourceLink Self { get; set; } = new();
+        public ResourceLink Self { get; set; }
+
+        public MembershipApplicationLinks(ResourceLink self)
+        {
+            Self = self;
+        }
+    }
+
+    public MembershipApplicationApiResource(
+        string id,
+        string applicant,
+        string submittedAt,
+        string expiresOn,
+        MembershipApprovalListApiResource approvals,
+        MembershipApplicationLinks links
+    )
+    {
+        Id = id;
+        Applicant = applicant;
+        SubmittedAt = submittedAt;
+        ExpiresOn = expiresOn;
+        Approvals = approvals;
+        Links = links;
     }
 }

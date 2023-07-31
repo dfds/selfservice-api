@@ -20,13 +20,10 @@ public static class OutboxProducerOptionsExtensions
             _topic = topic;
         }
 
-        public ProducerOptions Register<TMessage>(string messageType, Func<TMessage, string> keySelector) where TMessage : class
+        public ProducerOptions Register<TMessage>(string messageType, Func<TMessage, string> keySelector)
+            where TMessage : class
         {
-            _options.Register<TMessage>(
-                topic: _topic,
-                type: messageType,
-                keySelector: keySelector
-            );
+            _options.Register<TMessage>(topic: _topic, type: messageType, keySelector: keySelector);
 
             return this;
         }

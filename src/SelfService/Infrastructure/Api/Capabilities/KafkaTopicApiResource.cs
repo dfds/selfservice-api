@@ -14,13 +14,49 @@ public class KafkaTopicApiResource
     public string Status { get; set; }
 
     [JsonPropertyName("_links")]
-    public KafkaTopicLinks Links { get; set; } = new();
+    public KafkaTopicLinks Links { get; set; }
 
     public class KafkaTopicLinks
     {
-        public ResourceLink Self { get; set; } = new();
-        public ResourceLink MessageContracts { get; set; } = new();
-        public ResourceLink Consumers { get; set; } = new();
+        public ResourceLink Self { get; set; }
+        public ResourceLink MessageContracts { get; set; }
+        public ResourceLink Consumers { get; set; }
         public ResourceActionLink? UpdateDescription { get; set; }
+
+        public KafkaTopicLinks(
+            ResourceLink self,
+            ResourceLink messageContracts,
+            ResourceLink consumers,
+            ResourceActionLink? updateDescription
+        )
+        {
+            Self = self;
+            MessageContracts = messageContracts;
+            Consumers = consumers;
+            UpdateDescription = updateDescription;
+        }
+    }
+
+    public KafkaTopicApiResource(
+        string id,
+        string name,
+        string description,
+        string capabilityId,
+        string kafkaClusterId,
+        uint partitions,
+        string retention,
+        string status,
+        KafkaTopicLinks links
+    )
+    {
+        Id = id;
+        Name = name;
+        Description = description;
+        CapabilityId = capabilityId;
+        KafkaClusterId = kafkaClusterId;
+        Partitions = partitions;
+        Retention = retention;
+        Status = status;
+        Links = links;
     }
 }

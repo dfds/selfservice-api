@@ -6,6 +6,7 @@ public class CapabilityCreated : IDomainEvent
 {
     public string CapabilityId { get; }
     public string RequestedBy { get; }
+
     public CapabilityCreated(string capabilityId, string requestedBy)
     {
         CapabilityId = capabilityId;

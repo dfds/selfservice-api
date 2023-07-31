@@ -2,8 +2,6 @@
 
 public class AlreadyHasActiveMembershipException : Exception
 {
-    public AlreadyHasActiveMembershipException(string message) : base(message)
-    {
-        
-    }
+    public AlreadyHasActiveMembershipException(string message)
+        : base(message) { }
 }

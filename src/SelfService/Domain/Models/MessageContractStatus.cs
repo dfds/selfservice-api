@@ -36,7 +36,7 @@ public class MessageContractStatus : ValueObject
     public static bool TryParse(string? text, out MessageContractStatus status)
     {
         var input = text ?? "";
-        
+
         foreach (var value in Values)
         {
             if (value.ToString().Equals(input, StringComparison.InvariantCultureIgnoreCase))
@@ -50,14 +50,9 @@ public class MessageContractStatus : ValueObject
         return false;
     }
 
-    public static IReadOnlyCollection<MessageContractStatus> Values => new[]
-    {
-        Requested, InProgress, Provisioned
-    };
+    public static IReadOnlyCollection<MessageContractStatus> Values => new[] { Requested, InProgress, Provisioned };
 
-    public static implicit operator MessageContractStatus(string text) 
-        => Parse(text);
+    public static implicit operator MessageContractStatus(string text) => Parse(text);
 
-    public static implicit operator string(MessageContractStatus status) 
-        => status.ToString();
+    public static implicit operator string(MessageContractStatus status) => status.ToString();
 }

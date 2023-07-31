@@ -17,6 +17,5 @@ public class CapabilityRepositoryBuilder
         return new CapabilityRepository(_dbContext!);
     }
 
-    public static implicit operator CapabilityRepository(CapabilityRepositoryBuilder builder)
-        => builder.Build();
+    public static implicit operator CapabilityRepository(CapabilityRepositoryBuilder builder) => builder.Build();
 }

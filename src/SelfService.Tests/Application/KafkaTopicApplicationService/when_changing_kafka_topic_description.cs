@@ -5,9 +5,7 @@ namespace SelfService.Tests.Application.KafkaTopicApplicationService;
 
 public class when_changing_kafka_topic_description : IAsyncLifetime
 {
-    private readonly KafkaTopic _aTopic = A.KafkaTopic
-        .WithDescription("foo")
-        .Build();
+    private readonly KafkaTopic _aTopic = A.KafkaTopic.WithDescription("foo").Build();
 
     public async Task InitializeAsync()
     {

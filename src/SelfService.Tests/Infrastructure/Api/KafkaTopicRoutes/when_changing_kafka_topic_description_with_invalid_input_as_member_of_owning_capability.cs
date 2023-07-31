@@ -23,7 +23,7 @@ public class when_changing_kafka_topic_description_with_invalid_input_as_member_
         using var client = application.CreateClient();
 
         _response = await client.PutAsync(
-            requestUri: $"/kafkatopics/{stubKafkaTopic.Id}/description", 
+            requestUri: $"/kafkatopics/{stubKafkaTopic.Id}/description",
             content: new StringContent(
                 content: @"{
                     ""description"": """"
@@ -37,7 +37,7 @@ public class when_changing_kafka_topic_description_with_invalid_input_as_member_
     [Fact]
     public void then_response_has_expected_status_code()
     {
-        Assert.Equal((HttpStatusCode) 400, _response.StatusCode);
+        Assert.Equal((HttpStatusCode)400, _response.StatusCode);
     }
 
     [Fact]

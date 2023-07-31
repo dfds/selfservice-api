@@ -9,7 +9,8 @@ namespace SelfService.Tests.Infrastructure.Api;
 
 public class TestPrometheusClientResultParsing
 {
-    private HttpClient getMockedHttpClient(string mockResponse) {
+    private HttpClient getMockedHttpClient(string mockResponse)
+    {
         var mockHttpHandler = new Mock<HttpMessageHandler>();
         var response = new HttpResponseMessage
         {
@@ -25,7 +26,7 @@ public class TestPrometheusClientResultParsing
                 ItExpr.IsAny<CancellationToken>()
             )
             .ReturnsAsync(response);
-        
+
         var httpClient = new HttpClient(mockHttpHandler.Object);
         httpClient.BaseAddress = new Uri("http://localhost:9090");
 
@@ -33,10 +34,11 @@ public class TestPrometheusClientResultParsing
     }
 
     [Fact]
-    public async Task  parsing_failure_produces_empty_list()
+    public async Task parsing_failure_produces_empty_list()
     {
         // create dummy input
-        string mockResponse = @"{
+        string mockResponse =
+            @"{
             ""status"": ""failure""
         }";
 
@@ -54,27 +56,32 @@ public class TestPrometheusClientResultParsing
             var actual = await service.GetConsumersForKafkaTopic("topic");
             Assert.Equal(expected, actual);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Assert.Fail("Unexpected exception was thrown: " + e.Message);
         }
     }
 
     [Fact]
-    public async Task  parsing_success_with_incomplete_data_produces_empty_list()
+    public async Task parsing_success_with_incomplete_data_produces_empty_list()
     {
         // create dummy input
         List<string> mockResponses = new List<string>();
-        mockResponses.Append(@"{
+        mockResponses.Append(
+            @"{
             ""status"": ""success""
-        }");
-        mockResponses.Append(@"{
+        }"
+        );
+        mockResponses.Append(
+            @"{
             ""status"": ""success"",
             ""data"": {
                 ""resultType"": ""vector""
             }
-        }");
-        mockResponses.Append(@"{
+        }"
+        );
+        mockResponses.Append(
+            @"{
             ""status"": ""success"",
             ""data"": {
                 ""resultType"": ""vector"",
@@ -86,8 +93,10 @@ public class TestPrometheusClientResultParsing
                         ]
                     },
             }
-        }");
-        mockResponses.Append(@"{
+        }"
+        );
+        mockResponses.Append(
+            @"{
             ""status"": ""success"",
             ""data"": {
                 ""resultType"": ""vector"",
@@ -102,12 +111,14 @@ public class TestPrometheusClientResultParsing
                         ]
                     },
             }
-        }");
+        }"
+        );
 
         // define expectations
         var expected = new List<string>();
 
-        foreach (string mockResponse in mockResponses) {
+        foreach (string mockResponse in mockResponses)
+        {
             var loggerMock = new Mock<ILogger<PrometheusClient>>();
             var httpClient = getMockedHttpClient(mockResponse);
 
@@ -118,19 +129,19 @@ public class TestPrometheusClientResultParsing
                 var actual = await service.GetConsumersForKafkaTopic("doesnot matter");
                 Assert.Equal(expected, actual);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Assert.Fail("Unexpected exception was thrown: " + e.Message);
             }
         }
     }
 
-
     [Fact]
-    public async Task  parsing_success_with_legal_result_returns_all_consumers_for_topic_across_partitions()
+    public async Task parsing_success_with_legal_result_returns_all_consumers_for_topic_across_partitions()
     {
         // create dummy input
-        string mockResponse = @"{
+        string mockResponse =
+            @"{
             ""status"": ""success"",
             ""data"": {
                 ""resultType"": ""vector"",
@@ -178,24 +189,24 @@ public class TestPrometheusClientResultParsing
         IKafkaTopicConsumerService service = new PrometheusClient(loggerMock.Object, httpClient);
 
         // verification
-        var expected = new List<string>{"consumer1", "consumer2"};
+        var expected = new List<string> { "consumer1", "consumer2" };
         try
         {
             var actual = await service.GetConsumersForKafkaTopic("topic");
             Assert.Equal(expected, actual);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Assert.Fail("Unexpected exception was thrown: " + e.Message);
         }
 
-        var expected2 = new List<string>{"consumer3"};
+        var expected2 = new List<string> { "consumer3" };
         try
         {
             var actual2 = await service.GetConsumersForKafkaTopic("topic2");
             Assert.Equal(expected2, actual2);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Assert.Fail("Unexpected exception was thrown: " + e.Message);
         }

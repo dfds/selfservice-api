@@ -8,7 +8,10 @@ public class MembershipApplicationDomainService
     private readonly IMembershipRepository _membershipRepository;
     private readonly IMembershipQuery _membershipQuery;
 
-    public MembershipApplicationDomainService(IMembershipRepository membershipRepository, IMembershipQuery membershipQuery)
+    public MembershipApplicationDomainService(
+        IMembershipRepository membershipRepository,
+        IMembershipQuery membershipQuery
+    )
     {
         _membershipRepository = membershipRepository;
         _membershipQuery = membershipQuery;

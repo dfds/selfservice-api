@@ -38,7 +38,8 @@ public class CapabilityController : ControllerBase
         IAwsAccountApplicationService awsAccountApplicationService,
         IMembershipApplicationService membershipApplicationService,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
-        IDataPlatformRequesterService dataPlatformRequesterService)
+        IDataPlatformRequesterService dataPlatformRequesterService
+        )
     {
         _membersQuery = membersQuery;
         _capabilityRepository = capabilityRepository;
@@ -77,8 +78,10 @@ public class CapabilityController : ControllerBase
 
         if (!CapabilityId.TryCreateFrom(request.Name, out var capabilityId))
         {
-            ModelState.AddModelError(nameof(request.Name),
-                $"unable to create capability ID from name \"{request.Name}\"");
+            ModelState.AddModelError(
+                nameof(request.Name),
+                $"unable to create capability ID from name \"{request.Name}\""
+            );
         }
 
         if (!ModelState.IsValid)
@@ -88,13 +91,19 @@ public class CapabilityController : ControllerBase
 
         try
         {
-            await _capabilityApplicationService.CreateNewCapability(capabilityId, request.Name!,
-                request.Description ?? "", userId);
+            await _capabilityApplicationService.CreateNewCapability(
+                capabilityId,
+                request.Name!,
+                request.Description ?? "",
+                userId
+            );
         }
         catch (EntityAlreadyExistsException)
         {
-            ModelState.AddModelError(nameof(request.Name),
-                $"The name \"{request.Name}\" results in an ID that already exists");
+            ModelState.AddModelError(
+                nameof(request.Name),
+                $"The name \"{request.Name}\" results in an ID that already exists"
+            );
             return ValidationProblem(statusCode: StatusCodes.Status409Conflict);
         }
 
@@ -116,33 +125,39 @@ public class CapabilityController : ControllerBase
     {
         if (!User.TryGetUserId(out _))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Access denied!",
-                Detail = $"The user id is not valid and access to the resource cannot be granted.",
-                Status = StatusCodes.Status401Unauthorized
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access denied!",
+                    Detail = $"The user id is not valid and access to the resource cannot be granted.",
+                    Status = StatusCodes.Status401Unauthorized
+                }
+            );
         }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Capability not found",
-                Detail = $"No capability with id \"{id}\" is know by the system.",
-                Status = StatusCodes.Status404NotFound
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found",
+                    Detail = $"No capability with id \"{id}\" is know by the system.",
+                    Status = StatusCodes.Status404NotFound
+                }
+            );
         }
 
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability is null)
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Capability not found",
-                Detail = $"No capability with id \"{id}\" is know by the system.",
-                Status = StatusCodes.Status404NotFound
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found",
+                    Detail = $"No capability with id \"{id}\" is know by the system.",
+                    Status = StatusCodes.Status404NotFound
+                }
+            );
         }
 
         return Ok(await _apiResourceFactory.Convert(capability));
@@ -248,8 +263,10 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(MembershipApplicationListApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetCapabilityMembershipApplications(string id,
-        [FromServices] ICapabilityMembershipApplicationQuery query)
+    public async Task<IActionResult> GetCapabilityMembershipApplications(
+        string id,
+        [FromServices] ICapabilityMembershipApplicationQuery query
+    )
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -271,9 +288,7 @@ public class CapabilityController : ControllerBase
         if (!await _authorizationService.CanViewAllApplications(userId, capabilityId))
         {
             // only allow the current users own application(s)
-            applications = applications
-                .Where(x => x.Applicant == userId)
-                .ToList();
+            applications = applications.Where(x => x.Applicant == userId).ToList();
         }
 
         var resource = await _apiResourceFactory.Convert(capabilityId, applications, userId);
@@ -287,9 +302,11 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
-    public async Task<IActionResult> AddCapabilityMembershipApplications(string id,
+    public async Task<IActionResult> AddCapabilityMembershipApplications(
+        string id,
         [FromServices] IMembershipApplicationService membershipApplicationService,
-        [FromServices] IMembershipApplicationRepository membershipApplicationRepository)
+        [FromServices] IMembershipApplicationRepository membershipApplicationRepository
+    )
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -321,11 +338,13 @@ public class CapabilityController : ControllerBase
         }
         catch (EntityNotFoundException<Capability>)
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Capability not found",
-                Detail = $"Capability \"{capabilityId}\" is unknown by the system."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found",
+                    Detail = $"Capability \"{capabilityId}\" is unknown by the system."
+                }
+            );
         }
         catch (PendingMembershipApplicationAlreadyExistsException)
         {
@@ -338,11 +357,13 @@ public class CapabilityController : ControllerBase
         }
         catch (AlreadyHasActiveMembershipException)
         {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Already member",
-                Detail = $"User \"{userId}\" is already member of capability \"{capabilityId}\"."
-            });
+            return Conflict(
+                new ProblemDetails
+                {
+                    Title = "Already member",
+                    Detail = $"User \"{userId}\" is already member of capability \"{capabilityId}\"."
+                }
+            );
         }
     }
 
@@ -371,32 +392,42 @@ public class CapabilityController : ControllerBase
 
         if (!KafkaClusterId.TryParse(topicRequest.KafkaClusterId, out var kafkaClusterId))
         {
-            ModelState.AddModelError(nameof(topicRequest.KafkaClusterId),
-                $"Value \"{topicRequest.KafkaClusterId}\" is not a valid kafka cluster id.");
+            ModelState.AddModelError(
+                nameof(topicRequest.KafkaClusterId),
+                $"Value \"{topicRequest.KafkaClusterId}\" is not a valid kafka cluster id."
+            );
         }
 
         if (!KafkaTopicName.TryParse(topicRequest.Name, out var kafkaTopicName))
         {
-            ModelState.AddModelError(nameof(topicRequest.Name),
-                $"Value \"{topicRequest.Name}\" is not a valid kafka topic name.");
+            ModelState.AddModelError(
+                nameof(topicRequest.Name),
+                $"Value \"{topicRequest.Name}\" is not a valid kafka topic name."
+            );
         }
 
         if (!KafkaTopicPartitions.TryCreate(topicRequest.Partitions ?? 0, out var topicPartitions))
         {
-            ModelState.AddModelError(nameof(topicRequest.Partitions),
-                $"Value \"{topicRequest.Partitions}\" is invalid for kafka topic partitions.");
+            ModelState.AddModelError(
+                nameof(topicRequest.Partitions),
+                $"Value \"{topicRequest.Partitions}\" is invalid for kafka topic partitions."
+            );
         }
 
         if (!KafkaTopicRetention.TryParse(topicRequest.Retention, out var topicRetention))
         {
-            ModelState.AddModelError(nameof(topicRequest.Retention),
-                $"Value \"{topicRequest.Retention}\" is invalid for kafka topic retention.");
+            ModelState.AddModelError(
+                nameof(topicRequest.Retention),
+                $"Value \"{topicRequest.Retention}\" is invalid for kafka topic retention."
+            );
         }
 
         if (!await _kafkaClusterRepository.Exists(kafkaClusterId))
         {
-            ModelState.AddModelError(nameof(topicRequest.KafkaClusterId),
-                $"Kafka cluster with id \"{kafkaClusterId}\" is unknown to the system.");
+            ModelState.AddModelError(
+                nameof(topicRequest.KafkaClusterId),
+                $"Kafka cluster with id \"{kafkaClusterId}\" is unknown to the system."
+            );
         }
 
         if (!ModelState.IsValid)
@@ -432,11 +463,7 @@ public class CapabilityController : ControllerBase
         }
         catch (EntityAlreadyExistsException err)
         {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Topic already exists",
-                Detail = err.Message,
-            });
+            return Conflict(new ProblemDetails { Title = "Topic already exists", Detail = err.Message, });
         }
     }
 
@@ -449,21 +476,25 @@ public class CapabilityController : ControllerBase
         // Verify user and fetch userId
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Unknown user id",
-                Detail = $"User id is not valid and thus cannot leave any capabilities.",
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                }
+            );
         }
 
         // Check that capability with provided id exists
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Capability not found.",
-                Detail = $"A capability with id \"{id}\" could not be found."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
         }
 
         // Leave capability
@@ -474,11 +505,13 @@ public class CapabilityController : ControllerBase
         }
         catch (EntityNotFoundException<Membership>)
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Membership not cancelled.",
-                Detail = $"A membership of user \"{userId}\" for capability \"{id}\" could not be found."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Membership not cancelled.",
+                    Detail = $"A membership of user \"{userId}\" for capability \"{id}\" could not be found."
+                }
+            );
         }
     }
 
@@ -489,20 +522,24 @@ public class CapabilityController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Unknown user id",
-                Detail = $"User id is not valid and thus cannot leave any capabilities.",
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                }
+            );
         }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Capability not found.",
-                Detail = $"A capability with id \"{id}\" could not be found."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
         }
 
         var clusters = await _kafkaClusterRepository.GetAll();
@@ -519,48 +556,58 @@ public class CapabilityController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Unknown user id",
-                Detail = $"User id is not valid and thus cannot leave any capabilities.",
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                }
+            );
         }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Capability not found.",
-                Detail = $"A capability with id \"{id}\" could not be found."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
         }
 
         if (!KafkaClusterId.TryParse(clusterId, out var kafkaClusterId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Kafka cluster not found.",
-                Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Kafka cluster not found.",
+                    Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found."
+                }
+            );
         }
 
         if (!await _authorizationService.CanViewAccess(userId, capabilityId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Not a capability member",
-                Detail = $"User is not a member of capability {capabilityId}",
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Not a capability member",
+                    Detail = $"User is not a member of capability {capabilityId}",
+                }
+            );
         }
 
         var kafkaCluster = await _kafkaClusterRepository.FindBy(kafkaClusterId);
         if (kafkaCluster == null)
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Kafka cluster not found.",
-                Detail = $"Kafka cluster \"{clusterId}\" could has not found."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Kafka cluster not found.",
+                    Detail = $"Kafka cluster \"{clusterId}\" could has not found."
+                }
+            );
         }
 
         var clusterAccess = await _kafkaClusterAccessRepository.FindBy(capabilityId, kafkaClusterId);
@@ -576,11 +623,13 @@ public class CapabilityController : ControllerBase
 
         if (clusterAccess.IsAccessGranted)
         {
-            return Ok(new KafkaClusterAccessApiResource
-            {
-                BootstrapServers = kafkaCluster.BootstrapServers,
-                SchemaRegistryUrl = kafkaCluster.SchemaRegistryUrl,
-            });
+            return Ok(
+                new KafkaClusterAccessApiResource(
+                    bootstrapServers: kafkaCluster.BootstrapServers,
+                    schemaRegistryUrl: kafkaCluster.SchemaRegistryUrl,
+                    links: null
+                )
+            );
         }
 
         return AcceptedAtAction(
@@ -599,29 +648,35 @@ public class CapabilityController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Unknown user id",
-                Detail = $"User id is not valid and thus cannot leave any capabilities.",
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                }
+            );
         }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Capability not found.",
-                Detail = $"A capability with id \"{id}\" could not be found."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
         }
 
         if (!KafkaClusterId.TryParse(clusterId, out var kafkaClusterId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Kafka cluster not found.",
-                Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Kafka cluster not found.",
+                    Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found."
+                }
+            );
         }
 
         await _capabilityApplicationService.RequestKafkaClusterAccess(capabilityId, kafkaClusterId, userId);

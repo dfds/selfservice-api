@@ -32,6 +32,5 @@ public class MemberBuilder
         return new Member(_id, _email, _displayName);
     }
 
-    public static implicit operator Member(MemberBuilder builder)
-        => builder.Build();
+    public static implicit operator Member(MemberBuilder builder) => builder.Build();
 }
