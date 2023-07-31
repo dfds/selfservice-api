@@ -27,9 +27,10 @@ public class DataPlatformRequesterService : IDataPlatformRequesterService
     {
         StringBuilder sb = new StringBuilder();
         sb.Append($"{_httpClient.BaseAddress}/api/data/timeseries/finout");
+        sb.Append($"?tag={capabilityId}");
         if (daysWindow > 0)
         {
-            sb.Append($"?days-window={daysWindow}");
+            sb.Append($"&days-window={daysWindow}");
         }
 
         HttpResponseMessage response = await _httpClient.GetAsync(sb.ToString());

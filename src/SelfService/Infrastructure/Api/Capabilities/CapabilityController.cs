@@ -693,11 +693,11 @@ public class CapabilityController : ControllerBase
         );
     }
 
-    [HttpPost("{id:required}/costs")]
+    [HttpGet("{id:required}/costs")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetCosts(string id, [FromQuery] int days)
+    public async Task<IActionResult> GetCosts(string id, [FromQuery] int daysWindow)
     {
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
@@ -718,7 +718,7 @@ public class CapabilityController : ControllerBase
             );
         }
 
-        var costs = await _dataPlatformRequesterService.GetCapabilityCosts(capabilityId, days);
+        var costs = await _dataPlatformRequesterService.GetCapabilityCosts(capabilityId, daysWindow);
 
         if (costs.Costs.Length == 0)
         {
@@ -731,11 +731,6 @@ public class CapabilityController : ControllerBase
             );
         }
 
-        return AcceptedAtAction(
-            actionName: nameof(GetCosts),
-            controllerName: "Capability",
-            routeValues: new { id },
-            value: new { status = "Requested" }
-        );
+        return Ok(costs);
     }
 }

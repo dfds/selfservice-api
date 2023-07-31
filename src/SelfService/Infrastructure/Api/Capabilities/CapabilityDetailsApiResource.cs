@@ -48,8 +48,6 @@ public class CapabilityDetailsApiResource
         Description = description;
         Links = links;
     }
-
-    public ResourceLink Costs { get; set; }
 }
 
 public class CapabilityListItemApiResource
