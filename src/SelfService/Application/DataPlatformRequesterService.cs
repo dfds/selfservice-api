@@ -1,10 +1,13 @@
+using System.Text;
+using System.Text.Json;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
 namespace SelfService.Application;
 
 public class DataPlatformRequesterService : IDataPlatformRequesterService
 {
-    struct DataPlatformApiTimeSeries
+    private struct DataPlatformApiTimeSeries
     {
         public DateTime TimeStamp { get; set; }
         public float Value { get; set; }
@@ -20,30 +23,38 @@ public class DataPlatformRequesterService : IDataPlatformRequesterService
         _httpClient = httpClient;
     }
 
-    private DataPlatformApiTimeSeries[] GetAsyncWithParameters(int daysWindow)
+
+    public async Task<CapabilityCosts> GetCapabilityCosts(CapabilityId capabilityId, int daysWindow)
     {
-        
-    }
-
-    public Task<CapabilityCosts> GetCapabilityCosts(string capabilityId, int daysWindow)
-    {
-        string url = $"{_httpClient.BaseAddress}/api/v1/query?query=kafka_consumergroup_lag"; // consider time parameter (e.g "&time=1689844553.339")
-        HttpResponseMessage response = await _httpClient.GetAsync(url);
-
-        string jsonstring = await response.Content.ReadAsStringAsync();
-        _logger.LogDebug("Response was {StatusCode} with body {ResponseBody}", response.StatusCode, jsonstring);
-
-        if (response.IsSuccessStatusCode)
+        StringBuilder sb = new StringBuilder();
+        sb.Append($"{_httpClient.BaseAddress}/api/data/timeseries/finout");
+        if (daysWindow > 0)
         {
-            if (jsonstring == null)
-            {
-                throw new KafkaTopicConsumersUnavailable($"Prometheus response is null");
-            }
-            Response? promResponse = JsonSerializer.Deserialize<Response>(jsonstring);
-            return (GetConsumersFromResponse(promResponse, topic));
+            sb.Append($"?days-window={daysWindow}");
         }
-        else {
-            throw new KafkaTopicConsumersUnavailable($"Prometheus StatusCode: {response.StatusCode}");
-        }   
+
+        HttpResponseMessage response = await _httpClient.GetAsync(sb.ToString());
+
+        if (!response.IsSuccessStatusCode)
+            throw new DataPlatformApiUnavailableException($"DataPlatformApi StatusCode: {response.StatusCode}");
+
+        string json = await response.Content.ReadAsStringAsync();
+        _logger.LogDebug("Response was {StatusCode} with body {ResponseBody}", response.StatusCode, json);
+
+        var dataResponse = JsonSerializer.Deserialize<DataPlatformApiTimeSeries[]>(json);
+        if (dataResponse == null)
+            return new CapabilityCosts(capabilityId, new TimeSeries[] { });
+
+        List<TimeSeries> timeSeries = new List<TimeSeries>();
+
+        foreach (var dataPlatformApiTimeSeries in dataResponse)
+        {
+            if (dataPlatformApiTimeSeries.Tag != capabilityId)
+                continue;
+            timeSeries.Add(new TimeSeries(dataPlatformApiTimeSeries.Value, dataPlatformApiTimeSeries.TimeStamp));
+        }
+
+
+        return new CapabilityCosts(capabilityId, timeSeries.ToArray());
     }
 }

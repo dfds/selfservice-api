@@ -51,7 +51,6 @@ try
     app.MapControllers().RequireAuthorization();
 
     app.MapEndpoints();
-    app.MapProxies();
 
     app.UseHttpMetrics();
 

@@ -329,6 +329,20 @@ public class ApiResourceFactory
         };
     }
 
+    private ResourceLink CreateCostsLinkFor(Capability capability)
+    {
+        return new ResourceLink
+        {
+            Href = _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCosts),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }) ?? "",
+            Rel = "self",
+            Allow = { Get }
+        };
+    }
+
     public async Task<CapabilityDetailsApiResource> Convert(Capability capability)
     {
         return new CapabilityDetailsApiResource
@@ -344,6 +358,7 @@ public class ApiResourceFactory
                 MembershipApplications = await CreateMembershipApplicationsLinkFor(capability),
                 LeaveCapability = await CreateLeaveCapabilityLinkFor(capability),
                 AwsAccount = await CreateAwsAccountLinkFor(capability),
+                Costs = CreateCostsLinkFor(capability),
             },
         };
     }
@@ -672,7 +687,7 @@ public class ApiResourceFactory
                             values: new { id = capabilityId }) ?? "",
                         Rel = "self",
                         Allow = createTopicAllow
-                    }
+                    },
                 }
             });
         }

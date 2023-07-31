@@ -1,20 +1,26 @@
 namespace SelfService.Domain.Models;
 
 
-public class Timeseries
+public class TimeSeries
 {
-    public DateTime TimeStamp;
-    public string Value;
+    public DateTime TimeStamp { get; set; }
+    public float Value { get; set; }
+
+    public TimeSeries(float value, DateTime timeStamp)
+    {               
+        Value = value;
+        TimeStamp = timeStamp;
+    }
 }
 
 public class CapabilityCosts
 {
-    private readonly Capability _capability;
-    private readonly Timeseries[] _costs;
+    public CapabilityId CapabilityId { get; set; }
+    public TimeSeries[] Costs { get; set; }
 
-    public CapabilityCosts(Capability capability, Timeseries[] costs)
+    public CapabilityCosts(CapabilityId capabilityId, TimeSeries[] costs)
     {
-        _capability = capability;
-        _costs = costs;
+        CapabilityId = capabilityId;
+        Costs = costs;
     }   
 }

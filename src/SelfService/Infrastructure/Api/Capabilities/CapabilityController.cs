@@ -633,15 +633,43 @@ public class CapabilityController : ControllerBase
             value: new { status = "Requested" }
         );
     }
-    
-    [HttpPost("{id:required}/costs/")]
-    [ProducesResponseType(StatusCodes.Status202Accepted)]
+
+    [HttpPost("{id:required}/costs")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetCosts(string id,[FromQuery] int days)
+    public async Task<IActionResult> GetCosts(string id, [FromQuery] int days)
     {
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Capability Id Not Parsable.",
+                Detail = $"ID {id}, could not be parsed as a CapabilityID"
+            });
+        }
 
-       await _dataPlatformRequesterService.GetCapabilityCosts(id,days);
+        var exists = await _capabilityRepository.Exists(capabilityId);
+        if (!exists)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Capability Not Found.",
+                Detail = $"Found no Capability with Id {id}"
+            });
+        }
+
+        var costs = await _dataPlatformRequesterService.GetCapabilityCosts(capabilityId, days);
+
+        if (costs.Costs.Length == 0)
+        {
+            return NotFound(new ProblemDetails()
+            {
+                Title = "Capability Costs not found",
+                Detail = $"No Cost data found for Capability with ID {id}",
+            });
+        }
+
         return AcceptedAtAction(
             actionName: nameof(GetCosts),
             controllerName: "Capability",
@@ -649,5 +677,4 @@ public class CapabilityController : ControllerBase
             value: new { status = "Requested" }
         );
     }
-
 }

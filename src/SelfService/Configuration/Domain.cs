@@ -90,7 +90,7 @@ public static class Domain
         
         var dataPlatformEndpoint = new Uri(builder.Configuration["SS_DATA_PLATFORM_API_ENDPOINT"] ?? "");
         var dataPlatformApiKey = builder.Configuration["SS_DATA_PLATFORM_API_KEY"];
-        builder.Services.AddProxies(client =>
+        builder.Services.AddHttpClient<IDataPlatformRequesterService,DataPlatformRequesterService>(client =>
         {
             client.BaseAddress = dataPlatformEndpoint;
             client.DefaultRequestHeaders.Add("x-api-key",dataPlatformApiKey);

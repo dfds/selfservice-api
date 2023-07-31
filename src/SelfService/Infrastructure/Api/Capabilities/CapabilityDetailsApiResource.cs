@@ -8,8 +8,7 @@ public class CapabilityDetailsApiResource
     public string Name { get; set; }
     public string Description { get; set; }
 
-    [JsonPropertyName("_links")]
-    public CapabilityDetailsLinks Links { get; set; } = new();
+    [JsonPropertyName("_links")] public CapabilityDetailsLinks Links { get; set; } = new();
 
     public class CapabilityDetailsLinks
     {
@@ -19,6 +18,7 @@ public class CapabilityDetailsApiResource
         public ResourceLink MembershipApplications { get; set; } = new();
         public ResourceLink LeaveCapability { get; set; } = new();
         public ResourceLink AwsAccount { get; set; } = new();
+        public ResourceLink Costs { get; set; } = new();
     }
 }
 
@@ -28,8 +28,7 @@ public class CapabilityListItemApiResource
     public string Name { get; set; }
     public string Description { get; set; }
 
-    [JsonPropertyName("_links")]
-    public CapabilityListItemLinks Links { get; set; } = new();
+    [JsonPropertyName("_links")] public CapabilityListItemLinks Links { get; set; } = new();
 
     public class CapabilityListItemLinks
     {
