@@ -324,11 +324,13 @@ public class ApiResourceFactory
     {
         return new ResourceLink
         {
-            Href = _linkGenerator.GetUriByAction(
-                httpContext: HttpContext,
-                action: nameof(CapabilityController.GetCosts),
-                controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }) ?? "",
+            Href =
+                _linkGenerator.GetUriByAction(
+                    httpContext: HttpContext,
+                    action: nameof(CapabilityController.GetCosts),
+                    controller: GetNameOf<CapabilityController>(),
+                    values: new { id = capability.Id }
+                ) ?? "",
             Rel = "self",
             Allow = { Get }
         };

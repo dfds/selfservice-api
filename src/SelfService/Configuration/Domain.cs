@@ -81,19 +81,19 @@ public static class Domain
             client.BaseAddress = topdeskEndpoint;
             client.DefaultRequestHeaders.Add("x-api-key", topdeskApiKey);
         });
-        
+
         var prometheusEndpoint = new Uri(builder.Configuration["SS_PROMETHEUS_API_ENDPOINT"] ?? "");
         builder.Services.AddHttpClient<IKafkaTopicConsumerService, PrometheusClient>(client =>
         {
             client.BaseAddress = prometheusEndpoint;
         });
-        
+
         var dataPlatformEndpoint = new Uri(builder.Configuration["SS_DATA_PLATFORM_API_ENDPOINT"] ?? "");
         var dataPlatformApiKey = builder.Configuration["SS_DATA_PLATFORM_API_KEY"];
-        builder.Services.AddHttpClient<IDataPlatformRequesterService,DataPlatformRequesterService>(client =>
+        builder.Services.AddHttpClient<IDataPlatformRequesterService, DataPlatformRequesterService>(client =>
         {
             client.BaseAddress = dataPlatformEndpoint;
-            client.DefaultRequestHeaders.Add("x-api-key",dataPlatformApiKey);
+            client.DefaultRequestHeaders.Add("x-api-key", dataPlatformApiKey);
         });
     }
 }

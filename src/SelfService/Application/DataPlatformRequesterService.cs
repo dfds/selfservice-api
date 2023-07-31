@@ -23,7 +23,6 @@ public class DataPlatformRequesterService : IDataPlatformRequesterService
         _httpClient = httpClient;
     }
 
-
     public async Task<CapabilityCosts> GetCapabilityCosts(CapabilityId capabilityId, int daysWindow)
     {
         StringBuilder sb = new StringBuilder();
@@ -53,7 +52,6 @@ public class DataPlatformRequesterService : IDataPlatformRequesterService
                 continue;
             timeSeries.Add(new TimeSeries(dataPlatformApiTimeSeries.Value, dataPlatformApiTimeSeries.TimeStamp));
         }
-
 
         return new CapabilityCosts(capabilityId, timeSeries.ToArray());
     }

@@ -1,13 +1,12 @@
 namespace SelfService.Domain.Models;
 
-
 public class TimeSeries
 {
     public DateTime TimeStamp { get; set; }
     public float Value { get; set; }
 
     public TimeSeries(float value, DateTime timeStamp)
-    {               
+    {
         Value = value;
         TimeStamp = timeStamp;
     }
@@ -22,5 +21,5 @@ public class CapabilityCosts
     {
         CapabilityId = capabilityId;
         Costs = costs;
-    }   
+    }
 }

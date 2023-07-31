@@ -39,7 +39,7 @@ public class CapabilityController : ControllerBase
         IMembershipApplicationService membershipApplicationService,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         IDataPlatformRequesterService dataPlatformRequesterService
-        )
+    )
     {
         _membersQuery = membersQuery;
         _capabilityRepository = capabilityRepository;
@@ -348,12 +348,14 @@ public class CapabilityController : ControllerBase
         }
         catch (PendingMembershipApplicationAlreadyExistsException)
         {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Already has pending membership application",
-                Detail =
-                    $"User \"{userId}\" already has a pending membership application for capability \"{capabilityId}\"."
-            });
+            return Conflict(
+                new ProblemDetails
+                {
+                    Title = "Already has pending membership application",
+                    Detail =
+                        $"User \"{userId}\" already has a pending membership application for capability \"{capabilityId}\"."
+                }
+            );
         }
         catch (AlreadyHasActiveMembershipException)
         {
@@ -613,12 +615,14 @@ public class CapabilityController : ControllerBase
         var clusterAccess = await _kafkaClusterAccessRepository.FindBy(capabilityId, kafkaClusterId);
         if (clusterAccess == null)
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Kafka cluster access not found.",
-                Detail =
-                    $"Access to Kafka cluster \"{clusterId}\" for capability \"{capabilityId}\" has not been requested."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Kafka cluster access not found.",
+                    Detail =
+                        $"Access to Kafka cluster \"{clusterId}\" for capability \"{capabilityId}\" has not been requested."
+                }
+            );
         }
 
         if (clusterAccess.IsAccessGranted)
@@ -697,32 +701,34 @@ public class CapabilityController : ControllerBase
     {
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Capability Id Not Parsable.",
-                Detail = $"ID {id}, could not be parsed as a CapabilityID"
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability Id Not Parsable.",
+                    Detail = $"ID {id}, could not be parsed as a CapabilityID"
+                }
+            );
         }
 
         var exists = await _capabilityRepository.Exists(capabilityId);
         if (!exists)
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Capability Not Found.",
-                Detail = $"Found no Capability with Id {id}"
-            });
+            return NotFound(
+                new ProblemDetails { Title = "Capability Not Found.", Detail = $"Found no Capability with Id {id}" }
+            );
         }
 
         var costs = await _dataPlatformRequesterService.GetCapabilityCosts(capabilityId, days);
 
         if (costs.Costs.Length == 0)
         {
-            return NotFound(new ProblemDetails()
-            {
-                Title = "Capability Costs not found",
-                Detail = $"No Cost data found for Capability with ID {id}",
-            });
+            return NotFound(
+                new ProblemDetails()
+                {
+                    Title = "Capability Costs not found",
+                    Detail = $"No Cost data found for Capability with ID {id}",
+                }
+            );
         }
 
         return AcceptedAtAction(
