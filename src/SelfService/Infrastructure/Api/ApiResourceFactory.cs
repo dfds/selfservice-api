@@ -323,17 +323,17 @@ public class ApiResourceFactory
     private ResourceLink CreateCostsLinkFor(Capability capability)
     {
         return new ResourceLink
-        {
-            Href =
+        (
+            href:
                 _linkGenerator.GetUriByAction(
                     httpContext: HttpContext,
                     action: nameof(CapabilityController.GetCosts),
                     controller: GetNameOf<CapabilityController>(),
                     values: new { id = capability.Id }
                 ) ?? "",
-            Rel = "self",
-            Allow = { Get }
-        };
+            rel: "self",
+            allow: Allow.Get
+        );
     }
 
     public async Task<CapabilityDetailsApiResource> Convert(Capability capability)

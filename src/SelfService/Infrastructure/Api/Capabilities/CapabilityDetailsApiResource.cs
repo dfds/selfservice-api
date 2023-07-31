@@ -18,6 +18,7 @@ public class CapabilityDetailsApiResource
         public ResourceLink MembershipApplications { get; set; }
         public ResourceLink LeaveCapability { get; set; }
         public ResourceLink AwsAccount { get; set; }
+        public ResourceLink Costs { get; set; }
 
         public CapabilityDetailsLinks(
             ResourceLink self,
@@ -25,7 +26,8 @@ public class CapabilityDetailsApiResource
             ResourceLink clusters,
             ResourceLink membershipApplications,
             ResourceLink leaveCapability,
-            ResourceLink awsAccount
+            ResourceLink awsAccount,
+            ResourceLink costs
         )
         {
             Self = self;
@@ -34,6 +36,7 @@ public class CapabilityDetailsApiResource
             MembershipApplications = membershipApplications;
             LeaveCapability = leaveCapability;
             AwsAccount = awsAccount;
+            Costs = costs;
         }
     }
 
@@ -43,8 +46,9 @@ public class CapabilityDetailsApiResource
         Name = name;
         Description = description;
         Links = links;
-        public ResourceLink Costs { get; set; } = new();
     }
+
+    public ResourceLink Costs { get; set; }
 }
 
 public class CapabilityListItemApiResource
