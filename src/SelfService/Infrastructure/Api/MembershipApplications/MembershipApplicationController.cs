@@ -43,7 +43,7 @@ public class MembershipApplicationController : ControllerBase
         if (!User.TryGetUserId(out var userId))
         {
             return Unauthorized();
-        }Œ
+        }
 
         if (!MembershipApplicationId.TryParse(id, out var membershipApplicationId))
         {
@@ -53,12 +53,7 @@ public class MembershipApplicationController : ControllerBase
         var application = await _membershipApplicationQuery.FindById(membershipApplicationId);
         if (application is null)
         {
-            return NotFound(
-                new ProblemDetails
-                {
-                    Title = "MembershipApplication not found",
-                    Detail = $"MembershipApplication \"{membershipApplicationId}\" is unknown by the system."
-                }
+            return NotFound(new ProblemDetails { Title = "MembershipApplication not found", Detail = $"MembershipApplication \"{membershipApplicationId}\" is unknown by the system." }
             );
         }
 
