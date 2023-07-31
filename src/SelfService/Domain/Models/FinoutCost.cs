@@ -1,0 +1,2 @@
+namespace SelfService.Domain.Models;
+

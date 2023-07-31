@@ -1,6 +1,8 @@
+using SelfService.Domain.Models;
+
 namespace SelfService.Application;
 
 public interface IDataPlatformRequesterService
 {
-    Task<IEnumerable<string>> GetConsumersForKafkaTopic(string capability);
+    Task<CapabilityCosts> GetCapabilityCosts(string capabilityId,int daysWindow);
 }

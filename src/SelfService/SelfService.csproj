@@ -25,4 +25,8 @@
       <Folder Include="Configuration\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Domain\Models\FinoutCost.cs" />
+    </ItemGroup>
+
 </Project>

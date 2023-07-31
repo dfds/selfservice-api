@@ -81,7 +81,7 @@ public static class Domain
             client.BaseAddress = topdeskEndpoint;
             client.DefaultRequestHeaders.Add("x-api-key", topdeskApiKey);
         });
-
+        
         var prometheusEndpoint = new Uri(builder.Configuration["SS_PROMETHEUS_API_ENDPOINT"] ?? "");
         builder.Services.AddHttpClient<IKafkaTopicConsumerService, PrometheusClient>(client => 
         {
