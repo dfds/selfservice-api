@@ -31,7 +31,7 @@ public class TestCapabilityId
         Assert.Equal(expected, namePart);
         Assert.Matches("-[a-z]{5}", randomPart);
     }
-    
+
     [Theory]
     [InlineData("")]
     [InlineData("    ")]
@@ -42,7 +42,7 @@ public class TestCapabilityId
     {
         Assert.Throws<FormatException>(() => CapabilityId.CreateFrom(input));
     }
-    
+
     [Fact]
     public void check_uniqueness_of_suffix()
     {

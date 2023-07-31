@@ -39,8 +39,7 @@ public class PlaceholderHandler : IMessageHandler<Placeholder>
         }
         else
         {
-            serviceDescription = new ServiceDescription
-            (
+            serviceDescription = new ServiceDescription(
                 id: Guid.NewGuid(),
                 name: message.Name,
                 @namespace: message.Namespace,
@@ -50,7 +49,7 @@ public class PlaceholderHandler : IMessageHandler<Placeholder>
 
             await _dbContext.AddAsync(serviceDescription);
         }
-        
+
         await _dbContext.SaveChangesAsync();
     }
 }

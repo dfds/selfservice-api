@@ -15,8 +15,11 @@ public class MemberApplicationService : IMemberApplicationService
     private readonly IMemberRepository _memberRepository;
     private readonly SystemTime _systemTime;
 
-    public MemberApplicationService(ILogger<MemberApplicationService> logger, IMemberRepository memberRepository, 
-        SystemTime systemTime)
+    public MemberApplicationService(
+        ILogger<MemberApplicationService> logger,
+        IMemberRepository memberRepository,
+        SystemTime systemTime
+    )
     {
         _logger = logger;
         _memberRepository = memberRepository;
@@ -26,8 +29,12 @@ public class MemberApplicationService : IMemberApplicationService
     [TransactionalBoundary, Outboxed]
     public async Task RegisterUserProfile(UserId userId, string name, string email)
     {
-        using var _ = _logger.BeginScope("{Action} on {ImplementationType} for {CurrentUser}",
-            nameof(RegisterUserProfile), GetType().FullName, userId);
+        using var _ = _logger.BeginScope(
+            "{Action} on {ImplementationType} for {CurrentUser}",
+            nameof(RegisterUserProfile),
+            GetType().FullName,
+            userId
+        );
 
         var user = await _memberRepository.FindBy(userId);
         if (user == null)
@@ -48,8 +55,12 @@ public class MemberApplicationService : IMemberApplicationService
     [TransactionalBoundary, Outboxed]
     public async Task RegisterLastSeen(UserId userId, DateTime lastSeen)
     {
-        using var _ = _logger.BeginScope("{Action} on {ImplementationType} for {CurrentUser}",
-            nameof(RegisterLastSeen), GetType().FullName, userId);
+        using var _ = _logger.BeginScope(
+            "{Action} on {ImplementationType} for {CurrentUser}",
+            nameof(RegisterLastSeen),
+            GetType().FullName,
+            userId
+        );
 
         var user = await _memberRepository.FindBy(userId);
         if (user != null)

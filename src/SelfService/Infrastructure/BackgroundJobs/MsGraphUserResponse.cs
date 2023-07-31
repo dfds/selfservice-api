@@ -20,7 +20,14 @@ public class User
     [JsonPropertyName("identities")]
     public List<Identity> Identities { get; set; }
 
-    public User(string odataContext, string displayName, bool accountEnabled, string id, string mail, List<Identity> identities)
+    public User(
+        string odataContext,
+        string displayName,
+        bool accountEnabled,
+        string id,
+        string mail,
+        List<Identity> identities
+    )
     {
         OdataContext = odataContext;
         DisplayName = displayName;

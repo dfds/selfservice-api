@@ -10,6 +10,7 @@ public class StubKafkaClusterRepository : IKafkaClusterRepository
     {
         _clusters = clusters;
     }
+
     public Task<bool> Exists(KafkaClusterId id)
     {
         throw new NotImplementedException();

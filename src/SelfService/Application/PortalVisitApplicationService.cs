@@ -9,8 +9,11 @@ public class PortalVisitApplicationService : IPortalVisitApplicationService
     private readonly IPortalVisitRepository _portalVisitRepository;
     private readonly SystemTime _systemTime;
 
-    public PortalVisitApplicationService(ILogger<PortalVisitApplicationService> logger, IPortalVisitRepository portalVisitRepository, 
-        SystemTime systemTime)
+    public PortalVisitApplicationService(
+        ILogger<PortalVisitApplicationService> logger,
+        IPortalVisitRepository portalVisitRepository,
+        SystemTime systemTime
+    )
     {
         _logger = logger;
         _portalVisitRepository = portalVisitRepository;
@@ -20,13 +23,9 @@ public class PortalVisitApplicationService : IPortalVisitApplicationService
     [TransactionalBoundary, Outboxed]
     public async Task RegisterVisit(UserId userId)
     {
-        using var _ = _logger.BeginScope("{Action} on {ImplementationType}",
-            nameof(RegisterVisit), GetType().FullName);
+        using var _ = _logger.BeginScope("{Action} on {ImplementationType}", nameof(RegisterVisit), GetType().FullName);
 
-        await _portalVisitRepository.Add(PortalVisit.Register(
-            visitedBy: userId,
-            visitedAt: _systemTime.Now
-        ));
+        await _portalVisitRepository.Add(PortalVisit.Register(visitedBy: userId, visitedAt: _systemTime.Now));
 
         _logger.LogDebug("Registered a portal visit for user {UserId}", userId);
     }

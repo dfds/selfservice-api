@@ -43,7 +43,10 @@ public class KafkaTopicRetention : ValueObject
         var candidate = text ?? "";
 
         var match = Regex.Match(candidate, @"^(?<days>\d+)[dD]$");
-        if ((match.Success && match.Groups["days"].Value != "0") || "forever".Equals(candidate, StringComparison.InvariantCultureIgnoreCase))
+        if (
+            (match.Success && match.Groups["days"].Value != "0")
+            || "forever".Equals(candidate, StringComparison.InvariantCultureIgnoreCase)
+        )
         {
             retention = new KafkaTopicRetention(text!.ToLowerInvariant());
             return true;
@@ -54,5 +57,6 @@ public class KafkaTopicRetention : ValueObject
     }
 
     public static implicit operator string(KafkaTopicRetention retention) => retention._value;
+
     public static implicit operator KafkaTopicRetention(string value) => Parse(value);
 }

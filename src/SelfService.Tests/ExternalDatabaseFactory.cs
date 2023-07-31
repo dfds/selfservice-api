@@ -7,7 +7,8 @@ namespace SelfService.Tests;
 
 public class ExternalDatabaseFactory : IDisposable, IAsyncDisposable
 {
-    private const string DefaultConnectionString = "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db;timeout=2;Command Timeout=2;";
+    private const string DefaultConnectionString =
+        "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db;timeout=2;Command Timeout=2;";
 
     private DbConnection? _connection;
     private SelfServiceDbContext? _dbContext;
@@ -19,9 +20,7 @@ public class ExternalDatabaseFactory : IDisposable, IAsyncDisposable
 
         await _connection.OpenAsync();
 
-        var options = new DbContextOptionsBuilder<SelfServiceDbContext>()
-            .UseNpgsql(_connection)
-            .Options;
+        var options = new DbContextOptionsBuilder<SelfServiceDbContext>().UseNpgsql(_connection).Options;
 
         _dbContext = new SelfServiceDbContext(options);
         return _dbContext;

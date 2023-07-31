@@ -6,11 +6,10 @@ namespace SelfService.Infrastructure.Persistence.Converters;
 
 public class MessageContractExampleConverter : ValueConverter<MessageContractExample, string>
 {
-    public MessageContractExampleConverter() : base(ToDatabaseType, FromDatabaseType)
-    {
-            
-    }
+    public MessageContractExampleConverter()
+        : base(ToDatabaseType, FromDatabaseType) { }
 
     private static Expression<Func<MessageContractExample, string>> ToDatabaseType => id => id.ToString();
-    private static Expression<Func<string, MessageContractExample>> FromDatabaseType => value => MessageContractExample.Parse(value);
+    private static Expression<Func<string, MessageContractExample>> FromDatabaseType =>
+        value => MessageContractExample.Parse(value);
 }

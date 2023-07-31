@@ -42,5 +42,6 @@ public class UserId : ValueObject
     }
 
     public static implicit operator UserId(string text) => Parse(text);
+
     public static implicit operator string(UserId id) => id.ToString();
 }

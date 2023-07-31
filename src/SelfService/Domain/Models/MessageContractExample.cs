@@ -44,5 +44,6 @@ public class MessageContractExample : ValueObject
     }
 
     public static implicit operator MessageContractExample(string text) => Parse(text);
+
     public static implicit operator string(MessageContractExample example) => example.ToString();
 }

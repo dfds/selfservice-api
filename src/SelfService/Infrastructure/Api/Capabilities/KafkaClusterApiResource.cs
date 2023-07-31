@@ -28,5 +28,4 @@ public class KafkaClusterApiResource
         Description = description;
         Links = links;
     }
-
 }

@@ -69,5 +69,6 @@ public class MessageType : ValueObject
     }
 
     public static implicit operator MessageType(string text) => Parse(text);
+
     public static implicit operator string(MessageType messageType) => messageType.ToString();
 }

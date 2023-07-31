@@ -32,7 +32,11 @@ public class KafkaTopicListApiResource
         }
     }
 
-    public KafkaTopicListApiResource(KafkaTopicApiResource[] items, KafkaTopicListEmbeddedResources embedded, KafkaTopicListLinks links)
+    public KafkaTopicListApiResource(
+        KafkaTopicApiResource[] items,
+        KafkaTopicListEmbeddedResources embedded,
+        KafkaTopicListLinks links
+    )
     {
         Items = items;
         Embedded = embedded;

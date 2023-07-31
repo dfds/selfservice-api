@@ -23,7 +23,7 @@ public class when_changing_kafka_topic_description_as_member_of_owning_capabilit
         using var client = application.CreateClient();
 
         _response = await client.PutAsync(
-            requestUri: $"/kafkatopics/{stubKafkaTopic.Id}/description", 
+            requestUri: $"/kafkatopics/{stubKafkaTopic.Id}/description",
             content: new StringContent(
                 content: @"{
                     ""description"": ""dummy-value""
@@ -37,7 +37,7 @@ public class when_changing_kafka_topic_description_as_member_of_owning_capabilit
     [Fact]
     public void then_response_has_expected_status_code()
     {
-        Assert.Equal((HttpStatusCode) 204, _response.StatusCode);
+        Assert.Equal((HttpStatusCode)204, _response.StatusCode);
     }
 
     public Task DisposeAsync()

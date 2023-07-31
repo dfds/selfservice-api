@@ -20,9 +20,7 @@ public class AwsAccountRepository : IAwsAccountRepository
 
     public async Task<List<AwsAccount>> GetAll()
     {
-        return await _dbContext
-            .AwsAccounts
-            .ToListAsync();
+        return await _dbContext.AwsAccounts.ToListAsync();
     }
 
     public async Task<AwsAccount> Get(AwsAccountId id)

@@ -8,7 +8,7 @@ public class CapabilityTopics
         Clusters = clusters;
     }
 
-    public Capability Capability { get;  }
+    public Capability Capability { get; }
     public ClusterTopics[] Clusters { get; }
 }
 

@@ -2,7 +2,8 @@
 
 public class Member : AggregateRoot<UserId>
 {
-    public Member(UserId id, string email, string? displayName) : base(id)
+    public Member(UserId id, string email, string? displayName)
+        : base(id)
     {
         Email = email;
         DisplayName = displayName;

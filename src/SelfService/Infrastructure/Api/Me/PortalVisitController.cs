@@ -20,17 +20,17 @@ public class PortalVisitController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Access Denied!",
-                Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id."
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access Denied!",
+                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id."
+                }
+            );
         }
 
         await _portalVisitApplicationService.RegisterVisit(userId);
 
         return Accepted();
     }
-
-
 }

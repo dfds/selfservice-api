@@ -16,7 +16,6 @@ public static class PrometheusServerConfiguration
 
         private readonly IMetricServer _metricServer = new KestrelMetricServer(Host, Port);
 
-
         public Task StartAsync(CancellationToken cancellationToken)
         {
             Console.WriteLine($"Starting metric server on {Host}:{Port}");

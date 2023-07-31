@@ -47,8 +47,10 @@ public class MessageContractId : ValueObject
     }
 
     public static implicit operator MessageContractId(string text) => Parse(text);
+
     public static implicit operator string(MessageContractId id) => id.ToString();
 
     public static implicit operator MessageContractId(Guid idValue) => new MessageContractId(idValue);
+
     public static implicit operator Guid(MessageContractId id) => id._value;
 }

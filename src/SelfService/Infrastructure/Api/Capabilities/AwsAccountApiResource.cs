@@ -23,7 +23,14 @@ public class AwsAccountApiResource
         }
     }
 
-    public AwsAccountApiResource(string id, string? accountId, string? roleEmail, string? @namespace, string? status, AwsAccountLinks links)
+    public AwsAccountApiResource(
+        string id,
+        string? accountId,
+        string? roleEmail,
+        string? @namespace,
+        string? status,
+        AwsAccountLinks links
+    )
     {
         Id = id;
         AccountId = accountId;

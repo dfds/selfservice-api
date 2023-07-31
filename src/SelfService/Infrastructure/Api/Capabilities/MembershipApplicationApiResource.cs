@@ -23,7 +23,14 @@ public class MembershipApplicationApiResource
         }
     }
 
-    public MembershipApplicationApiResource(string id, string applicant, string submittedAt, string expiresOn, MembershipApprovalListApiResource approvals, MembershipApplicationLinks links)
+    public MembershipApplicationApiResource(
+        string id,
+        string applicant,
+        string submittedAt,
+        string expiresOn,
+        MembershipApprovalListApiResource approvals,
+        MembershipApplicationLinks links
+    )
     {
         Id = id;
         Applicant = applicant;

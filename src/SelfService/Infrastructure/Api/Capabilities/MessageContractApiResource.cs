@@ -25,7 +25,16 @@ public class MessageContractApiResource
         }
     }
 
-    public MessageContractApiResource(string id, string messageType, string description, string kafkaTopicId, string schema, string example, string status, MessageContractLinks links)
+    public MessageContractApiResource(
+        string id,
+        string messageType,
+        string description,
+        string kafkaTopicId,
+        string schema,
+        string example,
+        string status,
+        MessageContractLinks links
+    )
     {
         Id = id;
         MessageType = messageType;

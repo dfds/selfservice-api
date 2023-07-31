@@ -41,19 +41,19 @@ public class MembershipApplicationBuilder
         modifier(builder);
         return WithApprovals(builder.Build());
     }
-    
+
     public MembershipApplicationBuilder WithApprovals(params MembershipApproval[] approvals)
     {
         _approvals = approvals;
         return this;
     }
-    
+
     public MembershipApplicationBuilder WithApprovals(IEnumerable<MembershipApproval> approvals)
     {
         _approvals = approvals;
         return this;
     }
-    
+
     public MembershipApplication Build()
     {
         return new MembershipApplication(
@@ -67,7 +67,5 @@ public class MembershipApplicationBuilder
         );
     }
 
-    public static implicit operator MembershipApplication(MembershipApplicationBuilder builder)
-        => builder.Build();
-
+    public static implicit operator MembershipApplication(MembershipApplicationBuilder builder) => builder.Build();
 }

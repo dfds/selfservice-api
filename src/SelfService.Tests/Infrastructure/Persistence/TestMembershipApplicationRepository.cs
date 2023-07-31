@@ -13,22 +13,16 @@ public class TestMembershipApplicationRepository
         await using var databaseFactory = new InMemoryDatabaseFactory();
         var dbContext = await databaseFactory.CreateDbContext();
 
-        var stubApprovals = new[]
-        {
-            A.MembershipApproval.Build(),
-            A.MembershipApproval.Build(),
-        };
+        var stubApprovals = new[] { A.MembershipApproval.Build(), A.MembershipApproval.Build(), };
 
         var stub = A.MembershipApplication
-            //.WithApprovals(stubApprovals)
-            .Build();
+        //.WithApprovals(stubApprovals)
+        .Build();
 
         stub.Approve(UserId.Parse("foo1"), DateTime.MinValue);
-        stub.Approve(UserId.Parse("foo2"),DateTime.MinValue);
+        stub.Approve(UserId.Parse("foo2"), DateTime.MinValue);
 
-        var sut = A.MembershipApplicationRepository
-            .WithDbContext(dbContext)
-            .Build();
+        var sut = A.MembershipApplicationRepository.WithDbContext(dbContext).Build();
 
         await sut.Add(stub);
 
