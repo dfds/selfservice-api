@@ -7,7 +7,8 @@ public class TestLegacyIncomingMessageFactory
     [Fact]
     public void Can_deserialize_events_from_legacy_envelope()
     {
-        const string rawMessage = "{\"version\":\"1\",\"eventName\":\"aws_context_account_created\",\"x-correlationId\":\"0a4c0dc1-660e-4c39-bb2b-769bacd29c9e\",\"x-sender\":\"K8sJanitor.WebApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null\",\"payload\":{\"contextId\":\"8b8dcf9c-cd7c-44b5-995d-b75448dfd093\",\"capabilityId\":\"0d03e3ad-2118-46b7-970e-0ca87b59a202\",\"capabilityName\":\"Team One\",\"capabilityRootId\":\"team-one\",\"contextName\":\"default\",\"accountId\":\"123456789012\",\"roleArn\":\"arn:some-role\",\"roleEmail\":\"some@email.com\"}}";
+        const string rawMessage =
+            "{\"version\":\"1\",\"eventName\":\"aws_context_account_created\",\"x-correlationId\":\"0a4c0dc1-660e-4c39-bb2b-769bacd29c9e\",\"x-sender\":\"K8sJanitor.WebApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null\",\"payload\":{\"contextId\":\"8b8dcf9c-cd7c-44b5-995d-b75448dfd093\",\"capabilityId\":\"0d03e3ad-2118-46b7-970e-0ca87b59a202\",\"capabilityName\":\"Team One\",\"capabilityRootId\":\"team-one\",\"contextName\":\"default\",\"accountId\":\"123456789012\",\"roleArn\":\"arn:some-role\",\"roleEmail\":\"some@email.com\"}}";
 
         var sut = new LegacyIncomingMessageFactory();
 

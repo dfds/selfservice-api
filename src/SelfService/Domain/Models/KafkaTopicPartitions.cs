@@ -50,5 +50,6 @@ public class KafkaTopicPartitions : ValueObject
     }
 
     public static implicit operator KafkaTopicPartitions(uint value) => new(value);
+
     public static implicit operator uint(KafkaTopicPartitions partitions) => partitions._value;
 }

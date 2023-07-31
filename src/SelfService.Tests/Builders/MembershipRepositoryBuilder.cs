@@ -17,6 +17,5 @@ public class MembershipRepositoryBuilder
         return new MembershipRepository(_dbContext!);
     }
 
-    public static implicit operator MembershipRepository(MembershipRepositoryBuilder builder)
-        => builder.Build();
+    public static implicit operator MembershipRepository(MembershipRepositoryBuilder builder) => builder.Build();
 }

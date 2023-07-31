@@ -11,10 +11,11 @@ public class AuthorizationService : IAuthorizationService
     private readonly IAwsAccountRepository _awsAccountRepository;
 
     public AuthorizationService(
-        ILogger<AuthorizationService> logger, 
-        IMembershipQuery membershipQuery, 
+        ILogger<AuthorizationService> logger,
+        IMembershipQuery membershipQuery,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
-        IAwsAccountRepository awsAccountRepository)
+        IAwsAccountRepository awsAccountRepository
+    )
     {
         _logger = logger;
         _membershipQuery = membershipQuery;
@@ -45,7 +46,10 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanChange(PortalUser portalUser, KafkaTopic kafkaTopic)
     {
-        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(portalUser.Id, kafkaTopic.CapabilityId);
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(
+            portalUser.Id,
+            kafkaTopic.CapabilityId
+        );
         if (!isMemberOfOwningCapability)
         {
             return false;
@@ -67,7 +71,10 @@ public class AuthorizationService : IAuthorizationService
             return false;
         }
 
-        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(portalUser.Id, kafkaTopic.CapabilityId);
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(
+            portalUser.Id,
+            kafkaTopic.CapabilityId
+        );
         if (isMemberOfOwningCapability)
         {
             return true;
@@ -91,7 +98,7 @@ public class AuthorizationService : IAuthorizationService
         {
             return true;
         }
-        
+
         return false;
     }
 
@@ -140,21 +147,20 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanRequestAwsAccount(UserId userId, CapabilityId capabilityId)
     {
-        return await _membershipQuery.HasActiveMembership(userId, capabilityId) &&
-               !await _awsAccountRepository.Exists(capabilityId);
-
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId)
+            && !await _awsAccountRepository.Exists(capabilityId);
     }
 
     public async Task<bool> CanLeave(UserId userId, CapabilityId capabilityId)
     {
-        return await _membershipQuery.HasActiveMembership(userId, capabilityId) &&
-               await _membershipQuery.HasMultipleMembers(capabilityId);
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId)
+            && await _membershipQuery.HasMultipleMembers(capabilityId);
     }
 
     public async Task<bool> CanApply(UserId userId, CapabilityId capabilityId)
     {
-        return !await _membershipQuery.HasActiveMembership(userId, capabilityId) &&
-               !await _membershipQuery.HasActiveMembershipApplication(userId, capabilityId);
+        return !await _membershipQuery.HasActiveMembership(userId, capabilityId)
+            && !await _membershipQuery.HasActiveMembershipApplication(userId, capabilityId);
     }
 
     public async Task<bool> CanViewAllApplications(UserId userId, CapabilityId capabilityId)

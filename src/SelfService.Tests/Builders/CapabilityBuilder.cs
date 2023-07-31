@@ -45,6 +45,5 @@ public class CapabilityBuilder
         );
     }
 
-    public static implicit operator Capability(CapabilityBuilder builder)
-        => builder.Build();
+    public static implicit operator Capability(CapabilityBuilder builder) => builder.Build();
 }

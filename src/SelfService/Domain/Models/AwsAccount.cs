@@ -4,11 +4,10 @@ namespace SelfService.Domain.Models;
 
 public class AwsAccount : AggregateRoot<AwsAccountId>
 {
-    protected AwsAccount()
-    {
-    }
+    protected AwsAccount() { }
 
-    public AwsAccount(AwsAccountId id, CapabilityId capabilityId, DateTime requestedAt, string requestedBy) : base(id)
+    public AwsAccount(AwsAccountId id, CapabilityId capabilityId, DateTime requestedAt, string requestedBy)
+        : base(id)
     {
         CapabilityId = capabilityId;
         RequestedAt = requestedAt;
@@ -37,19 +36,16 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
         }
     }
 
-
     public static AwsAccount RequestNew(CapabilityId capabilityId, DateTime requestedAt, string requestedBy)
     {
         var account = new AwsAccount(
-            id: AwsAccountId.New(), 
-            capabilityId: capabilityId, 
-            requestedAt: requestedAt, 
-            requestedBy: requestedBy);
+            id: AwsAccountId.New(),
+            capabilityId: capabilityId,
+            requestedAt: requestedAt,
+            requestedBy: requestedBy
+        );
 
-        account.Raise(new AwsAccountRequested
-        {
-            AccountId = account.Id
-        });
+        account.Raise(new AwsAccountRequested { AccountId = account.Id });
 
         return account;
     }

@@ -1,6 +1,6 @@
 namespace SelfService.Domain.Models;
 
-public class MembershipApplicationStatusOptions: ValueObject
+public class MembershipApplicationStatusOptions : ValueObject
 {
     public static readonly MembershipApplicationStatusOptions Unknown = new("Unknown");
     public static readonly MembershipApplicationStatusOptions PendingApprovals = new("PendingApprovals");
@@ -51,14 +51,10 @@ public class MembershipApplicationStatusOptions: ValueObject
         return false;
     }
 
-    public static IReadOnlyCollection<MembershipApplicationStatusOptions> Values => new[]
-    {
-        Unknown, PendingApprovals, Finalized, Cancelled
-    };
+    public static IReadOnlyCollection<MembershipApplicationStatusOptions> Values =>
+        new[] { Unknown, PendingApprovals, Finalized, Cancelled };
 
-    public static implicit operator MembershipApplicationStatusOptions(string text)
-        => Parse(text);
+    public static implicit operator MembershipApplicationStatusOptions(string text) => Parse(text);
 
-    public static implicit operator string(MembershipApplicationStatusOptions status)
-        => status.ToString();
+    public static implicit operator string(MembershipApplicationStatusOptions status) => status.ToString();
 }

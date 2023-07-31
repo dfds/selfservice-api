@@ -4,7 +4,14 @@ namespace SelfService.Domain.Models;
 
 public class KafkaClusterAccess : AggregateRoot<Guid>
 {
-    public KafkaClusterAccess(Guid id, CapabilityId capabilityId, KafkaClusterId kafkaClusterId, DateTime createdAt, string createdBy) : base(id)
+    public KafkaClusterAccess(
+        Guid id,
+        CapabilityId capabilityId,
+        KafkaClusterId kafkaClusterId,
+        DateTime createdAt,
+        string createdBy
+    )
+        : base(id)
     {
         CapabilityId = capabilityId;
         KafkaClusterId = kafkaClusterId;
@@ -30,20 +37,28 @@ public class KafkaClusterAccess : AggregateRoot<Guid>
     public DateTime CreatedAt { get; private set; }
     public string CreatedBy { get; private set; }
 
-    public static KafkaClusterAccess RequestAccess(CapabilityId capabilityId, KafkaClusterId kafkaClusterId, DateTime createdAt, string createdBy)
+    public static KafkaClusterAccess RequestAccess(
+        CapabilityId capabilityId,
+        KafkaClusterId kafkaClusterId,
+        DateTime createdAt,
+        string createdBy
+    )
     {
         var instance = new KafkaClusterAccess(
             id: Guid.NewGuid(),
             capabilityId: capabilityId,
             kafkaClusterId: kafkaClusterId,
             createdAt: createdAt,
-            createdBy: createdBy);
+            createdBy: createdBy
+        );
 
-        instance.Raise(new KafkaClusterAccessRequested
-        {
-            CapabilityId = capabilityId.ToString(),
-            KafkaClusterId = kafkaClusterId.ToString(),
-        });
+        instance.Raise(
+            new KafkaClusterAccessRequested
+            {
+                CapabilityId = capabilityId.ToString(),
+                KafkaClusterId = kafkaClusterId.ToString(),
+            }
+        );
 
         return instance;
     }

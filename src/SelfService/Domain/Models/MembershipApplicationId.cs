@@ -47,8 +47,10 @@ public class MembershipApplicationId : ValueObject
     }
 
     public static implicit operator MembershipApplicationId(string text) => Parse(text);
+
     public static implicit operator string(MembershipApplicationId id) => id.ToString();
 
     public static implicit operator MembershipApplicationId(Guid idValue) => new MembershipApplicationId(idValue);
+
     public static implicit operator Guid(MembershipApplicationId id) => id._value;
 }

@@ -12,7 +12,6 @@ public class StubMembershipApplicationQuery : IMembershipApplicationQuery
         _membershipApplication = membershipApplication;
     }
 
-
     public Task<MembershipApplication?> FindById(MembershipApplicationId id)
     {
         return Task.FromResult(_membershipApplication);

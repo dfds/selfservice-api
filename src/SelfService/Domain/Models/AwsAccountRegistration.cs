@@ -4,9 +4,7 @@ public class AwsAccountRegistration : ValueObject
 {
     public static readonly AwsAccountRegistration Incomplete = new();
 
-    protected AwsAccountRegistration()
-    {
-    }
+    protected AwsAccountRegistration() { }
 
     public AwsAccountRegistration(RealAwsAccountId accountId, string? roleEmail, DateTime registeredAt)
     {
@@ -18,7 +16,7 @@ public class AwsAccountRegistration : ValueObject
     public RealAwsAccountId? AccountId { get; private set; }
     public string? RoleEmail { get; private set; }
     public DateTime? RegisteredAt { get; private set; }
-    
+
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return AccountId!;

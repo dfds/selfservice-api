@@ -9,12 +9,15 @@ public static class SwaggerConfiguration
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo
-            {
-                Description = "SelfService API",
-                Version = "v1",
-                Title = "SelfService API"
-            });
+            options.SwaggerDoc(
+                "v1",
+                new OpenApiInfo
+                {
+                    Description = "SelfService API",
+                    Version = "v1",
+                    Title = "SelfService API"
+                }
+            );
 
             options.DocInclusionPredicate((_, description) => !description.ShouldIgnore());
         });

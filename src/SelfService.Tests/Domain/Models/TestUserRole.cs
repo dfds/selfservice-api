@@ -45,30 +45,13 @@ public class TestUserRole
     }
 
     public static IEnumerable<object[]> ValidInput =>
-        new[]
-        {
-            "foo",
-            "bar",
-            "baz",
-            "qux",
-        }.Select(value => new[] {value});
+        new[] { "foo", "bar", "baz", "qux", }.Select(value => new[] { value });
 
     public static IEnumerable<object[]> ValidCloudEngineerInput =>
-        new[]
-        {
-            "Cloud.Engineer",
-            "Cloud Engineer",
-            "Cloud_Engineer",
-            "Cloud-Engineer",
-        }.Select(value => new[] {value});
+        new[] { "Cloud.Engineer", "Cloud Engineer", "Cloud_Engineer", "Cloud-Engineer", }.Select(
+            value => new[] { value }
+        );
 
-    public static IEnumerable<object[]> InvalidInput => 
-        new[]
-        {
-            null!,
-            "",
-            " ",
-            "     "
-        }
-        .Select(value => new[] {value});
+    public static IEnumerable<object[]> InvalidInput =>
+        new[] { null!, "", " ", "     " }.Select(value => new[] { value });
 }

@@ -6,7 +6,7 @@ public class KafkaClusterAccessApiResource
 {
     public string? BootstrapServers { get; set; }
     public string? SchemaRegistryUrl { get; set; }
-    
+
     [JsonPropertyName("_links")]
     public KafkaClusterAccess Links { get; set; } = new();
 

@@ -15,7 +15,9 @@ public class TestCapabilityMembershipsRoutes
         await using var application = new ApiApplication();
         application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
         application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true, hasMultipleMembers: true));
+        application.ReplaceService<IMembershipQuery>(
+            new StubMembershipQuery(hasActiveMembership: true, hasMultipleMembers: true)
+        );
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -23,8 +25,9 @@ public class TestCapabilityMembershipsRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/leaveCapability/allow")?
-            .EnumerateArray()
+        var allowValues = document
+            ?.SelectElement("/_links/leaveCapability/allow")
+            ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
@@ -47,8 +50,9 @@ public class TestCapabilityMembershipsRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/leaveCapability/allow")?
-            .EnumerateArray()
+        var allowValues = document
+            ?.SelectElement("/_links/leaveCapability/allow")
+            ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 

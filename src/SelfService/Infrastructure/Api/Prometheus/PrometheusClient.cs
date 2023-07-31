@@ -5,10 +5,8 @@ using SelfService.Application;
 
 namespace SelfService.Infrastructure.Api.Prometheus;
 
-
-public class PrometheusClient: IKafkaTopicConsumerService
+public class PrometheusClient : IKafkaTopicConsumerService
 {
-
     private readonly ILogger<PrometheusClient> _logger;
     private readonly HttpClient _httpClient;
 
@@ -21,11 +19,14 @@ public class PrometheusClient: IKafkaTopicConsumerService
     private IEnumerable<string> GetConsumersFromResponse(Response? response, string topic)
     {
         List<string> consumers = new List<string>();
-        if (response == null || response.data == null || response.data.result == null) {
+        if (response == null || response.data == null || response.data.result == null)
+        {
             return new List<string>();
         }
-        foreach (Result result in response.data.result) {
-            if (result.metric == null || result.metric.topic == null || result.metric.consumergroup == null) {
+        foreach (Result result in response.data.result)
+        {
+            if (result.metric == null || result.metric.topic == null || result.metric.consumergroup == null)
+            {
                 continue;
             }
             if (result.metric.topic == topic)
@@ -35,7 +36,6 @@ public class PrometheusClient: IKafkaTopicConsumerService
         }
         return consumers;
     }
-
 
     public async Task<IEnumerable<string>> GetConsumersForKafkaTopic(string topic)
     {
@@ -54,8 +54,9 @@ public class PrometheusClient: IKafkaTopicConsumerService
             Response? promResponse = JsonSerializer.Deserialize<Response>(jsonstring);
             return (GetConsumersFromResponse(promResponse, topic));
         }
-        else {
+        else
+        {
             throw new KafkaTopicConsumersUnavailable($"Prometheus StatusCode: {response.StatusCode}");
-        }   
+        }
     }
 }

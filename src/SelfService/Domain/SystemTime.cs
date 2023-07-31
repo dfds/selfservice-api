@@ -11,5 +11,4 @@ public class SystemTime
     }
 
     public DateTime Now => _provider();
-
 }

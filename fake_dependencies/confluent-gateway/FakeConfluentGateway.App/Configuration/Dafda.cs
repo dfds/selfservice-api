@@ -28,30 +28,24 @@ public static class Dafda
                 .Ignore("topic-deleted")
                 .Ignore("cluster-access-requested")
                 .RegisterMessageHandler<NewKafkaTopicHasBeenRequestedMessage, NewKafkaTopicHasBeenRequestedHandler>(
-                    "topic-requested")
-                ;
-
+                    "topic-requested"
+                );
 
             options
                 .ForTopic($"{SelfServicePrefix}.messagecontract")
                 .Ignore("message-contract-requested")
-                .Ignore("message-contract-provisioned")
-                ;
+                .Ignore("message-contract-provisioned");
 
             options
                 .ForTopic($"{ConfluentGatewayPrefix}.schema")
                 .Ignore("schema-registered")
-                .Ignore("schema-registration-failed")
-                ;
+                .Ignore("schema-registration-failed");
 
             #endregion
 
             #region Fake aad-aws-sync
 
-            options
-                .ForTopic($"{SelfServicePrefix}.membership")
-                .Ignore("user-has-joined-capability")
-                ;
+            options.ForTopic($"{SelfServicePrefix}.membership").Ignore("user-has-joined-capability");
 
             #endregion
         });
@@ -60,8 +54,11 @@ public static class Dafda
         {
             options.WithConfigurationSource(builder.Configuration);
             options.WithEnvironmentStyle("DEFAULT_KAFKA");
-            options.Register<KafkaTopicProvisioningHasCompleted>($"{ConfluentGatewayPrefix}.provisioning",
-                "topic-provisioned", (msg) => msg.TopicId);
+            options.Register<KafkaTopicProvisioningHasCompleted>(
+                $"{ConfluentGatewayPrefix}.provisioning",
+                "topic-provisioned",
+                (msg) => msg.TopicId
+            );
         });
 
         builder.Services.AddProducerFor<LegacyProducer>(options =>
@@ -72,15 +69,21 @@ public static class Dafda
 
             #region Fake org-account-context (pipeline)
 
-            options.Register<AwsContextAccountCreated>(LegacyTopic,
-                AwsContextAccountCreated.EventType, x => x.ContextId);
+            options.Register<AwsContextAccountCreated>(
+                LegacyTopic,
+                AwsContextAccountCreated.EventType,
+                x => x.ContextId
+            );
 
             #endregion
 
             #region Fake K8sJanitor
 
-            options.Register<K8sNamespaceCreatedAndAwsArnConnected>(LegacyTopic,
-                K8sNamespaceCreatedAndAwsArnConnected.EventType, x => x.ContextId);
+            options.Register<K8sNamespaceCreatedAndAwsArnConnected>(
+                LegacyTopic,
+                K8sNamespaceCreatedAndAwsArnConnected.EventType,
+                x => x.ContextId
+            );
 
             #endregion
         });
@@ -91,9 +94,11 @@ public static class Dafda
         public string? Version { get; set; }
         public string? EventName { get; set; }
 
-        [JsonPropertyName("x-correlationId")] public string? CorrelationId { get; set; }
+        [JsonPropertyName("x-correlationId")]
+        public string? CorrelationId { get; set; }
 
-        [JsonPropertyName("x-sender")] public string? Sender { get; set; }
+        [JsonPropertyName("x-sender")]
+        public string? Sender { get; set; }
 
         public object? Payload { get; set; }
     }
@@ -137,10 +142,7 @@ public class ConfluentGateway
 
     public async Task ProduceKafkaTopicProvisioningHasCompletedMessage(string topicId)
     {
-        await _producer.Produce(new KafkaTopicProvisioningHasCompleted()
-        {
-            TopicId = topicId
-        });
+        await _producer.Produce(new KafkaTopicProvisioningHasCompleted() { TopicId = topicId });
     }
 }
 
@@ -184,8 +186,7 @@ public static class ConsumerOptionsExtensions
             _topic = topic;
         }
 
-        public TopicConsumerOptions RegisterMessageHandler<TMessage, TMessageHandler>(
-            string messageType)
+        public TopicConsumerOptions RegisterMessageHandler<TMessage, TMessageHandler>(string messageType)
             where TMessage : class
             where TMessageHandler : class, IMessageHandler<TMessage>
         {
@@ -242,7 +243,6 @@ public class NewKafkaTopicHasBeenRequestedHandler : IMessageHandler<NewKafkaTopi
     {
         _gateway = gateway;
     }
-
 
     public async Task Handle(NewKafkaTopicHasBeenRequestedMessage message, MessageHandlerContext context)
     {

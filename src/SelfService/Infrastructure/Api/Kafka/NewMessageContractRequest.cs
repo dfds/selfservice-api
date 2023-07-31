@@ -12,7 +12,7 @@ public class NewMessageContractRequest
 
     [Required]
     public string? Example { get; set; }
-    
+
     [Required]
     public string? Schema { get; set; }
 }

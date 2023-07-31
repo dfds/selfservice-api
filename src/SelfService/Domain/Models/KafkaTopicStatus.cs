@@ -35,7 +35,6 @@ public class KafkaTopicStatus : ValueObject
 
     public static bool TryParse(string? input, out KafkaTopicStatus kafkaTopicStatus)
     {
-
         switch (input)
         {
             case "Requested":

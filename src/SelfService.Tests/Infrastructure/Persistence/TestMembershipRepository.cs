@@ -17,9 +17,7 @@ public class TestMembershipRepository
         var memberA = A.Membership.WithCapabilityId(capability.Id).WithUserId("MA").Build();
         var memberB = A.Membership.WithCapabilityId(capability.Id).WithUserId("MB").Build();
 
-        var repo = A.MembershipRepository
-            .WithDbContext(dbContext)
-            .Build();
+        var repo = A.MembershipRepository.WithDbContext(dbContext).Build();
 
         await repo.Add(memberA);
         await repo.Add(memberB);
@@ -50,9 +48,7 @@ public class TestMembershipRepository
         var capability = A.Capability.Build();
         var member = A.Membership.WithCapabilityId(capability.Id).Build();
 
-        var repo = A.MembershipRepository
-            .WithDbContext(dbContext)
-            .Build();
+        var repo = A.MembershipRepository.WithDbContext(dbContext).Build();
 
         await repo.Add(member);
 

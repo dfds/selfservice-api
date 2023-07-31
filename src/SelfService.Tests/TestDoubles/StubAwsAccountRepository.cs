@@ -6,7 +6,7 @@ public class StubAwsAccountRepository : IAwsAccountRepository
 {
     private readonly AwsAccount? _awsAccount;
 
-    public StubAwsAccountRepository(AwsAccount? awsAccount=null)
+    public StubAwsAccountRepository(AwsAccount? awsAccount = null)
     {
         _awsAccount = awsAccount;
     }

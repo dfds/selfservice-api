@@ -2,12 +2,10 @@ namespace SelfService.Domain.Models;
 
 public class MembershipApproval : Entity<Guid>
 {
-    private MembershipApproval()
-    {
-        
-    }
+    private MembershipApproval() { }
 
-    public MembershipApproval(Guid id, UserId approvedBy, DateTime approvedAt) : base(id)
+    public MembershipApproval(Guid id, UserId approvedBy, DateTime approvedAt)
+        : base(id)
     {
         ApprovedBy = approvedBy;
         ApprovedAt = approvedAt;

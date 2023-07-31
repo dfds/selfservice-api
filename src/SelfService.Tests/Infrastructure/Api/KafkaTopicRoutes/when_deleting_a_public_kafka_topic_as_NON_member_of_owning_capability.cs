@@ -12,9 +12,7 @@ public class when_deleting_a_public_kafka_topic_as_NON_member_of_owning_capabili
 
     public async Task InitializeAsync()
     {
-        var stubKafkaTopic = A.KafkaTopic
-            .WithName("pub.im-public")
-            .Build();
+        var stubKafkaTopic = A.KafkaTopic.WithName("pub.im-public").Build();
 
         await using var application = new ApiApplication();
         application.ReplaceService(Dummy.Of<IKafkaTopicApplicationService>());
@@ -29,7 +27,7 @@ public class when_deleting_a_public_kafka_topic_as_NON_member_of_owning_capabili
     [Fact]
     public void then_response_has_expected_status_code()
     {
-        Assert.Equal((HttpStatusCode) 401, _response.StatusCode);
+        Assert.Equal((HttpStatusCode)401, _response.StatusCode);
     }
 
     public Task DisposeAsync()

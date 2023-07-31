@@ -15,5 +15,4 @@ public class KafkaClusterApiResource
     {
         public ResourceLink Self { get; set; } = new();
     }
-
 }

@@ -9,9 +9,8 @@ using SelfService.Infrastructure.Metrics;
 using SelfService.Infrastructure.Persistence;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-    .CreateBootstrapLogger();
+
+Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Code).CreateBootstrapLogger();
 
 try
 {
@@ -47,11 +46,10 @@ try
     app.UseAuthorization();
 
     app.MapControllers().RequireAuthorization();
-    
+
     app.MapEndpoints();
 
     app.UseHttpMetrics();
-    
 
     app.UseSerilogRequestLogging();
 
@@ -67,7 +65,5 @@ finally
 }
 
 #pragma warning disable CA1050 // Declare types in namespaces
-public partial class Program
-{
-}
+public partial class Program { }
 #pragma warning disable CA1050 // Declare types in namespaces

@@ -43,7 +43,7 @@ public class PlaceholderHandler : IMessageHandler<Placeholder>
 
             await _dbContext.AddAsync(serviceDescription);
         }
-        
+
         await _dbContext.SaveChangesAsync();
     }
 }

@@ -18,25 +18,30 @@ public static class ConsumerConfiguration
 
             options.WithIncomingMessageFactory(_ => new LegacyIncomingMessageFactory());
 
-            options.ForTopic("build.selfservice.events.capabilities")
-                .RegisterMessageHandler<AwsContextAccountCreated, AwsContextAccountCreatedHandler>(AwsContextAccountCreated.EventType)
-                .RegisterMessageHandler<K8sNamespaceCreatedAndAwsArnConnected, K8sNamespaceCreatedAndAwsArnConnectedHandler>(K8sNamespaceCreatedAndAwsArnConnected.EventType)
-                ;
+            options
+                .ForTopic("build.selfservice.events.capabilities")
+                .RegisterMessageHandler<AwsContextAccountCreated, AwsContextAccountCreatedHandler>(
+                    AwsContextAccountCreated.EventType
+                )
+                .RegisterMessageHandler<
+                    K8sNamespaceCreatedAndAwsArnConnected,
+                    K8sNamespaceCreatedAndAwsArnConnectedHandler
+                >(K8sNamespaceCreatedAndAwsArnConnected.EventType);
 
             options.WithUnconfiguredMessageHandlingStrategy<UseNoOpHandler>();
         });
-
     }
 }
 
 public class LegacyIncomingMessageFactory : IIncomingMessageFactory
 {
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        NumberHandling = JsonNumberHandling.AllowReadingFromString
-    };
+    private static readonly JsonSerializerOptions JsonSerializerOptions =
+        new()
+        {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString
+        };
 
     public TransportLevelMessage Create(string rawMessage)
     {
@@ -59,13 +64,16 @@ public class LegacyIncomingMessageFactory : IIncomingMessageFactory
 
         var metadata = new Metadata(dict);
 
-        return new TransportLevelMessage(metadata, type =>
-        {
-            using (jsonDocument)
+        return new TransportLevelMessage(
+            metadata,
+            type =>
             {
-                return envelope.Payload.Deserialize(type, JsonSerializerOptions);
+                using (jsonDocument)
+                {
+                    return envelope.Payload.Deserialize(type, JsonSerializerOptions);
+                }
             }
-        });
+        );
     }
 
     private class LegacyEventEnvelope
