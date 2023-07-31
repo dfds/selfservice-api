@@ -53,7 +53,13 @@ public class MembershipApplicationController : ControllerBase
         var application = await _membershipApplicationQuery.FindById(membershipApplicationId);
         if (application is null)
         {
-            return NotFound(new ProblemDetails { Title = "MembershipApplication not found", Detail = $"MembershipApplication \"{membershipApplicationId}\" is unknown by the system." });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "MembershipApplication not found",
+                    Detail = $"MembershipApplication \"{membershipApplicationId}\" is unknown by the system."
+                }
+            );
         }
 
         if (!await _authorizationService.CanRead(userId, application))
