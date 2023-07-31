@@ -11,4 +11,10 @@ public class ResourceActionLink
 {
     public string Href { get; set; }
     public string Method { get; set; }
+
+    public ResourceActionLink(string href, string method)
+    {
+        Href = href;
+        Method = method;
+    }
 }

@@ -125,14 +125,14 @@ public class ApiResourceFactory
                 },
                 updateDescription: await _authorizationService.CanChange(portalUser, topic)
                     ? new ResourceActionLink
-                    {
-                        Href = _linkGenerator.GetUriByAction(
+                    (
+                        href: _linkGenerator.GetUriByAction(
                             httpContext: HttpContext,
                             action: nameof(KafkaTopicController.ChangeTopicDescription),
                             controller: GetNameOf<KafkaTopicController>(),
                             values: new { id = topic.Id }) ?? "?",
-                        Method = "PUT",
-                    }
+                        method: "PUT"
+                    )
                     : null
             )
         );
