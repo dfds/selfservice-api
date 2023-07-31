@@ -7,18 +7,35 @@ public class KafkaTopicListApiResource
     public KafkaTopicApiResource[] Items { get; set; } = Array.Empty<KafkaTopicApiResource>();
 
     [JsonPropertyName("_embedded")]
-    public KafkaTopicListEmbeddedResources Embedded { get; set; } = new();
+    public KafkaTopicListEmbeddedResources Embedded { get; set; }
 
     [JsonPropertyName("_links")]
-    public KafkaTopicListLinks Links { get; set; } = new();
+    public KafkaTopicListLinks Links { get; set; }
 
     public class KafkaTopicListEmbeddedResources
     {
         public KafkaClusterListApiResource KafkaClusters { get; set; }
+
+        public KafkaTopicListEmbeddedResources(KafkaClusterListApiResource kafkaClusters)
+        {
+            KafkaClusters = kafkaClusters;
+        }
     }
 
     public class KafkaTopicListLinks
     {
-        public ResourceLink Self { get; set; } = new();
+        public ResourceLink Self { get; set; }
+
+        public KafkaTopicListLinks(ResourceLink self)
+        {
+            Self = self;
+        }
+    }
+
+    public KafkaTopicListApiResource(KafkaTopicApiResource[] items, KafkaTopicListEmbeddedResources embedded, KafkaTopicListLinks links)
+    {
+        Items = items;
+        Embedded = embedded;
+        Links = links;
     }
 }

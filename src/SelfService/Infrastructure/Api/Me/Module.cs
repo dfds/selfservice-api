@@ -132,15 +132,32 @@ public class MyProfileApiResource
     public PersonalInformationApiResource PersonalInformation { get; set; } = new ();
 
     [JsonPropertyName("_links")]
-    public MyProfileLinks Links { get; set; } = new();
+    public MyProfileLinks Links { get; set; }
 
     public class MyProfileLinks
     {
-        public ResourceLink Self { get; set; } = new();
-        public ResourceLink PersonalInformation { get; set; } = new();
-        public ResourceLink PortalVisits { get; set; } = new();
-        public ResourceLink TopVisitors { get; set; } = new();
+        public ResourceLink Self { get; set; }
+        public ResourceLink PersonalInformation { get; set; }
+        public ResourceLink PortalVisits { get; set; }
+        public ResourceLink TopVisitors { get; set; }
+    
+        public MyProfileLinks(ResourceLink self, ResourceLink personalInformation, ResourceLink portalVisits, ResourceLink topVisitors)
+        {
+            Self = self;
+            PersonalInformation = personalInformation;
+            PortalVisits = portalVisits;
+            TopVisitors = topVisitors;
+        }
     }
+
+    public MyProfileApiResource(string id, IEnumerable<CapabilityListItemApiResource> capabilities, bool autoReloadTopics, PersonalInformationApiResource personalInformation, MyProfileLinks links)
+    {
+        Id = id;
+        Capabilities = capabilities;
+        AutoReloadTopics = autoReloadTopics;
+        PersonalInformation = personalInformation;
+        Links = links;
+    }    
 }
 
 public class PersonalInformationApiResource

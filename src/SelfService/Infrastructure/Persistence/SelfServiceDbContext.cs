@@ -31,27 +31,25 @@ public static class DependencyInjection
 
 public class SelfServiceDbContext : DbContext
 {
-    public SelfServiceDbContext(DbContextOptions<SelfServiceDbContext> options) : base(options)
-    {
+    // Parameterless constructor is required by EntityFramework
+    public SelfServiceDbContext(DbContextOptions<SelfServiceDbContext> options) : base(options){ }
 
-    }
+    public DbSet<OutboxEntry> OutboxEntries { get; set; } = null!; // suppress parameterless constructor warning
 
-    public DbSet<OutboxEntry> OutboxEntries { get; set; } = null!;
+    public DbSet<Capability> Capabilities { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<Member> Members { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<Membership> Memberships { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<MembershipApplication> MembershipApplications { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<AwsAccount> AwsAccounts { get; set; } = null!; // suppress parameterless constructor warning
 
-    public DbSet<Capability> Capabilities { get; set; } = null!;
-    public DbSet<Member> Members { get; set; } = null!;
-    public DbSet<Membership> Memberships { get; set; } = null!;
-    public DbSet<MembershipApplication> MembershipApplications { get; set; } = null!;
-    public DbSet<AwsAccount> AwsAccounts { get; set; } = null!;
+    public DbSet<KafkaCluster> KafkaClusters { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<KafkaClusterAccess> KafkaClusterAccess { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<KafkaTopic> KafkaTopics { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<MessageContract> MessageContracts { get; set; } = null!; // suppress parameterless constructor warning
 
-    public DbSet<KafkaCluster> KafkaClusters { get; set; } = null!;
-    public DbSet<KafkaClusterAccess> KafkaClusterAccess { get; set; } = null!;
-    public DbSet<KafkaTopic> KafkaTopics { get; set; } = null!;
-    public DbSet<MessageContract> MessageContracts { get; set; } = null!;
+    public DbSet<PortalVisit> PortalVisits { get; set; } = null!; // suppress parameterless constructor warning
 
-    public DbSet<PortalVisit> PortalVisits { get; set; } = null!;
-
-    public DbSet<ServiceDescription> ServiceCatalog { get; set; } = null!;
+    public DbSet<ServiceDescription> ServiceCatalog { get; set; } = null!; // suppress parameterless constructor warning
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
