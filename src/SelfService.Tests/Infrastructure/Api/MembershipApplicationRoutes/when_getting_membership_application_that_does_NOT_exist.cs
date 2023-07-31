@@ -20,7 +20,7 @@ public class when_getting_membership_application_that_does_NOT_exist : IAsyncLif
     }
 
     [Fact]
-    public async Task then_returns_not_found()
+    public void then_returns_not_found()
     {
         Assert.Equal(HttpStatusCode.NotFound, _response.StatusCode);
     }

@@ -24,7 +24,7 @@ public class when_getting_membership_application_for_another_applicant_as_NON_me
     }
 
     [Fact]
-    public async Task then_returns_unauthorized()
+    public void then_returns_unauthorized()
     {
         Assert.Equal(HttpStatusCode.Unauthorized, _response.StatusCode);
     }

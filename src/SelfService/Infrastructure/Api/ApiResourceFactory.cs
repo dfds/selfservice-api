@@ -275,7 +275,7 @@ public class ApiResourceFactory
         };
     }
 
-    private async Task<ResourceLink> CreateMembersLinkFor(Capability capability)
+    private ResourceLink CreateMembersLinkFor(Capability capability)
     {
         return new ResourceLink
         {
@@ -353,7 +353,7 @@ public class ApiResourceFactory
             Links =
             {
                 Self = CreateSelfLinkFor(capability),
-                Members = await CreateMembersLinkFor(capability),
+                Members = CreateMembersLinkFor(capability),
                 Clusters = CreateClusterAccessLinkFor(capability),
                 MembershipApplications = await CreateMembershipApplicationsLinkFor(capability),
                 LeaveCapability = await CreateLeaveCapabilityLinkFor(capability),
@@ -778,13 +778,12 @@ public class ApiResourceFactory
     }
 
     public MyProfileApiResource Convert(UserId userId, IEnumerable<Capability> capabilities, Member? member,
-        bool isDevelopment, IEnumerable<Stat> stats)
+        bool isDevelopment)
     {
         return new MyProfileApiResource
         {
             Id = userId,
             Capabilities = capabilities.Select(ConvertToListItem),
-            Stats = stats,
             AutoReloadTopics = !isDevelopment,
             PersonalInformation = member != null
                 ? new PersonalInformationApiResource
