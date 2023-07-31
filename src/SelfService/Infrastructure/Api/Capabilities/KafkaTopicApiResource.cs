@@ -23,7 +23,12 @@ public class KafkaTopicApiResource
         public ResourceLink Consumers { get; set; }
         public ResourceActionLink? UpdateDescription { get; set; }
 
-        public KafkaTopicLinks(ResourceLink self, ResourceLink messageContracts, ResourceLink consumers, ResourceActionLink? updateDescription)
+        public KafkaTopicLinks(
+            ResourceLink self,
+            ResourceLink messageContracts,
+            ResourceLink consumers,
+            ResourceActionLink? updateDescription
+        )
         {
             Self = self;
             MessageContracts = messageContracts;
@@ -32,7 +37,17 @@ public class KafkaTopicApiResource
         }
     }
 
-    public KafkaTopicApiResource(string id, string name, string description, string capabilityId, string kafkaClusterId, uint partitions, string retention, string status, KafkaTopicLinks links)
+    public KafkaTopicApiResource(
+        string id,
+        string name,
+        string description,
+        string capabilityId,
+        string kafkaClusterId,
+        uint partitions,
+        string retention,
+        string status,
+        KafkaTopicLinks links
+    )
     {
         Id = id;
         Name = name;

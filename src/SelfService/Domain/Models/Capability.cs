@@ -4,7 +4,15 @@ namespace SelfService.Domain.Models;
 
 public class Capability : AggregateRoot<CapabilityId>
 {
-    public Capability(CapabilityId id, string name, string description, DateTime? deleted, DateTime createdAt, string createdBy) : base(id)
+    public Capability(
+        CapabilityId id,
+        string name,
+        string description,
+        DateTime? deleted,
+        DateTime createdAt,
+        string createdBy
+    )
+        : base(id)
     {
         Name = name;
         Description = description;
@@ -13,7 +21,13 @@ public class Capability : AggregateRoot<CapabilityId>
         CreatedBy = createdBy;
     }
 
-    public static Capability CreateCapability(CapabilityId capabilityId, string name, string description, DateTime creationTime, string requestedBy)
+    public static Capability CreateCapability(
+        CapabilityId capabilityId,
+        string name,
+        string description,
+        DateTime creationTime,
+        string requestedBy
+    )
     {
         var capability = new Capability(capabilityId, name, description, null, creationTime, requestedBy);
         capability.Raise(new CapabilityCreated(capabilityId, requestedBy));

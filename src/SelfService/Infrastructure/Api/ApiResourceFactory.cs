@@ -18,8 +18,12 @@ public class ApiResourceFactory
     private readonly IAuthorizationService _authorizationService;
     private readonly IMembershipQuery _membershipQuery;
 
-    public ApiResourceFactory(IHttpContextAccessor httpContextAccessor, LinkGenerator linkGenerator,
-        IAuthorizationService authorizationService, IMembershipQuery membershipQuery)
+    public ApiResourceFactory(
+        IHttpContextAccessor httpContextAccessor,
+        LinkGenerator linkGenerator,
+        IAuthorizationService authorizationService,
+        IMembershipQuery membershipQuery
+    )
     {
         _httpContextAccessor = httpContextAccessor;
         _linkGenerator = linkGenerator;
@@ -27,8 +31,8 @@ public class ApiResourceFactory
         _membershipQuery = membershipQuery;
     }
 
-    private HttpContext HttpContext => _httpContextAccessor.HttpContext ??
-                                       throw new ApplicationException("Not in a http request context!");
+    private HttpContext HttpContext =>
+        _httpContextAccessor.HttpContext ?? throw new ApplicationException("Not in a http request context!");
 
     private UserId CurrentUser
     {
@@ -51,8 +55,8 @@ public class ApiResourceFactory
     /// </summary>
     /// <typeparam name="TController">The controller to extract the name from.</typeparam>
     /// <returns>Name on controller that adheres to the default naming convention (e.g. "FooController" -> "Foo").</returns>
-    private static string GetNameOf<TController>() where TController : ControllerBase
-        => typeof(TController).Name.Replace("Controller", "");
+    private static string GetNameOf<TController>()
+        where TController : ControllerBase => typeof(TController).Name.Replace("Controller", "");
 
     public async Task<KafkaTopicApiResource> Convert(KafkaTopic topic)
     {
@@ -81,8 +85,7 @@ public class ApiResourceFactory
             messageContractsAccessLevel += Post;
         }
 
-        var result = new KafkaTopicApiResource
-        (
+        var result = new KafkaTopicApiResource(
             id: topic.Id,
             name: topic.Name,
             description: topic.Description,
@@ -91,46 +94,45 @@ public class ApiResourceFactory
             partitions: topic.Partitions,
             retention: topic.Retention,
             status: topic.Status.ToString(),
-            links: new KafkaTopicApiResource.KafkaTopicLinks
-            (
-                self: new ResourceLink
-                (
+            links: new KafkaTopicApiResource.KafkaTopicLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(KafkaTopicController.GetTopic),
                         controller: GetNameOf<KafkaTopicController>(),
-                        values: new { id = topic.Id }) ?? "",
+                        values: new { id = topic.Id }
+                    ) ?? "",
                     rel: "self",
                     allow: allowOnSelf
                 ),
-                messageContracts: new ResourceLink
-                (
+                messageContracts: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(KafkaTopicController.GetMessageContracts),
                         controller: GetNameOf<KafkaTopicController>(),
-                        values: new { id = topic.Id }) ?? "?",
+                        values: new { id = topic.Id }
+                    ) ?? "?",
                     rel: "related",
                     allow: messageContractsAccessLevel
                 ),
-                consumers: new ResourceLink
-                (
+                consumers: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(KafkaTopicController.GetConsumers),
                         controller: GetNameOf<KafkaTopicController>(),
-                        values: new { id = topic.Id }) ?? "?",
+                        values: new { id = topic.Id }
+                    ) ?? "?",
                     rel: "related",
                     allow: consumerAccessLevel
                 ),
                 updateDescription: await _authorizationService.CanChange(portalUser, topic)
-                    ? new ResourceActionLink
-                    (
+                    ? new ResourceActionLink(
                         href: _linkGenerator.GetUriByAction(
                             httpContext: HttpContext,
                             action: nameof(KafkaTopicController.ChangeTopicDescription),
                             controller: GetNameOf<KafkaTopicController>(),
-                            values: new { id = topic.Id }) ?? "?",
+                            values: new { id = topic.Id }
+                        ) ?? "?",
                         method: "PUT"
                     )
                     : null
@@ -142,19 +144,16 @@ public class ApiResourceFactory
 
     public CapabilityMembersApiResource Convert(string id, IEnumerable<Member> members)
     {
-        return new CapabilityMembersApiResource
-        (
-            items: members
-                .Select(Convert)
-                .ToArray(),
-            links: new CapabilityMembersApiResource.CapabilityMembersLinks
-            (
-                self: new ResourceLink
-                (
+        return new CapabilityMembersApiResource(
+            items: members.Select(Convert).ToArray(),
+            links: new CapabilityMembersApiResource.CapabilityMembersLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         controller: GetNameOf<CapabilityController>(),
-                        action: nameof(CapabilityController.GetCapabilityMembers), values: new { id }) ?? "",
+                        action: nameof(CapabilityController.GetCapabilityMembers),
+                        values: new { id }
+                    ) ?? "",
                     rel: "self",
                     allow: Allow.Get
                 )
@@ -164,31 +163,25 @@ public class ApiResourceFactory
 
     private static MemberApiResource Convert(Member member)
     {
-        return new MemberApiResource
-        (
+        return new MemberApiResource(
             id: member.Id.ToString(),
             name: member.DisplayName,
             email: member.Email
-
-            // Note: [jandr] current design does not include the need for links
+        // Note: [jandr] current design does not include the need for links
         );
     }
 
     public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
     {
-        return new CapabilityListApiResource
-        (
-            items: capabilities
-                .Select(ConvertToListItem)
-                .ToArray(),
-            links: new CapabilityListApiResource.CapabilityListLinks
-            (
-                self: new ResourceLink
-                (
+        return new CapabilityListApiResource(
+            items: capabilities.Select(ConvertToListItem).ToArray(),
+            links: new CapabilityListApiResource.CapabilityListLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         controller: GetNameOf<CapabilityController>(),
-                        action: nameof(CapabilityController.GetAllCapabilities)) ?? "",
+                        action: nameof(CapabilityController.GetAllCapabilities)
+                    ) ?? "",
                     rel: "self",
                     allow: Allow.Get
                 )
@@ -198,20 +191,18 @@ public class ApiResourceFactory
 
     public CapabilityListItemApiResource ConvertToListItem(Capability capability)
     {
-        return new CapabilityListItemApiResource
-        (
+        return new CapabilityListItemApiResource(
             id: capability.Id,
             name: capability.Name,
             description: capability.Description,
-            links: new CapabilityListItemApiResource.CapabilityListItemLinks
-            (
-                self: new ResourceLink
-                (
+            links: new CapabilityListItemApiResource.CapabilityListItemLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(CapabilityController.GetCapabilityById),
                         controller: GetNameOf<CapabilityController>(),
-                        values: new { id = capability.Id }) ?? "",
+                        values: new { id = capability.Id }
+                    ) ?? "",
                     rel: "self",
                     allow: Allow.Get
                 )
@@ -228,13 +219,13 @@ public class ApiResourceFactory
             allowedInteractions += Post;
         }
 
-        return new ResourceLink
-        (
+        return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
                 action: nameof(CapabilityController.GetCapabilityMembershipApplications),
                 controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }) ?? "",
+                values: new { id = capability.Id }
+            ) ?? "",
             rel: "related",
             allow: allowedInteractions
         );
@@ -249,13 +240,13 @@ public class ApiResourceFactory
             allowedInteractions += Post;
         }
 
-        return new ResourceLink
-        (
+        return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
                 action: nameof(CapabilityController.LeaveCapability),
                 controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }) ?? "",
+                values: new { id = capability.Id }
+            ) ?? "",
             rel: "related",
             allow: allowedInteractions
         );
@@ -263,13 +254,13 @@ public class ApiResourceFactory
 
     private ResourceLink CreateSelfLinkFor(Capability capability)
     {
-        return new ResourceLink
-        (
+        return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
                 action: nameof(CapabilityController.GetCapabilityById),
                 controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }) ?? "",
+                values: new { id = capability.Id }
+            ) ?? "",
             rel: "self",
             allow: Allow.Get
         );
@@ -277,13 +268,13 @@ public class ApiResourceFactory
 
     private ResourceLink CreateMembersLinkFor(Capability capability)
     {
-        return new ResourceLink
-        (
+        return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
                 action: nameof(CapabilityController.GetCapabilityMembers),
                 controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }) ?? "",
+                values: new { id = capability.Id }
+            ) ?? "",
             rel: "related",
             allow: Allow.Get
         );
@@ -291,13 +282,13 @@ public class ApiResourceFactory
 
     private ResourceLink CreateClusterAccessLinkFor(Capability capability)
     {
-        return new ResourceLink
-        (
+        return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
                 action: nameof(CapabilityController.GetKafkaClusterAccessList),
                 controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }) ?? "",
+                values: new { id = capability.Id }
+            ) ?? "",
             rel: "related",
             allow: Allow.Get
         );
@@ -317,13 +308,13 @@ public class ApiResourceFactory
             }
         }
 
-        return new ResourceLink
-        (
+        return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
                 action: nameof(CapabilityController.RequestAwsAccount),
                 controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }) ?? "",
+                values: new { id = capability.Id }
+            ) ?? "",
             rel: "related",
             allow: allowedInteractions
         );
@@ -331,13 +322,11 @@ public class ApiResourceFactory
 
     public async Task<CapabilityDetailsApiResource> Convert(Capability capability)
     {
-        return new CapabilityDetailsApiResource
-        (
+        return new CapabilityDetailsApiResource(
             id: capability.Id,
             name: capability.Name,
             description: capability.Description,
-            links: new CapabilityDetailsApiResource.CapabilityDetailsLinks
-            (
+            links: new CapabilityDetailsApiResource.CapabilityDetailsLinks(
                 self: CreateSelfLinkFor(capability),
                 members: CreateMembersLinkFor(capability),
                 clusters: CreateClusterAccessLinkFor(capability),
@@ -356,22 +345,20 @@ public class ApiResourceFactory
             allowedInteractions += Get;
         }
 
-        return new AwsAccountApiResource
-        (
+        return new AwsAccountApiResource(
             id: account.Id,
             accountId: account.Registration.AccountId?.ToString(),
             roleEmail: account.Registration.RoleEmail,
             @namespace: account.KubernetesLink.Namespace,
             status: Convert(account.Status),
-            links: new AwsAccountApiResource.AwsAccountLinks
-            (
-                self: new ResourceLink
-                (
+            links: new AwsAccountApiResource.AwsAccountLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(CapabilityController.GetCapabilityAwsAccount),
                         controller: GetNameOf<CapabilityController>(),
-                        values: new { id = account.CapabilityId }) ?? "",
+                        values: new { id = account.CapabilityId }
+                    ) ?? "",
                     rel: "self",
                     allow: allowedInteractions
                 )
@@ -392,44 +379,36 @@ public class ApiResourceFactory
 
     public KafkaClusterApiResource Convert(KafkaCluster cluster)
     {
-        var resourceLink = new ResourceLink
-        (
+        var resourceLink = new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
                 action: nameof(KafkaClusterController.GetById),
                 controller: GetNameOf<KafkaClusterController>(),
-                values: new { id = cluster.Id }) ?? "",
+                values: new { id = cluster.Id }
+            ) ?? "",
             rel: "self",
             allow: Allow.Get
         );
 
-        return new KafkaClusterApiResource
-        (
+        return new KafkaClusterApiResource(
             id: cluster.Id,
             name: cluster.Name,
             description: cluster.Description,
-            links: new KafkaClusterApiResource.KafkaClusterLinks
-            (
-                self: resourceLink
-            )
+            links: new KafkaClusterApiResource.KafkaClusterLinks(self: resourceLink)
         );
     }
 
     public KafkaClusterListApiResource Convert(IEnumerable<KafkaCluster> clusters)
     {
-        return new KafkaClusterListApiResource
-        (
-            items: clusters
-                .Select(Convert)
-                .ToArray(),
-            links: new KafkaClusterListApiResource.KafkaClusterListLinks
-            (
-                self: new ResourceLink
-                (
+        return new KafkaClusterListApiResource(
+            items: clusters.Select(Convert).ToArray(),
+            links: new KafkaClusterListApiResource.KafkaClusterListLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(KafkaClusterController.GetAllClusters),
-                        controller: GetNameOf<KafkaClusterController>()) ?? "",
+                        controller: GetNameOf<KafkaClusterController>()
+                    ) ?? "",
                     rel: "self",
                     allow: Allow.Get
                 )
@@ -439,8 +418,7 @@ public class ApiResourceFactory
 
     public MessageContractApiResource Convert(MessageContract messageContract)
     {
-        return new MessageContractApiResource
-        (
+        return new MessageContractApiResource(
             id: messageContract.Id,
             messageType: messageContract.MessageType,
             description: messageContract.Description,
@@ -448,15 +426,14 @@ public class ApiResourceFactory
             schema: messageContract.Schema,
             kafkaTopicId: messageContract.KafkaTopicId,
             status: messageContract.Status,
-            links: new MessageContractApiResource.MessageContractLinks
-            (
-                self: new ResourceLink
-                (
+            links: new MessageContractApiResource.MessageContractLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(KafkaTopicController.GetSingleMessageContract),
                         controller: GetNameOf<KafkaTopicController>(),
-                        values: new { id = messageContract.KafkaTopicId, contractId = messageContract.Id }) ?? "",
+                        values: new { id = messageContract.KafkaTopicId, contractId = messageContract.Id }
+                    ) ?? "",
                     rel: "self",
                     allow: Allow.Get
                 )
@@ -464,8 +441,10 @@ public class ApiResourceFactory
         );
     }
 
-    public async Task<MessageContractListApiResource> Convert(IEnumerable<MessageContract> contracts,
-        KafkaTopic parentKafkaTopic)
+    public async Task<MessageContractListApiResource> Convert(
+        IEnumerable<MessageContract> contracts,
+        KafkaTopic parentKafkaTopic
+    )
     {
         var allowedInteractions = Allow.Get;
         if (await _authorizationService.CanAddMessageContract(PortalUser, parentKafkaTopic))
@@ -473,20 +452,16 @@ public class ApiResourceFactory
             allowedInteractions += Post;
         }
 
-        return new MessageContractListApiResource
-        (
-            items: contracts
-                .Select(Convert)
-                .ToArray(),
-            links: new MessageContractListApiResource.MessageContractListLinks
-            (
-                self: new ResourceLink
-                (
+        return new MessageContractListApiResource(
+            items: contracts.Select(Convert).ToArray(),
+            links: new MessageContractListApiResource.MessageContractListLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(KafkaTopicController.GetMessageContracts),
                         controller: GetNameOf<KafkaTopicController>(),
-                        values: new { id = parentKafkaTopic.Id }) ?? "",
+                        values: new { id = parentKafkaTopic.Id }
+                    ) ?? "",
                     rel: "self",
                     allow: allowedInteractions
                 )
@@ -494,8 +469,7 @@ public class ApiResourceFactory
         );
     }
 
-    public async Task<ConsumersListApiResource> Convert(IEnumerable<string> consumers,
-        KafkaTopic topic)
+    public async Task<ConsumersListApiResource> Convert(IEnumerable<string> consumers, KafkaTopic topic)
     {
         var allowedInteractions = Allow.None;
         if (await _authorizationService.CanReadConsumers(PortalUser, topic))
@@ -503,19 +477,16 @@ public class ApiResourceFactory
             allowedInteractions += Get;
         }
 
-        return new ConsumersListApiResource
-        (
-            items: consumers
-                .ToArray(),
-            links: new ConsumersListApiResource.ConsumersListLinks
-            (
-                self: new ResourceLink
-                (
+        return new ConsumersListApiResource(
+            items: consumers.ToArray(),
+            links: new ConsumersListApiResource.ConsumersListLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(KafkaTopicController.GetConsumers),
                         controller: GetNameOf<KafkaTopicController>(),
-                        values: new { topicId = topic.Id, clusterId = topic.KafkaClusterId }) ?? "",
+                        values: new { topicId = topic.Id, clusterId = topic.KafkaClusterId }
+                    ) ?? "",
                     rel: "self",
                     allow: allowedInteractions
                 )
@@ -528,9 +499,7 @@ public class ApiResourceFactory
         var isCurrentUserTheApplicant = application.Applicant == currentUser;
 
         // hide list of approvals if current user is the applicant
-        var approvals = isCurrentUserTheApplicant
-            ? Enumerable.Empty<MembershipApproval>()
-            : application.Approvals;
+        var approvals = isCurrentUserTheApplicant ? Enumerable.Empty<MembershipApproval>() : application.Approvals;
 
         var allowedApprovalInteractions = Allow.None;
         if (!isCurrentUserTheApplicant)
@@ -542,22 +511,20 @@ public class ApiResourceFactory
             }
         }
 
-        return new MembershipApplicationApiResource
-        (
+        return new MembershipApplicationApiResource(
             id: application.Id.ToString(),
             applicant: application.Applicant,
             submittedAt: application.SubmittedAt.ToUniversalTime().ToString("O"),
             expiresOn: application.ExpiresOn.ToUniversalTime().ToString("O"),
             approvals: Convert(approvals, application.Id, allowedApprovalInteractions),
-            links: new MembershipApplicationApiResource.MembershipApplicationLinks
-            (
-                self: new ResourceLink
-                (
+            links: new MembershipApplicationApiResource.MembershipApplicationLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(MembershipApplicationController.GetById),
                         controller: GetNameOf<MembershipApplicationController>(),
-                        values: new { id = application.Id.ToString() }) ?? "",
+                        values: new { id = application.Id.ToString() }
+                    ) ?? "",
                     rel: "self",
                     allow: Allow.Get
                 )
@@ -565,23 +532,22 @@ public class ApiResourceFactory
         );
     }
 
-    private MembershipApprovalListApiResource Convert(IEnumerable<MembershipApproval> approvals,
-        MembershipApplicationId parentApplicationId, Allow allowedInteractions)
+    private MembershipApprovalListApiResource Convert(
+        IEnumerable<MembershipApproval> approvals,
+        MembershipApplicationId parentApplicationId,
+        Allow allowedInteractions
+    )
     {
-        return new MembershipApprovalListApiResource
-        (
-            items: approvals
-                .Select(Convert)
-                .ToArray(),
-            links: new MembershipApprovalListApiResource.MembershipApprovalListLinks
-            (
-                self: new ResourceLink
-                (
+        return new MembershipApprovalListApiResource(
+            items: approvals.Select(Convert).ToArray(),
+            links: new MembershipApprovalListApiResource.MembershipApprovalListLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(MembershipApplicationController.GetMembershipApplicationApprovals),
                         controller: GetNameOf<MembershipApplicationController>(),
-                        values: new { id = parentApplicationId }) ?? "",
+                        values: new { id = parentApplicationId }
+                    ) ?? "",
                     rel: "self",
                     allow: allowedInteractions
                 )
@@ -591,16 +557,17 @@ public class ApiResourceFactory
 
     private static MembershipApprovalApiResource Convert(MembershipApproval approval)
     {
-        return new MembershipApprovalApiResource
-        (
+        return new MembershipApprovalApiResource(
             id: approval.Id.ToString("N"),
             approvedBy: approval.ApprovedBy,
             approvedAt: approval.ApprovedAt.ToUniversalTime().ToString("O")
         );
     }
 
-    public async Task<KafkaClusterAccessListApiResource> Convert(CapabilityId capabilityId,
-        IEnumerable<KafkaCluster> clusters)
+    public async Task<KafkaClusterAccessListApiResource> Convert(
+        CapabilityId capabilityId,
+        IEnumerable<KafkaCluster> clusters
+    )
     {
         IList<KafkaClusterAccessListItemApiResource> items = new List<KafkaClusterAccessListItemApiResource>();
 
@@ -626,69 +593,72 @@ public class ApiResourceFactory
                 }
             }
 
-            items.Add(new KafkaClusterAccessListItemApiResource
-            (
-                id: cluster.Id,
-                name: cluster.Name,
-                description: cluster.Description,
-                links: new KafkaClusterAccessListItemApiResource.KafkaClusterAccessListItem
-                (
-                    access: new ResourceLink
-                    (
-                        href: _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            action: nameof(CapabilityController.GetKafkaClusterAccess),
-                            controller: GetNameOf<CapabilityController>(),
-                            values: new { id = capabilityId, clusterId = cluster.Id }) ?? "",
-                        rel: "related",
-                        allow: accessAllow
-                    ),
-                    topics: new ResourceLink
-                    (
-                        href: _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            action: nameof(KafkaTopicController.GetAllTopics),
-                            controller: GetNameOf<KafkaTopicController>(),
-                            values: new { capabilityId, clusterId = cluster.Id, includePrivate = true }) ?? "",
-                        rel: "related",
-                        allow: Allow.Get
-                    ),
-                    requestAccess: new ResourceLink
-                    (
-                        href: _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            action: nameof(CapabilityController.RequestKafkaClusterAccess),
-                            controller: GetNameOf<CapabilityController>(),
-                            values: new { id = capabilityId, clusterId = cluster.Id }) ?? "",
-                        rel: "self",
-                        allow: requestAccessAllow
-                    ),
-                    createTopic: new ResourceLink
-                    (
-                        href: _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            action: nameof(CapabilityController.AddCapabilityTopic),
-                            controller: GetNameOf<CapabilityController>(),
-                            values: new { id = capabilityId }) ?? "",
-                        rel: "self",
-                        allow: createTopicAllow
+            items.Add(
+                new KafkaClusterAccessListItemApiResource(
+                    id: cluster.Id,
+                    name: cluster.Name,
+                    description: cluster.Description,
+                    links: new KafkaClusterAccessListItemApiResource.KafkaClusterAccessListItem(
+                        access: new ResourceLink(
+                            href: _linkGenerator.GetUriByAction(
+                                httpContext: HttpContext,
+                                action: nameof(CapabilityController.GetKafkaClusterAccess),
+                                controller: GetNameOf<CapabilityController>(),
+                                values: new { id = capabilityId, clusterId = cluster.Id }
+                            ) ?? "",
+                            rel: "related",
+                            allow: accessAllow
+                        ),
+                        topics: new ResourceLink(
+                            href: _linkGenerator.GetUriByAction(
+                                httpContext: HttpContext,
+                                action: nameof(KafkaTopicController.GetAllTopics),
+                                controller: GetNameOf<KafkaTopicController>(),
+                                values: new
+                                {
+                                    capabilityId,
+                                    clusterId = cluster.Id,
+                                    includePrivate = true
+                                }
+                            ) ?? "",
+                            rel: "related",
+                            allow: Allow.Get
+                        ),
+                        requestAccess: new ResourceLink(
+                            href: _linkGenerator.GetUriByAction(
+                                httpContext: HttpContext,
+                                action: nameof(CapabilityController.RequestKafkaClusterAccess),
+                                controller: GetNameOf<CapabilityController>(),
+                                values: new { id = capabilityId, clusterId = cluster.Id }
+                            ) ?? "",
+                            rel: "self",
+                            allow: requestAccessAllow
+                        ),
+                        createTopic: new ResourceLink(
+                            href: _linkGenerator.GetUriByAction(
+                                httpContext: HttpContext,
+                                action: nameof(CapabilityController.AddCapabilityTopic),
+                                controller: GetNameOf<CapabilityController>(),
+                                values: new { id = capabilityId }
+                            ) ?? "",
+                            rel: "self",
+                            allow: createTopicAllow
+                        )
                     )
                 )
-            ));
+            );
         }
 
-        var resource = new KafkaClusterAccessListApiResource
-        (
+        var resource = new KafkaClusterAccessListApiResource(
             items: items.ToArray(),
-            links: new KafkaClusterAccessListApiResource.KafkaClusterAccessList
-            (
-                self: new ResourceLink
-                (
+            links: new KafkaClusterAccessListApiResource.KafkaClusterAccessList(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(CapabilityController.GetKafkaClusterAccessList),
                         controller: GetNameOf<CapabilityController>(),
-                        values: new { id = capabilityId }) ?? "",
+                        values: new { id = capabilityId }
+                    ) ?? "",
                     rel: "self",
                     allow: Allow.Get
                 )
@@ -697,8 +667,11 @@ public class ApiResourceFactory
         return resource;
     }
 
-    public async Task<MembershipApplicationListApiResource> Convert(CapabilityId capabilityId,
-        IEnumerable<MembershipApplication> applications, UserId userId)
+    public async Task<MembershipApplicationListApiResource> Convert(
+        CapabilityId capabilityId,
+        IEnumerable<MembershipApplication> applications,
+        UserId userId
+    )
     {
         var allowedInteractions = Allow.Get;
         if (await _authorizationService.CanApply(CurrentUser, capabilityId))
@@ -706,21 +679,16 @@ public class ApiResourceFactory
             allowedInteractions += Post;
         }
 
-        var resource = new MembershipApplicationListApiResource
-        (
-            items: applications
-                .Select(application => Convert(application, userId))
-                .ToArray(),
-            links: new MembershipApplicationListApiResource.MembershipApplicationListLinks
-            (
-                self: new ResourceLink
-                (
+        var resource = new MembershipApplicationListApiResource(
+            items: applications.Select(application => Convert(application, userId)).ToArray(),
+            links: new MembershipApplicationListApiResource.MembershipApplicationListLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
-                               httpContext: HttpContext,
-                               controller: GetNameOf<CapabilityController>(),
-                               action: nameof(CapabilityController.GetCapabilityMembershipApplications),
-                               values: new { id = capabilityId }) ??
-                           "",
+                        httpContext: HttpContext,
+                        controller: GetNameOf<CapabilityController>(),
+                        action: nameof(CapabilityController.GetCapabilityMembershipApplications),
+                        values: new { id = capabilityId }
+                    ) ?? "",
                     rel: "self",
                     allow: allowedInteractions
                 )
@@ -729,8 +697,11 @@ public class ApiResourceFactory
         return resource;
     }
 
-    public async Task<KafkaTopicListApiResource> Convert(IEnumerable<KafkaTopic> topics,
-        IEnumerable<KafkaCluster> clusters, KafkaTopicQueryParams queryParams)
+    public async Task<KafkaTopicListApiResource> Convert(
+        IEnumerable<KafkaTopic> topics,
+        IEnumerable<KafkaCluster> clusters,
+        KafkaTopicQueryParams queryParams
+    )
     {
         var list = new List<KafkaTopicApiResource>();
         foreach (var topic in topics)
@@ -739,22 +710,17 @@ public class ApiResourceFactory
             list.Add(apiResource);
         }
 
-        return new KafkaTopicListApiResource
-        (
+        return new KafkaTopicListApiResource(
             items: list.ToArray(),
-            embedded: new KafkaTopicListApiResource.KafkaTopicListEmbeddedResources
-            (
-                kafkaClusters: Convert(clusters)
-            ),
-            links: new KafkaTopicListApiResource.KafkaTopicListLinks
-            (
-                self: new ResourceLink
-                (
+            embedded: new KafkaTopicListApiResource.KafkaTopicListEmbeddedResources(kafkaClusters: Convert(clusters)),
+            links: new KafkaTopicListApiResource.KafkaTopicListLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         controller: GetNameOf<KafkaTopicController>(),
                         action: nameof(KafkaTopicController.GetAllTopics),
-                        values: queryParams) ?? "",
+                        values: queryParams
+                    ) ?? "",
                     rel: "self",
                     allow: Allow.Get
                 )
@@ -762,56 +728,54 @@ public class ApiResourceFactory
         );
     }
 
-    public MyProfileApiResource Convert(UserId userId, IEnumerable<Capability> capabilities, Member? member,
-        bool isDevelopment)
+    public MyProfileApiResource Convert(
+        UserId userId,
+        IEnumerable<Capability> capabilities,
+        Member? member,
+        bool isDevelopment
+    )
     {
-        return new MyProfileApiResource
-        (
+        return new MyProfileApiResource(
             id: userId,
             capabilities: capabilities.Select(ConvertToListItem),
             autoReloadTopics: !isDevelopment,
             personalInformation: member != null
-                ? new PersonalInformationApiResource
-                {
-                    Name = member.DisplayName ?? "",
-                    Email = member.Email
-                }
+                ? new PersonalInformationApiResource { Name = member.DisplayName ?? "", Email = member.Email }
                 : PersonalInformationApiResource.Empty,
-            links: new MyProfileApiResource.MyProfileLinks
-            (
-                self: new ResourceLink
-                (
+            links: new MyProfileApiResource.MyProfileLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         controller: GetNameOf<MeController>(),
-                        action: nameof(MeController.GetMe)) ?? "",
+                        action: nameof(MeController.GetMe)
+                    ) ?? "",
                     rel: "self",
                     allow: Allow.Get
                 ),
-                personalInformation: new ResourceLink
-                (
+                personalInformation: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         controller: GetNameOf<MeController>(),
-                        action: nameof(MeController.UpdatePersonalInformation)) ?? "",
+                        action: nameof(MeController.UpdatePersonalInformation)
+                    ) ?? "",
                     rel: "related",
                     allow: Allow.Put
                 ),
-                portalVisits: new ResourceLink
-                (
+                portalVisits: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         controller: GetNameOf<PortalVisitController>(),
-                        action: nameof(PortalVisitController.RegisterVisit)) ?? "",
+                        action: nameof(PortalVisitController.RegisterVisit)
+                    ) ?? "",
                     rel: "related",
                     allow: Allow.Post
                 ),
-                topVisitors: new ResourceLink
-                (
+                topVisitors: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         controller: GetNameOf<SystemController>(),
-                        action: nameof(SystemController.GetTopVisitors)) ?? "",
+                        action: nameof(SystemController.GetTopVisitors)
+                    ) ?? "",
                     rel: "related",
                     allow: Allow.Get
                 )

@@ -135,8 +135,13 @@ public class MyProfileApiResource
         public ResourceLink PersonalInformation { get; set; }
         public ResourceLink PortalVisits { get; set; }
         public ResourceLink TopVisitors { get; set; }
-    
-        public MyProfileLinks(ResourceLink self, ResourceLink personalInformation, ResourceLink portalVisits, ResourceLink topVisitors)
+
+        public MyProfileLinks(
+            ResourceLink self,
+            ResourceLink personalInformation,
+            ResourceLink portalVisits,
+            ResourceLink topVisitors
+        )
         {
             Self = self;
             PersonalInformation = personalInformation;
@@ -145,14 +150,20 @@ public class MyProfileApiResource
         }
     }
 
-    public MyProfileApiResource(string id, IEnumerable<CapabilityListItemApiResource> capabilities, bool autoReloadTopics, PersonalInformationApiResource personalInformation, MyProfileLinks links)
+    public MyProfileApiResource(
+        string id,
+        IEnumerable<CapabilityListItemApiResource> capabilities,
+        bool autoReloadTopics,
+        PersonalInformationApiResource personalInformation,
+        MyProfileLinks links
+    )
     {
         Id = id;
         Capabilities = capabilities;
         AutoReloadTopics = autoReloadTopics;
         PersonalInformation = personalInformation;
         Links = links;
-    }    
+    }
 }
 
 public class PersonalInformationApiResource

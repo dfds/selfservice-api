@@ -20,7 +20,14 @@ public class CapabilityDetailsApiResource
         public ResourceLink LeaveCapability { get; set; }
         public ResourceLink AwsAccount { get; set; }
 
-        public CapabilityDetailsLinks(ResourceLink self, ResourceLink members, ResourceLink clusters, ResourceLink membershipApplications, ResourceLink leaveCapability, ResourceLink awsAccount)
+        public CapabilityDetailsLinks(
+            ResourceLink self,
+            ResourceLink members,
+            ResourceLink clusters,
+            ResourceLink membershipApplications,
+            ResourceLink leaveCapability,
+            ResourceLink awsAccount
+        )
         {
             Self = self;
             Members = members;
@@ -29,7 +36,6 @@ public class CapabilityDetailsApiResource
             LeaveCapability = leaveCapability;
             AwsAccount = awsAccount;
         }
-
     }
 
     public CapabilityDetailsApiResource(string id, string name, string description, CapabilityDetailsLinks links)
@@ -67,5 +73,4 @@ public class CapabilityListItemApiResource
         Description = description;
         Links = links;
     }
-
 }

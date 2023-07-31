@@ -19,7 +19,10 @@ public class KafkaClusterAccessListApiResource
         }
     }
 
-    public KafkaClusterAccessListApiResource(KafkaClusterAccessListItemApiResource[] items, KafkaClusterAccessList links)
+    public KafkaClusterAccessListApiResource(
+        KafkaClusterAccessListItemApiResource[] items,
+        KafkaClusterAccessList links
+    )
     {
         Items = items;
         Links = links;
@@ -42,7 +45,12 @@ public class KafkaClusterAccessListItemApiResource
         public ResourceLink RequestAccess { get; set; }
         public ResourceLink CreateTopic { get; set; }
 
-        public KafkaClusterAccessListItem(ResourceLink topics, ResourceLink access, ResourceLink requestAccess, ResourceLink createTopic)
+        public KafkaClusterAccessListItem(
+            ResourceLink topics,
+            ResourceLink access,
+            ResourceLink requestAccess,
+            ResourceLink createTopic
+        )
         {
             Topics = topics;
             Access = access;
@@ -51,7 +59,12 @@ public class KafkaClusterAccessListItemApiResource
         }
     }
 
-    public KafkaClusterAccessListItemApiResource(string id, string name, string description, KafkaClusterAccessListItem links)
+    public KafkaClusterAccessListItemApiResource(
+        string id,
+        string name,
+        string description,
+        KafkaClusterAccessListItem links
+    )
     {
         Id = id;
         Name = name;

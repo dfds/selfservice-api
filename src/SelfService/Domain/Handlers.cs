@@ -39,8 +39,7 @@ public class PlaceholderHandler : IMessageHandler<Placeholder>
         }
         else
         {
-            serviceDescription = new ServiceDescription
-            (
+            serviceDescription = new ServiceDescription(
                 id: Guid.NewGuid(),
                 name: message.Name,
                 @namespace: message.Namespace,

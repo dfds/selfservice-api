@@ -19,7 +19,10 @@ public class MembershipApplicationListApiResource
         }
     }
 
-    public MembershipApplicationListApiResource(MembershipApplicationApiResource[] items, MembershipApplicationListLinks links)
+    public MembershipApplicationListApiResource(
+        MembershipApplicationApiResource[] items,
+        MembershipApplicationListLinks links
+    )
     {
         Items = items;
         Links = links;

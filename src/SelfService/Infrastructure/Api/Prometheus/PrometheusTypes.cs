@@ -38,6 +38,7 @@ public class Result
 {
     [JsonPropertyName("metric")]
     public Metric metric { get; set; }
+
     //public string[] value;
 
     public Result(Metric metric)
