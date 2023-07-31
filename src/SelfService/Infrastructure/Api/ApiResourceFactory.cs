@@ -322,15 +322,13 @@ public class ApiResourceFactory
 
     private ResourceLink CreateCostsLinkFor(Capability capability)
     {
-        return new ResourceLink
-        (
-            href:
-                _linkGenerator.GetUriByAction(
-                    httpContext: HttpContext,
-                    action: nameof(CapabilityController.GetCosts),
-                    controller: GetNameOf<CapabilityController>(),
-                    values: new { id = capability.Id }
-                ) ?? "",
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCosts),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
             rel: "self",
             allow: Allow.Get
         );

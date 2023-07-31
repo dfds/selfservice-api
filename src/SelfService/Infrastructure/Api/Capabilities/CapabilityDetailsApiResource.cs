@@ -8,7 +8,8 @@ public class CapabilityDetailsApiResource
     public string Name { get; set; }
     public string Description { get; set; }
 
-    [JsonPropertyName("_links")] public CapabilityDetailsLinks Links { get; set; }
+    [JsonPropertyName("_links")]
+    public CapabilityDetailsLinks Links { get; set; }
 
     public class CapabilityDetailsLinks
     {
@@ -57,7 +58,8 @@ public class CapabilityListItemApiResource
     public string Name { get; set; }
     public string Description { get; set; }
 
-    [JsonPropertyName("_links")] public CapabilityListItemLinks Links { get; set; }
+    [JsonPropertyName("_links")]
+    public CapabilityListItemLinks Links { get; set; }
 
     public class CapabilityListItemLinks
     {
