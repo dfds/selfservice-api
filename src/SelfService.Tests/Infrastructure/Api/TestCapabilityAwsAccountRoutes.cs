@@ -44,8 +44,9 @@ public class TestCapabilityAwsAccountRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/awsAccount/allow")?
-            .EnumerateArray()
+        var allowValues = document
+            ?.SelectElement("/_links/awsAccount/allow")
+            ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
@@ -68,8 +69,9 @@ public class TestCapabilityAwsAccountRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/awsAccount/allow")?
-            .EnumerateArray()
+        var allowValues = document
+            ?.SelectElement("/_links/awsAccount/allow")
+            ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
@@ -92,8 +94,9 @@ public class TestCapabilityAwsAccountRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/awsAccount/allow")?
-            .EnumerateArray()
+        var allowValues = document
+            ?.SelectElement("/_links/awsAccount/allow")
+            ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
@@ -117,8 +120,9 @@ public class TestCapabilityAwsAccountRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/awsAccount/allow")?
-            .EnumerateArray()
+        var allowValues = document
+            ?.SelectElement("/_links/awsAccount/allow")
+            ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 

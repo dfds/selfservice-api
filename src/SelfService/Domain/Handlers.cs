@@ -12,6 +12,13 @@ public class Placeholder
     public string Name { get; set; }
     public string Namespace { get; set; }
     public string OpenApiSpec { get; set; }
+
+    public Placeholder(string name, string @namespace, string openApiSpec)
+    {
+        Name = name;
+        Namespace = @namespace;
+        OpenApiSpec = openApiSpec;
+    }
 }
 
 public class PlaceholderHandler : IMessageHandler<Placeholder>
@@ -32,18 +39,17 @@ public class PlaceholderHandler : IMessageHandler<Placeholder>
         }
         else
         {
-            serviceDescription = new ServiceDescription
-            {
-                Id = Guid.NewGuid(),
-                Name = message.Name,
-                Namespace = message.Namespace,
-                Spec = message.OpenApiSpec,
-                CreatedAt = DateTime.UtcNow
-            };
+            serviceDescription = new ServiceDescription(
+                id: Guid.NewGuid(),
+                name: message.Name,
+                @namespace: message.Namespace,
+                spec: message.OpenApiSpec,
+                createdAt: DateTime.UtcNow
+            );
 
             await _dbContext.AddAsync(serviceDescription);
         }
-        
+
         await _dbContext.SaveChangesAsync();
     }
 }

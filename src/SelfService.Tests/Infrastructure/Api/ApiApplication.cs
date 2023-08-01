@@ -93,7 +93,7 @@ public class ApiApplication : WebApplicationFactory<Program>
 
         builder.ConfigureAppConfiguration(x =>
         {
-            // [thfis] need to load appsettings.json otherwise the AzureAd security section isn't loaded 
+            // [thfis] need to load appsettings.json otherwise the AzureAd security section isn't loaded
             // x.Sources.Clear();
 
             if (_customConfiguration.Any())
@@ -117,8 +117,12 @@ public class ApiApplication : WebApplicationFactory<Program>
                 services.Configure(_authOptionsConfig);
             }
 
-            services.AddAuthentication(FakeAuthenticationSchemeDefaults.AuthenticationScheme)
-                .AddScheme<FakeAuthenticationSchemeOptions, FakeAuthenticationHandler>(FakeAuthenticationSchemeDefaults.AuthenticationScheme, null);
+            services
+                .AddAuthentication(FakeAuthenticationSchemeDefaults.AuthenticationScheme)
+                .AddScheme<FakeAuthenticationSchemeOptions, FakeAuthenticationHandler>(
+                    FakeAuthenticationSchemeDefaults.AuthenticationScheme,
+                    null
+                );
         });
     }
 
@@ -132,6 +136,8 @@ public class ApiApplication : WebApplicationFactory<Program>
         base.ConfigureClient(client);
 
         // set test authentication scheme by default
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(FakeAuthenticationSchemeDefaults.AuthenticationScheme);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            FakeAuthenticationSchemeDefaults.AuthenticationScheme
+        );
     }
 }

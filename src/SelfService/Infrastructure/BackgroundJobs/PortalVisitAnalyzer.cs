@@ -14,17 +14,20 @@ public class PortalVisitAnalyzer : BackgroundService
     {
         _serviceProvider = serviceProvider;
     }
-    
+
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        return Task.Run(async () =>
-        {
-            while (!stoppingToken.IsCancellationRequested)
+        return Task.Run(
+            async () =>
             {
-                await DoWork(stoppingToken);
-                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
-            }
-        }, stoppingToken);
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    await DoWork(stoppingToken);
+                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                }
+            },
+            stoppingToken
+        );
     }
 
     public static DateTime GetStartOfWeek(DateTime dateTime)
@@ -49,8 +52,7 @@ public class PortalVisitAnalyzer : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<PortalVisitAnalyzer>>();
 
-        using var _ = logger.BeginScope("{BackgroundJob} {CorrelationId}",
-            nameof(PortalVisitAnalyzer), Guid.NewGuid());
+        using var _ = logger.BeginScope("{BackgroundJob} {CorrelationId}", nameof(PortalVisitAnalyzer), Guid.NewGuid());
 
         logger.LogDebug("Starting portal visit analyzer...");
 
@@ -64,9 +66,7 @@ public class PortalVisitAnalyzer : BackgroundService
             .Where(x => x.VisitedAt >= windowBegin && x.VisitedAt <= windowEnd)
             .ToListAsync(cancellationToken);
 
-        var windowDataSet = visits
-            .GroupBy(x => x.VisitedBy)
-            .ToArray();
+        var windowDataSet = visits.GroupBy(x => x.VisitedBy).ToArray();
 
         var stats = new List<UserVisitStat>();
 
@@ -74,18 +74,18 @@ public class PortalVisitAnalyzer : BackgroundService
         {
             var visitor = portalVisits.Key;
 
-            var orderedVisits = portalVisits
-                .OrderBy(x => x.VisitedAt)
-                .ToArray();
+            var orderedVisits = portalVisits.OrderBy(x => x.VisitedAt).ToArray();
 
             var lastVisit = orderedVisits.Last();
             var properVisitsDuringWindow = RemoveVisitsTooCloseToEachOther(orderedVisits);
 
-            stats.Add(new UserVisitStat(
-                UserId: visitor,
-                LastVisit: lastVisit.VisitedAt,
-                TotalVisits: properVisitsDuringWindow.Count()
-            ));
+            stats.Add(
+                new UserVisitStat(
+                    UserId: visitor,
+                    LastVisit: lastVisit.VisitedAt,
+                    TotalVisits: properVisitsDuringWindow.Count()
+                )
+            );
         }
 
         var memberApplicationService = scope.ServiceProvider.GetRequiredService<IMemberApplicationService>();
@@ -97,9 +97,7 @@ public class PortalVisitAnalyzer : BackgroundService
         }
 
         // update top visitors list
-        var topVisitorsDuringWindow = stats
-            .OrderByDescending(x => x.TotalVisits)
-            .Take(3);
+        var topVisitorsDuringWindow = stats.OrderByDescending(x => x.TotalVisits).Take(3);
 
         var memberRepository = scope.ServiceProvider.GetRequiredService<IMemberRepository>();
         var result = new List<TopVisitorsRepository.VisitorRecord>();
@@ -108,20 +106,19 @@ public class PortalVisitAnalyzer : BackgroundService
         foreach (var stat in topVisitorsDuringWindow)
         {
             var user = await memberRepository.FindBy(stat.UserId);
-            result.Add(new TopVisitorsRepository.VisitorRecord(
-                Id: stat.UserId,
-                Name: user?.DisplayName ?? "n/a",
-                Rank: ++rank
-            ));
+            result.Add(
+                new TopVisitorsRepository.VisitorRecord(Id: stat.UserId, Name: user?.DisplayName ?? "n/a", Rank: ++rank)
+            );
         }
 
         var topVisitorsRepository = scope.ServiceProvider.GetRequiredService<TopVisitorsRepository>();
         topVisitorsRepository.Update(result);
 
-        logger.LogInformation("Top visitors between {WindowStart} and {WindowEnd} amongst {VisitCount} visits is updated to be: {Visitors}",
-            windowBegin.ToUniversalTime().ToString("O"), 
-            windowEnd.ToUniversalTime().ToString("O"), 
-            visits.Count, 
+        logger.LogInformation(
+            "Top visitors between {WindowStart} and {WindowEnd} amongst {VisitCount} visits is updated to be: {Visitors}",
+            windowBegin.ToUniversalTime().ToString("O"),
+            windowEnd.ToUniversalTime().ToString("O"),
+            visits.Count,
             string.Join(", ", result.Select(x => x.Id))
         );
     }

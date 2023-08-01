@@ -19,7 +19,4 @@ public class DomainEventDescriptorAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Property)]
-public class PartitionKey : Attribute
-{
-    
-}
+public class PartitionKey : Attribute { }

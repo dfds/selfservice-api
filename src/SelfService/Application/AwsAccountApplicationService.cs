@@ -14,7 +14,14 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
     private readonly SystemTime _systemTime;
     private readonly IHostEnvironment _environment;
 
-    public AwsAccountApplicationService(ILogger<AwsAccountApplicationService> logger, IAwsAccountRepository awsAccountRepository, ICapabilityRepository capabilityRepository, ITicketingSystem ticketingSystem, SystemTime systemTime, IHostEnvironment environment)
+    public AwsAccountApplicationService(
+        ILogger<AwsAccountApplicationService> logger,
+        IAwsAccountRepository awsAccountRepository,
+        ICapabilityRepository capabilityRepository,
+        ITicketingSystem ticketingSystem,
+        SystemTime systemTime,
+        IHostEnvironment environment
+    )
     {
         _logger = logger;
         _awsAccountRepository = awsAccountRepository;
@@ -42,20 +49,25 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
     [TransactionalBoundary, Outboxed]
     public async Task CreateAwsAccountRequestTicket(AwsAccountId id)
     {
-        using var _ = _logger.BeginScope("{Action} on {ImplementationType}",
-            nameof(CreateAwsAccountRequestTicket), GetType().FullName);
+        using var _ = _logger.BeginScope(
+            "{Action} on {ImplementationType}",
+            nameof(CreateAwsAccountRequestTicket),
+            GetType().FullName
+        );
 
         var account = await _awsAccountRepository.Get(id);
         var capability = await _capabilityRepository.Get(account.CapabilityId);
 
-        var message = CreateMessage("", new ContextAddedToCapabilityData
-        {
-            CapabilityId = capability.Id,
-            CapabilityName = capability.Name,
-            CapabilityRootId = capability.Id,
-            ContextId = account.Id,
-            ContextName = "default"
-        });
+        var message = CreateMessage(
+            "",
+            new ContextAddedToCapabilityData(
+                capabilityId: capability.Id,
+                capabilityName: capability.Name,
+                capabilityRootId: capability.Id,
+                contextId: account.Id,
+                contextName: "default"
+            )
+        );
 
         var headers = new Dictionary<string, string>();
 
@@ -91,18 +103,20 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
 
     private static string CreateMessage(string xCorrelationId, ContextAddedToCapabilityData payload)
     {
-        var message = "*New capability context created*\n" +
-                      "\nRun the following command from github.com/dfds/aws-account-manifests:\n" +
-                      "\n```\n" +
-                      $"CORRELATION_ID=\"{xCorrelationId}\" \\\n" +
-                      $"CAPABILITY_NAME=\"{payload.CapabilityName}\" \\\n" +
-                      $"CAPABILITY_ID=\"{payload.CapabilityId}\" \\\n" +
-                      $"CAPABILITY_ROOT_ID=\"{payload.CapabilityRootId}\" \\\n" +
-                      $"ACCOUNT_NAME=\"{payload.CapabilityRootId}\" \\\n" + // NB: for now account name and capability root id is the same by design
-                      $"CONTEXT_NAME=\"{payload.ContextName}\" \\\n" +
-                      $"CONTEXT_ID=\"{payload.ContextId}\" \\\n" +
-                      "./generate-tfvars.sh" +
-                      "\n```";
+        var message =
+            "*New capability context created*\n"
+            + "\nRun the following command from github.com/dfds/aws-account-manifests:\n"
+            + "\n```\n"
+            + $"CORRELATION_ID=\"{xCorrelationId}\" \\\n"
+            + $"CAPABILITY_NAME=\"{payload.CapabilityName}\" \\\n"
+            + $"CAPABILITY_ID=\"{payload.CapabilityId}\" \\\n"
+            + $"CAPABILITY_ROOT_ID=\"{payload.CapabilityRootId}\" \\\n"
+            + $"ACCOUNT_NAME=\"{payload.CapabilityRootId}\" \\\n"
+            + // NB: for now account name and capability root id is the same by design
+            $"CONTEXT_NAME=\"{payload.ContextName}\" \\\n"
+            + $"CONTEXT_ID=\"{payload.ContextId}\" \\\n"
+            + "./generate-tfvars.sh"
+            + "\n```";
 
         return message;
     }
@@ -114,5 +128,20 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         public string CapabilityRootId { get; set; }
         public string ContextId { get; set; }
         public string ContextName { get; set; }
+
+        public ContextAddedToCapabilityData(
+            string capabilityId,
+            string capabilityName,
+            string capabilityRootId,
+            string contextId,
+            string contextName
+        )
+        {
+            CapabilityId = capabilityId;
+            CapabilityName = capabilityName;
+            CapabilityRootId = capabilityRootId;
+            ContextId = contextId;
+            ContextName = contextName;
+        }
     }
 }

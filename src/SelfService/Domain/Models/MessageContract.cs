@@ -4,9 +4,20 @@ namespace SelfService.Domain.Models;
 
 public class MessageContract : AggregateRoot<MessageContractId>
 {
-    public MessageContract(MessageContractId id, KafkaTopicId kafkaTopicId, MessageType messageType, string description,
-        MessageContractExample example, MessageContractSchema schema, MessageContractStatus status, DateTime createdAt,
-        string createdBy, DateTime? modifiedAt, string? modifiedBy) : base(id)
+    public MessageContract(
+        MessageContractId id,
+        KafkaTopicId kafkaTopicId,
+        MessageType messageType,
+        string description,
+        MessageContractExample example,
+        MessageContractSchema schema,
+        MessageContractStatus status,
+        DateTime createdAt,
+        string createdBy,
+        DateTime? modifiedAt,
+        string? modifiedBy
+    )
+        : base(id)
     {
         MessageType = messageType;
         Example = example;
@@ -45,7 +56,9 @@ public class MessageContract : AggregateRoot<MessageContractId>
                 return; // already provisioned - just ignore
             }
 
-            throw new Exception($"Message contract \"{MessageType} (#{Id})\" has been provisioned and cannot change status!");
+            throw new Exception(
+                $"Message contract \"{MessageType} (#{Id})\" has been provisioned and cannot change status!"
+            );
         }
 
         Status = newStatus;
@@ -54,20 +67,22 @@ public class MessageContract : AggregateRoot<MessageContractId>
 
         if (Status == MessageContractStatus.Provisioned)
         {
-            Raise(new NewMessageContractHasBeenProvisioned
-            {
-                MessageContractId = Id.ToString(),
-                KafkaTopicId = KafkaTopicId.ToString(),
-                MessageType = MessageType.ToString(),
-            });
+            Raise(
+                new NewMessageContractHasBeenProvisioned
+                {
+                    MessageContractId = Id.ToString(),
+                    KafkaTopicId = KafkaTopicId.ToString(),
+                    MessageType = MessageType.ToString(),
+                }
+            );
         }
     }
 
-    public void RegisterAsInProgress(DateTime modifiedAt, string modifiedBy)
-        => ChangeStatus(MessageContractStatus.InProgress, modifiedAt, modifiedBy);
+    public void RegisterAsInProgress(DateTime modifiedAt, string modifiedBy) =>
+        ChangeStatus(MessageContractStatus.InProgress, modifiedAt, modifiedBy);
 
-    public void RegisterAsProvisioned(DateTime modifiedAt, string modifiedBy)
-        => ChangeStatus(MessageContractStatus.Provisioned, modifiedAt, modifiedBy);
+    public void RegisterAsProvisioned(DateTime modifiedAt, string modifiedBy) =>
+        ChangeStatus(MessageContractStatus.Provisioned, modifiedAt, modifiedBy);
 
     public DateTime CreatedAt { get; private set; }
     public string CreatedBy { get; private set; }
@@ -75,9 +90,18 @@ public class MessageContract : AggregateRoot<MessageContractId>
     public DateTime? ModifiedAt { get; private set; }
     public string? ModifiedBy { get; private set; }
 
-    public static MessageContract RequestNew(KafkaTopicId kafkaTopicId, MessageType messageType, KafkaTopicName kafkaTopicName, 
-        CapabilityId capabilityId, KafkaClusterId kafkaClusterId, string description, MessageContractExample example, 
-        MessageContractSchema schema, DateTime createdAt, string createdBy)
+    public static MessageContract RequestNew(
+        KafkaTopicId kafkaTopicId,
+        MessageType messageType,
+        KafkaTopicName kafkaTopicName,
+        CapabilityId capabilityId,
+        KafkaClusterId kafkaClusterId,
+        string description,
+        MessageContractExample example,
+        MessageContractSchema schema,
+        DateTime createdAt,
+        string createdBy
+    )
     {
         var instance = new MessageContract(
             id: MessageContractId.New(),
@@ -85,25 +109,27 @@ public class MessageContract : AggregateRoot<MessageContractId>
             messageType: messageType,
             description: description,
             example: example,
-            schema: schema, 
-            status: MessageContractStatus.Requested, 
+            schema: schema,
+            status: MessageContractStatus.Requested,
             createdAt: createdAt,
             createdBy: createdBy,
             modifiedAt: null,
             modifiedBy: null
         );
 
-        instance.Raise(new NewMessageContractHasBeenRequested
-        {
-            MessageContractId = instance.Id.ToString(),
-            KafkaTopicId = instance.KafkaTopicId.ToString(),
-            KafkaTopicName = kafkaTopicName.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
-            KafkaClusterId = kafkaClusterId.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
-            CapabilityId = capabilityId.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
-            MessageType = instance.MessageType.ToString(),
-            Schema = instance.Schema.ToString(),
-            Description = instance.Description,
-        });
+        instance.Raise(
+            new NewMessageContractHasBeenRequested
+            {
+                MessageContractId = instance.Id.ToString(),
+                KafkaTopicId = instance.KafkaTopicId.ToString(),
+                KafkaTopicName = kafkaTopicName.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
+                KafkaClusterId = kafkaClusterId.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
+                CapabilityId = capabilityId.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
+                MessageType = instance.MessageType.ToString(),
+                Schema = instance.Schema.ToString(),
+                Description = instance.Description,
+            }
+        );
 
         return instance;
     }

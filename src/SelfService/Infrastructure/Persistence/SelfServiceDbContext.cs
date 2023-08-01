@@ -9,20 +9,21 @@ public static class DependencyInjection
 {
     public static void AddDatabase(this WebApplicationBuilder builder)
     {
-        builder.Services.AddDbContext<SelfServiceDbContext>(options => 
+        builder.Services.AddDbContext<SelfServiceDbContext>(options =>
         {
             options.UseNpgsql(builder.Configuration["SS_CONNECTION_STRING"]);
 
             if (builder.Environment.IsDevelopment())
             {
                 options
-                    .UseLoggerFactory(LoggerFactory.Create(loggerConfig =>
-                    {
-                        loggerConfig
-                            .AddConsole()
-                            .AddFilter(DbLoggerCategory.Database.Command.Name, LogLevel.Information);
-
-                    }))
+                    .UseLoggerFactory(
+                        LoggerFactory.Create(loggerConfig =>
+                        {
+                            loggerConfig
+                                .AddConsole()
+                                .AddFilter(DbLoggerCategory.Database.Command.Name, LogLevel.Information);
+                        })
+                    )
                     .EnableSensitiveDataLogging();
             }
         });
@@ -31,111 +32,72 @@ public static class DependencyInjection
 
 public class SelfServiceDbContext : DbContext
 {
-    public SelfServiceDbContext(DbContextOptions<SelfServiceDbContext> options) : base(options)
-    {
+    // Parameterless constructor is required by EntityFramework
+    public SelfServiceDbContext(DbContextOptions<SelfServiceDbContext> options)
+        : base(options) { }
 
-    }
+    public DbSet<OutboxEntry> OutboxEntries { get; set; } = null!; // suppress parameterless constructor warning
 
-    public DbSet<OutboxEntry> OutboxEntries { get; set; } = null!;
+    public DbSet<Capability> Capabilities { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<Member> Members { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<Membership> Memberships { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<MembershipApplication> MembershipApplications { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<AwsAccount> AwsAccounts { get; set; } = null!; // suppress parameterless constructor warning
 
-    public DbSet<Capability> Capabilities { get; set; } = null!;
-    public DbSet<Member> Members { get; set; } = null!;
-    public DbSet<Membership> Memberships { get; set; } = null!;
-    public DbSet<MembershipApplication> MembershipApplications { get; set; } = null!;
-    public DbSet<AwsAccount> AwsAccounts { get; set; } = null!;
+    public DbSet<KafkaCluster> KafkaClusters { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<KafkaClusterAccess> KafkaClusterAccess { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<KafkaTopic> KafkaTopics { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<MessageContract> MessageContracts { get; set; } = null!; // suppress parameterless constructor warning
 
-    public DbSet<KafkaCluster> KafkaClusters { get; set; } = null!;
-    public DbSet<KafkaClusterAccess> KafkaClusterAccess { get; set; } = null!;
-    public DbSet<KafkaTopic> KafkaTopics { get; set; } = null!;
-    public DbSet<MessageContract> MessageContracts { get; set; } = null!;
+    public DbSet<PortalVisit> PortalVisits { get; set; } = null!; // suppress parameterless constructor warning
 
-    public DbSet<PortalVisit> PortalVisits { get; set; } = null!;
-
-    public DbSet<ServiceDescription> ServiceCatalog { get; set; } = null!;
+    public DbSet<ServiceDescription> ServiceCatalog { get; set; } = null!; // suppress parameterless constructor warning
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
 
-        configurationBuilder
-            .Properties<DateTime>()
-            .HaveConversion<ForceUtc>();
+        configurationBuilder.Properties<DateTime>().HaveConversion<ForceUtc>();
 
-        configurationBuilder
-            .Properties<CapabilityId>()
-            .HaveConversion<CapabilityIdConverter>();
+        configurationBuilder.Properties<CapabilityId>().HaveConversion<CapabilityIdConverter>();
 
-        configurationBuilder
-            .Properties<UserId>()
-            .HaveConversion<UserIdConverter>();
+        configurationBuilder.Properties<UserId>().HaveConversion<UserIdConverter>();
 
-        configurationBuilder
-            .Properties<MembershipId>()
-            .HaveConversion<MembershipIdConverter>();
+        configurationBuilder.Properties<MembershipId>().HaveConversion<MembershipIdConverter>();
 
-        configurationBuilder
-            .Properties<AwsAccountId>()
-            .HaveConversion<AwsAccountIdConverter>();
+        configurationBuilder.Properties<AwsAccountId>().HaveConversion<AwsAccountIdConverter>();
 
-        configurationBuilder
-            .Properties<RealAwsAccountId>()
-            .HaveConversion<RealAwsAccountIdConverter>();
+        configurationBuilder.Properties<RealAwsAccountId>().HaveConversion<RealAwsAccountIdConverter>();
 
-        configurationBuilder
-            .Properties<AwsRoleArn>()
-            .HaveConversion<AwsRoleArnConverter>();
+        configurationBuilder.Properties<AwsRoleArn>().HaveConversion<AwsRoleArnConverter>();
 
-        configurationBuilder
-            .Properties<KafkaClusterId>()
-            .HaveConversion<KafkaClusterIdConverter>();
+        configurationBuilder.Properties<KafkaClusterId>().HaveConversion<KafkaClusterIdConverter>();
 
-        configurationBuilder
-            .Properties<KafkaTopicId>()
-            .HaveConversion<KafkaTopicIdConverter>();
+        configurationBuilder.Properties<KafkaTopicId>().HaveConversion<KafkaTopicIdConverter>();
 
-        configurationBuilder
-            .Properties<KafkaTopicName>()
-            .HaveConversion<KafkaTopicNameConverter>();
+        configurationBuilder.Properties<KafkaTopicName>().HaveConversion<KafkaTopicNameConverter>();
 
-        configurationBuilder
-            .Properties<KafkaTopicStatus>()
-            .HaveConversion<KafkaTopicStatusConverter>();
+        configurationBuilder.Properties<KafkaTopicStatus>().HaveConversion<KafkaTopicStatusConverter>();
 
-        configurationBuilder
-            .Properties<MembershipApplicationId>()
-            .HaveConversion<MembershipApplicationIdConverter>();
+        configurationBuilder.Properties<MembershipApplicationId>().HaveConversion<MembershipApplicationIdConverter>();
 
         configurationBuilder
             .Properties<MembershipApplicationStatusOptions>()
-            .HaveConversion<string>();
+            .HaveConversion<MembershipApplicationStatusOptionsConverter>();
 
-        configurationBuilder
-            .Properties<KafkaTopicPartitions>()
-            .HaveConversion<KafkaTopicPartitionsConverter>();
+        configurationBuilder.Properties<KafkaTopicPartitions>().HaveConversion<KafkaTopicPartitionsConverter>();
 
-        configurationBuilder
-            .Properties<KafkaTopicRetention>()
-            .HaveConversion<KafkaTopicRetentionConverter>();
+        configurationBuilder.Properties<KafkaTopicRetention>().HaveConversion<KafkaTopicRetentionConverter>();
 
-        configurationBuilder
-            .Properties<MessageContractId>()
-            .HaveConversion<MessageContractIdConverter>();
+        configurationBuilder.Properties<MessageContractId>().HaveConversion<MessageContractIdConverter>();
 
-        configurationBuilder
-            .Properties<MessageType>()
-            .HaveConversion<MessageTypeConverter>();
+        configurationBuilder.Properties<MessageType>().HaveConversion<MessageTypeConverter>();
 
-        configurationBuilder
-            .Properties<MessageContractExample>()
-            .HaveConversion<MessageContractExampleConverter>();
+        configurationBuilder.Properties<MessageContractExample>().HaveConversion<MessageContractExampleConverter>();
 
-        configurationBuilder
-            .Properties<MessageContractSchema>()
-            .HaveConversion<MessageContractSchemaConverter>();
+        configurationBuilder.Properties<MessageContractSchema>().HaveConversion<MessageContractSchemaConverter>();
 
-        configurationBuilder
-            .Properties<MessageContractStatus>()
-            .HaveConversion<MessageContractStatusConverter>();
+        configurationBuilder.Properties<MessageContractStatus>().HaveConversion<MessageContractStatusConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -207,30 +169,36 @@ public class SelfServiceDbContext : DbContext
         modelBuilder.Entity<MembershipApproval>(cfg =>
         {
             cfg.ToTable("MembershipApproval");
-            
+
             cfg.HasKey(x => x.Id);
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.ApprovedBy);
             cfg.Property(x => x.ApprovedAt);
         });
-        
+
         modelBuilder.Entity<AwsAccount>(cfg =>
         {
             cfg.ToTable("AwsAccount");
             cfg.HasKey(x => x.Id);
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.CapabilityId);
-            cfg.OwnsOne(x => x.Registration, o =>
-            {
-                o.Property(x => x.AccountId).HasColumnName(nameof(AwsAccountRegistration.AccountId));
-                o.Property(x => x.RoleEmail).HasColumnName(nameof(AwsAccountRegistration.RoleEmail));
-                o.Property(x => x.RegisteredAt).HasColumnName(nameof(AwsAccountRegistration.RegisteredAt));
-            });
-            cfg.OwnsOne(x => x.KubernetesLink, o =>
-            {
-                o.Property(x => x.Namespace).HasColumnName(nameof(KubernetesLink.Namespace));
-                o.Property(x => x.LinkedAt).HasColumnName(nameof(KubernetesLink.LinkedAt));
-            });
+            cfg.OwnsOne(
+                x => x.Registration,
+                o =>
+                {
+                    o.Property(x => x.AccountId).HasColumnName(nameof(AwsAccountRegistration.AccountId));
+                    o.Property(x => x.RoleEmail).HasColumnName(nameof(AwsAccountRegistration.RoleEmail));
+                    o.Property(x => x.RegisteredAt).HasColumnName(nameof(AwsAccountRegistration.RegisteredAt));
+                }
+            );
+            cfg.OwnsOne(
+                x => x.KubernetesLink,
+                o =>
+                {
+                    o.Property(x => x.Namespace).HasColumnName(nameof(KubernetesLink.Namespace));
+                    o.Property(x => x.LinkedAt).HasColumnName(nameof(KubernetesLink.LinkedAt));
+                }
+            );
             cfg.Property(x => x.RequestedAt);
             cfg.Property(x => x.RequestedBy);
         });
@@ -305,7 +273,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.VisitedBy);
             cfg.Property(x => x.VisitedAt);
         });
-        
+
         // ----------------------------------------------
 
         modelBuilder.Entity<ServiceDescription>(cfg =>

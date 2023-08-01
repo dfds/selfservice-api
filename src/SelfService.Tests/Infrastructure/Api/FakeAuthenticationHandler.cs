@@ -24,7 +24,12 @@ public class FakeAuthenticationHandler : AuthenticationHandler<FakeAuthenticatio
 {
     private readonly FakeAuthenticationSchemeOptions _options;
 
-    public FakeAuthenticationHandler(IOptionsMonitor<FakeAuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
+    public FakeAuthenticationHandler(
+        IOptionsMonitor<FakeAuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
+        ISystemClock clock
+    )
         : base(options, logger, encoder, clock)
     {
         _options = options.CurrentValue;

@@ -28,7 +28,7 @@ public static class Security
             .GetExecutingAssembly()
             .GetTypes()
             .Where(x => typeof(IAuthorizationHandler).IsAssignableFrom(x))
-            .Where(x => x is {IsClass: true, IsAbstract: false})
+            .Where(x => x is { IsClass: true, IsAbstract: false })
             .ToArray();
 
         foreach (var implementationType in types)

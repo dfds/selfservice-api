@@ -7,10 +7,21 @@ public class ConsumersListApiResource
     public string[] Items { get; set; }
 
     [JsonPropertyName("_links")]
-    public ConsumerListLinks Links { get; set; } = new();
+    public ConsumersListLinks Links { get; set; }
 
-    public class ConsumerListLinks
+    public class ConsumersListLinks
     {
-        public ResourceLink Self { get; set; } = new();
+        public ResourceLink Self { get; set; }
+
+        public ConsumersListLinks(ResourceLink self)
+        {
+            Self = self;
+        }
+    }
+
+    public ConsumersListApiResource(string[] items, ConsumersListLinks links)
+    {
+        Items = items;
+        Links = links;
     }
 }

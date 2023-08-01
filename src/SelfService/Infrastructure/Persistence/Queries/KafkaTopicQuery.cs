@@ -19,10 +19,12 @@ public class KafkaTopicQuery : IKafkaTopicQuery
     {
         var sql = queryParams switch
         {
-            {CapabilityId: null, IncludePrivate: true} => GenerateSqlQueryForAllTopicsAccessibleForUser(userId),
-            {CapabilityId: null, IncludePrivate: not true} => GenerateSqlQueryForAllPublicTopics(),
-            {CapabilityId: not null, IncludePrivate: true} => GenerateSqlQueryForAllTopicsWithCapability(userId, queryParams.CapabilityId),
-            {CapabilityId: not null, IncludePrivate: not true} => GenerateSqlQueryForPublicTopicsWithCapability(queryParams.CapabilityId),
+            { CapabilityId: null, IncludePrivate: true } => GenerateSqlQueryForAllTopicsAccessibleForUser(userId),
+            { CapabilityId: null, IncludePrivate: not true } => GenerateSqlQueryForAllPublicTopics(),
+            { CapabilityId: not null, IncludePrivate: true }
+                => GenerateSqlQueryForAllTopicsWithCapability(userId, queryParams.CapabilityId),
+            { CapabilityId: not null, IncludePrivate: not true }
+                => GenerateSqlQueryForPublicTopicsWithCapability(queryParams.CapabilityId),
         };
 
         var query = _dbContext.KafkaTopics.FromSql(sql);
@@ -31,14 +33,11 @@ public class KafkaTopicQuery : IKafkaTopicQuery
         {
             query = query.Where(x => x.KafkaClusterId == queryParams.ClusterId);
         }
-        
-        var kafkaTopics = await query
-            .OrderBy(x => x.Name)
-            .AsNoTracking()
-            .ToListAsync();
-        
+
+        var kafkaTopics = await query.OrderBy(x => x.Name).AsNoTracking().ToListAsync();
+
         _logger.LogDebug("Found {Count} Kafka Topics for query {@QueryParams}", kafkaTopics.Count, queryParams);
-        
+
         return kafkaTopics;
     }
 

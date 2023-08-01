@@ -6,15 +6,13 @@ using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Api.KafkaTopicRoutes;
 
-public class when_deleting_a_public_kafka_topic_as_cloud_engineer: IAsyncLifetime
+public class when_deleting_a_public_kafka_topic_as_cloud_engineer : IAsyncLifetime
 {
     private HttpResponseMessage _response = null!;
 
     public async Task InitializeAsync()
     {
-        var stubKafkaTopic = A.KafkaTopic
-            .WithName("pub.im-public")
-            .Build();
+        var stubKafkaTopic = A.KafkaTopic.WithName("pub.im-public").Build();
 
         await using var application = new ApiApplication();
         application.ReplaceService(Dummy.Of<IKafkaTopicApplicationService>());
@@ -32,9 +30,9 @@ public class when_deleting_a_public_kafka_topic_as_cloud_engineer: IAsyncLifetim
     }
 
     [Fact]
-    public async Task then_response_has_expected_status_code()
+    public void then_response_has_expected_status_code()
     {
-        Assert.Equal((HttpStatusCode) 204, _response.StatusCode);
+        Assert.Equal((HttpStatusCode)204, _response.StatusCode);
     }
 
     public Task DisposeAsync()

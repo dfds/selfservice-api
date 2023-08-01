@@ -18,7 +18,9 @@ public class KafkaTopicApplicationServiceBuilder
         _kafkaTopicRepository = Dummy.Of<IKafkaTopicRepository>();
     }
 
-    public KafkaTopicApplicationServiceBuilder WithMessageContractRepository(IMessageContractRepository messageContractRepository)
+    public KafkaTopicApplicationServiceBuilder WithMessageContractRepository(
+        IMessageContractRepository messageContractRepository
+    )
     {
         _messageContractRepository = messageContractRepository;
         return this;
@@ -39,13 +41,14 @@ public class KafkaTopicApplicationServiceBuilder
     public SelfService.Application.KafkaTopicApplicationService Build()
     {
         return new SelfService.Application.KafkaTopicApplicationService(
-            logger: NullLogger<SelfService.Application.KafkaTopicApplicationService>.Instance, 
+            logger: NullLogger<SelfService.Application.KafkaTopicApplicationService>.Instance,
             messageContractRepository: _messageContractRepository,
             systemTime: _systemTime,
             kafkaTopicRepository: _kafkaTopicRepository
         );
     }
 
-    public static implicit operator SelfService.Application.KafkaTopicApplicationService(KafkaTopicApplicationServiceBuilder builder)
-        => builder.Build();
+    public static implicit operator SelfService.Application.KafkaTopicApplicationService(
+        KafkaTopicApplicationServiceBuilder builder
+    ) => builder.Build();
 }

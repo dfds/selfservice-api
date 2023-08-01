@@ -26,7 +26,9 @@ public class ApiResourceFactoryBuilder
         return this;
     }
 
-    public ApiResourceFactoryBuilder WithDomainAuthorizationService(SelfService.Domain.Services.IAuthorizationService domainAuthorizationService)
+    public ApiResourceFactoryBuilder WithDomainAuthorizationService(
+        SelfService.Domain.Services.IAuthorizationService domainAuthorizationService
+    )
     {
         _authorizationService = domainAuthorizationService;
         return this;
@@ -37,13 +39,12 @@ public class ApiResourceFactoryBuilder
         var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         httpContextAccessorMock
             .SetupGet(x => x.HttpContext)
-            .Returns(new DefaultHttpContext()
-            {
-                User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            .Returns(
+                new DefaultHttpContext()
                 {
-                    new Claim(ClaimTypes.Name, "foo")
-                }))
-            });
+                    User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "foo") }))
+                }
+            );
 
         return new ApiResourceFactory(
             httpContextAccessor: httpContextAccessorMock.Object,
@@ -53,6 +54,5 @@ public class ApiResourceFactoryBuilder
         );
     }
 
-    public static implicit operator ApiResourceFactory(ApiResourceFactoryBuilder builder)
-        => builder.Build();
+    public static implicit operator ApiResourceFactory(ApiResourceFactoryBuilder builder) => builder.Build();
 }

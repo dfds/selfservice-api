@@ -42,5 +42,6 @@ public class KafkaClusterId : ValueObject
     }
 
     public static implicit operator KafkaClusterId(string text) => Parse(text);
+
     public static implicit operator string(KafkaClusterId id) => id.ToString();
 }

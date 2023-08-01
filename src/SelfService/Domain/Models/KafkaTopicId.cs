@@ -48,8 +48,10 @@ public class KafkaTopicId : ValueObject
     }
 
     public static implicit operator KafkaTopicId(string text) => Parse(text);
+
     public static implicit operator string(KafkaTopicId id) => id.ToString();
 
     public static implicit operator KafkaTopicId(Guid idValue) => new KafkaTopicId(idValue);
+
     public static implicit operator Guid(KafkaTopicId id) => id._value;
 }

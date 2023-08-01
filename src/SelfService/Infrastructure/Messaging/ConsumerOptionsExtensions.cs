@@ -21,8 +21,7 @@ public static class ConsumerOptionsExtensions
             _topic = topic;
         }
 
-        public TopicConsumerOptions RegisterMessageHandler<TMessage, TMessageHandler>(
-            string messageType)
+        public TopicConsumerOptions RegisterMessageHandler<TMessage, TMessageHandler>(string messageType)
             where TMessage : class
             where TMessageHandler : class, IMessageHandler<TMessage>
         {

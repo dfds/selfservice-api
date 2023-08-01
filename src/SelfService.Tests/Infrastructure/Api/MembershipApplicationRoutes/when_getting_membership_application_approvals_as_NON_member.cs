@@ -18,14 +18,16 @@ public class when_getting_membership_application_approvals_as_NON_member : IAsyn
     {
         await using var application = new ApiApplication();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
-        application.ReplaceService<IMembershipApplicationQuery>(new StubMembershipApplicationQuery(_aMembershipApplication));
+        application.ReplaceService<IMembershipApplicationQuery>(
+            new StubMembershipApplicationQuery(_aMembershipApplication)
+        );
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/membershipapplications/{_aMembershipApplication.Id}/approvals");
     }
 
     [Fact]
-    public async Task then_returns_unauthorized()
+    public void then_returns_unauthorized()
     {
         Assert.Equal(HttpStatusCode.Unauthorized, _response.StatusCode);
     }

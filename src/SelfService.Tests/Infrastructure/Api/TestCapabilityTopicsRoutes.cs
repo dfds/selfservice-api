@@ -44,8 +44,9 @@ public class TestCapabilityTopicsRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/clusters/allow")?
-            .EnumerateArray()
+        var allowValues = document
+            ?.SelectElement("/_links/clusters/allow")
+            ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
@@ -68,8 +69,9 @@ public class TestCapabilityTopicsRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/clusters/allow")?
-            .EnumerateArray()
+        var allowValues = document
+            ?.SelectElement("/_links/clusters/allow")
+            ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
@@ -92,12 +94,12 @@ public class TestCapabilityTopicsRoutes
         var content = await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var allowValues = document?.SelectElement("/_links/clusters/allow")?
-            .EnumerateArray()
+        var allowValues = document
+            ?.SelectElement("/_links/clusters/allow")
+            ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
         Assert.Equal(new[] { "GET" }, allowValues);
     }
-
 }

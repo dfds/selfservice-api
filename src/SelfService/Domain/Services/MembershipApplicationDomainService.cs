@@ -8,13 +8,16 @@ public class MembershipApplicationDomainService
     private readonly IMembershipRepository _membershipRepository;
     private readonly IMembershipQuery _membershipQuery;
 
-    public MembershipApplicationDomainService(IMembershipRepository membershipRepository, IMembershipQuery membershipQuery)
+    public MembershipApplicationDomainService(
+        IMembershipRepository membershipRepository,
+        IMembershipQuery membershipQuery
+    )
     {
         _membershipRepository = membershipRepository;
         _membershipQuery = membershipQuery;
     }
 
-    public async Task<bool> CanBeFinalized(MembershipApplication application)
+    public bool CanBeFinalized(MembershipApplication application)
     {
         var approvalCount = application.Approvals.Count();
 

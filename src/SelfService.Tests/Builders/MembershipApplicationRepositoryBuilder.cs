@@ -30,6 +30,6 @@ public class MembershipApplicationRepositoryBuilder
         return new MembershipApplicationRepository(_dbContext!, _systemTime);
     }
 
-    public static implicit operator MembershipApplicationRepository(MembershipApplicationRepositoryBuilder builder)
-        => builder.Build();
+    public static implicit operator MembershipApplicationRepository(MembershipApplicationRepositoryBuilder builder) =>
+        builder.Build();
 }

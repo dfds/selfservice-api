@@ -33,39 +33,34 @@ public class MessageType : ValueObject
 
     public static bool TryParse(string? text, out MessageType messageType)
     {
+        messageType = null!;
         if (string.IsNullOrWhiteSpace(text))
         {
-            messageType = null!;
             return false;
         }
 
         if (Regex.IsMatch(text ?? "", @"^\s+"))
         {
-            messageType = null!;
             return false;
         }
 
         if (Regex.IsMatch(text ?? "", @"\s+$"))
         {
-            messageType = null!;
             return false;
         }
 
         if (Regex.IsMatch(text ?? "", @"^[_-]"))
         {
-            messageType = null!;
             return false;
         }
 
         if (Regex.IsMatch(text ?? "", @"[_-]$"))
         {
-            messageType = null!;
             return false;
         }
 
         if (Regex.IsMatch(text ?? "", @"[^a-zA-Z0-9_-]"))
         {
-            messageType = null!;
             return false;
         }
 
@@ -74,5 +69,6 @@ public class MessageType : ValueObject
     }
 
     public static implicit operator MessageType(string text) => Parse(text);
+
     public static implicit operator string(MessageType messageType) => messageType.ToString();
 }

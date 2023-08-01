@@ -27,13 +27,19 @@ public static class Impersonation
                 var impersonateAs = context.Request.Headers["x-impersonate-as"].FirstOrDefault();
                 if (!string.IsNullOrWhiteSpace(impersonateAs))
                 {
-                    var newIdentity = new ClaimsIdentity(new Claim[]
-                    {
-                        new Claim(ClaimTypes.NameIdentifier, impersonateAs),
-                        new Claim(ClaimTypes.Name, impersonateAs)
-                    });
+                    var newIdentity = new ClaimsIdentity(
+                        new Claim[]
+                        {
+                            new Claim(ClaimTypes.NameIdentifier, impersonateAs),
+                            new Claim(ClaimTypes.Name, impersonateAs)
+                        }
+                    );
 
-                    _logger.LogDebug("User {UserId} is impersonating {ImpersonatedUserId}", context.User.Identity?.Name, impersonateAs);
+                    _logger.LogDebug(
+                        "User {UserId} is impersonating {ImpersonatedUserId}",
+                        context.User.Identity?.Name,
+                        impersonateAs
+                    );
 
                     context.User = new ClaimsPrincipal(newIdentity);
                 }

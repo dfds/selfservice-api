@@ -15,16 +15,11 @@ public static class Module
 
     private static async Task<IResult> GetServiceCatalog(SelfServiceDbContext dbContext)
     {
-        var serviceDescriptions = await dbContext.ServiceCatalog
-            .OrderBy(x => x.Name)
-            .ToListAsync();
+        var serviceDescriptions = await dbContext.ServiceCatalog.OrderBy(x => x.Name).ToListAsync();
 
-        return Results.Ok(new
-        {
-            items = serviceDescriptions
-                .Select(x => new ServiceDescriptionDto(x.Id, x.Name))
-                .ToArray()
-        });
+        return Results.Ok(
+            new { items = serviceDescriptions.Select(x => new ServiceDescriptionDto(x.Id, x.Name)).ToArray() }
+        );
     }
 
     private static async Task<IResult> GetService(Guid id, SelfServiceDbContext dbContext)

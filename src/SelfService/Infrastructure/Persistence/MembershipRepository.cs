@@ -20,16 +20,12 @@ public class MembershipRepository : IMembershipRepository
 
     public async Task<IEnumerable<Membership>> FindBy(CapabilityId capabilityId)
     {
-        return await _dbContext.Memberships
-            .Where(x => x.CapabilityId == capabilityId)
-            .ToListAsync();
+        return await _dbContext.Memberships.Where(x => x.CapabilityId == capabilityId).ToListAsync();
     }
 
     public async Task<Membership?> Cancel(CapabilityId capabilityId, UserId userId)
     {
-        var membershipCount = await _dbContext.Memberships
-            .Where(x => x.CapabilityId == capabilityId)
-            .CountAsync();
+        var membershipCount = await _dbContext.Memberships.Where(x => x.CapabilityId == capabilityId).CountAsync();
         if (membershipCount <= 1)
         {
             return null;
@@ -40,7 +36,9 @@ public class MembershipRepository : IMembershipRepository
             .FirstOrDefaultAsync();
         if (membership == null)
         {
-            throw new EntityNotFoundException<Membership>($"No Membership for user \"{userId}\" in capability \"{capabilityId}\"");
+            throw new EntityNotFoundException<Membership>(
+                $"No Membership for user \"{userId}\" in capability \"{capabilityId}\""
+            );
         }
         _dbContext.Memberships.Remove(membership);
 

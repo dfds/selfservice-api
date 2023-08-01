@@ -9,7 +9,7 @@ namespace SelfService.Domain.Models;
 public class RealAwsAccountId : ValueObject
 {
     public static readonly RealAwsAccountId Empty = new("");
-    
+
     private readonly string _value;
 
     private RealAwsAccountId(string value)
@@ -45,7 +45,7 @@ public class RealAwsAccountId : ValueObject
             accountId = Empty;
             return true;
         }
-        
+
         if (string.IsNullOrWhiteSpace(text) || !Regex.IsMatch(text, @"\d{12}"))
         {
             accountId = null!;
@@ -57,5 +57,6 @@ public class RealAwsAccountId : ValueObject
     }
 
     public static implicit operator RealAwsAccountId(string text) => Parse(text);
+
     public static implicit operator string(RealAwsAccountId accountId) => accountId.ToString();
 }

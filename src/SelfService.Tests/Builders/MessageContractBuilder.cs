@@ -60,6 +60,5 @@ public class MessageContractBuilder
         );
     }
 
-    public static implicit operator MessageContract(MessageContractBuilder builder)
-        => builder.Build();
+    public static implicit operator MessageContract(MessageContractBuilder builder) => builder.Build();
 }

@@ -18,7 +18,9 @@ public class when_getting_membership_application_for_applicant : IAsyncLifetime
     {
         await using var application = new ApiApplication();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
-        application.ReplaceService<IMembershipApplicationQuery>(new StubMembershipApplicationQuery(_aMembershipApplication));
+        application.ReplaceService<IMembershipApplicationQuery>(
+            new StubMembershipApplicationQuery(_aMembershipApplication)
+        );
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/membershipapplications/{_aMembershipApplication.Id}");
@@ -41,9 +43,7 @@ public class when_getting_membership_application_for_applicant : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var value = document?
-            .SelectElements("/approvals/items")
-            .ToArray();
+        var value = document?.SelectElements("/approvals/items").ToArray();
 
         Assert.Equal(Array.Empty<JsonElement>(), value);
     }
@@ -54,10 +54,7 @@ public class when_getting_membership_application_for_applicant : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var value = document?
-            .SelectElements("/approvals/_links/self/allow")
-            .Select(x => x.GetString())
-            .ToArray();
+        var value = document?.SelectElements("/approvals/_links/self/allow").Select(x => x.GetString()).ToArray();
 
         Assert.Equal(Array.Empty<string>(), value);
     }

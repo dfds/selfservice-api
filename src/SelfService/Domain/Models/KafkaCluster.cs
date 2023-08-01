@@ -4,7 +4,15 @@ namespace SelfService.Domain.Models;
 
 public class KafkaCluster : AggregateRoot<KafkaClusterId>
 {
-    public KafkaCluster(KafkaClusterId id, string name, string description, bool enabled, string bootstrapServers, string schemaRegistryUrl) : base(id)
+    public KafkaCluster(
+        KafkaClusterId id,
+        string name,
+        string description,
+        bool enabled,
+        string bootstrapServers,
+        string schemaRegistryUrl
+    )
+        : base(id)
     {
         Name = name;
         Description = description;
