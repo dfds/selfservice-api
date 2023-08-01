@@ -1,3 +1,10 @@
 CapabilityId;UserId;CreatedAt;Id
-cloudengineering-xxx;jandr@dfds.com;2023-03-17T08:00:00;35C66428-811E-41E2-9B94-8E09995A0367
-marketing-department-xxx;thfis@dfds.com;2023-04-04T16:00:00;C20C9307-55E0-4039-B034-9E061499D7B5
+cloudengineering-xxx;andfris@dfds.com;2023-03-17T08:00:00;35C66428-811E-41E2-9B94-8E09995A0367
+pending-deletion-xxx;andfris@dfds.com;2023-03-17T08:00:00;35C66428-811E-41E2-9B94-8E09995A0368
+cloudengineering-xxx;krijens@dfds.com;2023-03-17T08:00:00;cf1db68c-3073-11ee-be56-0242ac120002
+pending-deletion-xxx;krijens@dfds.com;2023-03-17T08:00:00;cf1db68c-3073-11ee-be56-0242ac120003
+cloudengineering-xxx;pausegh@dfds.com;2023-03-17T08:00:00;d40676c0-3073-11ee-be56-0242ac120002
+pending-deletion-xxx;pausegh@dfds.com;2023-03-17T08:00:00;d40676c0-3073-11ee-be56-0242ac120003
+cloudengineering-xxx;hritote@dfds.com;2023-03-17T08:00:00;daf5f5fa-3073-11ee-be56-0242ac120002
+pending-deletion-xxx;hritote@dfds.com;2023-03-17T08:00:00;daf5f5fa-3073-11ee-be56-0242ac120003
+marketing-department-xxx;andfris@dfds.com;2023-04-04T16:00:00;C20C9307-55E0-4039-B034-9E061499D7B5
