@@ -22,4 +22,5 @@ public interface IAuthorizationService
     Task<bool> CanLeave(UserId userId, CapabilityId capabilityId);
     Task<bool> CanApply(UserId userId, CapabilityId capabilityId);
     Task<bool> CanViewAllApplications(UserId userId, CapabilityId capabilityId);
+    Task<bool> CanDeleteCapability(UserId userId, CapabilityId capabilityId);
 }
