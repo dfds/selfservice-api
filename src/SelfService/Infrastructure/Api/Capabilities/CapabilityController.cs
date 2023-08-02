@@ -754,6 +754,7 @@ public class CapabilityController : ControllerBase
         }
         catch (PlatformDataApiUnavailableException e)
         {
+            //TODO: This is not a 404 error, but a 500. Figure out how to do this
             return NotFound(
                 new ProblemDetails
                 {

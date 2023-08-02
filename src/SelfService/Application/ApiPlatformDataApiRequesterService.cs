@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
@@ -7,11 +8,14 @@ namespace SelfService.Application;
 
 public class ApiPlatformDataApiRequesterService : IPlatformDataApiRequesterService
 {
-    public struct PlatformDataApiTimeSeries
+    public class PlatformDataApiTimeSeries
     {
+        [JsonPropertyName("timestamp")] 
         public DateTime TimeStamp { get; set; }
+        [JsonPropertyName("value")] 
         public float Value { get; set; }
-        public string Tag { get; set; }
+        [JsonPropertyName("tag")] 
+        public string Tag { get; set; } = "";
     }
 
     private string GetTimeSeriesUrl()
@@ -36,7 +40,7 @@ public class ApiPlatformDataApiRequesterService : IPlatformDataApiRequesterServi
         for (int i = 0; i < args.Length; i++)
         {
             var (key, value) = args[i];
-            sb.Append($"?{key}={value}");
+            sb.Append($"{key}={value}");
             if (i < args.Length - 1)
             {
                 sb.Append("&");
