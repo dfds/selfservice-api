@@ -4,13 +4,7 @@ namespace SelfService.Domain.Models;
 
 public class Capability : AggregateRoot<CapabilityId>
 {
-    public Capability(
-        CapabilityId id,
-        string name,
-        string description,
-        DateTime createdAt,
-        string createdBy
-    )
+    public Capability(CapabilityId id, string name, string description, DateTime createdAt, string createdBy)
         : base(id)
     {
         Name = name;

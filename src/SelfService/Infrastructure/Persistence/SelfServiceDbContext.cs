@@ -85,10 +85,7 @@ public class SelfServiceDbContext : DbContext
             .Properties<MembershipApplicationStatusOptions>()
             .HaveConversion<MembershipApplicationStatusOptionsConverter>();
 
-        configurationBuilder
-            .Properties<CapabilityStatusOptions>()
-            .HaveConversion<CapabilityStatusOptionsConverter>();
-
+        configurationBuilder.Properties<CapabilityStatusOptions>().HaveConversion<CapabilityStatusOptionsConverter>();
 
         configurationBuilder.Properties<KafkaTopicPartitions>().HaveConversion<KafkaTopicPartitionsConverter>();
 

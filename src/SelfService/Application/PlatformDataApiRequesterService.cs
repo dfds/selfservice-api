@@ -6,15 +6,17 @@ using SelfService.Domain.Models;
 
 namespace SelfService.Application;
 
-public class ApiPlatformDataApiRequesterService : IPlatformDataApiRequesterService
+public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
 {
     public class PlatformDataApiTimeSeries
     {
-        [JsonPropertyName("timestamp")] 
+        [JsonPropertyName("timestamp")]
         public DateTime TimeStamp { get; set; }
-        [JsonPropertyName("value")] 
+
+        [JsonPropertyName("value")]
         public float Value { get; set; }
-        [JsonPropertyName("tag")] 
+
+        [JsonPropertyName("tag")]
         public string Tag { get; set; } = "";
     }
 
@@ -53,12 +55,12 @@ public class ApiPlatformDataApiRequesterService : IPlatformDataApiRequesterServi
     private const string QueryParamDaysWindow = "days-window";
     private const string QueryParamCapabilityId = "tag";
 
-    private readonly ILogger<ApiPlatformDataApiRequesterService> _logger;
+    private readonly ILogger<PlatformDataApiRequesterService> _logger;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly HttpClient _httpClient;
 
-    public ApiPlatformDataApiRequesterService(
-        ILogger<ApiPlatformDataApiRequesterService> logger,
+    public PlatformDataApiRequesterService(
+        ILogger<PlatformDataApiRequesterService> logger,
         HttpClient httpClient,
         ICapabilityRepository capabilityRepository
     )
