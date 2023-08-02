@@ -43,7 +43,7 @@ public class MyCapabilitiesQuery : IMyCapabilitiesQuery
             where membership.UserId == userId
             select capability;
 
-        return await query.OrderBy(x => x.Name).Where(x => x.Deleted == null).ToListAsync();
+        return await query.OrderBy(x => x.Name).Where(x => x.Status != CapabilityStatusOptions.Deleted).ToListAsync();
     }
 }
 

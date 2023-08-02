@@ -28,14 +28,15 @@ public class CapabilityComparer : IEqualityComparer<Capability?>
 
         return x.Name == y.Name
             && x.Description == y.Description
-            && Nullable.Equals(x.Deleted, y.Deleted)
+            && x.Status == y.Status
             && x.CreatedAt.Equals(y.CreatedAt)
+            && x.ModifiedAt.Equals(y.ModifiedAt)
             && x.CreatedBy == y.CreatedBy;
     }
 
     public int GetHashCode(Capability obj)
     {
-        return HashCode.Combine(obj.Name, obj.Description, obj.Deleted, obj.CreatedAt, obj.CreatedBy);
+        return HashCode.Combine(obj.Name, obj.Description, obj.Status, obj.CreatedAt, obj.ModifiedAt, obj.CreatedBy);
     }
 }
 

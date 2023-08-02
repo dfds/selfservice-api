@@ -49,7 +49,7 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
 
     private async Task<List<Capability>> GetAllActiveCapabilities()
     {
-        return await _context.Capabilities.Where(x => x.Deleted == null).ToListAsync();
+        return await _context.Capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted).ToListAsync();
     }
 
     private async Task<ILookup<CapabilityId, Membership>> GetAllMembershipByCapability()
