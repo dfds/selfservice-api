@@ -1,9 +1,8 @@
 -- 2023-08-01 11:30:xx : Add status and modified_at to capabilities
 
--- add columns
 ALTER TABLE "Capability"
-ADD column "Status" varchar(255) NOT NULL DEFAULT 'Active',
-ADD column "ModifiedAt" timestamp NOT NULL DEFAULT clock_timestamp();
+ADD COLUMN "Status" VARCHAR(255) NOT NULL DEFAULT 'Active',
+ADD COLUMN "ModifiedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP; -- always overwritten, but non-nulls should have a default
 
 -- update status and modified_at to fit existing deletions
 -- also update modified_at to fit existing created_at
@@ -17,6 +16,5 @@ UPDATE "Capability"
 SET "ModifiedAt" = "CreatedAt"
 WHERE "Deleted" IS NULL;
 
--- remove deleted coloumn
 ALTER TABLE "Capability"
-DROP column "Deleted";
+DROP COLUMN "Deleted";
