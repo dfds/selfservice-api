@@ -23,3 +23,4 @@ public class CapabilityCosts
         Costs = costs;
     }
 }
+

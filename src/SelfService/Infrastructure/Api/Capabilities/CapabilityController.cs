@@ -24,7 +24,7 @@ public class CapabilityController : ControllerBase
     private readonly IAwsAccountApplicationService _awsAccountApplicationService;
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
-    private readonly IDataPlatformRequesterService _dataPlatformRequesterService;
+    private readonly IPlatformDataApiRequesterService _platformDataApiRequesterService;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -38,7 +38,7 @@ public class CapabilityController : ControllerBase
         IAwsAccountApplicationService awsAccountApplicationService,
         IMembershipApplicationService membershipApplicationService,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
-        IDataPlatformRequesterService dataPlatformRequesterService
+        IPlatformDataApiRequesterService platformDataApiRequesterService
     )
     {
         _membersQuery = membersQuery;
@@ -52,7 +52,7 @@ public class CapabilityController : ControllerBase
         _awsAccountApplicationService = awsAccountApplicationService;
         _membershipApplicationService = membershipApplicationService;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
-        _dataPlatformRequesterService = dataPlatformRequesterService;
+        _platformDataApiRequesterService = platformDataApiRequesterService;
     }
 
     [HttpGet("")]
@@ -693,6 +693,26 @@ public class CapabilityController : ControllerBase
         );
     }
 
+    [HttpGet("/costs")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> GetAllCosts([FromQuery] int daysWindow)
+    {
+        var costs = await _platformDataApiRequesterService.GetAllCapabilityCosts(daysWindow);
+
+        if (costs.Count > 0)
+            return Ok(costs);
+
+        return NotFound(
+            new ProblemDetails()
+            {
+                Title = "Capability Costs not found",
+                Detail = $"No Cost data found for any capability",
+            }
+        );
+    }
+
     [HttpGet("{id:required}/costs")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
@@ -718,9 +738,24 @@ public class CapabilityController : ControllerBase
             );
         }
 
-        var costs = await _dataPlatformRequesterService.GetCapabilityCosts(capabilityId, daysWindow);
+        try
+        {
+            var costs = await _platformDataApiRequesterService.GetCapabilityCosts(capabilityId, daysWindow);
 
-        if (costs.Costs.Length == 0)
+            if (costs.Costs.Length == 0)
+            {
+                return NotFound(
+                    new ProblemDetails()
+                    {
+                        Title = "Capability Costs not found",
+                        Detail = $"No Cost data found for Capability with ID {id}",
+                    }
+                );
+            }
+
+            return Ok(costs);
+        }
+        catch (PlatformDataApiUnavailableException e)
         {
             return NotFound(
                 new ProblemDetails()
@@ -730,7 +765,18 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
-
-        return Ok(costs);
+        catch (Exception e)
+        {
+            Ok(e);
+            //System.Console.WriteLine(e);
+            //throw;
+        }
+        return NotFound(
+            new ProblemDetails()
+            {
+                Title = "Capability Costs not found",
+                Detail = $"No Cost data found for Capability with ID {id}",
+            }
+        );
     }
 }

@@ -88,12 +88,12 @@ public static class Domain
             client.BaseAddress = prometheusEndpoint;
         });
 
-        var dataPlatformEndpoint = new Uri(builder.Configuration["SS_DATA_PLATFORM_API_ENDPOINT"] ?? "");
-        var dataPlatformApiKey = builder.Configuration["SS_DATA_PLATFORM_API_KEY"];
-        builder.Services.AddHttpClient<IDataPlatformRequesterService, DataPlatformRequesterService>(client =>
+        var dataPlatformEndpoint = new Uri(builder.Configuration["SS_PLATFORM_DATA_ENDPOINT"] ?? "");
+        var dataApiKey = builder.Configuration["SS_PLATFORM_DATA_API_KEY"];
+        builder.Services.AddHttpClient<IPlatformDataApiRequesterService, ApiPlatformDataApiRequesterService>(client =>
         {
             client.BaseAddress = dataPlatformEndpoint;
-            client.DefaultRequestHeaders.Add("x-api-key", dataPlatformApiKey);
+            client.DefaultRequestHeaders.Add("x-api-key", dataApiKey);
         });
     }
 }
