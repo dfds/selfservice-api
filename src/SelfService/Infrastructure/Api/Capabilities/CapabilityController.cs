@@ -742,41 +742,25 @@ public class CapabilityController : ControllerBase
         {
             var costs = await _platformDataApiRequesterService.GetCapabilityCosts(capabilityId, daysWindow);
 
-            if (costs.Costs.Length == 0)
-            {
-                return NotFound(
+            return costs.Costs.Length == 0
+                ? NotFound(
                     new ProblemDetails()
                     {
                         Title = "Capability Costs not found",
                         Detail = $"No Cost data found for Capability with ID {id}",
                     }
-                );
-            }
-
-            return Ok(costs);
+                )
+                : Ok(costs);
         }
         catch (PlatformDataApiUnavailableException e)
         {
             return NotFound(
-                new ProblemDetails()
+                new ProblemDetails
                 {
-                    Title = "Capability Costs not found",
-                    Detail = $"No Cost data found for Capability with ID {id}",
+                    Title = "PlatformDataApi unreachable",
+                    Detail = $"PlatformDataApi error: {e.Message}."
                 }
             );
         }
-        catch (Exception e)
-        {
-            Ok(e);
-            //System.Console.WriteLine(e);
-            //throw;
-        }
-        return NotFound(
-            new ProblemDetails()
-            {
-                Title = "Capability Costs not found",
-                Detail = $"No Cost data found for Capability with ID {id}",
-            }
-        );
     }
 }

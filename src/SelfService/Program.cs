@@ -1,4 +1,3 @@
-using AspNetCore.Proxy;
 using Prometheus;
 using SelfService;
 using SelfService.Configuration;

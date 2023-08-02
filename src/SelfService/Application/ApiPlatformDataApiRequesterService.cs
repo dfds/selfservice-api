@@ -49,13 +49,15 @@ public class ApiPlatformDataApiRequesterService : IPlatformDataApiRequesterServi
     private const string QueryParamDaysWindow = "days-window";
     private const string QueryParamCapabilityId = "tag";
 
-
     private readonly ILogger<ApiPlatformDataApiRequesterService> _logger;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly HttpClient _httpClient;
 
-    public ApiPlatformDataApiRequesterService(ILogger<ApiPlatformDataApiRequesterService> logger, HttpClient httpClient,
-        ICapabilityRepository capabilityRepository)
+    public ApiPlatformDataApiRequesterService(
+        ILogger<ApiPlatformDataApiRequesterService> logger,
+        HttpClient httpClient,
+        ICapabilityRepository capabilityRepository
+    )
     {
         _logger = logger;
         _httpClient = httpClient;
@@ -63,7 +65,8 @@ public class ApiPlatformDataApiRequesterService : IPlatformDataApiRequesterServi
     }
 
     private async Task<List<PlatformDataApiTimeSeries>> FetchAndFilterValidCapabilities(
-        params KeyValuePair<string, string>[] queryParams)
+        params KeyValuePair<string, string>[] queryParams
+    )
     {
         List<PlatformDataApiTimeSeries> validTimeSeries = new List<PlatformDataApiTimeSeries>();
         var url = ConstructUrl(GetTimeSeriesUrl(), queryParams);
@@ -115,10 +118,8 @@ public class ApiPlatformDataApiRequesterService : IPlatformDataApiRequesterServi
     public async Task<List<CapabilityCosts>> GetAllCapabilityCosts(int daysWindow)
     {
         var timeSeriesWithValidCapabilities = await FetchAndFilterValidCapabilities(
-            new KeyValuePair<string, string>[]
-            {
-                new(QueryParamDaysWindow, daysWindow.ToString())
-            });
+            new KeyValuePair<string, string>[] { new(QueryParamDaysWindow, daysWindow.ToString()) }
+        );
 
         var mappedCosts = ToCapabilityMap(timeSeriesWithValidCapabilities);
         List<CapabilityCosts> costs = new List<CapabilityCosts>();
@@ -140,7 +141,8 @@ public class ApiPlatformDataApiRequesterService : IPlatformDataApiRequesterServi
     {
         var timeSeriesWithValidCapabilities = await FetchAndFilterValidCapabilities(
             new(QueryParamCapabilityId, capabilityId),
-            new(QueryParamDaysWindow, daysWindow.ToString()));
+            new(QueryParamDaysWindow, daysWindow.ToString())
+        );
 
         var mappedCosts = ToCapabilityMap(timeSeriesWithValidCapabilities);
         return mappedCosts.TryGetValue(capabilityId, out var cost)

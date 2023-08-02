@@ -4,7 +4,6 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class CapabilityCostsApiResource
 {
-
     [JsonPropertyName("_links")]
     public CapabilityCostsLinks Links { get; set; }
 

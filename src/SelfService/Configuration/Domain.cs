@@ -1,5 +1,4 @@
-﻿using AspNetCore.Proxy;
-using SelfService.Application;
+﻿using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
