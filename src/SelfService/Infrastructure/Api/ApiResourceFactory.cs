@@ -271,8 +271,7 @@ public class ApiResourceFactory
     {
         var allowedInteractions = Allow.None;
         if (
-            await _authorizationService.CanDeleteCapability(CurrentUser, capability.Id) &&
-            capability.Status == CapabilityStatusOptions.Active
+            await _authorizationService.CanDeleteCapability(CurrentUser, capability.Id)
         ) {
             allowedInteractions += Post;
         }
@@ -292,8 +291,7 @@ public class ApiResourceFactory
     {
         var allowedInteractions = Allow.None;
         if (
-            await _authorizationService.CanDeleteCapability(CurrentUser, capability.Id) &&
-            capability.Status == CapabilityStatusOptions.PendingDeletion
+            await _authorizationService.CanDeleteCapability(CurrentUser, capability.Id)
         ) {
             allowedInteractions += Post;
         }
