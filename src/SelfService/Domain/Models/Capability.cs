@@ -45,4 +45,26 @@ public class Capability : AggregateRoot<CapabilityId>
     {
         return Id.ToString();
     }
+
+    public void RequestDeletion()
+    {
+        if (Status != CapabilityStatusOptions.Active)
+        {
+            throw new InvalidOperationException("Capability is not active");
+        }
+
+        Status = CapabilityStatusOptions.PendingDeletion;
+        ModifiedAt = DateTime.UtcNow;
+    }
+
+    public void CancelDeletionRequest()
+    {
+        if (Status != CapabilityStatusOptions.PendingDeletion)
+        {
+            throw new InvalidOperationException("Capability is not pending deletion");
+        }
+
+        Status = CapabilityStatusOptions.Active;
+        ModifiedAt = DateTime.UtcNow;
+    }
 }
