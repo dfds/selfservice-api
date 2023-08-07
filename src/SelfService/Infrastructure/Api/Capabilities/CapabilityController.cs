@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net;
+using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
@@ -24,7 +25,6 @@ public class CapabilityController : ControllerBase
     private readonly IAwsAccountApplicationService _awsAccountApplicationService;
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
-    private readonly IPlatformDataApiRequesterService _platformDataApiRequesterService;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -37,8 +37,7 @@ public class CapabilityController : ControllerBase
         IAwsAccountRepository awsAccountRepository,
         IAwsAccountApplicationService awsAccountApplicationService,
         IMembershipApplicationService membershipApplicationService,
-        IKafkaClusterAccessRepository kafkaClusterAccessRepository,
-        IPlatformDataApiRequesterService platformDataApiRequesterService
+        IKafkaClusterAccessRepository kafkaClusterAccessRepository
     )
     {
         _membersQuery = membersQuery;
@@ -52,8 +51,8 @@ public class CapabilityController : ControllerBase
         _awsAccountApplicationService = awsAccountApplicationService;
         _membershipApplicationService = membershipApplicationService;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
-        _platformDataApiRequesterService = platformDataApiRequesterService;
     }
+
 
     [HttpGet("")]
     [ProducesResponseType(typeof(CapabilityListApiResource), StatusCodes.Status200OK)]
@@ -693,75 +692,5 @@ public class CapabilityController : ControllerBase
         );
     }
 
-    [HttpGet("/costs")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetAllCosts([FromQuery] int daysWindow)
-    {
-        var costs = await _platformDataApiRequesterService.GetAllCapabilityCosts(daysWindow);
-
-        if (costs.Count > 0)
-            return Ok(costs);
-
-        return NotFound(
-            new ProblemDetails()
-            {
-                Title = "Capability Costs not found",
-                Detail = $"No Cost data found for any capability",
-            }
-        );
-    }
-
-    [HttpGet("{id:required}/costs")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetCosts(string id, [FromQuery] int daysWindow)
-    {
-        if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
-            return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Capability Id Not Parsable.",
-                    Detail = $"ID {id}, could not be parsed as a CapabilityID"
-                }
-            );
-        }
-
-        var exists = await _capabilityRepository.Exists(capabilityId);
-        if (!exists)
-        {
-            return NotFound(
-                new ProblemDetails { Title = "Capability Not Found.", Detail = $"Found no Capability with Id {id}" }
-            );
-        }
-
-        try
-        {
-            var costs = await _platformDataApiRequesterService.GetCapabilityCosts(capabilityId, daysWindow);
-
-            return costs.Costs.Length == 0
-                ? NotFound(
-                    new ProblemDetails()
-                    {
-                        Title = "Capability Costs not found",
-                        Detail = $"No Cost data found for Capability with ID {id}",
-                    }
-                )
-                : Ok(costs);
-        }
-        catch (PlatformDataApiUnavailableException e)
-        {
-            //TODO: This is not a 404 error, but a 500. Figure out how to do this
-            return NotFound(
-                new ProblemDetails
-                {
-                    Title = "PlatformDataApi unreachable",
-                    Detail = $"PlatformDataApi error: {e.Message}."
-                }
-            );
-        }
-    }
+   
 }

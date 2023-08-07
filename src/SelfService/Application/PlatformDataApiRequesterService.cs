@@ -3,21 +3,21 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Persistence;
+using SelfService.Infrastructure.Persistence.Queries;
 
 namespace SelfService.Application;
 
 public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
 {
-    public class PlatformDataApiTimeSeries
+    private class PlatformDataApiTimeSeries
     {
-        [JsonPropertyName("timestamp")]
-        public DateTime TimeStamp { get; set; }
+        [JsonPropertyName("timestamp")] public DateTime TimeStamp { get; set; }
 
-        [JsonPropertyName("value")]
-        public float Value { get; set; }
+        [JsonPropertyName("value")] public float Value { get; set; }
 
-        [JsonPropertyName("tag")]
-        public string Tag { get; set; } = "";
+        [JsonPropertyName("tag")] public string Tag { get; set; } = "";
     }
 
     private string GetTimeSeriesUrl()
@@ -56,53 +56,42 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
     private const string QueryParamCapabilityId = "tag";
 
     private readonly ILogger<PlatformDataApiRequesterService> _logger;
-    private readonly ICapabilityRepository _capabilityRepository;
+    private readonly IMyCapabilitiesQuery _myCapabilitiesQuery;
     private readonly HttpClient _httpClient;
+
 
     public PlatformDataApiRequesterService(
         ILogger<PlatformDataApiRequesterService> logger,
-        HttpClient httpClient,
-        ICapabilityRepository capabilityRepository
+        IMyCapabilitiesQuery myCapabilitiesQuery,
+        HttpClient httpClient
     )
     {
         _logger = logger;
+        _myCapabilitiesQuery = myCapabilitiesQuery;
         _httpClient = httpClient;
-        _capabilityRepository = capabilityRepository;
     }
 
-    private async Task<List<PlatformDataApiTimeSeries>> FetchAndFilterValidCapabilities(
-        params KeyValuePair<string, string>[] queryParams
-    )
+    private async Task<List<PlatformDataApiTimeSeries>> FetchCapabilityCosts(
+        params KeyValuePair<string, string>[] queryParams)
     {
-        List<PlatformDataApiTimeSeries> validTimeSeries = new List<PlatformDataApiTimeSeries>();
         var url = ConstructUrl(GetTimeSeriesUrl(), queryParams);
         HttpResponseMessage response = await _httpClient.GetAsync(url);
 
         if (!response.IsSuccessStatusCode)
             throw new PlatformDataApiUnavailableException($"PlatformDataApi StatusCode: {response.StatusCode}");
 
-        string json = await response.Content.ReadAsStringAsync();
-        _logger.LogDebug("Response was {StatusCode} with body {ResponseBody}", response.StatusCode, json);
-
+        string json = await response.Content.ReadAsStringAsync();        
+        _logger.LogTrace("[PlatformDataApiRequesterService] Response was {StatusCode}", response.StatusCode);
+        List<PlatformDataApiTimeSeries> validSeries = new List<PlatformDataApiTimeSeries>();
         var dataResponse = JsonSerializer.Deserialize<PlatformDataApiTimeSeries[]>(json);
-        if (dataResponse == null)
-            return validTimeSeries;
 
-        Dictionary<string, bool> isCapabilityIdValid = new Dictionary<string, bool>();
-        foreach (var platformDataApiTimeSeries in dataResponse)
+        if (dataResponse != null)
         {
-            var timeSeriesCapabilityId = platformDataApiTimeSeries.Tag;
-            if (!isCapabilityIdValid.ContainsKey(timeSeriesCapabilityId))
-            {
-                var existsInRepo = await _capabilityRepository.Exists(timeSeriesCapabilityId);
-                isCapabilityIdValid.Add(timeSeriesCapabilityId, existsInRepo);
-            }
-
-            if (isCapabilityIdValid[timeSeriesCapabilityId])
-                validTimeSeries.Add(platformDataApiTimeSeries);
+            validSeries.AddRange(dataResponse);
         }
 
-        return validTimeSeries;
+
+        return validSeries;
     }
 
     private Dictionary<string, List<TimeSeries>> ToCapabilityMap(List<PlatformDataApiTimeSeries> validTimeSeries)
@@ -121,31 +110,28 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         return costs;
     }
 
-    public async Task<List<CapabilityCosts>> GetAllCapabilityCosts(int daysWindow)
+    public async Task<MyCapabilityCosts> GetMyCapabilityCosts(UserId userId, int daysWindow)
     {
-        var timeSeriesWithValidCapabilities = await FetchAndFilterValidCapabilities(
+        var timeSeriesWithValidCapabilities = await FetchCapabilityCosts(
             new KeyValuePair<string, string>[] { new(QueryParamDaysWindow, daysWindow.ToString()) }
         );
 
         var mappedCosts = ToCapabilityMap(timeSeriesWithValidCapabilities);
-        List<CapabilityCosts> costs = new List<CapabilityCosts>();
-        foreach (var (tag, timeSeriesData) in mappedCosts)
-        {
-            if (!CapabilityId.TryParse(tag, out var capabilityId))
-            {
-                _logger.LogDebug("unable to parse tag to capability: {CapabilityId}", tag);
-                continue;
-            }
 
-            costs.Add(new CapabilityCosts(capabilityId, timeSeriesData.ToArray()));
+        var myCapabilities = await _myCapabilitiesQuery.FindBy(userId);
+        List<CapabilityCosts> costs = new List<CapabilityCosts>();
+        foreach (var myCapability in myCapabilities)
+        {
+            if (mappedCosts.TryGetValue(myCapability.Id, out var myCosts))
+                costs.Add(new CapabilityCosts(myCapability.Id, myCosts.ToArray()));
         }
 
-        return costs;
+        return new MyCapabilityCosts(costs);
     }
 
     public async Task<CapabilityCosts> GetCapabilityCosts(CapabilityId capabilityId, int daysWindow)
     {
-        var timeSeriesWithValidCapabilities = await FetchAndFilterValidCapabilities(
+        var timeSeriesWithValidCapabilities = await FetchCapabilityCosts(
             new(QueryParamCapabilityId, capabilityId),
             new(QueryParamDaysWindow, daysWindow.ToString())
         );

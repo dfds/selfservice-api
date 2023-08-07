@@ -6,6 +6,7 @@ using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Metrics;
 using SelfService.Infrastructure.Api.System;
 using static SelfService.Infrastructure.Api.Method;
 
@@ -319,21 +320,7 @@ public class ApiResourceFactory
             allow: allowedInteractions
         );
     }
-
-    private ResourceLink CreateCostsLinkFor(Capability capability)
-    {
-        return new ResourceLink(
-            href: _linkGenerator.GetUriByAction(
-                httpContext: HttpContext,
-                action: nameof(CapabilityController.GetCosts),
-                controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }
-            ) ?? "",
-            rel: "self",
-            allow: Allow.Get
-        );
-    }
-
+    
     public async Task<CapabilityDetailsApiResource> Convert(Capability capability)
     {
         return new CapabilityDetailsApiResource(
@@ -346,8 +333,7 @@ public class ApiResourceFactory
                 clusters: CreateClusterAccessLinkFor(capability),
                 membershipApplications: await CreateMembershipApplicationsLinkFor(capability),
                 leaveCapability: await CreateLeaveCapabilityLinkFor(capability),
-                awsAccount: await CreateAwsAccountLinkFor(capability),
-                costs: CreateCostsLinkFor(capability)
+                awsAccount: await CreateAwsAccountLinkFor(capability)
             )
         );
     }

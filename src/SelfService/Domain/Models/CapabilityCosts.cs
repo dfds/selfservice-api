@@ -14,12 +14,22 @@ public class TimeSeries
 
 public class CapabilityCosts
 {
-    public CapabilityId CapabilityId { get; set; }
+    public string CapabilityId { get; set; }
     public TimeSeries[] Costs { get; set; }
 
     public CapabilityCosts(CapabilityId capabilityId, TimeSeries[] costs)
     {
         CapabilityId = capabilityId;
+        Costs = costs;
+    }
+}
+
+public class MyCapabilityCosts
+{
+    public List<CapabilityCosts> Costs { get; set; }
+
+    public MyCapabilityCosts(List<CapabilityCosts> costs)
+    {
         Costs = costs;
     }
 }
