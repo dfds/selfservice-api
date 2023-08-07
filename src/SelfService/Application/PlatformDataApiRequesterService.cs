@@ -13,11 +13,14 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
 {
     private class PlatformDataApiTimeSeries
     {
-        [JsonPropertyName("timestamp")] public DateTime TimeStamp { get; set; }
+        [JsonPropertyName("timestamp")]
+        public DateTime TimeStamp { get; set; }
 
-        [JsonPropertyName("value")] public float Value { get; set; }
+        [JsonPropertyName("value")]
+        public float Value { get; set; }
 
-        [JsonPropertyName("tag")] public string Tag { get; set; } = "";
+        [JsonPropertyName("tag")]
+        public string Tag { get; set; } = "";
     }
 
     private string GetTimeSeriesUrl()
@@ -59,7 +62,6 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
     private readonly IMyCapabilitiesQuery _myCapabilitiesQuery;
     private readonly HttpClient _httpClient;
 
-
     public PlatformDataApiRequesterService(
         ILogger<PlatformDataApiRequesterService> logger,
         IMyCapabilitiesQuery myCapabilitiesQuery,
@@ -72,7 +74,8 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
     }
 
     private async Task<List<PlatformDataApiTimeSeries>> FetchCapabilityCosts(
-        params KeyValuePair<string, string>[] queryParams)
+        params KeyValuePair<string, string>[] queryParams
+    )
     {
         var url = ConstructUrl(GetTimeSeriesUrl(), queryParams);
         HttpResponseMessage response = await _httpClient.GetAsync(url);
@@ -80,7 +83,7 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         if (!response.IsSuccessStatusCode)
             throw new PlatformDataApiUnavailableException($"PlatformDataApi StatusCode: {response.StatusCode}");
 
-        string json = await response.Content.ReadAsStringAsync();        
+        string json = await response.Content.ReadAsStringAsync();
         _logger.LogTrace("[PlatformDataApiRequesterService] Response was {StatusCode}", response.StatusCode);
         List<PlatformDataApiTimeSeries> validSeries = new List<PlatformDataApiTimeSeries>();
         var dataResponse = JsonSerializer.Deserialize<PlatformDataApiTimeSeries[]>(json);
@@ -89,7 +92,6 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         {
             validSeries.AddRange(dataResponse);
         }
-
 
         return validSeries;
     }

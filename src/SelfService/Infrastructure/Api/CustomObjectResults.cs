@@ -12,7 +12,8 @@ public class InternalServerErrorResult : ObjectResult
 {
     private const int DefaultStatusCode = StatusCodes.Status500InternalServerError;
 
-    public InternalServerErrorResult(object error) : base(error)
+    public InternalServerErrorResult(object error)
+        : base(error)
     {
         StatusCode = DefaultStatusCode;
     }

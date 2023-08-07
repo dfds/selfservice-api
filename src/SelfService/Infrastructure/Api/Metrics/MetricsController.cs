@@ -16,8 +16,11 @@ public class MetricsController : ControllerBase
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IPlatformDataApiRequesterService _platformDataApiRequesterService;
 
-    public MetricsController(ApiResourceFactory apiResourceFactory, ICapabilityRepository capabilityRepository,
-        IPlatformDataApiRequesterService platformDataApiRequesterService)
+    public MetricsController(
+        ApiResourceFactory apiResourceFactory,
+        ICapabilityRepository capabilityRepository,
+        IPlatformDataApiRequesterService platformDataApiRequesterService
+    )
     {
         _apiResourceFactory = apiResourceFactory;
         _capabilityRepository = capabilityRepository;
@@ -37,7 +40,7 @@ public class MetricsController : ControllerBase
         }
         try
         {
-            var costs = await _platformDataApiRequesterService.GetMyCapabilityCosts(userId,daysWindow);
+            var costs = await _platformDataApiRequesterService.GetMyCapabilityCosts(userId, daysWindow);
 
             if (costs.Costs.Count > 0)
                 return Ok(costs);
@@ -55,11 +58,7 @@ public class MetricsController : ControllerBase
         catch (Exception e)
         {
             return CustomObjectResults.InternalServerError(
-                new ProblemDetails
-                {
-                    Title = "Uncaught Exception",
-                    Detail = $"GetCapabilityCosts: {e.Message}."
-                }
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetCapabilityCosts: {e.Message}." }
             );
         }
 

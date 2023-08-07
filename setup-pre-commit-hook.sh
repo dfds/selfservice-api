@@ -1,4 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+macospath="/usr/local/share/dotnet"
+linuxpath="/home/user/share/dotnet/dotnet"
+windowspath="C:/program files/dotnet/"
 
 # install dotnet csharpier if not installed
 if [  ! "dotnet tool update csharpier -g" ]; then
@@ -17,7 +21,9 @@ fi
 
 echo "Creating pre-commit hook"
 mkdir .git/hooks 2>&-
-echo "#!/bin/sh" > .git/hooks/pre-commit
+echo "#!/usr/bin/env bash" > .git/hooks/pre-commit
+echo "export PATH=$PATH:$macospath,$linuxpath,$windowspath" >> .git/hooks/pre-commit 
+
 echo "dotnet csharpier ." >> .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 echo "Done"
