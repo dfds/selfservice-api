@@ -40,6 +40,8 @@ spec:
               value: build.selfservice.selfservice-api
             - name: SS_APISPECS_TOPIC
               value: cloudengineering.selfservice.apispecs
+            - name: SS_PROMETHEUS_API_ENDPOINT
+              value: http://monitoring-kube-prometheus-prometheus.monitoring:9090
           envFrom:
             - secretRef:
                 name: kafka-credentials

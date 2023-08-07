@@ -22,7 +22,7 @@ fi
 echo "Creating pre-commit hook"
 mkdir .git/hooks 2>&-
 echo "#!/usr/bin/env bash" > .git/hooks/pre-commit
-echo "export PATH=$PATH:$macospath,$linuxpath,$windowspath" >> .git/hooks/pre-commit 
+echo "export PATH=\"$PATH:$macospath:$linuxpath:$windowspath\"" >> .git/hooks/pre-commit
 
 echo "dotnet csharpier ." >> .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
