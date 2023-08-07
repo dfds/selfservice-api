@@ -270,9 +270,8 @@ public class ApiResourceFactory
     private async Task<ResourceLink> CreateRequestDeletionLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
-        if (
-            await _authorizationService.CanDeleteCapability(CurrentUser, capability.Id)
-        ) {
+        if (await _authorizationService.CanDeleteCapability(CurrentUser, capability.Id))
+        {
             allowedInteractions += Post;
         }
         return new ResourceLink(
@@ -290,9 +289,8 @@ public class ApiResourceFactory
     private async Task<ResourceLink> CreateCancelDeletionRequestLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
-        if (
-            await _authorizationService.CanDeleteCapability(CurrentUser, capability.Id)
-        ) {
+        if (await _authorizationService.CanDeleteCapability(CurrentUser, capability.Id))
+        {
             allowedInteractions += Post;
         }
 

@@ -3,7 +3,6 @@ using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
-
 public class CapabilityDetailsApiResource
 {
     public string Id { get; set; }
@@ -47,7 +46,13 @@ public class CapabilityDetailsApiResource
         }
     }
 
-    public CapabilityDetailsApiResource(string id, string name, string status, string description, CapabilityDetailsLinks links)
+    public CapabilityDetailsApiResource(
+        string id,
+        string name,
+        string status,
+        string description,
+        CapabilityDetailsLinks links
+    )
     {
         Id = id;
         Name = name;
@@ -77,7 +82,13 @@ public class CapabilityListItemApiResource
         }
     }
 
-    public CapabilityListItemApiResource(string id, string name, string status, string description, CapabilityListItemLinks links)
+    public CapabilityListItemApiResource(
+        string id,
+        string name,
+        string status,
+        string description,
+        CapabilityListItemLinks links
+    )
     {
         Id = id;
         Name = name;

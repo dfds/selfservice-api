@@ -152,9 +152,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task RequestCapabilityDeletion(
-        CapabilityId capabilityId
-    )
+    public async Task RequestCapabilityDeletion(CapabilityId capabilityId)
     {
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability is null)
@@ -163,13 +161,10 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         }
         var modificationTime = _systemTime.Now;
         capability.RequestDeletion();
-
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task CancelCapabilityDeletionRequest(
-        CapabilityId capabilityId
-    )
+    public async Task CancelCapabilityDeletionRequest(CapabilityId capabilityId)
     {
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability is null)

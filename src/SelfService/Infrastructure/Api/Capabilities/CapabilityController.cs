@@ -723,7 +723,8 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Not authorized",
-                    Detail = $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\"."
+                    Detail =
+                        $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\"."
                 }
             );
         }
@@ -737,11 +738,7 @@ public class CapabilityController : ControllerBase
         catch (EntityNotFoundException e)
         {
             return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Capability deletion not requested.",
-                    Detail = $"error: {e.Message}"
-                }
+                new ProblemDetails { Title = "Capability deletion not requested.", Detail = $"error: {e.Message}" }
             );
         }
         catch (InvalidOperationException)
@@ -790,7 +787,8 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Not authorized",
-                    Detail = $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\"."
+                    Detail =
+                        $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\"."
                 }
             );
         }
@@ -804,11 +802,7 @@ public class CapabilityController : ControllerBase
         catch (EntityNotFoundException e)
         {
             return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Capability deletion not requested.",
-                    Detail = $"error: {e.Message}"
-                }
+                new ProblemDetails { Title = "Capability deletion not requested.", Detail = $"error: {e.Message}" }
             );
         }
         catch (InvalidOperationException)
