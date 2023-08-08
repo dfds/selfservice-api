@@ -13,9 +13,7 @@ public class MetricsController : ControllerBase
 {
     private readonly IPlatformDataApiRequesterService _platformDataApiRequesterService;
 
-    public MetricsController(
-        IPlatformDataApiRequesterService platformDataApiRequesterService
-    )
+    public MetricsController(IPlatformDataApiRequesterService platformDataApiRequesterService)
     {
         _platformDataApiRequesterService = platformDataApiRequesterService;
     }
@@ -42,7 +40,7 @@ public class MetricsController : ControllerBase
         catch (PlatformDataApiUnavailableException e)
         {
             return CustomObjectResults.InternalServerError(
-                new ProblemDetails  
+                new ProblemDetails
                 {
                     Title = "PlatformDataApi unreachable",
                     Detail = $"PlatformDataApi error: {e.Message}."
