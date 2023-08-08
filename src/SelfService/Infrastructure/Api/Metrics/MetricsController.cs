@@ -11,19 +11,12 @@ namespace SelfService.Infrastructure.Api.Metrics;
 [ApiController]
 public class MetricsController : ControllerBase
 {
-    private readonly ApiResourceFactory _apiResourceFactory;
-
-    private readonly ICapabilityRepository _capabilityRepository;
     private readonly IPlatformDataApiRequesterService _platformDataApiRequesterService;
 
     public MetricsController(
-        ApiResourceFactory apiResourceFactory,
-        ICapabilityRepository capabilityRepository,
         IPlatformDataApiRequesterService platformDataApiRequesterService
     )
     {
-        _apiResourceFactory = apiResourceFactory;
-        _capabilityRepository = capabilityRepository;
         _platformDataApiRequesterService = platformDataApiRequesterService;
     }
 
@@ -38,6 +31,7 @@ public class MetricsController : ControllerBase
         {
             return Unauthorized();
         }
+
         try
         {
             var costs = await _platformDataApiRequesterService.GetMyCapabilityCosts(userId, daysWindow);
@@ -48,7 +42,7 @@ public class MetricsController : ControllerBase
         catch (PlatformDataApiUnavailableException e)
         {
             return CustomObjectResults.InternalServerError(
-                new ProblemDetails
+                new ProblemDetails  
                 {
                     Title = "PlatformDataApi unreachable",
                     Detail = $"PlatformDataApi error: {e.Message}."

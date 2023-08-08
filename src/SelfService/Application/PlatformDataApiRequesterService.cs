@@ -25,12 +25,12 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
 
     private string GetTimeSeriesUrl()
     {
-        return $"{_httpClient.BaseAddress}/api/data/timeseries/finout";
+        return $"{_httpClient.BaseAddress}api/data/timeseries/finout";
     }
 
     private string GetTimeSeriesByGroupUrl()
     {
-        return $"{_httpClient.BaseAddress}/api/data/timeseriesbygroup/finout";
+        return $"{_httpClient.BaseAddress}api/data/timeseriesbygroup/finout";
     }
 
     private string ConstructUrl(string url, params KeyValuePair<string, string>[] args)
