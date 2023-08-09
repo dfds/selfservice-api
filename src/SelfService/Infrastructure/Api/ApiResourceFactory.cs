@@ -194,6 +194,7 @@ public class ApiResourceFactory
         return new CapabilityListItemApiResource(
             id: capability.Id,
             name: capability.Name,
+            status: capability.Status.ToString(),
             description: capability.Description,
             links: new CapabilityListItemApiResource.CapabilityListItemLinks(
                 self: new ResourceLink(
@@ -266,6 +267,45 @@ public class ApiResourceFactory
         );
     }
 
+    private async Task<ResourceLink> CreateRequestDeletionLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanDeleteCapability(CurrentUser, capability.Id))
+        {
+            allowedInteractions += Post;
+        }
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.RequestCapabilityDeletion),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: allowedInteractions
+        );
+    }
+
+    private async Task<ResourceLink> CreateCancelDeletionRequestLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanDeleteCapability(CurrentUser, capability.Id))
+        {
+            allowedInteractions += Post;
+        }
+
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.CancelCapabilityDeletionRequest),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: allowedInteractions
+        );
+    }
+
     private ResourceLink CreateMembersLinkFor(Capability capability)
     {
         return new ResourceLink(
@@ -325,6 +365,7 @@ public class ApiResourceFactory
         return new CapabilityDetailsApiResource(
             id: capability.Id,
             name: capability.Name,
+            status: capability.Status.ToString(),
             description: capability.Description,
             links: new CapabilityDetailsApiResource.CapabilityDetailsLinks(
                 self: CreateSelfLinkFor(capability),
@@ -332,7 +373,9 @@ public class ApiResourceFactory
                 clusters: CreateClusterAccessLinkFor(capability),
                 membershipApplications: await CreateMembershipApplicationsLinkFor(capability),
                 leaveCapability: await CreateLeaveCapabilityLinkFor(capability),
-                awsAccount: await CreateAwsAccountLinkFor(capability)
+                awsAccount: await CreateAwsAccountLinkFor(capability),
+                requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
+                cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability)
             )
         );
     }

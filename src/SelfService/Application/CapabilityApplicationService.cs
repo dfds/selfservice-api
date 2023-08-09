@@ -44,7 +44,6 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         var capability = Capability.CreateCapability(capabilityId, name, description, creationTime, requestedBy);
         await _capabilityRepository.Add(capability);
 
-        // TODO [paulseghers & thfis]: check if capability already exists in db
         return capabilityId;
     }
 
@@ -150,5 +149,29 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         }
 
         kafkaClusterAccess.RegisterAsGranted(_systemTime.Now);
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task RequestCapabilityDeletion(CapabilityId capabilityId)
+    {
+        var capability = await _capabilityRepository.FindBy(capabilityId);
+        if (capability is null)
+        {
+            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
+        }
+        var modificationTime = _systemTime.Now;
+        capability.RequestDeletion();
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task CancelCapabilityDeletionRequest(CapabilityId capabilityId)
+    {
+        var capability = await _capabilityRepository.FindBy(capabilityId);
+        if (capability is null)
+        {
+            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
+        }
+        var modificationTime = _systemTime.Now;
+        capability.CancelDeletionRequest();
     }
 }

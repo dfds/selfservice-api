@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
@@ -6,6 +7,7 @@ public class CapabilityDetailsApiResource
 {
     public string Id { get; set; }
     public string Name { get; set; }
+    public string Status { get; set; }
     public string Description { get; set; }
 
     [JsonPropertyName("_links")]
@@ -19,6 +21,8 @@ public class CapabilityDetailsApiResource
         public ResourceLink MembershipApplications { get; set; }
         public ResourceLink LeaveCapability { get; set; }
         public ResourceLink AwsAccount { get; set; }
+        public ResourceLink RequestCapabilityDeletion { get; set; }
+        public ResourceLink CancelCapabilityDeletionRequest { get; set; }
 
         public CapabilityDetailsLinks(
             ResourceLink self,
@@ -26,7 +30,9 @@ public class CapabilityDetailsApiResource
             ResourceLink clusters,
             ResourceLink membershipApplications,
             ResourceLink leaveCapability,
-            ResourceLink awsAccount
+            ResourceLink awsAccount,
+            ResourceLink requestCapabilityDeletion,
+            ResourceLink cancelCapabilityDeletionRequest
         )
         {
             Self = self;
@@ -35,13 +41,22 @@ public class CapabilityDetailsApiResource
             MembershipApplications = membershipApplications;
             LeaveCapability = leaveCapability;
             AwsAccount = awsAccount;
+            RequestCapabilityDeletion = requestCapabilityDeletion;
+            CancelCapabilityDeletionRequest = cancelCapabilityDeletionRequest;
         }
     }
 
-    public CapabilityDetailsApiResource(string id, string name, string description, CapabilityDetailsLinks links)
+    public CapabilityDetailsApiResource(
+        string id,
+        string name,
+        string status,
+        string description,
+        CapabilityDetailsLinks links
+    )
     {
         Id = id;
         Name = name;
+        Status = status;
         Description = description;
         Links = links;
     }
@@ -51,6 +66,7 @@ public class CapabilityListItemApiResource
 {
     public string Id { get; set; }
     public string Name { get; set; }
+    public string Status { get; set; }
     public string Description { get; set; }
 
     [JsonPropertyName("_links")]
@@ -66,10 +82,17 @@ public class CapabilityListItemApiResource
         }
     }
 
-    public CapabilityListItemApiResource(string id, string name, string description, CapabilityListItemLinks links)
+    public CapabilityListItemApiResource(
+        string id,
+        string name,
+        string status,
+        string description,
+        CapabilityListItemLinks links
+    )
     {
         Id = id;
         Name = name;
+        Status = status;
         Description = description;
         Links = links;
     }

@@ -26,10 +26,12 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
             {
                 return AwsAccountStatus.Completed;
             }
+
             if (Registration.RegisteredAt is null)
             {
                 return AwsAccountStatus.Requested;
             }
+
             return AwsAccountStatus.Pending;
         }
     }
@@ -43,7 +45,7 @@ public class AwsAccount : AggregateRoot<AwsAccountId>
             requestedBy: requestedBy
         );
 
-        account.Raise(new AwsAccountRequested(accountId: account.Id));
+        account.Raise(new AwsAccountRequested() { AccountId = account.Id, });
 
         return account;
     }

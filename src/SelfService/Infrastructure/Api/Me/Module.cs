@@ -95,7 +95,9 @@ public class MeController : ControllerBase
         {
             new Stat(
                 Title: "Capabilities",
-                Value: await _dbContext.Capabilities.Where(x => x.Deleted == null).CountAsync()
+                Value: await _dbContext.Capabilities
+                    .Where(x => x.Status != CapabilityStatusOptions.Deleted)
+                    .CountAsync()
             ),
             new Stat(Title: "AWS Accounts", Value: await _dbContext.AwsAccounts.CountAsync()),
             new Stat(Title: "Kubernetes Clusters", Value: 1),

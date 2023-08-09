@@ -85,6 +85,8 @@ public class SelfServiceDbContext : DbContext
             .Properties<MembershipApplicationStatusOptions>()
             .HaveConversion<MembershipApplicationStatusOptionsConverter>();
 
+        configurationBuilder.Properties<CapabilityStatusOptions>().HaveConversion<CapabilityStatusOptionsConverter>();
+
         configurationBuilder.Properties<KafkaTopicPartitions>().HaveConversion<KafkaTopicPartitionsConverter>();
 
         configurationBuilder.Properties<KafkaTopicRetention>().HaveConversion<KafkaTopicRetentionConverter>();
@@ -123,8 +125,9 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.Name);
             cfg.Property(x => x.Description);
-            cfg.Property(x => x.Deleted);
+            cfg.Property(x => x.Status);
             cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.ModifiedAt);
             cfg.Property(x => x.CreatedBy);
         });
 

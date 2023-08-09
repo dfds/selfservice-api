@@ -7,8 +7,9 @@ public class CapabilityBuilder
     private CapabilityId _id;
     private string _name;
     private string _description;
-    private DateTime? _deleted;
+    private CapabilityStatusOptions _status;
     private DateTime _createdAt;
+    private DateTime _modifiedAt;
     private string _createdBy;
 
     public CapabilityBuilder()
@@ -16,8 +17,9 @@ public class CapabilityBuilder
         _id = CapabilityId.CreateFrom("foo");
         _name = "foo";
         _description = "this is foo";
-        _deleted = null;
+        _status = CapabilityStatusOptions.Active;
         _createdAt = new DateTime(2000, 1, 1);
+        _modifiedAt = new DateTime(2000, 1, 1);
         _createdBy = nameof(CapabilityBuilder);
     }
 
@@ -39,7 +41,6 @@ public class CapabilityBuilder
             id: _id,
             name: _name,
             description: _description,
-            deleted: _deleted,
             createdAt: _createdAt,
             createdBy: _createdBy
         );

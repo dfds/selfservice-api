@@ -684,4 +684,132 @@ public class CapabilityController : ControllerBase
             value: new { status = "Requested" }
         );
     }
+
+    [HttpPost("{id}/requestdeletion")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> RequestCapabilityDeletion(string id)
+    {
+        // Verify user and fetch userId
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                }
+            );
+        }
+
+        // Check that capability with provided id exists
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+        }
+
+        // deleting and canceling deletion are the same responsibility currently.
+        // thus we use the same authorization check for both
+        if (!await _authorizationService.CanDeleteCapability(userId, capabilityId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Not authorized",
+                    Detail =
+                        $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\"."
+                }
+            );
+        }
+
+        // Set capability status
+        try
+        {
+            await _capabilityApplicationService.RequestCapabilityDeletion(capabilityId);
+            return NoContent();
+        }
+        catch (EntityNotFoundException e)
+        {
+            return NotFound(
+                new ProblemDetails { Title = "Capability deletion not requested.", Detail = $"error: {e.Message}" }
+            );
+        }
+        catch (InvalidOperationException)
+        {
+            // fails silently
+            // users triggering this are trying to circumvent the system and we ignore them
+            return NoContent();
+        }
+    }
+
+    [HttpPost("{id}/canceldeletionrequest")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> CancelCapabilityDeletionRequest(string id)
+    {
+        // Verify user and fetch userId
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                }
+            );
+        }
+
+        // Check that capability with provided id exists
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+        }
+
+        // deleting and canceling deletion are the same responsibility currently.
+        // thus we use the same authorization check for both -- if you can do one, you can do the other
+        if (!await _authorizationService.CanDeleteCapability(userId, capabilityId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Not authorized",
+                    Detail =
+                        $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\"."
+                }
+            );
+        }
+
+        // Set capability status
+        try
+        {
+            await _capabilityApplicationService.CancelCapabilityDeletionRequest(capabilityId);
+            return NoContent();
+        }
+        catch (EntityNotFoundException e)
+        {
+            return NotFound(
+                new ProblemDetails { Title = "Capability deletion not requested.", Detail = $"error: {e.Message}" }
+            );
+        }
+        catch (InvalidOperationException)
+        {
+            // fails silently
+            // users triggering this are trying to circumvent the system and we ignore them
+            return NoContent();
+        }
+    }
 }

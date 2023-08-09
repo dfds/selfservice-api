@@ -100,3 +100,10 @@ nm: newmigration
 
 clean-restore-build: clean restore build
 docker-build-push: publish containers deliver
+
+
+setup-pre-commit-hook:
+	@sh ./setup-pre-commit-hook.sh
+
+pre-commit-hook:
+	@sh ./.git/hooks/pre-commit

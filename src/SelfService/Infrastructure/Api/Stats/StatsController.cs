@@ -48,7 +48,9 @@ public class StatsController : ControllerBase
     private async Task<Stat[]> ComposeStats()
     {
         //first fetch/compute the values:
-        int capabilitiesStat = await _dbContext.Capabilities.Where(x => x.Deleted == null).CountAsync();
+        int capabilitiesStat = await _dbContext.Capabilities
+            .Where(x => x.Status != CapabilityStatusOptions.Deleted)
+            .CountAsync();
 
         int awsAccountsStat = await _dbContext.AwsAccounts.CountAsync();
 

@@ -167,4 +167,9 @@ public class AuthorizationService : IAuthorizationService
     {
         return await _membershipQuery.HasActiveMembership(userId, capabilityId);
     }
+
+    public async Task<bool> CanDeleteCapability(UserId userId, CapabilityId capabilityId)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
+    }
 }
