@@ -19,7 +19,15 @@ This may take a minute. If it fails it's usually because the ports are already i
 ```
 make dev
 ```
-to start the api.
+to start the api. The default port it gets exposed on is `8080`.
 
 To quickly check if there are any warnings/code issues (not runtime ones), without needing to spin-up all the dependencies, you can do a ```make build```, which returns more warnings than run<br>
-To run tests, simply do ``` make tests```
+To run tests, simply do ``` make tests```.<br>
+
+We currently do not have a dedicated test environment, so if you have a feature that also depends on the frontend, we suggest setting it up locally as well and pointing it to the port where the instance of your api is running. See the [portal's README](link-is-missing) for this.<br>
+
+If your tests pass here and you're getting the wanted behavior in your feature, things should also work in prod, unless some k8s stuff needs to be configured as well. check the wiki or ask someone smart to find out how to do that.
+
+## Branch Workflow
+
+This project uses a lighter version of the classic git master/develop/feature/hotfix workflow (we don't really have "releases"). We try to have a 1-1 mapping of features to issues on [this board](https://github.com/orgs/dfds/projects/25/views/5?filterQuery=milestone%3A%221P%3A+Self-Service+Platform+resuscitation+%2B+Kafka-Janitor+rework%22), and try to keep feature branches as limited in scope as possible. We make PRs into `develop` and have automatic mergeing from develop into `master` every once in a while.
