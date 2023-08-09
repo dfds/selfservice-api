@@ -17,7 +17,7 @@ public class TestAwsAccountApplicationService
         var capability = new CapabilityBuilder().Build();
         var awsAccount = new AwsAccountBuilder().Build();
         var sut = new AwsAccountApplicationService(
-            NullLogger<AwsAccountApplicationService>.Instance, 
+            NullLogger<AwsAccountApplicationService>.Instance,
             awsAccountRepository: new AwsAccountRepositoryStub(awsAccount),
             capabilityRepository: new CapabilityRepositoryStub(capability),
             ticketingSystem: spy,
@@ -27,18 +27,22 @@ public class TestAwsAccountApplicationService
 
         await sut.CreateAwsAccountRequestTicket(id: AwsAccountId.New());
 
-        Assert.Equal("*New capability context created*\n" +
-                     "\nRun the following command from github.com/dfds/aws-account-manifests:\n" +
-                     "\n```\n" +
-                     $"CORRELATION_ID=\"\" \\\n" +
-                     $"CAPABILITY_NAME=\"{capability.Name}\" \\\n" +
-                     $"CAPABILITY_ID=\"{capability.Id}\" \\\n" +
-                     $"CAPABILITY_ROOT_ID=\"{capability.Id}\" \\\n" +
-                     $"ACCOUNT_NAME=\"{capability.Id}\" \\\n" + // NB: for now account name and capability root id is the same by design
-                     "CONTEXT_NAME=\"default\" \\\n" +
-                     $"CONTEXT_ID=\"{awsAccount.Id}\" \\\n" +
-                     "./generate-tfvars.sh" +
-                     "\n```", spy.Message);
+        Assert.Equal(
+            "*New capability context created*\n"
+                + "\nRun the following command from github.com/dfds/aws-account-manifests:\n"
+                + "\n```\n"
+                + $"CORRELATION_ID=\"\" \\\n"
+                + $"CAPABILITY_NAME=\"{capability.Name}\" \\\n"
+                + $"CAPABILITY_ID=\"{capability.Id}\" \\\n"
+                + $"CAPABILITY_ROOT_ID=\"{capability.Id}\" \\\n"
+                + $"ACCOUNT_NAME=\"{capability.Id}\" \\\n"
+                + // NB: for now account name and capability root id is the same by design
+                "CONTEXT_NAME=\"default\" \\\n"
+                + $"CONTEXT_ID=\"{awsAccount.Id}\" \\\n"
+                + "./generate-tfvars.sh"
+                + "\n```",
+            spy.Message
+        );
     }
 
     [Fact]
@@ -48,7 +52,7 @@ public class TestAwsAccountApplicationService
         var capability = new CapabilityBuilder().Build();
         var awsAccount = new AwsAccountBuilder().Build();
         var sut = new AwsAccountApplicationService(
-            NullLogger<AwsAccountApplicationService>.Instance, 
+            NullLogger<AwsAccountApplicationService>.Instance,
             awsAccountRepository: new AwsAccountRepositoryStub(awsAccount),
             capabilityRepository: new CapabilityRepositoryStub(capability),
             ticketingSystem: spy,
@@ -58,16 +62,19 @@ public class TestAwsAccountApplicationService
 
         await sut.CreateAwsAccountRequestTicket(id: AwsAccountId.New());
 
-        Assert.Equal(new Dictionary<string, string>
-        {
-            ["CORRELATION_ID"] = "",
-            ["CAPABILITY_NAME"] = capability.Name,
-            ["CAPABILITY_ID"] = capability.Id,
-            ["CAPABILITY_ROOT_ID"] = capability.Id,
-            ["ACCOUNT_NAME"] = capability.Id,
-            ["CONTEXT_NAME"] = "default",
-            ["CONTEXT_ID"] = awsAccount.Id,
-        }, spy.Headers);
+        Assert.Equal(
+            new Dictionary<string, string>
+            {
+                ["CORRELATION_ID"] = "",
+                ["CAPABILITY_NAME"] = capability.Name,
+                ["CAPABILITY_ID"] = capability.Id,
+                ["CAPABILITY_ROOT_ID"] = capability.Id,
+                ["ACCOUNT_NAME"] = capability.Id,
+                ["CONTEXT_NAME"] = "default",
+                ["CONTEXT_ID"] = awsAccount.Id,
+            },
+            spy.Headers
+        );
     }
 
     [Fact]
@@ -77,7 +84,7 @@ public class TestAwsAccountApplicationService
         var capability = new CapabilityBuilder().Build();
         var awsAccount = new AwsAccountBuilder().Build();
         var sut = new AwsAccountApplicationService(
-            NullLogger<AwsAccountApplicationService>.Instance, 
+            NullLogger<AwsAccountApplicationService>.Instance,
             awsAccountRepository: new AwsAccountRepositoryStub(awsAccount),
             capabilityRepository: new CapabilityRepositoryStub(capability),
             ticketingSystem: spy,
@@ -172,7 +179,7 @@ public class TestAwsAccountApplicationService
         }
 
         public string? Message { get; private set; }
-        public IDictionary<string, string> Headers { get; set; }
+        public IDictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
     }
 
     #endregion

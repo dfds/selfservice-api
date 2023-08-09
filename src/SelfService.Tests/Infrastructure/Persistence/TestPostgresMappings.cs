@@ -21,11 +21,7 @@ public class TestPostgresMappings
         // read
         var storedVersion = await dbContext.Capabilities.FindAsync(stub.Id);
 
-        Assert.Equal(
-            expected: stub,
-            actual: storedVersion,
-            comparer: new CapabilityComparer()
-        );
+        Assert.Equal(expected: stub, actual: storedVersion, comparer: new CapabilityComparer());
     }
 
     [Fact]
@@ -44,11 +40,7 @@ public class TestPostgresMappings
         // read
         var storedVersion = await dbContext.Members.FindAsync(stub.Id);
 
-        Assert.Equal(
-            expected: stub,
-            actual: storedVersion,
-            comparer: new MemberComparer()
-        );
+        Assert.Equal(expected: stub, actual: storedVersion, comparer: new MemberComparer());
     }
 
     [Fact]
@@ -67,13 +59,9 @@ public class TestPostgresMappings
         // read
         var storedVersion = await dbContext.Memberships.FindAsync(stub.Id);
 
-        Assert.Equal(
-            expected: stub,
-            actual: storedVersion,
-            comparer: new MembershipComparer()
-        );
+        Assert.Equal(expected: stub, actual: storedVersion, comparer: new MembershipComparer());
     }
-    
+
     [Fact]
     [Trait("Category", "Integration")]
     public async Task awsaccount()
@@ -82,7 +70,11 @@ public class TestPostgresMappings
         var dbContext = await databaseFactory.CreateDbContext();
 
         var stub = A.AwsAccount.Build();
-        stub.RegisterRealAwsAccount(RealAwsAccountId.Parse(new string('0', 12)), "foo@foo.com", new DateTime(2000, 1, 1));
+        stub.RegisterRealAwsAccount(
+            RealAwsAccountId.Parse(new string('0', 12)),
+            "foo@foo.com",
+            new DateTime(2000, 1, 1)
+        );
         stub.LinkKubernetesNamespace("the-namespace", new DateTime(2000, 1, 1));
 
         // write
@@ -92,11 +84,7 @@ public class TestPostgresMappings
         // read
         var storedVersion = await dbContext.AwsAccounts.FindAsync(stub.Id);
 
-        Assert.Equal(
-            expected: stub,
-            actual: storedVersion,
-            comparer: new AwsAccountComparer()
-        );
+        Assert.Equal(expected: stub, actual: storedVersion, comparer: new AwsAccountComparer());
     }
 
     [Fact]
@@ -115,11 +103,7 @@ public class TestPostgresMappings
         // read
         var storedVersion = await dbContext.KafkaClusters.FindAsync(stub.Id);
 
-        Assert.Equal(
-            expected: stub,
-            actual: storedVersion,
-            comparer: new KafkaClusterComparer()
-        );
+        Assert.Equal(expected: stub, actual: storedVersion, comparer: new KafkaClusterComparer());
     }
 
     [Fact]
@@ -138,11 +122,7 @@ public class TestPostgresMappings
         // read
         var storedVersion = await dbContext.KafkaTopics.FindAsync(stub.Id);
 
-        Assert.Equal(
-            expected: stub,
-            actual: storedVersion,
-            comparer: new KafkaTopicComparer()
-        );
+        Assert.Equal(expected: stub, actual: storedVersion, comparer: new KafkaTopicComparer());
     }
 
     [Fact]
@@ -152,15 +132,9 @@ public class TestPostgresMappings
         await using var databaseFactory = new ExternalDatabaseFactory();
         var dbContext = await databaseFactory.CreateDbContext();
 
-        var stubApprovals = new[]
-        {
-            A.MembershipApproval.Build(),
-            A.MembershipApproval.Build(),
-        };
-        
-        var stub = A.MembershipApplication
-            .WithApprovals(stubApprovals)
-            .Build();
+        var stubApprovals = new[] { A.MembershipApproval.Build(), A.MembershipApproval.Build(), };
+
+        var stub = A.MembershipApplication.WithApprovals(stubApprovals).Build();
 
         // write
         await dbContext.MembershipApplications.AddAsync(stub);
@@ -169,11 +143,7 @@ public class TestPostgresMappings
         // read
         var storedVersion = await dbContext.MembershipApplications.FindAsync(stub.Id);
 
-        Assert.Equal(
-            expected: stub,
-            actual: storedVersion,
-            comparer: new MembershipApplicationComparer()
-        );
+        Assert.Equal(expected: stub, actual: storedVersion, comparer: new MembershipApplicationComparer());
 
         Assert.Equal(
             expected: stubApprovals,
@@ -190,7 +160,7 @@ public class TestPostgresMappings
         var dbContext = await databaseFactory.CreateDbContext();
 
         var stub = A.MessageContract.Build();
-        
+
         // write
         await dbContext.MessageContracts.AddAsync(stub);
         await dbContext.SaveChangesAsync();
@@ -198,10 +168,6 @@ public class TestPostgresMappings
         // read
         var storedVersion = await dbContext.MessageContracts.FindAsync(stub.Id);
 
-        Assert.Equal(
-            expected: stub,
-            actual: storedVersion,
-            comparer: new MessageContractComparer()
-        );
+        Assert.Equal(expected: stub, actual: storedVersion, comparer: new MessageContractComparer());
     }
 }

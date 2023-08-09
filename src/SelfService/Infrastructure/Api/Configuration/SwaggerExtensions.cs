@@ -14,7 +14,5 @@ public static class SwaggerExtensions
         return description.ActionDescriptor.EndpointMetadata.OfType<IgnoreSwaggerDocs>().Any();
     }
 
-    private class IgnoreSwaggerDocs
-    {
-    }
+    private class IgnoreSwaggerDocs { }
 }

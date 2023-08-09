@@ -4,7 +4,8 @@ namespace SelfService.Domain.Models;
 
 public class Membership : AggregateRoot<MembershipId>
 {
-    public Membership(MembershipId id, CapabilityId capabilityId, UserId userId, DateTime createdAt) : base(id)
+    public Membership(MembershipId id, CapabilityId capabilityId, UserId userId, DateTime createdAt)
+        : base(id)
     {
         CapabilityId = capabilityId;
         UserId = userId;
@@ -29,24 +30,27 @@ public class Membership : AggregateRoot<MembershipId>
             createdAt: createdAt
         );
 
-        instance.Raise(new UserHasJoinedCapability
-        {
-            MembershipId = instance.Id.ToString(),
-            CapabilityId = capabilityId,
-            UserId = userId,
-        });
+        instance.Raise(
+            new UserHasJoinedCapability
+            {
+                MembershipId = instance.Id.ToString(),
+                CapabilityId = capabilityId,
+                UserId = userId,
+            }
+        );
 
         return instance;
     }
 
     public void Cancel()
     {
-        Raise(new UserHasLeftCapability
-        {
-            MembershipId = Id.ToString(),
-            CapabilityId = CapabilityId,
-            UserId = UserId,
-        });
+        Raise(
+            new UserHasLeftCapability
+            {
+                MembershipId = Id.ToString(),
+                CapabilityId = CapabilityId,
+                UserId = UserId,
+            }
+        );
     }
-
 }

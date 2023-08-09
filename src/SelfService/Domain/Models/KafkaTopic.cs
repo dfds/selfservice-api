@@ -4,8 +4,21 @@ namespace SelfService.Domain.Models;
 
 public class KafkaTopic : AggregateRoot<KafkaTopicId>
 {
-    public KafkaTopic(KafkaTopicId id, KafkaClusterId kafkaClusterId, CapabilityId capabilityId, KafkaTopicName name, string description,
-        KafkaTopicStatus status, KafkaTopicPartitions partitions, KafkaTopicRetention retention, DateTime createdAt, string createdBy, DateTime? modifiedAt, string? modifiedBy) : base(id)
+    public KafkaTopic(
+        KafkaTopicId id,
+        KafkaClusterId kafkaClusterId,
+        CapabilityId capabilityId,
+        KafkaTopicName name,
+        string description,
+        KafkaTopicStatus status,
+        KafkaTopicPartitions partitions,
+        KafkaTopicRetention retention,
+        DateTime createdAt,
+        string createdBy,
+        DateTime? modifiedAt,
+        string? modifiedBy
+    )
+        : base(id)
     {
         KafkaClusterId = kafkaClusterId;
         CapabilityId = capabilityId;
@@ -46,7 +59,7 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
         ModifiedAt = modifiedAt;
         ModifiedBy = modifiedBy;
     }
-        
+
     public KafkaTopicStatus Status { get; private set; }
 
     private void ChangeStatus(KafkaTopicStatus newStatus, DateTime modifiedAt, string modifiedBy)
@@ -58,18 +71,15 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
         // raise event??
     }
 
-    public void RegisterAsInProgress(DateTime modifiedAt, string modifiedBy) 
-        => ChangeStatus(KafkaTopicStatus.InProgress, modifiedAt, modifiedBy);
+    public void RegisterAsInProgress(DateTime modifiedAt, string modifiedBy) =>
+        ChangeStatus(KafkaTopicStatus.InProgress, modifiedAt, modifiedBy);
 
-    public void RegisterAsProvisioned(DateTime modifiedAt, string modifiedBy) 
-        => ChangeStatus(KafkaTopicStatus.Provisioned, modifiedAt, modifiedBy);
+    public void RegisterAsProvisioned(DateTime modifiedAt, string modifiedBy) =>
+        ChangeStatus(KafkaTopicStatus.Provisioned, modifiedAt, modifiedBy);
 
     public void Delete()
     {
-        Raise(new KafkaTopicHasBeenDeleted
-        {
-            KafkaTopicId = Id.ToString()
-        });
+        Raise(new KafkaTopicHasBeenDeleted { KafkaTopicId = Id.ToString() });
     }
 
     public KafkaTopicPartitions Partitions { get; private set; }
@@ -77,12 +87,20 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
 
     public DateTime CreatedAt { get; private set; }
     public string CreatedBy { get; private set; }
-        
+
     public DateTime? ModifiedAt { get; private set; }
     public string? ModifiedBy { get; private set; }
 
-    public static KafkaTopic RequestNew(KafkaClusterId kafkaClusterId, CapabilityId capabilityId, KafkaTopicName name, string description, 
-        KafkaTopicPartitions partitions, KafkaTopicRetention retention, DateTime createdAt, string createdBy)
+    public static KafkaTopic RequestNew(
+        KafkaClusterId kafkaClusterId,
+        CapabilityId capabilityId,
+        KafkaTopicName name,
+        string description,
+        KafkaTopicPartitions partitions,
+        KafkaTopicRetention retention,
+        DateTime createdAt,
+        string createdBy
+    )
     {
         var instance = new KafkaTopic(
             id: KafkaTopicId.New(),
@@ -99,15 +117,17 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
             modifiedBy: null
         );
 
-        instance.Raise(new NewKafkaTopicHasBeenRequested
-        {
-            KafkaTopicId = instance.Id.ToString(),
-            KafkaTopicName = instance.Name.ToString(),
-            KafkaClusterId = kafkaClusterId.ToString(),
-            CapabilityId = capabilityId.ToString(),
-            Partitions = instance.Partitions.ToValue(),
-            Retention = instance.Retention.ToString()
-        });
+        instance.Raise(
+            new NewKafkaTopicHasBeenRequested
+            {
+                KafkaTopicId = instance.Id.ToString(),
+                KafkaTopicName = instance.Name.ToString(),
+                KafkaClusterId = kafkaClusterId.ToString(),
+                CapabilityId = capabilityId.ToString(),
+                Partitions = instance.Partitions.ToValue(),
+                Retention = instance.Retention.ToString()
+            }
+        );
 
         return instance;
     }

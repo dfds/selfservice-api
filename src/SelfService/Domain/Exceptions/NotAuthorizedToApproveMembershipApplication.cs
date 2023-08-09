@@ -2,7 +2,6 @@
 
 public class NotAuthorizedToApproveMembershipApplication : Exception
 {
-    public NotAuthorizedToApproveMembershipApplication(string message) : base(message)
-    {
-    }
+    public NotAuthorizedToApproveMembershipApplication(string message)
+        : base(message) { }
 }

@@ -89,10 +89,11 @@ public class ApiApplication : WebApplicationFactory<Program>
         builder.UseSetting("SS_APISPECS_TOPIC", "dummy");
         builder.UseSetting("SS_TOPDESK_API_GATEWAY_ENDPOINT", "http://localhost:5051");
         builder.UseSetting("SS_TOPDESK_API_GATEWAY_API_KEY", "dummy");
+        builder.UseSetting("SS_PROMETHEUS_API_ENDPOINT", "http://localhost:9090");
 
         builder.ConfigureAppConfiguration(x =>
         {
-            // [thfis] need to load appsettings.json otherwise the AzureAd security section isn't loaded 
+            // [thfis] need to load appsettings.json otherwise the AzureAd security section isn't loaded
             // x.Sources.Clear();
 
             if (_customConfiguration.Any())
@@ -116,8 +117,12 @@ public class ApiApplication : WebApplicationFactory<Program>
                 services.Configure(_authOptionsConfig);
             }
 
-            services.AddAuthentication(FakeAuthenticationSchemeDefaults.AuthenticationScheme)
-                .AddScheme<FakeAuthenticationSchemeOptions, FakeAuthenticationHandler>(FakeAuthenticationSchemeDefaults.AuthenticationScheme, null);
+            services
+                .AddAuthentication(FakeAuthenticationSchemeDefaults.AuthenticationScheme)
+                .AddScheme<FakeAuthenticationSchemeOptions, FakeAuthenticationHandler>(
+                    FakeAuthenticationSchemeDefaults.AuthenticationScheme,
+                    null
+                );
         });
     }
 
@@ -131,6 +136,8 @@ public class ApiApplication : WebApplicationFactory<Program>
         base.ConfigureClient(client);
 
         // set test authentication scheme by default
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(FakeAuthenticationSchemeDefaults.AuthenticationScheme);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            FakeAuthenticationSchemeDefaults.AuthenticationScheme
+        );
     }
 }

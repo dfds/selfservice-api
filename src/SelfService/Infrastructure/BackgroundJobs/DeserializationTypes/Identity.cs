@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
-namespace SelfService.Infrastructure.BackgroundJobs;
 
+namespace SelfService.Infrastructure.BackgroundJobs;
 
 public class Identity
 {

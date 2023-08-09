@@ -75,6 +75,5 @@ public class KafkaTopicBuilder
         );
     }
 
-    public static implicit operator KafkaTopic(KafkaTopicBuilder builder)
-        => builder.Build();
+    public static implicit operator KafkaTopic(KafkaTopicBuilder builder) => builder.Build();
 }

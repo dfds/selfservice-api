@@ -16,26 +16,29 @@ public class TopDesk : ITicketingSystem
 
     public async Task CreateTicket(string message, IDictionary<string, string> headers)
     {
-        using var _ = _logger.BeginScope("{Action} on {ImplementationType}",
-            nameof(CreateTicket), GetType().FullName);
+        using var _ = _logger.BeginScope("{Action} on {ImplementationType}", nameof(CreateTicket), GetType().FullName);
 
         using var content = new StringContent(message, new MediaTypeHeaderValue("text/plain"));
-        using var request = new HttpRequestMessage(HttpMethod.Post, "sendnotification")
-        {
-            Content = content
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Post, "sendnotification") { Content = content };
 
         foreach (var (key, value) in headers)
         {
             request.Headers.Add(key, value);
         }
 
-        _logger.LogDebug("Going to create top desk ticket {TopDeskTicket} at {TopDeskTicketUrl}",
-            message, _httpClient.BaseAddress);
+        _logger.LogDebug(
+            "Going to create top desk ticket {TopDeskTicket} at {TopDeskTicketUrl}",
+            message,
+            _httpClient.BaseAddress
+        );
 
         var response = await _httpClient.SendAsync(request);
 
-        _logger.LogDebug("Response was {StatusCode} with body {ResponseBody}", response.StatusCode, await response.Content.ReadAsStringAsync());
+        _logger.LogDebug(
+            "Response was {StatusCode} with body {ResponseBody}",
+            response.StatusCode,
+            await response.Content.ReadAsStringAsync()
+        );
 
         response.EnsureSuccessStatusCode();
     }

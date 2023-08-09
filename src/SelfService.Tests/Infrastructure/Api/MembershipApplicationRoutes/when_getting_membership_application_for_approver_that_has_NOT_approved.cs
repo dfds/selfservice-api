@@ -20,7 +20,9 @@ public class when_getting_membership_application_for_approver_that_has_NOT_appro
     {
         await using var application = new ApiApplication();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
-        application.ReplaceService<IMembershipApplicationQuery>(new StubMembershipApplicationQuery(_aMembershipApplication));
+        application.ReplaceService<IMembershipApplicationQuery>(
+            new StubMembershipApplicationQuery(_aMembershipApplication)
+        );
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/membershipapplications/{_aMembershipApplication.Id}");
@@ -32,8 +34,8 @@ public class when_getting_membership_application_for_approver_that_has_NOT_appro
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var value = document?
-            .SelectElements("/approvals/items")
+        var value = document
+            ?.SelectElements("/approvals/items")
             .Select(x => x.SelectElement("approvedBy"))
             .Select(x => x.ToString())
             .ToArray();
@@ -47,10 +49,7 @@ public class when_getting_membership_application_for_approver_that_has_NOT_appro
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var value = document?
-            .SelectElements("/approvals/_links/self/allow")
-            .Select(x => x.ToString())
-            .ToArray();
+        var value = document?.SelectElements("/approvals/_links/self/allow").Select(x => x.ToString()).ToArray();
 
         Assert.Equal(new[] { "GET", "POST" }, value);
     }

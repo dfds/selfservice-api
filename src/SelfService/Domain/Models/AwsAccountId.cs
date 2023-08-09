@@ -44,7 +44,10 @@ public class AwsAccountId : ValueObject
     }
 
     public static implicit operator AwsAccountId(string text) => Parse(text);
+
     public static implicit operator string(AwsAccountId id) => id.ToString();
+
     public static implicit operator AwsAccountId(Guid idValue) => new AwsAccountId(idValue);
+
     public static implicit operator Guid(AwsAccountId id) => id._value;
 }

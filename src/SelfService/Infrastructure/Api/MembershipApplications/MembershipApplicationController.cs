@@ -24,7 +24,8 @@ public class MembershipApplicationController : ControllerBase
         IAuthorizationService authorizationService,
         IMembershipApplicationService membershipApplicationService,
         IMembershipApplicationQuery membershipApplicationQuery,
-        ApiResourceFactory apiResourceFactory)
+        ApiResourceFactory apiResourceFactory
+    )
     {
         _authorizationService = authorizationService;
         _membershipApplicationService = membershipApplicationService;
@@ -52,11 +53,13 @@ public class MembershipApplicationController : ControllerBase
         var application = await _membershipApplicationQuery.FindById(membershipApplicationId);
         if (application is null)
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "MembershipApplication not found",
-                Detail = $"MembershipApplication \"{membershipApplicationId}\" is unknown by the system."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "MembershipApplication not found",
+                    Detail = $"MembershipApplication \"{membershipApplicationId}\" is unknown by the system."
+                }
+            );
         }
 
         if (!await _authorizationService.CanRead(userId, application))
@@ -76,42 +79,51 @@ public class MembershipApplicationController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Access denied!",
-                Detail = $"User is not authorized to access membership application \"{id}\"."
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access denied!",
+                    Detail = $"User is not authorized to access membership application \"{id}\"."
+                }
+            );
         }
 
         if (!MembershipApplicationId.TryParse(id, out var membershipApplicationId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Membership application not found",
-                Detail = $"Membership application \"{membershipApplicationId}\" is unknown by the system."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Membership application not found",
+                    Detail = $"Membership application \"{membershipApplicationId}\" is unknown by the system."
+                }
+            );
         }
 
         var application = await _membershipApplicationQuery.FindById(membershipApplicationId);
         if (application == null)
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Membership application not found",
-                Detail = $"Membership application \"{membershipApplicationId}\" is unknown by the system."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Membership application not found",
+                    Detail = $"Membership application \"{membershipApplicationId}\" is unknown by the system."
+                }
+            );
         }
 
         if (!await _authorizationService.CanRead(userId, application))
         {
             // user is not member of capability and the membership application does not belong to THIS user
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Access denied!",
-                Detail = $"User \"{userId}\" is not authorized to access membership application \"{membershipApplicationId}\"."
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access denied!",
+                    Detail =
+                        $"User \"{userId}\" is not authorized to access membership application \"{membershipApplicationId}\"."
+                }
+            );
         }
-        
+
         var parent = _apiResourceFactory.Convert(application, userId);
         return Ok(parent.Approvals);
     }
@@ -124,20 +136,24 @@ public class MembershipApplicationController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Unknown user id",
-                Detail = $"User id is not valid and cannot be used to approve a membership application.",
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and cannot be used to approve a membership application.",
+                }
+            );
         }
 
         if (!MembershipApplicationId.TryParse(id, out var membershipApplicationId))
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Membership application not found.",
-                Detail = $"A membership application with id \"{id}\" could not be found."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Membership application not found.",
+                    Detail = $"A membership application with id \"{id}\" could not be found."
+                }
+            );
         }
 
         try
@@ -147,19 +163,24 @@ public class MembershipApplicationController : ControllerBase
         }
         catch (EntityNotFoundException<MembershipApplication>)
         {
-            return NotFound(new ProblemDetails
-            {
-                Title = "Membership application not found.",
-                Detail = $"A membership application with id \"{id}\" could not be found."
-            });
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Membership application not found.",
+                    Detail = $"A membership application with id \"{id}\" could not be found."
+                }
+            );
         }
         catch (NotAuthorizedToApproveMembershipApplication)
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Not authorized to approve",
-                Detail = $"User \"{userId}\" is not authorized to approve membership application \"{membershipApplicationId}\".", 
-            });
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Not authorized to approve",
+                    Detail =
+                        $"User \"{userId}\" is not authorized to approve membership application \"{membershipApplicationId}\".",
+                }
+            );
         }
     }
 }

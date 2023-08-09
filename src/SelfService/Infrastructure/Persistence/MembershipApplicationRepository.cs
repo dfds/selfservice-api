@@ -37,9 +37,7 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
 
     public async Task<MembershipApplication?> FindBy(MembershipApplicationId id)
     {
-        return await _dbContext.MembershipApplications
-            .Include(x => x.Approvals)
-            .FirstOrDefaultAsync(x => x.Id == id);
+        return await _dbContext.MembershipApplications.Include(x => x.Approvals).FirstOrDefaultAsync(x => x.Id == id);
     }
 
     public async Task<IEnumerable<MembershipApplication>> FindExpiredApplications()
@@ -56,8 +54,12 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
     {
         return await _dbContext.MembershipApplications
             .Include(x => x.Approvals)
-            .Where(x => x.Status == MembershipApplicationStatusOptions.PendingApprovals &&
-                        x.CapabilityId == capabilityId && x.Applicant == userId)
+            .Where(
+                x =>
+                    x.Status == MembershipApplicationStatusOptions.PendingApprovals
+                    && x.CapabilityId == capabilityId
+                    && x.Applicant == userId
+            )
             .SingleOrDefaultAsync();
     }
 
@@ -78,13 +80,11 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
 
     public async Task<List<MembershipApplication>> RemoveAllWithUserId(UserId userId)
     {
-        var applications =  await _dbContext.MembershipApplications
-            .Where(x => x.Applicant == userId)
-            .ToListAsync();
+        var applications = await _dbContext.MembershipApplications.Where(x => x.Applicant == userId).ToListAsync();
 
         foreach (var membershipApplication in applications)
         {
-            Remove(membershipApplication);
+            await Remove(membershipApplication);
         }
 
         return applications;

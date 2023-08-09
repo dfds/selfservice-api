@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 namespace SelfService.Infrastructure.BackgroundJobs;
 
 public class AuthTokenResponse

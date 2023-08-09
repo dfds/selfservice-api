@@ -16,7 +16,8 @@ public class DeactivatedMemberCleanerApplicationService
         ILogger<DeactivatedMemberCleanerApplicationService> logger,
         IMembershipRepository membershipRepository,
         IMemberRepository memberRepository,
-        IMembershipApplicationRepository membershipApplicationRepository)
+        IMembershipApplicationRepository membershipApplicationRepository
+    )
     {
         _membershipRepository = membershipRepository;
         _memberRepository = memberRepository;
@@ -34,8 +35,9 @@ public class DeactivatedMemberCleanerApplicationService
         StringBuilder notFoundMembersStringBuilder = new StringBuilder();
         foreach (var member in members)
         {
-            var (isDeactivated,reason) = await userStatusChecker.CheckUserStatus(member.Id);
-            if(isDeactivated){
+            var (isDeactivated, reason) = await userStatusChecker.CheckUserStatus(member.Id);
+            if (isDeactivated)
+            {
                 if (reason == "NotFound")
                 {
                     notFoundMembers.Add(member);
@@ -59,11 +61,15 @@ public class DeactivatedMemberCleanerApplicationService
 
         _logger.LogWarning(
             "[TRIAL] following {NotFoundmembersCount} members not found in Azure AD:\n{notfoundMembers}\n NOT deleting for now",
-            notFoundMembers.Count, notFoundMembersStringBuilder.ToString());
+            notFoundMembers.Count,
+            notFoundMembersStringBuilder.ToString()
+        );
 
         _logger.LogDebug(
             "Removing {DeactivatedMembersCount} members, disabled or not found in Azure AD:\\n{DeactivatedMembers}",
-            deactivatedMembers.Count, deactivatedMembersStringBuilder.ToString());
+            deactivatedMembers.Count,
+            deactivatedMembersStringBuilder.ToString()
+        );
 
         List<Member> membersToBeDeleted = deactivatedMembers;
 

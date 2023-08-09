@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using SelfService.Infrastructure.Persistence;
 
-
 namespace SelfService.Infrastructure.BackgroundJobs;
 
 public class UserStatusChecker : IUserStatusChecker
@@ -18,6 +17,7 @@ public class UserStatusChecker : IUserStatusChecker
         _logger = logger;
         SetAuthToken();
     }
+
     private async void SetAuthToken()
     {
         /*
@@ -47,9 +47,14 @@ public class UserStatusChecker : IUserStatusChecker
         //setup request
         string url = $"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token ";
         HttpClient client = new HttpClient();
-        string formData = $"client_id={client_id}&grant_type=client_credentials&scope=https://graph.microsoft.com/.default&client_secret={client_secret}";
+        string formData =
+            $"client_id={client_id}&grant_type=client_credentials&scope=https://graph.microsoft.com/.default&client_secret={client_secret}";
 
-        HttpContent content = new StringContent(formData, System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
+        HttpContent content = new StringContent(
+            formData,
+            System.Text.Encoding.UTF8,
+            "application/x-www-form-urlencoded"
+        );
 
         // Make request and handle response
         try
@@ -58,7 +63,9 @@ public class UserStatusChecker : IUserStatusChecker
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"[UserStatusChecker] Unable to request AccessToken, failed with {response.StatusCode}");
+                _logger.LogError(
+                    $"[UserStatusChecker] Unable to request AccessToken, failed with {response.StatusCode}"
+                );
                 return;
             }
 
@@ -75,7 +82,9 @@ public class UserStatusChecker : IUserStatusChecker
         }
         catch (Exception ex)
         {
-            _logger.LogError($"[UserStatusChecker] Got exception when trying to request accessToken: {ex.Message} with {ex.InnerException}");
+            _logger.LogError(
+                $"[UserStatusChecker] Got exception when trying to request accessToken: {ex.Message} with {ex.InnerException}"
+            );
             return;
         }
 
@@ -98,12 +107,14 @@ public class UserStatusChecker : IUserStatusChecker
             SetAuthToken();
             if (_authToken == null)
             { //TODO: throw the right exceptions so this can be a try/catch
-                throw new Exception("[UserStatusChecker] Service started with no authToken and attempt to set it has failed, exiting");
+                throw new Exception(
+                    "[UserStatusChecker] Service started with no authToken and attempt to set it has failed, exiting"
+                );
             }
-
         }
 
-        string url = $"https://graph.microsoft.com/v1.0/users/{userId}?%24select=displayName,accountEnabled,id,identities,mail";
+        string url =
+            $"https://graph.microsoft.com/v1.0/users/{userId}?%24select=displayName,accountEnabled,id,identities,mail";
 
         HttpClient client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authToken);
@@ -115,22 +126,22 @@ public class UserStatusChecker : IUserStatusChecker
             switch (response.StatusCode)
             {
                 case HttpStatusCode.OK:
+                {
+                    string result = await response.Content.ReadAsStringAsync();
+                    User? user = JsonSerializer.Deserialize<User>(result);
+                    if (user != null)
                     {
-                        string result = await response.Content.ReadAsStringAsync();
-                        User? user = JsonSerializer.Deserialize<User>(result);
-                        if (user != null)
+                        if (!user.AccountEnabled)
                         {
-                            if (!user.AccountEnabled)
-                            {
-                                return (true, "Deactivated");
-                            }
+                            return (true, "Deactivated");
                         }
-                        else
-                        {
-                            _logger.LogError($"failed to deserialize response for user with id {userId}");
-                        }
-                        break;
                     }
+                    else
+                    {
+                        _logger.LogError($"failed to deserialize response for user with id {userId}");
+                    }
+                    break;
+                }
                 case HttpStatusCode.NotFound:
                     return (true, "NotFound");
                 case HttpStatusCode.Unauthorized:
@@ -148,4 +159,3 @@ public class UserStatusChecker : IUserStatusChecker
         return (false, $"{userId}");
     }
 }
-

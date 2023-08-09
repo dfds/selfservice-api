@@ -13,10 +13,36 @@ public class MessageContractApiResource
     public string Status { get; set; }
 
     [JsonPropertyName("_links")]
-    public MessageContractLinks Links { get; set; } = new();
+    public MessageContractLinks Links { get; set; }
 
     public class MessageContractLinks
     {
-        public ResourceLink Self { get; set; } = new();
+        public ResourceLink Self { get; set; }
+
+        public MessageContractLinks(ResourceLink self)
+        {
+            Self = self;
+        }
+    }
+
+    public MessageContractApiResource(
+        string id,
+        string messageType,
+        string description,
+        string kafkaTopicId,
+        string schema,
+        string example,
+        string status,
+        MessageContractLinks links
+    )
+    {
+        Id = id;
+        MessageType = messageType;
+        Description = description;
+        KafkaTopicId = kafkaTopicId;
+        Schema = schema;
+        Example = example;
+        Status = status;
+        Links = links;
     }
 }

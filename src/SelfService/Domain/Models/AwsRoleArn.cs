@@ -51,5 +51,6 @@ public class AwsRoleArn : ValueObject
     }
 
     public static implicit operator AwsRoleArn(string text) => Parse(text);
+
     public static implicit operator string(AwsRoleArn roleArn) => roleArn.ToString();
 }

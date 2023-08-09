@@ -20,9 +20,7 @@ public class KafkaTopicRepository : IKafkaTopicRepository
 
     public async Task<bool> Exists(KafkaTopicName name, KafkaClusterId clusterId)
     {
-        return await _dbContext.KafkaTopics
-            .Where(x => x.Name == name && x.KafkaClusterId == clusterId)
-            .AnyAsync();
+        return await _dbContext.KafkaTopics.Where(x => x.Name == name && x.KafkaClusterId == clusterId).AnyAsync();
     }
 
     public async Task<KafkaTopic> Get(KafkaTopicId id)
@@ -44,7 +42,7 @@ public class KafkaTopicRepository : IKafkaTopicRepository
     public async Task<IEnumerable<KafkaTopic>> GetAllPublic()
     {
         return await _dbContext.KafkaTopics
-            .Where(x => ((string) x.Name).StartsWith("pub."))
+            .Where(x => ((string)x.Name).StartsWith("pub."))
             .OrderBy(x => x.Name)
             .ToListAsync();
     }
@@ -62,7 +60,6 @@ public class KafkaTopicRepository : IKafkaTopicRepository
         return await _dbContext.KafkaTopics
             .Where(x => x.Name == name && x.KafkaClusterId == clusterId)
             .SingleOrDefaultAsync();
-
     }
 
     public Task Delete(KafkaTopic topic)

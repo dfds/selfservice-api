@@ -25,13 +25,8 @@ public class AwsAccountBuilder
 
     public AwsAccount Build()
     {
-        return new AwsAccount(
-            id: _id,
-            capabilityId: _capabilityId,
-            requestedAt: _createdAt,
-            requestedBy: _createdBy);
+        return new AwsAccount(id: _id, capabilityId: _capabilityId, requestedAt: _createdAt, requestedBy: _createdBy);
     }
 
-    public static implicit operator AwsAccount(AwsAccountBuilder builder)
-        => builder.Build();
+    public static implicit operator AwsAccount(AwsAccountBuilder builder) => builder.Build();
 }

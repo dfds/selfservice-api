@@ -33,11 +33,11 @@ public class KafkaClusterBuilder
             id: _id,
             name: _name,
             description: _description,
-            enabled: _enabled, 
-            bootstrapServers: _bootstrapServers, 
-            schemaRegistryUrl: _schemaRegistryUrl);
+            enabled: _enabled,
+            bootstrapServers: _bootstrapServers,
+            schemaRegistryUrl: _schemaRegistryUrl
+        );
     }
 
-    public static implicit operator KafkaCluster(KafkaClusterBuilder builder)
-        => builder.Build();
+    public static implicit operator KafkaCluster(KafkaClusterBuilder builder) => builder.Build();
 }

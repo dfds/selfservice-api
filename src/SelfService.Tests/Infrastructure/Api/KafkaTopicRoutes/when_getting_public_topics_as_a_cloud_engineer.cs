@@ -26,7 +26,9 @@ public class when_getting_public_topics_as_a_cloud_engineer : IAsyncLifetime
     {
         await using var application = new ApiApplication();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
-        application.ReplaceService<IKafkaClusterRepository>(new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo")));
+        application.ReplaceService<IKafkaClusterRepository>(
+            new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo"))
+        );
         application.ReplaceService<IKafkaTopicQuery>(new StubKafkaTopicQuery(_aPublicTopic));
 
         application.ConfigureFakeAuthentication(options =>
@@ -39,9 +41,9 @@ public class when_getting_public_topics_as_a_cloud_engineer : IAsyncLifetime
     }
 
     [Fact]
-    public async Task then_response_status_code_is_expected()
+    public void then_response_status_code_is_expected()
     {
-        Assert.Equal((HttpStatusCode) 200, _response.StatusCode);
+        Assert.Equal((HttpStatusCode)200, _response.StatusCode);
     }
 
     [Fact]
@@ -50,7 +52,8 @@ public class when_getting_public_topics_as_a_cloud_engineer : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var nameValues = document?.SelectElements("items")
+        var nameValues = document
+            ?.SelectElements("items")
             .Select(x => x.SelectElement("name"))
             .Select(x => x?.GetString() ?? "");
 
@@ -63,13 +66,9 @@ public class when_getting_public_topics_as_a_cloud_engineer : IAsyncLifetime
         var content = await _response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
-        var topicItem = document?.SelectElements("items")
-            .Single();
+        var topicItem = document?.SelectElements("items").Single();
 
-        var values = topicItem?
-            .SelectElements("_links/self/allow")?
-            .Select(x => x.GetString())
-            .ToArray();
+        var values = topicItem?.SelectElements("_links/self/allow")?.Select(x => x.GetString()).ToArray();
 
         Assert.Equal(new[] { "GET", "DELETE" }, values);
     }

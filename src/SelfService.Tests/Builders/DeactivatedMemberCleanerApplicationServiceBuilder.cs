@@ -12,10 +12,11 @@ namespace SelfService.Tests.Builders;
 public class DeactivatedMemberCleanerApplicationServiceBuilder
 {
     private SystemTime _systemTime;
-    private IMembershipRepository _membershipRepository ;
+    private IMembershipRepository _membershipRepository;
     private IMemberRepository _memberRepository;
     private IMembershipApplicationRepository _membershipApplicationRepository;
     private ILogger<DeactivatedMemberCleanerApplicationService> _logger; //make correct logger
+
     public DeactivatedMemberCleanerApplicationServiceBuilder()
     {
         _membershipRepository = Dummy.Of<IMembershipRepository>();
@@ -25,7 +26,9 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         _systemTime = SystemTime.Default;
     }
 
-    public DeactivatedMemberCleanerApplicationServiceBuilder WithMembershipRepository(IMembershipRepository membershipRepository)
+    public DeactivatedMemberCleanerApplicationServiceBuilder WithMembershipRepository(
+        IMembershipRepository membershipRepository
+    )
     {
         _membershipRepository = membershipRepository;
         return this;
@@ -43,7 +46,9 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         return this;
     }
 
-    public DeactivatedMemberCleanerApplicationServiceBuilder WithMembershipApplicationRepository(IMembershipApplicationRepository membershipApplicationRepository)
+    public DeactivatedMemberCleanerApplicationServiceBuilder WithMembershipApplicationRepository(
+        IMembershipApplicationRepository membershipApplicationRepository
+    )
     {
         _membershipApplicationRepository = membershipApplicationRepository;
         return this;
@@ -59,6 +64,7 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         );
     }
 
-    public static implicit operator SelfService.Application.DeactivatedMemberCleanerApplicationService(DeactivatedMemberCleanerApplicationServiceBuilder builder)
-       => builder.Build();
+    public static implicit operator SelfService.Application.DeactivatedMemberCleanerApplicationService(
+        DeactivatedMemberCleanerApplicationServiceBuilder builder
+    ) => builder.Build();
 }

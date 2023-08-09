@@ -11,7 +11,11 @@ public class OutboxEnqueuerAspect : IAspect
     private readonly SelfServiceDbContext _dbContext;
     private readonly OutboxQueue _outbox;
 
-    public OutboxEnqueuerAspect(ILogger<OutboxEnqueuerAspect> logger, SelfServiceDbContext dbContext, OutboxQueue outbox)
+    public OutboxEnqueuerAspect(
+        ILogger<OutboxEnqueuerAspect> logger,
+        SelfServiceDbContext dbContext,
+        OutboxQueue outbox
+    )
     {
         _logger = logger;
         _dbContext = dbContext;
@@ -30,25 +34,25 @@ public class OutboxEnqueuerAspect : IAspect
 
         foreach (var aggregate in aggregateDomainEvents)
         {
-            var domainEvents = aggregate
-                .GetEvents()
-                .ToArray();
+            var domainEvents = aggregate.GetEvents().ToArray();
 
             await _outbox.Enqueue(domainEvents);
             aggregate.ClearEvents();
 
             foreach (var domainEvent in domainEvents)
             {
-                _logger.LogTrace("Queued domain event {DomainEvent} in the outbox for aggregate {Aggregate}",
-                    domainEvent.GetType().Name, aggregate.GetType().Name);
+                _logger.LogTrace(
+                    "Queued domain event {DomainEvent} in the outbox for aggregate {Aggregate}",
+                    domainEvent.GetType().Name,
+                    aggregate.GetType().Name
+                );
             }
         }
     }
 
     private IEventSource[] GetAggregates()
     {
-        return _dbContext
-            .ChangeTracker
+        return _dbContext.ChangeTracker
             .Entries<IEventSource>()
             .Where(x => x.Entity.GetEvents().Any())
             .Select(x => x.Entity)

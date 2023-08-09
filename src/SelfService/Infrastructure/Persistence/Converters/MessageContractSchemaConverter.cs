@@ -6,11 +6,10 @@ namespace SelfService.Infrastructure.Persistence.Converters;
 
 public class MessageContractSchemaConverter : ValueConverter<MessageContractSchema, string>
 {
-    public MessageContractSchemaConverter() : base(ToDatabaseType, FromDatabaseType)
-    {
-            
-    }
+    public MessageContractSchemaConverter()
+        : base(ToDatabaseType, FromDatabaseType) { }
 
     private static Expression<Func<MessageContractSchema, string>> ToDatabaseType => id => id.ToString();
-    private static Expression<Func<string, MessageContractSchema>> FromDatabaseType => value => MessageContractSchema.Parse(value);
+    private static Expression<Func<string, MessageContractSchema>> FromDatabaseType =>
+        value => MessageContractSchema.Parse(value);
 }

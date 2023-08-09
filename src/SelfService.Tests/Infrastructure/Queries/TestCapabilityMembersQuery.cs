@@ -48,15 +48,10 @@ public class TestCapabilityMembersQuery
         var dbContext = await databaseFactory.CreateDbContext();
 
         var expectedMember = A.Member.Build();
-        var stubOtherMember = A.Member
-            .WithUserId("other-member-id")
-            .Build();
+        var stubOtherMember = A.Member.WithUserId("other-member-id").Build();
 
         var stubCapability = A.Capability.Build();
-        var stubMembership= A.Membership
-            .WithCapabilityId(stubCapability.Id)
-            .WithUserId(expectedMember.Id)
-            .Build();
+        var stubMembership = A.Membership.WithCapabilityId(stubCapability.Id).WithUserId(expectedMember.Id).Build();
 
         await dbContext.Capabilities.AddAsync(stubCapability, cancellationTokenSource.Token);
         await dbContext.Members.AddAsync(expectedMember, cancellationTokenSource.Token);
@@ -68,7 +63,7 @@ public class TestCapabilityMembersQuery
         var sut = new CapabilityMembersQuery(dbContext);
         var result = await sut.FindBy(stubCapability.Id);
 
-        Assert.Equal(new[] {expectedMember}, result);
+        Assert.Equal(new[] { expectedMember }, result);
     }
 
     [Fact]
@@ -80,23 +75,12 @@ public class TestCapabilityMembersQuery
         await using var databaseFactory = new InMemoryDatabaseFactory();
         var dbContext = await databaseFactory.CreateDbContext();
 
-        var expectedMembers = new[]
-        {
-            A.Member
-                .WithUserId("1")
-                .Build(),
-            A.Member
-                .WithUserId("2")
-                .Build(),
-        };
+        var expectedMembers = new[] { A.Member.WithUserId("1").Build(), A.Member.WithUserId("2").Build(), };
 
         var stubCapability = A.Capability.Build();
 
-        var stubMemberships = expectedMembers.Select(x => A.Membership
-                .WithCapabilityId(stubCapability.Id)
-                .WithUserId(x.Id)
-                .Build()
-            )
+        var stubMemberships = expectedMembers
+            .Select(x => A.Membership.WithCapabilityId(stubCapability.Id).WithUserId(x.Id).Build())
             .ToArray();
 
         await dbContext.Members.AddRangeAsync(expectedMembers, cancellationTokenSource.Token);
@@ -155,10 +139,7 @@ public class TestMyCapabilitiesQuery
 
         var stubMember = A.Member.Build();
         var stubCapability = A.Capability.Build();
-        var stubMembership = A.Membership
-            .WithUserId(stubMember.Id)
-            .WithCapabilityId(stubCapability.Id)
-            .Build();
+        var stubMembership = A.Membership.WithUserId(stubMember.Id).WithCapabilityId(stubCapability.Id).Build();
 
         await dbContext.Members.AddAsync(stubMember, cancellationTokenSource.Token);
         await dbContext.Capabilities.AddAsync(stubCapability, cancellationTokenSource.Token);
@@ -168,7 +149,7 @@ public class TestMyCapabilitiesQuery
         var sut = new MyCapabilitiesQuery(dbContext);
         var result = await sut.FindBy(stubMember.Id);
 
-        Assert.Equal(new[]{stubCapability}, result);
+        Assert.Equal(new[] { stubCapability }, result);
     }
 
     [Fact]
@@ -184,25 +165,14 @@ public class TestMyCapabilitiesQuery
 
         var expectedCapabilities = new[]
         {
-            A.Capability
-                .WithId("a")
-                .WithName("a")
-                .Build(),
-            A.Capability
-                .WithId("b")
-                .WithName("b")
-                .Build(),
+            A.Capability.WithId("a").WithName("a").Build(),
+            A.Capability.WithId("b").WithName("b").Build(),
         };
 
-        var stubOtherCapability = A.Capability
-            .WithId("not-this-one")
-            .Build();
+        var stubOtherCapability = A.Capability.WithId("not-this-one").Build();
 
-        var stubMembership = expectedCapabilities.Select(x => A.Membership
-                .WithUserId(stubMember.Id)
-                .WithCapabilityId(x.Id)
-                .Build()
-            )
+        var stubMembership = expectedCapabilities
+            .Select(x => A.Membership.WithUserId(stubMember.Id).WithCapabilityId(x.Id).Build())
             .ToArray();
 
         await dbContext.Members.AddAsync(stubMember, cancellationTokenSource.Token);

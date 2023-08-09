@@ -41,9 +41,8 @@ public class CapabilityRepository : ICapabilityRepository
 
     public async Task<IEnumerable<Capability>> GetAll()
     {
-        return await _dbContext
-            .Capabilities
-            .Where(c => c.Deleted == null)
+        return await _dbContext.Capabilities
+            .Where(c => c.Status != CapabilityStatusOptions.Deleted)
             .OrderBy(x => x.Name)
             .ToListAsync();
     }

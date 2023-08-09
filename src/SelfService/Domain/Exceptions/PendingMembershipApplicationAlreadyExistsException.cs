@@ -2,8 +2,6 @@
 
 public class PendingMembershipApplicationAlreadyExistsException : Exception
 {
-    public PendingMembershipApplicationAlreadyExistsException(string message) : base(message)
-    {
-        
-    }
+    public PendingMembershipApplicationAlreadyExistsException(string message)
+        : base(message) { }
 }

@@ -5,7 +5,7 @@ using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Application.KafkaTopicApplicationService;
 
-public class when_deleting_a_kafka_topic: IAsyncLifetime
+public class when_deleting_a_kafka_topic : IAsyncLifetime
 {
     private readonly Mock<IKafkaTopicRepository> _stubAndMockRepository = new();
     private readonly KafkaTopic _aTopic = A.KafkaTopic.Build();
@@ -14,13 +14,9 @@ public class when_deleting_a_kafka_topic: IAsyncLifetime
     {
         var stubKafkaTopicRepository = new StubKafkaTopicRepository(_aTopic);
 
-        _stubAndMockRepository
-            .Setup(x => x.Get(_aTopic.Id))
-            .ReturnsAsync(_aTopic);
+        _stubAndMockRepository.Setup(x => x.Get(_aTopic.Id)).ReturnsAsync(_aTopic);
 
-        var sut = A.KafkaTopicApplicationService
-            .WithKafkaTopicRepository(_stubAndMockRepository.Object)
-            .Build();
+        var sut = A.KafkaTopicApplicationService.WithKafkaTopicRepository(_stubAndMockRepository.Object).Build();
 
         await sut.DeleteKafkaTopic(_aTopic.Id, "dummy-user");
     }

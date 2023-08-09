@@ -4,7 +4,8 @@ namespace SelfService.Domain.Models;
 
 public class PortalVisit : AggregateRoot<Guid>
 {
-    public PortalVisit(Guid id, UserId visitedBy, DateTime visitedAt) : base(id)
+    public PortalVisit(Guid id, UserId visitedBy, DateTime visitedAt)
+        : base(id)
     {
         VisitedBy = visitedBy;
         VisitedAt = visitedAt;

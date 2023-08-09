@@ -26,16 +26,17 @@ public class CapabilityComparer : IEqualityComparer<Capability?>
             return false;
         }
 
-        return x.Name == y.Name &&
-               x.Description == y.Description &&
-               Nullable.Equals(x.Deleted, y.Deleted) &&
-               x.CreatedAt.Equals(y.CreatedAt) &&
-               x.CreatedBy == y.CreatedBy;
+        return x.Name == y.Name
+            && x.Description == y.Description
+            && x.Status == y.Status
+            && x.CreatedAt.Equals(y.CreatedAt)
+            && x.ModifiedAt.Equals(y.ModifiedAt)
+            && x.CreatedBy == y.CreatedBy;
     }
 
     public int GetHashCode(Capability obj)
     {
-        return HashCode.Combine(obj.Name, obj.Description, obj.Deleted, obj.CreatedAt, obj.CreatedBy);
+        return HashCode.Combine(obj.Name, obj.Description, obj.Status, obj.CreatedAt, obj.ModifiedAt, obj.CreatedBy);
     }
 }
 
@@ -96,9 +97,7 @@ public class MembershipComparer : IEqualityComparer<Membership?>
             return false;
         }
 
-        return x.CapabilityId.Equals(y.CapabilityId) && 
-               x.UserId.Equals(y.UserId) && 
-               x.CreatedAt.Equals(y.CreatedAt);
+        return x.CapabilityId.Equals(y.CapabilityId) && x.UserId.Equals(y.UserId) && x.CreatedAt.Equals(y.CreatedAt);
     }
 
     public int GetHashCode(Membership obj)
@@ -131,10 +130,10 @@ public class AwsAccountComparer : IEqualityComparer<AwsAccount?>
             return false;
         }
 
-        return x.CapabilityId.Equals(y.CapabilityId) &&
-               x.Registration.Equals(y.Registration) &&
-               x.RequestedAt.Equals(y.RequestedAt) &&
-               x.RequestedBy == y.RequestedBy;
+        return x.CapabilityId.Equals(y.CapabilityId)
+            && x.Registration.Equals(y.Registration)
+            && x.RequestedAt.Equals(y.RequestedAt)
+            && x.RequestedBy == y.RequestedBy;
     }
 
     public int GetHashCode(AwsAccount obj)
@@ -200,17 +199,17 @@ public class KafkaTopicComparer : IEqualityComparer<KafkaTopic?>
             return false;
         }
 
-        return x.CapabilityId.Equals(y.CapabilityId) &&
-               x.KafkaClusterId.Equals(y.KafkaClusterId) &&
-               x.Name.Equals(y.Name) &&
-               x.Description == y.Description &&
-               x.Status == y.Status &&
-               x.Partitions == y.Partitions &&
-               x.Retention == y.Retention &&
-               x.CreatedAt.Equals(y.CreatedAt) &&
-               x.CreatedBy == y.CreatedBy &&
-               Nullable.Equals(x.ModifiedAt, y.ModifiedAt) &&
-               x.ModifiedBy == y.ModifiedBy;
+        return x.CapabilityId.Equals(y.CapabilityId)
+            && x.KafkaClusterId.Equals(y.KafkaClusterId)
+            && x.Name.Equals(y.Name)
+            && x.Description == y.Description
+            && x.Status == y.Status
+            && x.Partitions == y.Partitions
+            && x.Retention == y.Retention
+            && x.CreatedAt.Equals(y.CreatedAt)
+            && x.CreatedBy == y.CreatedBy
+            && Nullable.Equals(x.ModifiedAt, y.ModifiedAt)
+            && x.ModifiedBy == y.ModifiedBy;
     }
 
     public int GetHashCode(KafkaTopic obj)
@@ -255,12 +254,12 @@ public class MembershipApplicationComparer : IEqualityComparer<MembershipApplica
             return false;
         }
 
-        return x.CapabilityId.Equals(y.CapabilityId) &&
-               x.Applicant.Equals(y.Applicant) &&
-               x.Status.Equals(y.Status) &&
-               x.SubmittedAt.Equals(y.SubmittedAt) &&
-               x.ExpiresOn.Equals(y.ExpiresOn) &&
-               x.Approvals.SequenceEqual(y.Approvals, new MembershipApprovalComparer());
+        return x.CapabilityId.Equals(y.CapabilityId)
+            && x.Applicant.Equals(y.Applicant)
+            && x.Status.Equals(y.Status)
+            && x.SubmittedAt.Equals(y.SubmittedAt)
+            && x.ExpiresOn.Equals(y.ExpiresOn)
+            && x.Approvals.SequenceEqual(y.Approvals, new MembershipApprovalComparer());
     }
 
     public int GetHashCode(MembershipApplication obj)
@@ -280,10 +279,14 @@ public class MembershipApprovalComparer : IEqualityComparer<MembershipApproval?>
 {
     public bool Equals(MembershipApproval? x, MembershipApproval? y)
     {
-        if (ReferenceEquals(x, y)) return true;
-        if (ReferenceEquals(x, null)) return false;
-        if (ReferenceEquals(y, null)) return false;
-        if (x.GetType() != y.GetType()) return false;
+        if (ReferenceEquals(x, y))
+            return true;
+        if (ReferenceEquals(x, null))
+            return false;
+        if (ReferenceEquals(y, null))
+            return false;
+        if (x.GetType() != y.GetType())
+            return false;
         return x.ApprovedBy.Equals(y.ApprovedBy) && x.ApprovedAt.Equals(y.ApprovedAt);
     }
 
@@ -317,16 +320,16 @@ public class MessageContractComparer : IEqualityComparer<MessageContract?>
             return false;
         }
 
-        return x.KafkaTopicId.Equals(y.KafkaTopicId) &&
-               x.MessageType.Equals(y.MessageType) &&
-               x.Example.Equals(y.Example) &&
-               x.Schema.Equals(y.Schema) &&
-               x.Description == y.Description &&
-               x.Status.Equals(y.Status) &&
-               x.CreatedAt.Equals(y.CreatedAt) &&
-               x.CreatedBy == y.CreatedBy &&
-               Nullable.Equals(x.ModifiedAt, y.ModifiedAt) &&
-               x.ModifiedBy == y.ModifiedBy;
+        return x.KafkaTopicId.Equals(y.KafkaTopicId)
+            && x.MessageType.Equals(y.MessageType)
+            && x.Example.Equals(y.Example)
+            && x.Schema.Equals(y.Schema)
+            && x.Description == y.Description
+            && x.Status.Equals(y.Status)
+            && x.CreatedAt.Equals(y.CreatedAt)
+            && x.CreatedBy == y.CreatedBy
+            && Nullable.Equals(x.ModifiedAt, y.ModifiedAt)
+            && x.ModifiedBy == y.ModifiedBy;
     }
 
     public int GetHashCode(MessageContract obj)

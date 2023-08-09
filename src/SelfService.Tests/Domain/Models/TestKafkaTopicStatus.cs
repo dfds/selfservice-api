@@ -28,19 +28,13 @@ public class TestKafkaTopicStatus
         Assert.Throws<FormatException>(() => KafkaTopicStatus.Parse(invalidInput));
     }
 
-
     #region helpers
 
     public static IEnumerable<object[]> ValidInput
     {
         get
         {
-            var validValues = new object[]
-            {
-                "Requested",
-                "In Progress",
-                "Provisioned"
-            };
+            var validValues = new object[] { "Requested", "In Progress", "Provisioned" };
 
             return validValues.Select(x => new[] { x });
         }

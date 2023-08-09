@@ -1,3 +1,2 @@
 Id;CapabilityId;Applicant;Status;SubmittedAt;ExpiresOn
 183fb4f4-9d0c-45b9-a33f-5fdcb32b88bc;cloudengineering-xxx;john@doe.com;PendingApprovals;2000-01-01;3000-01-01
-8a4908f6-7402-4ce1-82af-68f60cd06711;marketing-department-xxx;jandr@dfds.com;PendingApprovals;2000-01-01;3000-01-01

@@ -44,5 +44,6 @@ public class MessageContractSchema : ValueObject
     }
 
     public static implicit operator MessageContractSchema(string text) => Parse(text);
+
     public static implicit operator string(MessageContractSchema schema) => schema.ToString();
 }

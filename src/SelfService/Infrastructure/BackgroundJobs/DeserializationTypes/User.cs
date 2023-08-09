@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 namespace SelfService.Infrastructure.BackgroundJobs;
 
 public class User
@@ -21,4 +22,3 @@ public class User
     [JsonPropertyName("identities")]
     public List<Identity>? Identities { get; set; }
 }
-

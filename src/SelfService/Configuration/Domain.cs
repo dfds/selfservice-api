@@ -1,4 +1,4 @@
-﻿using SelfService.Application;
+using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
@@ -9,6 +9,7 @@ using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Infrastructure.Ticketing;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using SelfService.Infrastructure.Api.Prometheus;
 
 namespace SelfService.Configuration;
 
@@ -50,6 +51,7 @@ public static class Domain
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
         builder.Services.AddTransient<IMembershipApplicationQuery, MembershipApplicationQuery>();
+
         builder.Services.AddTransient<IMembershipQuery, MembershipQuery>();
         //builder.Services.AddTransient<MembershipQuery>();
         //builder.Services.AddScoped<IMembershipQuery, CachedMembershipQueryDecorator>(provider =>
@@ -78,7 +80,11 @@ public static class Domain
             client.BaseAddress = endpoint;
             client.DefaultRequestHeaders.Add("x-api-key", apiKey);
         });
+
+        var prometheusEndpoint = new Uri(builder.Configuration["SS_PROMETHEUS_API_ENDPOINT"] ?? "");
+        builder.Services.AddHttpClient<IKafkaTopicConsumerService, PrometheusClient>(client =>
+        {
+            client.BaseAddress = prometheusEndpoint;
+        });
     }
 }
-
-

@@ -6,7 +6,7 @@ public class UserRole : ValueObject
 {
     public static readonly UserRole CloudEngineer = new("CloudEngineer");
     public static readonly UserRole NormalUser = new("NormalUser");
-    
+
     private readonly string _value;
 
     public UserRole(string value)
@@ -14,10 +14,7 @@ public class UserRole : ValueObject
         _value = value;
     }
 
-    public static IReadOnlyCollection<UserRole> Values => new[]
-    {
-        CloudEngineer, NormalUser
-    };
+    public static IReadOnlyCollection<UserRole> Values => new[] { CloudEngineer, NormalUser };
 
     protected override IEnumerable<object> GetEqualityComponents()
     {
@@ -59,9 +56,7 @@ public class UserRole : ValueObject
         throw new FormatException($"Value \"{text}\" is not valid.");
     }
 
-    public static implicit operator UserRole(string text)
-        => Parse(text);
+    public static implicit operator UserRole(string text) => Parse(text);
 
-    public static implicit operator string(UserRole role)
-        => role.ToString();
+    public static implicit operator string(UserRole role) => role.ToString();
 }

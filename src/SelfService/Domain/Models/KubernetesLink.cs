@@ -4,9 +4,7 @@ public class KubernetesLink : ValueObject
 {
     public static readonly KubernetesLink Unlinked = new();
 
-    protected KubernetesLink()
-    {
-    }
+    protected KubernetesLink() { }
 
     public KubernetesLink(string? @namespace, DateTime? linkedAt)
     {

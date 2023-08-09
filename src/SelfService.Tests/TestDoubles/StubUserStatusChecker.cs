@@ -1,13 +1,11 @@
 using Microsoft.Extensions.Logging;
 using SelfService.Infrastructure.BackgroundJobs;
 
-
 namespace SelfService.Tests.TestDoubles;
 
 public class StubUserStatusChecker : IUserStatusChecker
 {
     private readonly ILogger<RemoveDeactivatedMemberships> _logger; //depends on that background job
-    private string? _authToken;
 
     public StubUserStatusChecker(ILogger<RemoveDeactivatedMemberships> logger)
     {
@@ -15,24 +13,25 @@ public class StubUserStatusChecker : IUserStatusChecker
         SetAuthToken();
     }
 
-    private async void SetAuthToken()
+    private void SetAuthToken()
     {
         return; //so we can await it
     }
 
+    private Task<bool> BusyWait()
+    {
+        return new Task<bool>(() => true);
+    }
+
     public async Task<(bool, string)> CheckUserStatus(string userId)
     {
+        await BusyWait();
         if (userId == "userdeactivated@dfds.com")
-        {
-            return (true, "Deactivated");
-        }
-        else if (userId == "useractive@dfds.com")
-        {
+            return new(true, "Deactivated");
+
+        if (userId == "useractive@dfds.com")
             return (false, "");
-        }
-        else{
-            return (true, "NotFound"); //undefined for this test
-        }
+
+        return (true, "NotFound"); //undefined for this test
     }
 }
-

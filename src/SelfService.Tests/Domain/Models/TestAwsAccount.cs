@@ -20,7 +20,10 @@ public class TestAwsAccount
 
         account.RegisterRealAwsAccount(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today);
 
-        Assert.Equal(new AwsAccountRegistration(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today), account.Registration);
+        Assert.Equal(
+            new AwsAccountRegistration(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today),
+            account.Registration
+        );
         Assert.Equal(KubernetesLink.Unlinked, account.KubernetesLink);
     }
 
@@ -32,8 +35,11 @@ public class TestAwsAccount
         account.RegisterRealAwsAccount(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today);
         account.LinkKubernetesNamespace("dummy-namespace", DateTime.Today);
 
-        Assert.Equal(new AwsAccountRegistration(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today), account.Registration);
-        Assert.Equal( new KubernetesLink("dummy-namespace", DateTime.Today), account.KubernetesLink);
+        Assert.Equal(
+            new AwsAccountRegistration(RealAwsAccountId.Empty, "foo@foo.com", DateTime.Today),
+            account.Registration
+        );
+        Assert.Equal(new KubernetesLink("dummy-namespace", DateTime.Today), account.KubernetesLink);
     }
 
     [Fact]

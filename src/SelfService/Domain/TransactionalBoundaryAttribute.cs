@@ -1,7 +1,4 @@
 ﻿namespace SelfService.Domain;
 
 [AttributeUsage(AttributeTargets.Method)]
-public class TransactionalBoundaryAttribute : Attribute
-{
-
-}
+public class TransactionalBoundaryAttribute : Attribute { }
