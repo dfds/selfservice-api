@@ -29,7 +29,7 @@ public static class ConsumerConfiguration
                 .ForTopic($"{SelfServicePrefix}.awsaccount")
                 .Register<AwsAccountRequested>(
                     messageType: AwsAccountRequested.EventType,
-                    keySelector: x => x.AccountId
+                    keySelector: x => x.AccountId!
                 );
 
             options
