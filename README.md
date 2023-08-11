@@ -30,4 +30,9 @@ If your tests pass here and you're getting the wanted behavior in your feature, 
 
 ## Branch Workflow
 
-This project uses a lighter version of the classic git master/develop/feature/hotfix workflow (we don't really have "releases"). We try to have a 1-1 mapping of features to issues on [this board](https://github.com/orgs/dfds/projects/25/views/5?filterQuery=milestone%3A%221P%3A+Self-Service+Platform+resuscitation+%2B+Kafka-Janitor+rework%22), and try to keep feature branches as limited in scope as possible. We make PRs into `develop` and have automatic mergeing from develop into `master` every once in a while.
+This project uses a lighter version of the classic git master/develop/feature/hotfix workflow. We try to have a 1-1 mapping of features (= feature branches) to issues on [this board](https://github.com/orgs/dfds/projects/25/views/5?filterQuery=milestone%3A%221P%3A+Self-Service+Platform+resuscitation+%2B+Kafka-Janitor+rework%22), and try to keep feature branches as limited in scope as possible. We make PRs into `develop` and have automatic mergeing from develop into `master` every once in a while.
+
+## [good to know about Dockerfile]
+
+the dockerfile of this project currently doesn't build the api, but simply copies things that were built on your machine by `make` into a docker container :snek:.
+[11AUG23] - We are in the process of changing this.
