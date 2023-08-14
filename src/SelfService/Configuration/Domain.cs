@@ -73,18 +73,26 @@ public static class Domain
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
 
-        var endpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
-        var apiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
+        var topdeskEndpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
+        var topdeskApiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
         builder.Services.AddHttpClient<ITicketingSystem, TopDesk>(client =>
         {
-            client.BaseAddress = endpoint;
-            client.DefaultRequestHeaders.Add("x-api-key", apiKey);
+            client.BaseAddress = topdeskEndpoint;
+            client.DefaultRequestHeaders.Add("x-api-key", topdeskApiKey);
         });
 
         var prometheusEndpoint = new Uri(builder.Configuration["SS_PROMETHEUS_API_ENDPOINT"] ?? "");
         builder.Services.AddHttpClient<IKafkaTopicConsumerService, PrometheusClient>(client =>
         {
             client.BaseAddress = prometheusEndpoint;
+        });
+
+        var platformDataEndpoint = new Uri(builder.Configuration["SS_PLATFORM_DATA_ENDPOINT"] ?? "");
+        var dataApiKey = builder.Configuration["SS_PLATFORM_DATA_API_KEY"];
+        builder.Services.AddHttpClient<IPlatformDataApiRequesterService, PlatformDataApiRequesterService>(client =>
+        {
+            client.BaseAddress = platformDataEndpoint;
+            client.DefaultRequestHeaders.Add("x-api-key", dataApiKey);
         });
     }
 }

@@ -529,6 +529,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
@@ -562,6 +563,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
@@ -572,6 +574,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
         if (!KafkaClusterId.TryParse(clusterId, out var kafkaClusterId))
         {
             return NotFound(
@@ -654,6 +657,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
@@ -664,6 +668,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
         if (!KafkaClusterId.TryParse(clusterId, out var kafkaClusterId))
         {
             return NotFound(
