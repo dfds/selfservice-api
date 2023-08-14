@@ -23,14 +23,9 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         public string Tag { get; set; } = "";
     }
 
-    private string GetTimeSeriesUrl()
+    private string GetTimeSeriesUrl(Uri? baseUrl)
     {
-        return $"{_httpClient.BaseAddress}api/data/timeseries/finout";
-    }
-
-    private string GetTimeSeriesByGroupUrl()
-    {
-        return $"{_httpClient.BaseAddress}api/data/timeseriesbygroup/finout";
+        return $"{baseUrl}api/data/timeseries/finout";
     }
 
     private string ConstructUrl(string url, params KeyValuePair<string, string>[] args)
@@ -77,7 +72,7 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         params KeyValuePair<string, string>[] queryParams
     )
     {
-        var url = ConstructUrl(GetTimeSeriesUrl(), queryParams);
+        var url = ConstructUrl(GetTimeSeriesUrl(_httpClient.BaseAddress), queryParams);
         HttpResponseMessage response = await _httpClient.GetAsync(url);
 
         if (!response.IsSuccessStatusCode)
@@ -112,7 +107,7 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         return costs;
     }
 
-    public async Task<MyCapabilityCosts> GetMyCapabilityCosts(UserId userId, int daysWindow)
+    public async Task<MyCapabilityCosts> GetMyCapabilitiesCosts(UserId userId, int daysWindow)
     {
         var timeSeriesWithValidCapabilities = await FetchCapabilityCosts(
             new KeyValuePair<string, string>[] { new(QueryParamDaysWindow, daysWindow.ToString()) }

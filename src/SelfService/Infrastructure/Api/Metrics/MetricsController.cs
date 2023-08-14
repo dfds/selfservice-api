@@ -23,7 +23,7 @@ public class MetricsController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> GetMyCapabilityCosts([FromQuery] int daysWindow)
+    public async Task<IActionResult> GetMyCapabilitiesCosts([FromQuery] int daysWindow)
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -32,7 +32,7 @@ public class MetricsController : ControllerBase
 
         try
         {
-            var costs = await _platformDataApiRequesterService.GetMyCapabilityCosts(userId, daysWindow);
+            var costs = await _platformDataApiRequesterService.GetMyCapabilitiesCosts(userId, daysWindow);
 
             if (costs.Costs.Count > 0)
                 return Ok(costs);
