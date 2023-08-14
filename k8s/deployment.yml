@@ -50,7 +50,7 @@ spec:
             - secretRef:
                 name: selfservice-api-msgraph
             - secretRef:
-                name: selfservice-api-dataplatform
+                name: selfservice-api-platformdata
           resources:
             requests:
               memory: "50Mi"

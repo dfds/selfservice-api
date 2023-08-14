@@ -6,6 +6,7 @@ using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Metrics;
 using SelfService.Infrastructure.Api.System;
 using static SelfService.Infrastructure.Api.Method;
 
