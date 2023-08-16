@@ -46,4 +46,12 @@ public class CapabilityRepository : ICapabilityRepository
             .OrderBy(x => x.Name)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Capability>> GetAllPendingDeletion()
+    {
+        return await _dbContext.Capabilities
+            .Where(c => c.Status == CapabilityStatusOptions.PendingDeletion)
+            .OrderBy(x => x.Name)
+            .ToListAsync();
+    }
 }

@@ -61,4 +61,8 @@ public class Capability : AggregateRoot<CapabilityId>
         Status = CapabilityStatusOptions.Active;
         ModifiedAt = DateTime.UtcNow;
     }
+
+    public bool HasBeenPendingFor(int days) {
+        return Status == CapabilityStatusOptions.PendingDeletion && DateTime.UtcNow.Subtract(ModifiedAt).Days >= days;
+    }
 }

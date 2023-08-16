@@ -1,6 +1,7 @@
 ﻿using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Domain.Services;
 
 namespace SelfService.Application;
 
@@ -10,13 +11,17 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
+    private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
+
+    private const int PendingDaysUntilDeletion = 7;
 
     public CapabilityApplicationService(
         ILogger<CapabilityApplicationService> logger,
         ICapabilityRepository capabilityRepository,
         IKafkaTopicRepository kafkaTopicRepository,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
+        ITicketingSystem ticketingSystem,
         SystemTime systemTime
     )
     {
@@ -24,6 +29,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _capabilityRepository = capabilityRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
+        _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
     }
 
@@ -173,5 +179,28 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         }
         var modificationTime = _systemTime.Now;
         capability.CancelDeletionRequest();
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task CheckPendingCapabilityDeletions()
+    {
+        var capabilities = await _capabilityRepository.GetAllPendingDeletion();
+        foreach (var capability in capabilities)
+        {
+            if (capability.HasBeenPendingFor(days: PendingDaysUntilDeletion))
+            {
+                var message =
+                    "*Capability Deletion Request*\n"
+                    + "\nThe following capability has been pending deletion for 7 days and will be deleted in 24 hours:\n"
+                    + $"Capability Name=\"{capability.Name}\" \\\n"
+                    + $"Capability Id=\"{capability.Id}\"";
+                var headers = new Dictionary<string, string>();
+                headers["CAPABILITY_NAME"] = capability.Name;
+                headers["CAPABILITY_ID"] = capability.Id;
+                headers["DELETION_REQUESTED"] = capability.ModifiedAt.ToString();
+
+                await _ticketingSystem.CreateTicket(message, headers);
+            }
+        }
     }
 }
