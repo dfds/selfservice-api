@@ -69,6 +69,7 @@ public static class Domain
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
         //builder.Services.AddHostedService<RemoveInactiveMemberships>();
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
+        builder.Services.AddHostedService<CheckPendingCapabilityDeletions>();
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();

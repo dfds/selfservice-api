@@ -158,7 +158,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task RequestCapabilityDeletion(CapabilityId capabilityId)
+    public async Task RequestCapabilityDeletion(CapabilityId capabilityId, UserId userId)
     {
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability is null)
@@ -166,11 +166,11 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
         var modificationTime = _systemTime.Now;
-        capability.RequestDeletion();
+        capability.RequestDeletion(userId);
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task CancelCapabilityDeletionRequest(CapabilityId capabilityId)
+    public async Task CancelCapabilityDeletionRequest(CapabilityId capabilityId, UserId userId)
     {
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability is null)
@@ -178,7 +178,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
         var modificationTime = _systemTime.Now;
-        capability.CancelDeletionRequest();
+        capability.CancelDeletionRequest(userId);
     }
 
     [TransactionalBoundary, Outboxed]
@@ -193,13 +193,19 @@ public class CapabilityApplicationService : ICapabilityApplicationService
                     "*Capability Deletion Request*\n"
                     + "\nThe following capability has been pending deletion for 7 days and will be deleted in 24 hours:\n"
                     + $"Capability Name=\"{capability.Name}\" \\\n"
-                    + $"Capability Id=\"{capability.Id}\"";
+                    + $"Capability Id=\"{capability.Id}\" \\\n"
+                    + $"Deletion Requested by user=\"{capability.ModifiedBy}\" \\\n"
+                    + $"Originally Created by user=\"{capability.CreatedBy}\"";
                 var headers = new Dictionary<string, string>();
                 headers["CAPABILITY_NAME"] = capability.Name;
                 headers["CAPABILITY_ID"] = capability.Id;
-                headers["DELETION_REQUESTED"] = capability.ModifiedAt.ToString();
+                headers["CAPABILITY_CREATED_BY"] = capability.CreatedBy;
+                headers["DELETION_REQUESTED_AT"] = capability.ModifiedAt.ToString();
+                headers["DELETION_REQUESTED_BY"] = capability.ModifiedBy;
 
                 await _ticketingSystem.CreateTicket(message, headers);
+
+                capability.MarkAsDeleted();
             }
         }
     }
