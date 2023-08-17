@@ -99,14 +99,9 @@ string RandomAccountId(int length)
 string CreateOutOfBoundsTimeSeriesFinoutJson()
 {
     List<PlatformDataApiTimeSeries> timeSeries = new List<PlatformDataApiTimeSeries>();
-    
-    
+
     // ids gotten from db/seed/Capabilities.csv
-    var capabilityIds = new string[]
-    {
-        "pending-deletion-xxx",
-        "cloudengineering-xxx"
-    };
+    var capabilityIds = new string[] { "pending-deletion-xxx", "cloudengineering-xxx" };
 
     var addAllCapabilitiesFunc = (float value, DateTime timeStamp) =>
     {
@@ -122,19 +117,18 @@ string CreateOutOfBoundsTimeSeriesFinoutJson()
             );
         }
     };
-    
-    
+
     var now = DateTime.UtcNow;
     var startMidnight = new DateTime(now.Year, now.Month, now.Day).AddDays(-30);
     var current = startMidnight;
-    
+
     // Still need 30 days of data, but we are only interested in the last 7 days
-    for (int i = 0; i <= 30-7; i++)
+    for (int i = 0; i <= 30 - 7; i++)
     {
         current = current.AddDays(1);
         addAllCapabilitiesFunc(4.82f, current);
     }
-    
+
     addAllCapabilitiesFunc(4.82f, current.AddDays(1));
     addAllCapabilitiesFunc(4.82f, current.AddDays(2));
     addAllCapabilitiesFunc(11.45f, current.AddDays(3));
@@ -142,8 +136,7 @@ string CreateOutOfBoundsTimeSeriesFinoutJson()
     addAllCapabilitiesFunc(8.72f, current.AddDays(5));
     addAllCapabilitiesFunc(4.95f, current.AddDays(6));
     addAllCapabilitiesFunc(4.93f, current.AddDays(7));
-    
-    
+
     return JsonSerializer.Serialize(timeSeries.ToArray());
 }
 
