@@ -7,5 +7,5 @@ public interface ICapabilityRepository
     Task<bool> Exists(CapabilityId id);
     Task Add(Capability capability);
     Task<IEnumerable<Capability>> GetAll();
-    Task<IEnumerable<Capability>> GetAllPendingDeletion();
+    Task<IEnumerable<Capability>> GetAllPendingDeletionFor(int days);
 }

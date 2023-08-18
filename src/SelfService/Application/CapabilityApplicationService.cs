@@ -184,29 +184,26 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     [TransactionalBoundary, Outboxed]
     public async Task CheckPendingCapabilityDeletions()
     {
-        var capabilities = await _capabilityRepository.GetAllPendingDeletion();
-        foreach (var capability in capabilities)
+        var pendingCapabilities = await _capabilityRepository.GetAllPendingDeletionFor(days: PendingDaysUntilDeletion);
+        foreach (var capability in pendingCapabilities)
         {
-            if (capability.HasBeenPendingFor(days: PendingDaysUntilDeletion))
-            {
-                var message =
-                    "*Capability Deletion Request*\n"
-                    + "\nThe following capability has been pending deletion for 7 days and will be deleted in 24 hours:\n"
-                    + $"Capability Name=\"{capability.Name}\" \\\n"
-                    + $"Capability Id=\"{capability.Id}\" \\\n"
-                    + $"Deletion Requested by user=\"{capability.ModifiedBy}\" \\\n"
-                    + $"Originally Created by user=\"{capability.CreatedBy}\"";
-                var headers = new Dictionary<string, string>();
-                headers["CAPABILITY_NAME"] = capability.Name;
-                headers["CAPABILITY_ID"] = capability.Id;
-                headers["CAPABILITY_CREATED_BY"] = capability.CreatedBy;
-                headers["DELETION_REQUESTED_AT"] = capability.ModifiedAt.ToString();
-                headers["DELETION_REQUESTED_BY"] = capability.ModifiedBy;
+            var message =
+                "*Capability Deletion Request*\n"
+                + "\nThe following capability has been pending deletion for 7 days and will be deleted in 24 hours:\n"
+                + $"Capability Name=\"{capability.Name}\" \\\n"
+                + $"Capability Id=\"{capability.Id}\" \\\n"
+                + $"Deletion Requested by user=\"{capability.ModifiedBy}\" \\\n"
+                + $"Originally Created by user=\"{capability.CreatedBy}\"";
+            var headers = new Dictionary<string, string>();
+            headers["CAPABILITY_NAME"] = capability.Name;
+            headers["CAPABILITY_ID"] = capability.Id;
+            headers["CAPABILITY_CREATED_BY"] = capability.CreatedBy;
+            headers["DELETION_REQUESTED_AT"] = capability.ModifiedAt.ToString();
+            headers["DELETION_REQUESTED_BY"] = capability.ModifiedBy;
 
-                await _ticketingSystem.CreateTicket(message, headers);
+            await _ticketingSystem.CreateTicket(message, headers);
 
-                capability.MarkAsDeleted();
-            }
+            capability.MarkAsDeleted();
         }
     }
 }

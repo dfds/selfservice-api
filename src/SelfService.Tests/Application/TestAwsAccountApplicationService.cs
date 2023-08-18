@@ -168,7 +168,7 @@ public class TestAwsAccountApplicationService
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Capability>> GetAllPendingDeletion()
+        public Task<IEnumerable<Capability>> GetAllPendingDeletionFor(int days)
         {
             throw new NotImplementedException();
         }

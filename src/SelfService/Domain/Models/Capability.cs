@@ -54,6 +54,11 @@ public class Capability : AggregateRoot<CapabilityId>
         ModifiedBy = userId;
     }
 
+    public void SetModifiedDate(DateTime modifiedAt)
+    {
+        ModifiedAt = modifiedAt;
+    }
+
     public void CancelDeletionRequest(UserId userId)
     {
         if (Status != CapabilityStatusOptions.PendingDeletion)
@@ -64,10 +69,6 @@ public class Capability : AggregateRoot<CapabilityId>
         Status = CapabilityStatusOptions.Active;
         ModifiedAt = DateTime.UtcNow;
         ModifiedBy = userId;
-    }
-
-    public bool HasBeenPendingFor(int days) {
-        return Status == CapabilityStatusOptions.PendingDeletion && DateTime.UtcNow.Subtract(ModifiedAt).Days >= days;
     }
 
     public void MarkAsDeleted() {
