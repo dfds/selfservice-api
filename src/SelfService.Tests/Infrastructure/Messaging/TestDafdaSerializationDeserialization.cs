@@ -3,10 +3,11 @@ using System.Text.Json.Serialization;
 using Dafda.Serializing;
 using SelfService.Domain.Events;
 using SelfService.Domain.Models;
+using SelfService.Infrastructure.Messaging;
 
 namespace SelfService.Tests.Infrastructure.Messaging;
 
-public class TestDomainEventsDafdaDeserialization
+public class TestDafdaSerializationDeserialization
 {
     // Copy of code in Dafda.JsonFactory
     private readonly JsonSerializerOptions _jsonSerializerOptions =
@@ -189,5 +190,49 @@ public class TestDomainEventsDafdaDeserialization
                 UserId = TestUser
             }
         );
+    }
+
+    [Fact]
+    public async Task dafda_serialize_deserialize_kafka_cluster_access_granted()
+    {
+        await dafda_serialize_deserialize(new KafkaClusterAccessGranted());
+        await dafda_serialize_deserialize(
+            new KafkaClusterAccessGranted { CapabilityId = TestCapabilityId, KafkaClusterId = TestKafkaClusterId, }
+        );
+    }
+
+    [Fact]
+    public async Task dafda_serialize_deserialize_kafka_topic_provisioning_has_begun()
+    {
+        await dafda_serialize_deserialize(new KafkaTopicProvisioningHasBegun());
+        await dafda_serialize_deserialize(
+            new KafkaTopicProvisioningHasBegun
+            {
+                ClusterId = TestKafkaClusterId,
+                TopicId = TestTopicId,
+                TopicName = TestTopicName
+            }
+        );
+    }
+
+    [Fact]
+    public async Task dafda_serialize_deserialize_kafka_topic_provisioning_has_completed()
+    {
+        await dafda_serialize_deserialize(new KafkaTopicProvisioningHasCompleted());
+        await dafda_serialize_deserialize(
+            new KafkaTopicProvisioningHasCompleted
+            {
+                ClusterId = TestKafkaClusterId,
+                TopicId = TestTopicId,
+                TopicName = TestTopicName
+            }
+        );
+    }
+
+    [Fact]
+    public async Task dafda_serialize_deserialize_schema_registered()
+    {
+        await dafda_serialize_deserialize(new SchemaRegistered());
+        await dafda_serialize_deserialize(new SchemaRegistered { MessageContractId = TestMessageContractId });
     }
 }
