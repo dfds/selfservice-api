@@ -84,14 +84,7 @@ public static class ConsumerConfiguration
                     messageType: "membership-application-cancelled",
                     keySelector: x => x.MembershipApplicationId!
                 );
-
-            //options
-            //    .ForTopic($"{SelfServicePrefix}.portalvisit")
-            //    .Register<NewPortalVisitRegistered>(
-            //        messageType: "new-portal-visit-registered",
-            //        keySelector: x => x.VisitedBy!
-            //    )
-            //    ;
+            // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs
         });
 
         builder.Services.AddConsumer(options =>
@@ -128,6 +121,7 @@ public static class ConsumerConfiguration
                 .RegisterMessageHandler<MembershipApplicationHasBeenCancelled, RemoveCancelledMembershipApplication>(
                     "membership-application-cancelled"
                 );
+            // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs
 
             #region confluent gateway events
 
@@ -157,24 +151,10 @@ public static class ConsumerConfiguration
                 .RegisterMessageHandler<KafkaClusterAccessGranted, KafkaClusterAccessGrantedHandler>(
                     "cluster-access-granted"
                 );
-
+            // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs"
             #endregion
         });
     }
-}
-
-public class KafkaTopicProvisioningHasBegun
-{
-    public string? ClusterId { get; set; }
-    public string? TopicId { get; set; }
-    public string? TopicName { get; set; }
-}
-
-public class KafkaTopicProvisioningHasCompleted
-{
-    public string? ClusterId { get; set; }
-    public string? TopicId { get; set; }
-    public string? TopicName { get; set; }
 }
 
 public class UpdateKafkaTopicProvisioningProgress
@@ -313,12 +293,6 @@ public class AwsAccountRequestedHandler : IMessageHandler<AwsAccountRequested>
 
         await _awsAccountApplicationService.CreateAwsAccountRequestTicket(id);
     }
-}
-
-public class KafkaClusterAccessGranted
-{
-    public string? CapabilityId { get; set; }
-    public string? KafkaClusterId { get; set; }
 }
 
 public class KafkaClusterAccessGrantedHandler : IMessageHandler<KafkaClusterAccessGranted>
