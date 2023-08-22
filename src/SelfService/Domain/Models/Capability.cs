@@ -13,6 +13,7 @@ public class Capability : AggregateRoot<CapabilityId>
         Status = CapabilityStatusOptions.Active; // all new capabilities are active to begin with
         CreatedBy = createdBy;
         ModifiedAt = createdAt; // this will always be the same as CreatedAt for a new Capability
+        ModifiedBy = createdBy;
     }
 
     public static Capability CreateCapability(
@@ -34,13 +35,14 @@ public class Capability : AggregateRoot<CapabilityId>
     public DateTime CreatedAt { get; private set; }
     public DateTime ModifiedAt { get; private set; }
     public string CreatedBy { get; private set; }
+    public string ModifiedBy { get; private set; }
 
     public override string ToString()
     {
         return Id.ToString();
     }
 
-    public void RequestDeletion()
+    public void RequestDeletion(UserId userId)
     {
         if (Status != CapabilityStatusOptions.Active)
         {
@@ -49,9 +51,15 @@ public class Capability : AggregateRoot<CapabilityId>
 
         Status = CapabilityStatusOptions.PendingDeletion;
         ModifiedAt = DateTime.UtcNow;
+        ModifiedBy = userId;
     }
 
-    public void CancelDeletionRequest()
+    public void SetModifiedDate(DateTime modifiedAt)
+    {
+        ModifiedAt = modifiedAt;
+    }
+
+    public void CancelDeletionRequest(UserId userId)
     {
         if (Status != CapabilityStatusOptions.PendingDeletion)
         {
@@ -59,6 +67,17 @@ public class Capability : AggregateRoot<CapabilityId>
         }
 
         Status = CapabilityStatusOptions.Active;
+        ModifiedAt = DateTime.UtcNow;
+        ModifiedBy = userId;
+    }
+
+    public void MarkAsDeleted() {
+        if (Status != CapabilityStatusOptions.PendingDeletion)
+        {
+            throw new InvalidOperationException("Capability is not pending deletion");
+        }
+
+        Status = CapabilityStatusOptions.Deleted;
         ModifiedAt = DateTime.UtcNow;
     }
 }

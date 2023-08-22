@@ -23,6 +23,7 @@ public interface ICapabilityApplicationService
     );
     Task RequestKafkaClusterAccess(CapabilityId capabilityId, KafkaClusterId kafkaClusterId, UserId requestedBy);
     Task RegisterKafkaClusterAccessGranted(CapabilityId capabilityId, KafkaClusterId kafkaClusterId);
-    Task RequestCapabilityDeletion(CapabilityId capabilityId);
-    Task CancelCapabilityDeletionRequest(CapabilityId capabilityId);
+    Task RequestCapabilityDeletion(CapabilityId capabilityId, UserId userId);
+    Task CancelCapabilityDeletionRequest(CapabilityId capabilityId, UserId userId);
+    Task ActOnPendingCapabilityDeletions();
 }

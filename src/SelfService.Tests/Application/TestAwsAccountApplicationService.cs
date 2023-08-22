@@ -167,6 +167,11 @@ public class TestAwsAccountApplicationService
         {
             throw new NotImplementedException();
         }
+
+        public Task<IEnumerable<Capability>> GetAllPendingDeletionFor(int days)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     private class TicketingSystemSpy : ITicketingSystem

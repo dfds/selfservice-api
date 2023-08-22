@@ -1,6 +1,8 @@
-﻿using SelfService.Domain;
+﻿using System.Text;
+using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Domain.Services;
 
 namespace SelfService.Application;
 
@@ -10,13 +12,17 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
+    private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
+
+    private const int PendingDaysUntilDeletion = 7;
 
     public CapabilityApplicationService(
         ILogger<CapabilityApplicationService> logger,
         ICapabilityRepository capabilityRepository,
         IKafkaTopicRepository kafkaTopicRepository,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
+        ITicketingSystem ticketingSystem,
         SystemTime systemTime
     )
     {
@@ -24,6 +30,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _capabilityRepository = capabilityRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
+        _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
     }
 
@@ -152,7 +159,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task RequestCapabilityDeletion(CapabilityId capabilityId)
+    public async Task RequestCapabilityDeletion(CapabilityId capabilityId, UserId userId)
     {
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability is null)
@@ -160,11 +167,11 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
         var modificationTime = _systemTime.Now;
-        capability.RequestDeletion();
+        capability.RequestDeletion(userId);
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task CancelCapabilityDeletionRequest(CapabilityId capabilityId)
+    public async Task CancelCapabilityDeletionRequest(CapabilityId capabilityId, UserId userId)
     {
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability is null)
@@ -172,6 +179,46 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
         var modificationTime = _systemTime.Now;
-        capability.CancelDeletionRequest();
+        capability.CancelDeletionRequest(userId);
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task ActOnPendingCapabilityDeletions()
+    {
+        using var _ = _logger.BeginScope(
+            "{BackgroundJob} {CorrelationId}",
+            nameof(ActOnPendingCapabilityDeletions),
+            Guid.NewGuid()
+        );
+
+        var pendingCapabilities = await _capabilityRepository.GetAllPendingDeletionFor(days: PendingDaysUntilDeletion);
+        foreach (var capability in pendingCapabilities)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("*Capability Deletion Request*");
+            sb.AppendLine("The following capability has been pending deletion for 7 days and will be deleted in 24 hours:");
+            sb.AppendFormat("Capability Name: {0}", capability.Name); sb.AppendLine();
+            sb.AppendFormat("Capability Id: {0}", capability.Id); sb.AppendLine();
+            sb.AppendFormat("Deletion Requested by user: {0}", capability.ModifiedBy); sb.AppendLine();
+            sb.AppendFormat("Originally Created by user: {0}", capability.CreatedBy); sb.AppendLine();
+            var message = sb.ToString();
+
+            var headers = new Dictionary<string, string>();
+            headers["CAPABILITY_NAME"] = capability.Name;
+            headers["CAPABILITY_ID"] = capability.Id;
+            headers["CAPABILITY_CREATED_BY"] = capability.CreatedBy;
+            headers["DELETION_REQUESTED_AT"] = capability.ModifiedAt.ToString();
+            headers["DELETION_REQUESTED_BY"] = capability.ModifiedBy;
+
+            await _ticketingSystem.CreateTicket(message, headers);
+
+            capability.MarkAsDeleted();
+
+            _logger.LogInformation(
+                "Deletion of Capability {CapabilityId} begun and removed from UI. Requested by {RequestedBy}.",
+                capability.Id,
+                capability.ModifiedBy
+            );
+        }
     }
 }

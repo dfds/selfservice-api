@@ -1,4 +1,4 @@
-Id;Name;Description;CreatedAt;CreatedBy;Status;ModifiedAt
-cloudengineering-xxx;CloudEngineering-xxx;This is cloud stuff;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00
-marketing-department-xxx;Marketing-Department;We send emails;2023-02-10T08:00:00;SeedScript;Deleted;2023-07-25T08:00:00
-pending-deletion-xxx;pending-deletion-xxx;Pending Deletion;2023-02-10T08:00:00;SeedScript;Pending Deletion;2023-02-10T08:00:00
+Id;Name;Description;CreatedAt;CreatedBy;Status;ModifiedAt,ModifiedBy
+cloudengineering-xxx;CloudEngineering-xxx;This is cloud stuff;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript
+marketing-department-xxx;Marketing-Department;We send emails;2023-02-10T08:00:00;SeedScript;Deleted;2023-07-25T08:00:00;SeedScript
+pending-deletion-xxx;pending-deletion-xxx;Pending Deletion;2023-02-10T08:00:00;SeedScript;Pending Deletion;2023-02-10T08:00:00;SeedScript

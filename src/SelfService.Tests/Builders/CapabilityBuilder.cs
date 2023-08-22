@@ -18,8 +18,8 @@ public class CapabilityBuilder
         _name = "foo";
         _description = "this is foo";
         _status = CapabilityStatusOptions.Active;
-        _createdAt = new DateTime(2000, 1, 1);
-        _modifiedAt = new DateTime(2000, 1, 1);
+        _createdAt = DateTime.Now;
+        _modifiedAt = DateTime.Now;
         _createdBy = nameof(CapabilityBuilder);
     }
 
@@ -34,16 +34,36 @@ public class CapabilityBuilder
         _name = name;
         return this;
     }
+    public CapabilityBuilder WithModifiedAt(DateTime modifiedAt)
+    {
+        _modifiedAt = modifiedAt;
+        return this;
+    }
+    public CapabilityBuilder WithDescription(string description)
+    {
+        _description = description;
+        return this;
+    }
+
+    public CapabilityBuilder WithStatus(CapabilityStatusOptions status)
+    {
+        _status = status;
+        return this;
+    }
 
     public Capability Build()
     {
-        return new Capability(
+        var c = new Capability(
             id: _id,
             name: _name,
             description: _description,
             createdAt: _createdAt,
             createdBy: _createdBy
         );
+        c.Status = _status;
+        c.SetModifiedDate(_modifiedAt);
+
+        return c;
     }
 
     public static implicit operator Capability(CapabilityBuilder builder) => builder.Build();
