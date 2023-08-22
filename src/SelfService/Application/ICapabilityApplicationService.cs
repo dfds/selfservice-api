@@ -25,5 +25,5 @@ public interface ICapabilityApplicationService
     Task RegisterKafkaClusterAccessGranted(CapabilityId capabilityId, KafkaClusterId kafkaClusterId);
     Task RequestCapabilityDeletion(CapabilityId capabilityId, UserId userId);
     Task CancelCapabilityDeletionRequest(CapabilityId capabilityId, UserId userId);
-    Task CheckPendingCapabilityDeletions();
+    Task ActOnPendingCapabilityDeletions();
 }

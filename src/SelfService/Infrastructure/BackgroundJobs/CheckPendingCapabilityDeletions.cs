@@ -2,11 +2,11 @@ using SelfService.Application;
 
 namespace SelfService.Infrastructure.BackgroundJobs;
 
-public class CheckPendingCapabilityDeletions : BackgroundService
+public class ActOnPendingCapabilityDeletions : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public CheckPendingCapabilityDeletions(IServiceProvider serviceProvider)
+    public ActOnPendingCapabilityDeletions(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
@@ -29,17 +29,17 @@ public class CheckPendingCapabilityDeletions : BackgroundService
     private async Task DoWork(CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<CheckPendingCapabilityDeletions>>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<ActOnPendingCapabilityDeletions>>();
 
         using var _ = logger.BeginScope(
             "{BackgroundJob} {CorrelationId}",
-            nameof(CheckPendingCapabilityDeletions),
+            nameof(ActOnPendingCapabilityDeletions),
             Guid.NewGuid()
         );
 
         var applicationService = scope.ServiceProvider.GetRequiredService<ICapabilityApplicationService>();
 
         logger.LogDebug("Checking all currently pending deletion requests for capabilities...");
-        await applicationService.CheckPendingCapabilityDeletions();
+        await applicationService.ActOnPendingCapabilityDeletions();
     }
 }

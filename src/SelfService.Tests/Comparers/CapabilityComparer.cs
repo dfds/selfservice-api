@@ -38,7 +38,7 @@ public class CapabilityComparer : IEqualityComparer<Capability?>
 
     public int GetHashCode(Capability obj)
     {
-        return HashCode.Combine(obj.Name, obj.Description, obj.Status, obj.CreatedAt, obj.ModifiedAt, obj.CreatedBy);
+        return HashCode.Combine(obj.Id, obj.Name, obj.Description, obj.Status, obj.CreatedAt, obj.ModifiedAt, obj.CreatedBy, obj.ModifiedBy);
     }
 }
 

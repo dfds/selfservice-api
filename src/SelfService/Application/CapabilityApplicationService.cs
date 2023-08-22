@@ -1,4 +1,5 @@
-﻿using SelfService.Domain;
+﻿using System.Text;
+using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
@@ -182,18 +183,26 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task CheckPendingCapabilityDeletions()
+    public async Task ActOnPendingCapabilityDeletions()
     {
+        using var _ = _logger.BeginScope(
+            "{BackgroundJob} {CorrelationId}",
+            nameof(ActOnPendingCapabilityDeletions),
+            Guid.NewGuid()
+        );
+
         var pendingCapabilities = await _capabilityRepository.GetAllPendingDeletionFor(days: PendingDaysUntilDeletion);
         foreach (var capability in pendingCapabilities)
         {
-            var message =
-                "*Capability Deletion Request*\n"
-                + "\nThe following capability has been pending deletion for 7 days and will be deleted in 24 hours:\n"
-                + $"Capability Name=\"{capability.Name}\" \\\n"
-                + $"Capability Id=\"{capability.Id}\" \\\n"
-                + $"Deletion Requested by user=\"{capability.ModifiedBy}\" \\\n"
-                + $"Originally Created by user=\"{capability.CreatedBy}\"";
+            var sb = new StringBuilder();
+            sb.AppendLine("*Capability Deletion Request*");
+            sb.AppendLine("The following capability has been pending deletion for 7 days and will be deleted in 24 hours:");
+            sb.AppendFormat("Capability Name: {0}", capability.Name); sb.AppendLine();
+            sb.AppendFormat("Capability Id: {0}", capability.Id); sb.AppendLine();
+            sb.AppendFormat("Deletion Requested by user: {0}", capability.ModifiedBy); sb.AppendLine();
+            sb.AppendFormat("Originally Created by user: {0}", capability.CreatedBy); sb.AppendLine();
+            var message = sb.ToString();
+
             var headers = new Dictionary<string, string>();
             headers["CAPABILITY_NAME"] = capability.Name;
             headers["CAPABILITY_ID"] = capability.Id;
@@ -204,6 +213,12 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             await _ticketingSystem.CreateTicket(message, headers);
 
             capability.MarkAsDeleted();
+
+            _logger.LogInformation(
+                "Deletion of Capability {CapabilityId} begun and removed from UI. Requested by {RequestedBy}.",
+                capability.Id,
+                capability.ModifiedBy
+            );
         }
     }
 }
