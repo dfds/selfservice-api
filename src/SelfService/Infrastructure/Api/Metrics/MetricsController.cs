@@ -23,7 +23,7 @@ public class MetricsController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> GetMyCapabilitiesCosts([FromQuery] int daysWindow)
+    public async Task<IActionResult> GetMyCapabilitiesCosts([FromQuery] int daysWindow) // daysWindow == 30
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -32,10 +32,10 @@ public class MetricsController : ControllerBase
 
         try
         {
-            var costs = await _platformDataApiRequesterService.GetMyCapabilitiesCosts(userId, daysWindow);
+            var myCapabilitiesMetrics = await _platformDataApiRequesterService.GetMyCapabilitiesMetrics(userId);
 
-            if (costs.Costs.Count > 0)
-                return Ok(costs);
+            if (myCapabilitiesMetrics.Costs.Count > 0)
+                return Ok(new MyCapabilityCosts(myCapabilitiesMetrics.Costs));
         }
         catch (PlatformDataApiUnavailableException e)
         {
@@ -61,5 +61,40 @@ public class MetricsController : ControllerBase
                 Detail = $"No Cost data found for any capability",
             }
         );
+    }
+
+    [HttpGet("my-capabilities-metrics")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    public async Task<IActionResult> GetMyCapabilitiesMetrics()
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var myCapabilitiesMetrics = await _platformDataApiRequesterService.GetMyCapabilitiesMetrics(userId);
+            return Ok(myCapabilitiesMetrics);
+        }
+        catch (PlatformDataApiUnavailableException e)
+        {
+            return CustomObjectResults.InternalServerError(
+                new ProblemDetails
+                {
+                    Title = "PlatformDataApi unreachable",
+                    Detail = $"PlatformDataApi error: {e.Message}."
+                }
+            );
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResults.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetCapabilityCosts: {e.Message}." }
+            );
+        }
     }
 }

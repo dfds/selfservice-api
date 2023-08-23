@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.IdentityModel.Tokens;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
@@ -11,6 +12,8 @@ namespace SelfService.Application;
 
 public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
 {
+    #region ResponseObjects
+
     private class PlatformDataApiTimeSeries
     {
         [JsonPropertyName("timestamp")]
@@ -23,9 +26,34 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         public string Tag { get; set; } = "";
     }
 
+    private class PlatformDataApiAwsResourceCount
+    {
+        [JsonPropertyName("resource_id")]
+        public string ResourceId { get; set; } = "";
+
+        [JsonPropertyName("count")]
+        public int Count { get; set; } = 0;
+    }
+
+    private class PlatformDataApiAwsResourceCounts
+    {
+        [JsonPropertyName("aws_account_id")]
+        public string AwsAccountId { get; set; } = "";
+
+        [JsonPropertyName("counts")]
+        public PlatformDataApiAwsResourceCount[] Counts { get; set; } = Array.Empty<PlatformDataApiAwsResourceCount>();
+    }
+
+    #endregion
+
     private string GetTimeSeriesUrl(Uri? baseUrl)
     {
         return $"{baseUrl}api/data/timeseries/finout";
+    }
+
+    private string GetResourceCountsUrl(Uri? baseUrl)
+    {
+        return $"{baseUrl}api/data/counts/aws-resources";
     }
 
     private string ConstructUrl(string url, params KeyValuePair<string, string>[] args)
@@ -51,27 +79,29 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
     }
 
     private const string QueryParamDaysWindow = "days-window";
-    private const string QueryParamCapabilityId = "tag";
+    private const int DaysToFetch = 30;
 
     private readonly ILogger<PlatformDataApiRequesterService> _logger;
+    private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly IMyCapabilitiesQuery _myCapabilitiesQuery;
     private readonly HttpClient _httpClient;
 
     public PlatformDataApiRequesterService(
         ILogger<PlatformDataApiRequesterService> logger,
+        IAwsAccountRepository awsAccountRepository,
         IMyCapabilitiesQuery myCapabilitiesQuery,
         HttpClient httpClient
     )
     {
         _logger = logger;
+        _awsAccountRepository = awsAccountRepository;
         _myCapabilitiesQuery = myCapabilitiesQuery;
         _httpClient = httpClient;
     }
 
-    private async Task<List<PlatformDataApiTimeSeries>> FetchCapabilityCosts(
-        params KeyValuePair<string, string>[] queryParams
-    )
+    private async Task<List<PlatformDataApiTimeSeries>> FetchCapabilityCosts(int daysWindow)
     {
+        var queryParams = new KeyValuePair<string, string>[] { new(QueryParamDaysWindow, daysWindow.ToString()) };
         var url = ConstructUrl(GetTimeSeriesUrl(_httpClient.BaseAddress), queryParams);
         HttpResponseMessage response = await _httpClient.GetAsync(url);
 
@@ -82,6 +112,28 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         _logger.LogTrace("[PlatformDataApiRequesterService] Response was {StatusCode}", response.StatusCode);
         List<PlatformDataApiTimeSeries> validSeries = new List<PlatformDataApiTimeSeries>();
         var dataResponse = JsonSerializer.Deserialize<PlatformDataApiTimeSeries[]>(json);
+
+        if (dataResponse != null)
+        {
+            validSeries.AddRange(dataResponse);
+        }
+
+        return validSeries;
+    }
+
+    private async Task<List<PlatformDataApiAwsResourceCounts>> FetchAwsResourceCounts()
+    {
+        var queryParams = new KeyValuePair<string, string>[] { };
+        var url = ConstructUrl(GetResourceCountsUrl(_httpClient.BaseAddress), queryParams);
+        HttpResponseMessage response = await _httpClient.GetAsync(url);
+
+        if (!response.IsSuccessStatusCode)
+            throw new PlatformDataApiUnavailableException($"PlatformDataApi StatusCode: {response.StatusCode}");
+
+        string json = await response.Content.ReadAsStringAsync();
+        _logger.LogTrace("[PlatformDataApiRequesterService] Response was {StatusCode}", response.StatusCode);
+        List<PlatformDataApiAwsResourceCounts> validSeries = new List<PlatformDataApiAwsResourceCounts>();
+        var dataResponse = JsonSerializer.Deserialize<PlatformDataApiAwsResourceCounts[]>(json);
 
         if (dataResponse != null)
         {
@@ -107,35 +159,82 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         return costs;
     }
 
-    public async Task<MyCapabilityCosts> GetMyCapabilitiesCosts(UserId userId, int daysWindow)
+    private Dictionary<string, List<PlatformDataApiAwsResourceCount>> ToAwsAccountMap(
+        List<PlatformDataApiAwsResourceCounts> counts
+    )
     {
-        var timeSeriesWithValidCapabilities = await FetchCapabilityCosts(
-            new KeyValuePair<string, string>[] { new(QueryParamDaysWindow, daysWindow.ToString()) }
-        );
+        Dictionary<string, List<PlatformDataApiAwsResourceCount>> costs =
+            new Dictionary<string, List<PlatformDataApiAwsResourceCount>>();
+        foreach (var count in counts)
+        {
+            if (!costs.ContainsKey(count.AwsAccountId))
+            {
+                costs.Add(count.AwsAccountId, new List<PlatformDataApiAwsResourceCount>());
+            }
 
+            costs[count.AwsAccountId].AddRange(count.Counts);
+        }
+
+        return costs;
+    }
+
+    public async Task<MyCapabilitiesMetrics> GetMyCapabilitiesMetrics(UserId userId)
+    {
+        var myCapabilities = await _myCapabilitiesQuery.FindBy(userId);
+        var capabilitiesArray = myCapabilities as Capability[] ?? myCapabilities.ToArray();
+        if (capabilitiesArray.Length == 0)
+            return new EmptyMyCapabilitiesMetrics();
+
+        var awsAccountIdToCapabilityIdMap = new Dictionary<string, CapabilityId>();
+        foreach (var myCapability in capabilitiesArray)
+        {
+            var awsAccount = await _awsAccountRepository.FindBy(myCapability.Id);
+            if (awsAccount is null)
+                continue;
+            awsAccountIdToCapabilityIdMap.Add(awsAccount.Id, myCapability.Id);
+        }
+
+        var timeSeriesWithValidCapabilities = await FetchCapabilityCosts(DaysToFetch);
         var mappedCosts = ToCapabilityMap(timeSeriesWithValidCapabilities);
 
-        var myCapabilities = await _myCapabilitiesQuery.FindBy(userId);
         List<CapabilityCosts> costs = new List<CapabilityCosts>();
-        foreach (var myCapability in myCapabilities)
+        foreach (var myCapability in capabilitiesArray)
         {
             if (mappedCosts.TryGetValue(myCapability.Id, out var myCosts))
                 costs.Add(new CapabilityCosts(myCapability.Id, myCosts.ToArray()));
         }
 
-        return new MyCapabilityCosts(costs);
-    }
+        var awsResourceCounts = await FetchAwsResourceCounts();
 
-    public async Task<CapabilityCosts> GetCapabilityCosts(CapabilityId capabilityId, int daysWindow)
-    {
-        var timeSeriesWithValidCapabilities = await FetchCapabilityCosts(
-            new(QueryParamCapabilityId, capabilityId),
-            new(QueryParamDaysWindow, daysWindow.ToString())
-        );
+        var mappedCounts = ToAwsAccountMap(awsResourceCounts);
 
-        var mappedCosts = ToCapabilityMap(timeSeriesWithValidCapabilities);
-        return mappedCosts.TryGetValue(capabilityId, out var cost)
-            ? new CapabilityCosts(capabilityId, cost.ToArray())
-            : new CapabilityCosts(capabilityId, new TimeSeries[] { });
+        List<CapabilityAwsResourceCounts> resourceCounts = new List<CapabilityAwsResourceCounts>();
+        foreach (var accountsCount in awsResourceCounts)
+        {
+            if (!awsAccountIdToCapabilityIdMap.TryGetValue(accountsCount.AwsAccountId, out var capabilityId))
+            {
+                // not an error, remember my capabilities are a subset of all capabilities
+                continue;
+            }
+
+            if (!mappedCounts.TryGetValue(accountsCount.AwsAccountId, out var counts))
+            {
+                _logger.LogError(
+                    "unable to find expected resource counts for aws account with id {AwsAccountId}",
+                    accountsCount.AwsAccountId
+                );
+                continue;
+            }
+
+            List<AwsResourceCount> convertedCounts = new List<AwsResourceCount>();
+            foreach (var resourceCount in counts)
+            {
+                convertedCounts.Add(new AwsResourceCount(resourceCount.ResourceId, resourceCount.Count));
+            }
+
+            resourceCounts.Add(new CapabilityAwsResourceCounts(capabilityId, convertedCounts));
+        }
+
+        return new MyCapabilitiesMetrics(costs, resourceCounts);
     }
 }

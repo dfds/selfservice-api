@@ -4,5 +4,5 @@ namespace SelfService.Application;
 
 public interface IPlatformDataApiRequesterService
 {
-    Task<MyCapabilityCosts> GetMyCapabilitiesCosts(UserId userId, int daysWindow);
+    Task<MyCapabilitiesMetrics> GetMyCapabilitiesMetrics(UserId userId);
 }
