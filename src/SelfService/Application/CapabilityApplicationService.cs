@@ -196,11 +196,17 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         {
             var sb = new StringBuilder();
             sb.AppendLine("*Capability Deletion Request*");
-            sb.AppendLine("The following capability has been pending deletion for 7 days and will be deleted in 24 hours:");
-            sb.AppendFormat("Capability Name: {0}", capability.Name); sb.AppendLine();
-            sb.AppendFormat("Capability Id: {0}", capability.Id); sb.AppendLine();
-            sb.AppendFormat("Deletion Requested by user: {0}", capability.ModifiedBy); sb.AppendLine();
-            sb.AppendFormat("Originally Created by user: {0}", capability.CreatedBy); sb.AppendLine();
+            sb.AppendLine(
+                "The following capability has been pending deletion for 7 days and will be deleted in 24 hours:"
+            );
+            sb.AppendFormat("Capability Name: {0}", capability.Name);
+            sb.AppendLine();
+            sb.AppendFormat("Capability Id: {0}", capability.Id);
+            sb.AppendLine();
+            sb.AppendFormat("Deletion Requested by user: {0}", capability.ModifiedBy);
+            sb.AppendLine();
+            sb.AppendFormat("Originally Created by user: {0}", capability.CreatedBy);
+            sb.AppendLine();
             var message = sb.ToString();
 
             var headers = new Dictionary<string, string>();

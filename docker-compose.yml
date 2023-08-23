@@ -135,3 +135,7 @@ services:
 
     ports:
       - 5051:5051
+  fake-platform-data-api:
+    build: ./fake_dependencies/platform-data-api
+    ports:
+      - "8070:8070"
