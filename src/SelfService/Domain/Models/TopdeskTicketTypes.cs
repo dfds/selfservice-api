@@ -2,24 +2,24 @@ namespace SelfService.Domain.Models;
 
 public class TopdeskTicketType : ValueObject
 {
-    public static readonly TopdeskTicketType awsAccountRequest = new("AWS_ACCOUNT_REQUEST");
-    public static readonly TopdeskTicketType capabilityDeletionRequest = new("CAPABILITY_DELETION_REQUEST");
+    public static readonly TopdeskTicketType AwsAccountRequest = new("AWS_ACCOUNT_REQUEST");
+    public static readonly TopdeskTicketType CapabilityDeletionRequest = new("CAPABILITY_DELETION_REQUEST");
 
-    protected TopdeskTicketType(string type)
+    private TopdeskTicketType(string type)
     {
-        Type = type;
+        _value = type;
     }
 
-    public string Type { get; private set; }
+    public string _value { get; private set; }
 
     protected override IEnumerable<object> GetEqualityComponents()
     {
-        yield return Type!;
+        yield return _value;
     }
 
     public override string ToString()
     {
-        return Type;
+        return _value;
     }
 
     public static implicit operator string(TopdeskTicketType type) => type.ToString();

@@ -46,7 +46,7 @@ app.MapPost(
             return Results.Ok();
         }
 
-        if (headers["TICKET_TYPE"] == TopdeskTicketType.awsAccountRequest)
+        if (headers["TICKET_TYPE"] == TopdeskTicketType.AwsAccountRequest)
         {
             var legacyProducer = context.RequestServices.GetRequiredService<LegacyProducer>();
             var contextId = headers["CONTEXT_ID"];
