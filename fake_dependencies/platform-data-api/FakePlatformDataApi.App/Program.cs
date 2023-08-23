@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 var finoutResponseJson = CreateTimeSeriesFinoutJson();
 
+app.MapGet("ping", () => Results.Content("Pong!"));
 app.MapGet(
     "api/data/timeseries/finout",
     () =>
