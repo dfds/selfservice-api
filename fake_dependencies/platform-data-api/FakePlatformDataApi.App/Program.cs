@@ -13,6 +13,8 @@ app.MapGet(
         return Results.Content(finoutResponseJson);
     }
 );
+app.Run();
+
 
 // Using values seen in production giving out of bounds charts in the MyCapabilities section
 string CreateOutOfBoundsTimeSeriesFinoutJson()
