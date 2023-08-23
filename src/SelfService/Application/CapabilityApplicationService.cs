@@ -204,6 +204,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             var message = sb.ToString();
 
             var headers = new Dictionary<string, string>();
+            headers["TICKET_TYPE"] = TopdeskTicketType.capabilityDeletionRequest;
             headers["CAPABILITY_NAME"] = capability.Name;
             headers["CAPABILITY_ID"] = capability.Id;
             headers["CAPABILITY_CREATED_BY"] = capability.CreatedBy;

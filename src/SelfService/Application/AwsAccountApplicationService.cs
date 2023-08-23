@@ -73,6 +73,7 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
 
         if (_environment.IsDevelopment())
         {
+            headers["TICKET_TYPE"] = TopdeskTicketType.awsAccountRequest;
             headers["CORRELATION_ID"] = "";
             headers["CAPABILITY_NAME"] = capability.Name;
             headers["CAPABILITY_ID"] = capability.Id;

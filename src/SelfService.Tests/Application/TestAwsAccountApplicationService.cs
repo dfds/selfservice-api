@@ -65,6 +65,7 @@ public class TestAwsAccountApplicationService
         Assert.Equal(
             new Dictionary<string, string>
             {
+                ["TICKET_TYPE"] = TopdeskTicketType.awsAccountRequest,
                 ["CORRELATION_ID"] = "",
                 ["CAPABILITY_NAME"] = capability.Name,
                 ["CAPABILITY_ID"] = capability.Id,

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FakeConfluentGateway.App.Configuration;
+using SelfService.Domain.Models;
 
 Random random = new Random();
 
@@ -40,48 +41,54 @@ app.MapPost(
         Console.WriteLine("-----------------------------------------------------------");
 
         // send messages
-
-        var legacyProducer = context.RequestServices.GetRequiredService<LegacyProducer>();
-        var contextId = headers["CONTEXT_ID"];
-        var accountId = RandomAccountId(12);
-        var capabilityRootId = headers["CAPABILITY_ROOT_ID"];
-        var capabilityName = headers["CAPABILITY_NAME"];
-        var contextName = headers["CONTEXT_NAME"];
-        var capabilityId = headers["CAPABILITY_ID"];
-
-        _ = Task.Run(async () =>
+        if (!headers.ContainsKey("TICKET_TYPE"))
         {
+            return Results.Ok();
+        }
+
+        if (headers["TICKET_TYPE"] == TopdeskTicketType.awsAccountRequest) {
+            var legacyProducer = context.RequestServices.GetRequiredService<LegacyProducer>();
+            var contextId = headers["CONTEXT_ID"];
+            var accountId = RandomAccountId(12);
+            var capabilityRootId = headers["CAPABILITY_ROOT_ID"];
+            var capabilityName = headers["CAPABILITY_NAME"];
+            var contextName = headers["CONTEXT_NAME"];
+            var capabilityId = headers["CAPABILITY_ID"];
+
+            _ = Task.Run(async () =>
             {
-                await Task.Delay(2000);
-
-                var message = new AwsContextAccountCreated
                 {
-                    ContextId = contextId,
-                    AccountId = accountId,
-                    RoleArn = $"arn:aws:iam::{accountId}:root",
-                    RoleEmail = "role@aws.com",
-                    CapabilityRootId = capabilityRootId,
-                    CapabilityName = capabilityName,
-                    ContextName = contextName,
-                    CapabilityId = capabilityId,
-                };
+                    await Task.Delay(2000);
 
-                await legacyProducer.SendAwsContextAccountCreated(message);
-            }
+                    var message = new AwsContextAccountCreated
+                    {
+                        ContextId = contextId,
+                        AccountId = accountId,
+                        RoleArn = $"arn:aws:iam::{accountId}:root",
+                        RoleEmail = "role@aws.com",
+                        CapabilityRootId = capabilityRootId,
+                        CapabilityName = capabilityName,
+                        ContextName = contextName,
+                        CapabilityId = capabilityId,
+                    };
 
-            {
-                await Task.Delay(5000);
+                    await legacyProducer.SendAwsContextAccountCreated(message);
+                }
 
-                var message = new K8sNamespaceCreatedAndAwsArnConnected
                 {
-                    CapabilityId = capabilityId,
-                    ContextId = contextId,
-                    NamespaceName = capabilityId
-                };
+                    await Task.Delay(5000);
 
-                await legacyProducer.SendK8sNamespaceCreatedAndAwsArnConnected(message);
-            }
-        });
+                    var message = new K8sNamespaceCreatedAndAwsArnConnected
+                    {
+                        CapabilityId = capabilityId,
+                        ContextId = contextId,
+                        NamespaceName = capabilityId
+                    };
+
+                    await legacyProducer.SendK8sNamespaceCreatedAndAwsArnConnected(message);
+                }
+            });
+        }
 
         return Results.Ok();
     }
