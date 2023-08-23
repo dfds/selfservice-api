@@ -71,7 +71,8 @@ public class Capability : AggregateRoot<CapabilityId>
         ModifiedBy = userId;
     }
 
-    public void MarkAsDeleted() {
+    public void MarkAsDeleted()
+    {
         if (Status != CapabilityStatusOptions.PendingDeletion)
         {
             throw new InvalidOperationException("Capability is not pending deletion");
