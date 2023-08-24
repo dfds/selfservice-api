@@ -46,4 +46,13 @@ public class CapabilityRepository : ICapabilityRepository
             .OrderBy(x => x.Name)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Capability>> GetAllPendingDeletionFor(int days)
+    {
+        var targetDate = DateTime.UtcNow.Subtract(TimeSpan.FromDays(days));
+        return await _dbContext.Capabilities
+            .Where(c => c.Status == CapabilityStatusOptions.PendingDeletion && c.ModifiedAt <= targetDate)
+            .OrderBy(x => x.Name)
+            .ToListAsync();
+    }
 }

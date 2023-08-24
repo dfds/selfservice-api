@@ -280,7 +280,7 @@ public class ApiResourceFactory
                 httpContext: HttpContext,
                 action: nameof(CapabilityController.RequestCapabilityDeletion),
                 controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }
+                values: new { id = capability.Id, user = CurrentUser }
             ) ?? "",
             rel: "self",
             allow: allowedInteractions

@@ -65,6 +65,7 @@ public class TestAwsAccountApplicationService
         Assert.Equal(
             new Dictionary<string, string>
             {
+                ["TICKET_TYPE"] = TopdeskTicketType.AwsAccountRequest,
                 ["CORRELATION_ID"] = "",
                 ["CAPABILITY_NAME"] = capability.Name,
                 ["CAPABILITY_ID"] = capability.Id,
@@ -164,6 +165,11 @@ public class TestAwsAccountApplicationService
         }
 
         public Task<IEnumerable<Capability>> GetAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<Capability>> GetAllPendingDeletionFor(int days)
         {
             throw new NotImplementedException();
         }

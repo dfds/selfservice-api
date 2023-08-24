@@ -26,17 +26,28 @@ public class CapabilityComparer : IEqualityComparer<Capability?>
             return false;
         }
 
-        return x.Name == y.Name
+        return x.Id == y.Id
+            && x.Name == y.Name
             && x.Description == y.Description
             && x.Status == y.Status
             && x.CreatedAt.Equals(y.CreatedAt)
             && x.ModifiedAt.Equals(y.ModifiedAt)
-            && x.CreatedBy == y.CreatedBy;
+            && x.CreatedBy == y.CreatedBy
+            && x.ModifiedBy == y.ModifiedBy;
     }
 
     public int GetHashCode(Capability obj)
     {
-        return HashCode.Combine(obj.Name, obj.Description, obj.Status, obj.CreatedAt, obj.ModifiedAt, obj.CreatedBy);
+        return HashCode.Combine(
+            obj.Id,
+            obj.Name,
+            obj.Description,
+            obj.Status,
+            obj.CreatedAt,
+            obj.ModifiedAt,
+            obj.CreatedBy,
+            obj.ModifiedBy
+        );
     }
 }
 
