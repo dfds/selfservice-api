@@ -1,9 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FakeConfluentGateway.App.Configuration;
-using SelfService.Domain.Models;
 
 Random random = new Random();
+
+// Copy paste of ticket type inside of SelfServiceApi project to prevent import
+const string awsRequestedTicketType = "AWS_ACCOUNT_REQUEST";
 
 var builder = WebApplication.CreateBuilder(args);
 builder.ConfigureSerilog();
@@ -38,7 +40,7 @@ app.MapPost(
             return Results.Ok();
         }
 
-        if (headers["TICKET_TYPE"] == TopdeskTicketType.AwsAccountRequest)
+        if (headers["TICKET_TYPE"] == awsRequestedTicketType)
         {
             var legacyProducer = context.RequestServices.GetRequiredService<LegacyProducer>();
             var contextId = headers["CONTEXT_ID"];
