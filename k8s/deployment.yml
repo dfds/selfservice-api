@@ -53,11 +53,11 @@ spec:
                 name: selfservice-api-platformdata
           resources:
             requests:
-              memory: "50Mi"
+              memory: "150Mi"
               cpu: "50m"
             limits:
-              memory: "200Mi"
-              cpu: "200m"
+              memory: "300Mi"
+              cpu: "400m"
 
 ---
 apiVersion: apps/v1
