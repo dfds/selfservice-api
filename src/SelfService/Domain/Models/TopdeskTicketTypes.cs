@@ -10,7 +10,7 @@ public class TopdeskTicketType : ValueObject
         _value = type;
     }
 
-    public string _value { get; private set; }
+    private readonly string _value;
 
     protected override IEnumerable<object> GetEqualityComponents()
     {
