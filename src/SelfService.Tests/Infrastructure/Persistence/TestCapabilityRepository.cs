@@ -34,15 +34,14 @@ public class TestCapabilityRepository
         var repo = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
         await repo.Add(A.Capability.WithId("active"));
-        await repo.Add(A.Capability.WithId("pending-new")
-            .WithStatus(CapabilityStatusOptions.PendingDeletion));
-        await repo.Add(A.Capability.WithId("pending-old")
-            .WithStatus(CapabilityStatusOptions.PendingDeletion)
-            .WithModifiedAt(DateTime.UtcNow.AddDays(-8))
+        await repo.Add(A.Capability.WithId("pending-new").WithStatus(CapabilityStatusOptions.PendingDeletion));
+        await repo.Add(
+            A.Capability
+                .WithId("pending-old")
+                .WithStatus(CapabilityStatusOptions.PendingDeletion)
+                .WithModifiedAt(DateTime.UtcNow.AddDays(-8))
         );
-        await repo.Add(A.Capability.WithId("deleted")
-            .WithStatus(CapabilityStatusOptions.Deleted)
-        );
+        await repo.Add(A.Capability.WithId("deleted").WithStatus(CapabilityStatusOptions.Deleted));
 
         await dbContext.SaveChangesAsync();
 

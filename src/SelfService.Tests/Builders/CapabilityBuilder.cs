@@ -34,11 +34,13 @@ public class CapabilityBuilder
         _name = name;
         return this;
     }
+
     public CapabilityBuilder WithModifiedAt(DateTime modifiedAt)
     {
         _modifiedAt = modifiedAt;
         return this;
     }
+
     public CapabilityBuilder WithDescription(string description)
     {
         _description = description;
