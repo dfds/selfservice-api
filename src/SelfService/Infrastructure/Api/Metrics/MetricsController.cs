@@ -32,10 +32,10 @@ public class MetricsController : ControllerBase
 
         try
         {
-            var myCapabilitiesMetrics = await _platformDataApiRequesterService.GetMyCapabilitiesCosts(userId);
+            var myCapabilitiesCosts = await _platformDataApiRequesterService.GetMyCapabilitiesCosts(userId);
 
-            if (myCapabilitiesMetrics.Costs.Count > 0)
-                return Ok(myCapabilitiesMetrics);
+            if (myCapabilitiesCosts.Costs.Count > 0)
+                return Ok(myCapabilitiesCosts);
         }
         catch (PlatformDataApiUnavailableException e)
         {
@@ -77,10 +77,9 @@ public class MetricsController : ControllerBase
 
         try
         {
-            var myCapabilitiesMetrics = await _platformDataApiRequesterService.GetMyCapabilitiesAwsResourceCounts(
-                userId
-            );
-            return Ok(myCapabilitiesMetrics);
+            var myCapabilitiesResourceCounts =
+                await _platformDataApiRequesterService.GetMyCapabilitiesAwsResourceCounts(userId);
+            return Ok(myCapabilitiesResourceCounts);
         }
         catch (PlatformDataApiUnavailableException e)
         {

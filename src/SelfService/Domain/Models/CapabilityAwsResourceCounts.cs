@@ -26,7 +26,7 @@ public class CapabilityAwsResourceCounts
 
 public class MyCapabilitiesAwsResourceCounts
 {
-    private List<CapabilityAwsResourceCounts> CapabilityAwsResourceCounts { get; set; }
+    public List<CapabilityAwsResourceCounts> CapabilityAwsResourceCounts { get; set; }
 
     public MyCapabilitiesAwsResourceCounts(List<CapabilityAwsResourceCounts> capabilityAwsResourceCounts)
     {

@@ -200,9 +200,10 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         foreach (var myCapability in capabilitiesArray)
         {
             var awsAccount = await _awsAccountRepository.FindBy(myCapability.Id);
-            if (awsAccount is null)
+            if (awsAccount?.Registration.AccountId is null)
                 continue;
-            awsAccountIdToCapabilityIdMap.Add(awsAccount.Id, myCapability.Id);
+            var id = awsAccount.Registration.AccountId?.ToString();
+            awsAccountIdToCapabilityIdMap.Add(id!, myCapability.Id);
         }
 
         var awsResourceCounts = await FetchAwsResourceCounts();
