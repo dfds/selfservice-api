@@ -9,7 +9,6 @@ Random random = new Random();
 const string capabilityIdA = "cool-beans-xxx";
 const string capabilityIdB = "cloudengineering-xxx";
 
-
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 var finoutResponseJson = CreateTimeSeriesFinoutJson();
@@ -18,12 +17,12 @@ var awsResourcesResponseJson = CreateAwsResourcesJson();
 app.MapGet("ping", () => Results.Content("Pong!"));
 app.MapGet(
     "api/data/timeseries/finout",
-    () => { return Results.Content(finoutResponseJson); }
+    () =>
+    {
+        return Results.Content(finoutResponseJson);
+    }
 );
-app.MapGet(
-    "api/data/counts/aws-resources",
-    () => Results.Content(awsResourcesResponseJson)
-);
+app.MapGet("api/data/counts/aws-resources", () => Results.Content(awsResourcesResponseJson));
 app.Run();
 
 #region Finout
@@ -77,7 +76,6 @@ string CreateTimeSeriesFinoutJson()
 {
     var easing = (float t) => t * t * t; // Make more exaggerated changes
     List<PlatformDataApiTimeSeries> timeSeries = new List<PlatformDataApiTimeSeries>();
-
 
     var randMinMax = (float minimum, float maximum) => (float)random.NextDouble() * (maximum - minimum) + minimum;
 
@@ -144,21 +142,15 @@ string CreateAwsResourcesJson()
             counts.Add(awsId, new List<PlatformDataApiAwsResourceCount>());
         }
 
-        counts[awsId].Add(new PlatformDataApiAwsResourceCount()
-        {
-            ResourceId = resourceId,
-            Count = count,
-        });
+        counts[awsId].Add(new PlatformDataApiAwsResourceCount() { ResourceId = resourceId, Count = count, });
     }
 
     var awsResourceCounts = new List<PlatformDataApiAwsResourceCounts>();
     foreach (var (awsId, awsCounts) in counts)
     {
-        awsResourceCounts.Add(new PlatformDataApiAwsResourceCounts()
-        {
-            AwsAccountId = awsId,
-            Counts = awsCounts.ToArray(),
-        });
+        awsResourceCounts.Add(
+            new PlatformDataApiAwsResourceCounts() { AwsAccountId = awsId, Counts = awsCounts.ToArray(), }
+        );
     }
 
     return JsonSerializer.Serialize(awsResourceCounts.ToArray());
