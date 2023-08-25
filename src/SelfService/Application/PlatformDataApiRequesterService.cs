@@ -1,12 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.IdentityModel.Tokens;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
-using SelfService.Infrastructure.Persistence;
-using SelfService.Infrastructure.Persistence.Queries;
 
 namespace SelfService.Application;
 
@@ -178,13 +175,27 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         return costs;
     }
 
-    public async Task<MyCapabilitiesMetrics> GetMyCapabilitiesMetrics(UserId userId)
+    public async Task<MyCapabilityCosts> GetMyCapabilitiesCosts(UserId userId)
+    {
+        var myCapabilities = await _myCapabilitiesQuery.FindBy(userId);
+
+        var timeSeriesWithValidCapabilities = await FetchCapabilityCosts(DaysToFetch);
+        var mappedCosts = ToCapabilityMap(timeSeriesWithValidCapabilities);
+
+        List<CapabilityCosts> costs = new List<CapabilityCosts>();
+        foreach (var myCapability in myCapabilities)
+        {
+            if (mappedCosts.TryGetValue(myCapability.Id, out var myCosts))
+                costs.Add(new CapabilityCosts(myCapability.Id, myCosts.ToArray()));
+        }
+
+        return new MyCapabilityCosts(costs);
+    }
+
+    public async Task<MyCapabilitiesAwsResourceCounts> GetMyCapabilitiesAwsResourceCounts(UserId userId)
     {
         var myCapabilities = await _myCapabilitiesQuery.FindBy(userId);
         var capabilitiesArray = myCapabilities as Capability[] ?? myCapabilities.ToArray();
-        if (capabilitiesArray.Length == 0)
-            return new EmptyMyCapabilitiesMetrics();
-
         var awsAccountIdToCapabilityIdMap = new Dictionary<string, CapabilityId>();
         foreach (var myCapability in capabilitiesArray)
         {
@@ -192,16 +203,6 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
             if (awsAccount is null)
                 continue;
             awsAccountIdToCapabilityIdMap.Add(awsAccount.Id, myCapability.Id);
-        }
-
-        var timeSeriesWithValidCapabilities = await FetchCapabilityCosts(DaysToFetch);
-        var mappedCosts = ToCapabilityMap(timeSeriesWithValidCapabilities);
-
-        List<CapabilityCosts> costs = new List<CapabilityCosts>();
-        foreach (var myCapability in capabilitiesArray)
-        {
-            if (mappedCosts.TryGetValue(myCapability.Id, out var myCosts))
-                costs.Add(new CapabilityCosts(myCapability.Id, myCosts.ToArray()));
         }
 
         var awsResourceCounts = await FetchAwsResourceCounts();
@@ -235,6 +236,6 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
             resourceCounts.Add(new CapabilityAwsResourceCounts(capabilityId, convertedCounts));
         }
 
-        return new MyCapabilitiesMetrics(costs, resourceCounts);
+        return new MyCapabilitiesAwsResourceCounts(resourceCounts);
     }
 }

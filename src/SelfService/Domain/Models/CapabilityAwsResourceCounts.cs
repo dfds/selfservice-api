@@ -23,3 +23,13 @@ public class CapabilityAwsResourceCounts
         AwsResourceCounts = awsResourceCount;
     }
 }
+
+public class MyCapabilitiesAwsResourceCounts
+{
+    private List<CapabilityAwsResourceCounts> CapabilityAwsResourceCounts { get; set; }
+
+    public MyCapabilitiesAwsResourceCounts(List<CapabilityAwsResourceCounts> capabilityAwsResourceCounts)
+    {
+        CapabilityAwsResourceCounts = capabilityAwsResourceCounts;
+    }
+}

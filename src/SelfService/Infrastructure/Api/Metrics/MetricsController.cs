@@ -32,10 +32,10 @@ public class MetricsController : ControllerBase
 
         try
         {
-            var myCapabilitiesMetrics = await _platformDataApiRequesterService.GetMyCapabilitiesMetrics(userId);
+            var myCapabilitiesMetrics = await _platformDataApiRequesterService.GetMyCapabilitiesCosts(userId);
 
             if (myCapabilitiesMetrics.Costs.Count > 0)
-                return Ok(new MyCapabilityCosts(myCapabilitiesMetrics.Costs));
+                return Ok(myCapabilitiesMetrics);
         }
         catch (PlatformDataApiUnavailableException e)
         {
@@ -63,12 +63,12 @@ public class MetricsController : ControllerBase
         );
     }
 
-    [HttpGet("my-capabilities-metrics")]
+    [HttpGet("my-capabilities-resources")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> GetMyCapabilitiesMetrics()
+    public async Task<IActionResult> GetMyCapabilitiesAwsResources()
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -77,7 +77,9 @@ public class MetricsController : ControllerBase
 
         try
         {
-            var myCapabilitiesMetrics = await _platformDataApiRequesterService.GetMyCapabilitiesMetrics(userId);
+            var myCapabilitiesMetrics = await _platformDataApiRequesterService.GetMyCapabilitiesAwsResourceCounts(
+                userId
+            );
             return Ok(myCapabilitiesMetrics);
         }
         catch (PlatformDataApiUnavailableException e)
