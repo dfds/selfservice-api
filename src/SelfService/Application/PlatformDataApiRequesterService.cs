@@ -160,19 +160,18 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         List<PlatformDataApiAwsResourceCounts> counts
     )
     {
-        Dictionary<string, List<PlatformDataApiAwsResourceCount>> costs =
-            new Dictionary<string, List<PlatformDataApiAwsResourceCount>>();
+        var resourceCounts = new Dictionary<string, List<PlatformDataApiAwsResourceCount>>();
         foreach (var count in counts)
         {
-            if (!costs.ContainsKey(count.AwsAccountId))
+            if (!resourceCounts.ContainsKey(count.AwsAccountId))
             {
-                costs.Add(count.AwsAccountId, new List<PlatformDataApiAwsResourceCount>());
+                resourceCounts.Add(count.AwsAccountId, new());
             }
 
-            costs[count.AwsAccountId].AddRange(count.Counts);
+            resourceCounts[count.AwsAccountId].AddRange(count.Counts);
         }
 
-        return costs;
+        return resourceCounts;
     }
 
     public async Task<MyCapabilityCosts> GetMyCapabilitiesCosts(UserId userId)
@@ -219,6 +218,7 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
                 continue;
             }
 
+            // sanity check, should be set in ToAwsAccountMap
             if (!mappedCounts.TryGetValue(accountsCount.AwsAccountId, out var counts))
             {
                 _logger.LogError(
