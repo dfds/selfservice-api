@@ -1,5 +1,6 @@
 ﻿using Dafda.Consuming;
 using SelfService.Application;
+using SelfService.Domain.Events;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
@@ -56,9 +57,4 @@ public class MarkMessageContractAsProvisioned : IMessageHandler<SchemaRegistered
             );
         }
     }
-}
-
-public class SchemaRegistered : IDomainEvent
-{
-    public string? MessageContractId { get; set; }
 }

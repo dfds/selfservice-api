@@ -6,6 +6,7 @@ using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Metrics;
 using SelfService.Infrastructure.Api.System;
 using static SelfService.Infrastructure.Api.Method;
 
@@ -279,7 +280,7 @@ public class ApiResourceFactory
                 httpContext: HttpContext,
                 action: nameof(CapabilityController.RequestCapabilityDeletion),
                 controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }
+                values: new { id = capability.Id, user = CurrentUser }
             ) ?? "",
             rel: "self",
             allow: allowedInteractions

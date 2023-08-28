@@ -529,6 +529,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
@@ -562,6 +563,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
@@ -572,6 +574,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
         if (!KafkaClusterId.TryParse(clusterId, out var kafkaClusterId))
         {
             return NotFound(
@@ -654,6 +657,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
@@ -664,6 +668,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
         if (!KafkaClusterId.TryParse(clusterId, out var kafkaClusterId))
         {
             return NotFound(
@@ -689,7 +694,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> RequestCapabilityDeletion(string id)
+    public async Task<IActionResult> RequestCapabilityDeletion(string id, UserId user)
     {
         // Verify user and fetch userId
         if (!User.TryGetUserId(out var userId))
@@ -732,7 +737,7 @@ public class CapabilityController : ControllerBase
         // Set capability status
         try
         {
-            await _capabilityApplicationService.RequestCapabilityDeletion(capabilityId);
+            await _capabilityApplicationService.RequestCapabilityDeletion(capabilityId, userId);
             return NoContent();
         }
         catch (EntityNotFoundException e)
@@ -796,7 +801,7 @@ public class CapabilityController : ControllerBase
         // Set capability status
         try
         {
-            await _capabilityApplicationService.CancelCapabilityDeletionRequest(capabilityId);
+            await _capabilityApplicationService.CancelCapabilityDeletionRequest(capabilityId, userId);
             return NoContent();
         }
         catch (EntityNotFoundException e)
