@@ -18,12 +18,12 @@ public class MetricsController : ControllerBase
         _platformDataApiRequesterService = platformDataApiRequesterService;
     }
 
-    [HttpGet("my-capability-costs")]
+    [HttpGet("my-capabilities-costs")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> GetMyCapabilitiesCosts([FromQuery] int daysWindow)
+    public async Task<IActionResult> GetMyCapabilitiesCosts()
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -32,10 +32,10 @@ public class MetricsController : ControllerBase
 
         try
         {
-            var costs = await _platformDataApiRequesterService.GetMyCapabilitiesCosts(userId, daysWindow);
+            var myCapabilitiesCosts = await _platformDataApiRequesterService.GetMyCapabilitiesCosts(userId);
 
-            if (costs.Costs.Count > 0)
-                return Ok(costs);
+            if (myCapabilitiesCosts.Costs.Count > 0)
+                return Ok(myCapabilitiesCosts);
         }
         catch (PlatformDataApiUnavailableException e)
         {
@@ -61,5 +61,52 @@ public class MetricsController : ControllerBase
                 Detail = $"No Cost data found for any capability",
             }
         );
+    }
+
+    // TODO: Remove when #1919 has been merged
+    [HttpGet("my-capability-costs")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    public Task<IActionResult> GetMyCapabilitiesCosts([FromQuery] int daysWindow) // daysWindow == 30
+    {
+        return GetMyCapabilitiesCosts();
+    }
+
+    [HttpGet("my-capabilities-resources")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    public async Task<IActionResult> GetMyCapabilitiesAwsResources()
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var myCapabilitiesResourceCounts =
+                await _platformDataApiRequesterService.GetMyCapabilitiesAwsResourceCounts(userId);
+            return Ok(myCapabilitiesResourceCounts);
+        }
+        catch (PlatformDataApiUnavailableException e)
+        {
+            return CustomObjectResults.InternalServerError(
+                new ProblemDetails
+                {
+                    Title = "PlatformDataApi unreachable",
+                    Detail = $"PlatformDataApi error: {e.Message}."
+                }
+            );
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResults.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetCapabilityCosts: {e.Message}." }
+            );
+        }
     }
 }
