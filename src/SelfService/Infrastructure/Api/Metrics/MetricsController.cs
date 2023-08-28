@@ -18,12 +18,12 @@ public class MetricsController : ControllerBase
         _platformDataApiRequesterService = platformDataApiRequesterService;
     }
 
-    [HttpGet("my-capability-costs")]
+    [HttpGet("my-capabilities-costs")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> GetMyCapabilitiesCosts([FromQuery] int daysWindow) // daysWindow == 30
+    public async Task<IActionResult> GetMyCapabilitiesCosts()
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -61,6 +61,17 @@ public class MetricsController : ControllerBase
                 Detail = $"No Cost data found for any capability",
             }
         );
+    }
+
+    // TODO: Remove when #1919 has been merged
+    [HttpGet("my-capability-costs")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    public Task<IActionResult> GetMyCapabilitiesCosts([FromQuery] int daysWindow) // daysWindow == 30
+    {
+        return GetMyCapabilitiesCosts();
     }
 
     [HttpGet("my-capabilities-resources")]

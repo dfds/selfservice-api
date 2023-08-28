@@ -3,12 +3,12 @@ namespace SelfService.Domain.Models;
 public class AwsResourceCount
 {
     public string ResourceId { get; set; }
-    public int Count { get; set; }
+    public int ResourceCount { get; set; }
 
-    public AwsResourceCount(string resourceId, int count)
+    public AwsResourceCount(string resourceId, int resourceCount)
     {
         ResourceId = resourceId;
-        Count = count;
+        ResourceCount = resourceCount;
     }
 }
 
