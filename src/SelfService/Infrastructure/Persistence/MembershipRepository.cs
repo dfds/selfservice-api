@@ -23,7 +23,7 @@ public class MembershipRepository : IMembershipRepository
         return await _dbContext.Memberships.Where(x => x.CapabilityId == capabilityId).ToListAsync();
     }
 
-    public async Task<Membership?> Cancel(CapabilityId capabilityId, UserId userId)
+    public async Task<Membership?> CancelWithCapabilityId(CapabilityId capabilityId, UserId userId)
     {
         var membershipCount = await _dbContext.Memberships.Where(x => x.CapabilityId == capabilityId).CountAsync();
         if (membershipCount <= 1)
@@ -40,8 +40,21 @@ public class MembershipRepository : IMembershipRepository
                 $"No Membership for user \"{userId}\" in capability \"{capabilityId}\""
             );
         }
+
         _dbContext.Memberships.Remove(membership);
 
         return membership;
+    }
+
+    public async Task<List<Membership>> CancelAllMembershipsWithUserId(UserId userId)
+    {
+        var memberships = await _dbContext.Memberships.Where(x => x.UserId == userId).ToListAsync();
+
+        foreach (var membership in memberships)
+        {
+            _dbContext.Memberships.Remove(membership);
+        }
+
+        return memberships;
     }
 }

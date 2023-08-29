@@ -9,4 +9,6 @@ public interface IMembershipApplicationRepository
     Task<MembershipApplication?> FindBy(MembershipApplicationId id);
     Task Remove(MembershipApplicationId id);
     Task Remove(MembershipApplication application);
+
+    Task<List<MembershipApplication>> RemoveAllWithUserId(UserId userId);
 }

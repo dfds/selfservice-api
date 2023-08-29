@@ -9,4 +9,10 @@ public static class Dummy
     {
         return new Mock<T>().Object;
     }
+
+    public static T OfWithParameters<T>(params object[] args)
+        where T : class
+    {
+        return new Mock<T>(args).Object;
+    }
 }
