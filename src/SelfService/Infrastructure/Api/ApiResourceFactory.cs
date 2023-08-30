@@ -174,6 +174,17 @@ public class ApiResourceFactory
 
     public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
     {
+        var includeDeleted = false;
+        if (_authorizationService.CanViewDeletedCapabilities(PortalUser))
+        {
+            includeDeleted = true;
+        }
+
+        if (!includeDeleted)
+        {
+            capabilities = capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted);
+        }
+
         return new CapabilityListApiResource(
             items: capabilities.Select(ConvertToListItem).ToArray(),
             links: new CapabilityListApiResource.CapabilityListLinks(

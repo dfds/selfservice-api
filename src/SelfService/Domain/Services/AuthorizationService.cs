@@ -58,6 +58,15 @@ public class AuthorizationService : IAuthorizationService
         return true;
     }
 
+    public bool CanViewDeletedCapabilities(PortalUser portalUser)
+    {
+        if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
+        {
+            return true;
+        }
+        return false;
+    }
+
     public async Task<bool> CanDelete(PortalUser portalUser, KafkaTopic kafkaTopic)
     {
         if (kafkaTopic.IsPublic)
