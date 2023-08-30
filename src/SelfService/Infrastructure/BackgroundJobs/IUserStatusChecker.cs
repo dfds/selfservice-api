@@ -1,8 +1,10 @@
 using System.Threading.Tasks;
+using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.BackgroundJobs;
 
 public interface IUserStatusChecker
 {
-    Task<(bool, string)> CheckUserStatus(string userId);
+    Task<UserStatusCheckerStatus> CheckUserStatus(string userId);
+    bool TrySetAuthToken();
 }

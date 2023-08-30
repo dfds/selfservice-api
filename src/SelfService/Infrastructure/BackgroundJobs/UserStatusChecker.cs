@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
-
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.BackgroundJobs;
@@ -33,11 +33,13 @@ public class UserStatusChecker : IUserStatusChecker
             _logger.LogError("[UserStatusChecker] `client_secret` not found in environment");
             return;
         }
+
         if (client_id == null)
         {
             _logger.LogError("[UserStatusChecker] `client_id` not found in environment");
             return;
         }
+
         if (tenant_id == null)
         {
             _logger.LogError("[UserStatusChecker] `tenant_id` not found in environment");
@@ -91,25 +93,30 @@ public class UserStatusChecker : IUserStatusChecker
         _logger.LogDebug("[UserStatusChecker] ms-graph authToken has been set");
     }
 
-    public async Task<(bool, string)> CheckUserStatus(string userId)
+    /// <returns> true if AuthToken is set or was set sucessfully</returns>
+    public bool TrySetAuthToken()
     {
-        /*
-            if the authToken attribute is set, attempts an ms-graph/AzureAD
-            request to determine a member's status from the org's PoV
-            [!] returns True if a user is DEactivated or not found in AD
-
-            string part of return value is left in for debugging and logging
-        */
         if (_authToken == null)
         {
-            _logger.LogError("[UserStatusChecker] cannot make user request, `authToken` is not set");
-            _logger.LogDebug("[UserStatusChecker] re-attempting to set `authToken`");
             SetAuthToken();
-            if (_authToken == null)
-            { //TODO: throw the right exceptions so this can be a try/catch
-                throw new Exception(
-                    "[UserStatusChecker] Service started with no authToken and attempt to set it has failed, exiting"
-                );
+        }
+        return _authToken != null;
+    }
+
+    /// <summary>
+    ///  Returns the status of a member, by querying ms-graph/AzureAD
+    /// </summary>
+    public async Task<UserStatusCheckerStatus> CheckUserStatus(string userId)
+    {
+        if (_authToken == null)
+        {
+            _logger.LogError(
+                "[UserStatusChecker] cannot make user request, `authToken` is not set, attempting to set `authToken`"
+            );
+            if (!TrySetAuthToken())
+            {
+                _logger.LogError("[UserStatusChecker] Failed setting authToken: cancelling CheckUserStatus");
+                return UserStatusCheckerStatus.NoAuthToken;
             }
         }
 
@@ -133,20 +140,22 @@ public class UserStatusChecker : IUserStatusChecker
                     {
                         if (!user.AccountEnabled)
                         {
-                            return (true, "Deactivated");
+                            return UserStatusCheckerStatus.Deactivated;
                         }
                     }
                     else
                     {
                         _logger.LogError($"failed to deserialize response for user with id {userId}");
                     }
+
                     break;
                 }
                 case HttpStatusCode.NotFound:
-                    return (true, "NotFound");
+                    return UserStatusCheckerStatus.NotFound;
                 case HttpStatusCode.Unauthorized:
-                    _logger.LogError("Bad users (ms-graph) authorization token, exiting");
-                    throw new Exception("Bad token");
+                    _logger.LogError("Bad users (ms-graph) authorization token. Setting to null");
+                    _authToken = null;
+                    return UserStatusCheckerStatus.BadAuthToken;
                 default:
                     _logger.LogError($"Unhandled HttpStatusCode: {response.StatusCode}");
                     break;
@@ -156,6 +165,7 @@ public class UserStatusChecker : IUserStatusChecker
         {
             Console.WriteLine(e.Message);
         }
-        return (false, $"{userId}");
+
+        return UserStatusCheckerStatus.Unknown;
     }
 }
