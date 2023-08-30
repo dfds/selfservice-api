@@ -31,9 +31,9 @@ public class DeactivatedMemberCleanerApplicationService
     {
         _sb.Clear();
 
-        foreach (var notFoundMember in members)
+        foreach (var member in members)
         {
-            _sb.AppendLine(notFoundMember.Id);
+            _sb.AppendLine(member.Id);
         }
 
         return _sb.ToString();
