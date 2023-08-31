@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using SelfService.Domain.Models;
 using SelfService.Infrastructure.BackgroundJobs;
 
 namespace SelfService.Tests.TestDoubles;
@@ -13,6 +14,11 @@ public class StubUserStatusChecker : IUserStatusChecker
         SetAuthToken();
     }
 
+    public bool TrySetAuthToken()
+    {
+        return false;
+    }
+
     private void SetAuthToken()
     {
         return; //so we can await it
@@ -23,15 +29,15 @@ public class StubUserStatusChecker : IUserStatusChecker
         return new Task<bool>(() => true);
     }
 
-    public async Task<(bool, string)> CheckUserStatus(string userId)
+    public async Task<UserStatusCheckerStatus> CheckUserStatus(string userId)
     {
         await BusyWait();
         if (userId == "userdeactivated@dfds.com")
-            return new(true, "Deactivated");
+            return UserStatusCheckerStatus.Deactivated;
 
         if (userId == "useractive@dfds.com")
-            return (false, "");
+            return UserStatusCheckerStatus.Found;
 
-        return (true, "NotFound"); //undefined for this test
+        return UserStatusCheckerStatus.NotFound; //undefined for this test
     }
 }

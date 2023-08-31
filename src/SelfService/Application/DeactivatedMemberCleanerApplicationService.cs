@@ -12,6 +12,8 @@ public class DeactivatedMemberCleanerApplicationService
 
     private readonly ILogger<DeactivatedMemberCleanerApplicationService> _logger;
 
+    private readonly StringBuilder _sb = new();
+
     public DeactivatedMemberCleanerApplicationService(
         ILogger<DeactivatedMemberCleanerApplicationService> logger,
         IMembershipRepository membershipRepository,
@@ -25,57 +27,78 @@ public class DeactivatedMemberCleanerApplicationService
         _logger = logger;
     }
 
+    private string ToIdStringList(List<Member> members)
+    {
+        _sb.Clear();
+
+        foreach (var member in members)
+        {
+            _sb.AppendLine(member.Id);
+        }
+
+        return _sb.ToString();
+    }
+
     public async Task RemoveDeactivatedMemberships(IUserStatusChecker userStatusChecker)
     {
         _logger.LogDebug("Started looking for deactivated users");
+        if (!userStatusChecker.TrySetAuthToken())
+        {
+            _logger.LogError("Unable to Remove Deactivated Memberships, no valid auth token found");
+            return;
+        }
+
         var members = await _memberRepository.GetAll();
         List<Member> deactivatedMembers = new List<Member>();
         List<Member> notFoundMembers = new List<Member>();
-        StringBuilder deactivatedMembersStringBuilder = new StringBuilder();
-        StringBuilder notFoundMembersStringBuilder = new StringBuilder();
         foreach (var member in members)
         {
-            var (isDeactivated, reason) = await userStatusChecker.CheckUserStatus(member.Id);
-            if (isDeactivated)
+            var status = await userStatusChecker.CheckUserStatus(member.Id);
+
+            if (status == UserStatusCheckerStatus.NotFound)
+                notFoundMembers.Add(member);
+            if (status == UserStatusCheckerStatus.Deactivated)
+                deactivatedMembers.Add(member);
+
+            if (status == UserStatusCheckerStatus.NoAuthToken || status == UserStatusCheckerStatus.BadAuthToken)
             {
-                if (reason == "NotFound")
-                {
-                    notFoundMembers.Add(member);
-                    notFoundMembersStringBuilder.AppendLine(member.Id);
-                }
-                if (reason == "Deactivated")
-                {
-                    deactivatedMembers.Add(member);
-                    deactivatedMembersStringBuilder.AppendLine(member.Id);
-                }
+                _logger.LogError("Unable to check status of user {UserID}, no valid auth token found", member.Id);
+                return;
             }
         }
+
         if (notFoundMembers.Count <= 0)
         {
             _logger.LogDebug("no users were completely unfound in Azure AD (yay)");
         }
+        else
+        {
+            _logger.LogWarning(
+                "[TRIAL] following {NotFoundmembersCount} members not found in Azure AD:\n{notfoundMembers}\n NOT deleting for now",
+                notFoundMembers.Count,
+                ToIdStringList(notFoundMembers)
+            );
+        }
+
         if (deactivatedMembers.Count <= 0)
         {
             _logger.LogDebug("Found no members with deactivated/disabled accounts");
         }
+        else
+        {
+            _logger.LogDebug(
+                "Removing {DeactivatedMembersCount} members, disabled or not found in Azure AD:\\n{DeactivatedMembers}",
+                deactivatedMembers.Count,
+                ToIdStringList(deactivatedMembers)
+            );
+        }
 
-        _logger.LogWarning(
-            "[TRIAL] following {NotFoundmembersCount} members not found in Azure AD:\n{notfoundMembers}\n NOT deleting for now",
-            notFoundMembers.Count,
-            notFoundMembersStringBuilder.ToString()
-        );
+        var membersToBeDeleted = new HashSet<Member>();
+        deactivatedMembers.ForEach(x => membersToBeDeleted.Add(x));
+        //notFoundMembers.ForEach(x => membersToBeDeleted.Add(x)); // TODO: Enable when we deem it safe
 
-        _logger.LogDebug(
-            "Removing {DeactivatedMembersCount} members, disabled or not found in Azure AD:\\n{DeactivatedMembers}",
-            deactivatedMembers.Count,
-            deactivatedMembersStringBuilder.ToString()
-        );
-
-        List<Member> membersToBeDeleted = deactivatedMembers;
-
-        // membersToBeDeleted = deactivatedMembers
-        //     .Concat(notFoundMembers)
-        //     .ToHashSet().ToList(); //removal of duplicates if an Id is in both lists, though this shouldn't happen
+        if (membersToBeDeleted.Count <= 0)
+            return;
 
         foreach (var member in membersToBeDeleted)
         {
