@@ -77,4 +77,16 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
         _dbContext.MembershipApplications.Remove(application);
         return Task.CompletedTask;
     }
+
+    public async Task<List<MembershipApplication>> RemoveAllWithUserId(UserId userId)
+    {
+        var applications = await _dbContext.MembershipApplications.Where(x => x.Applicant == userId).ToListAsync();
+
+        foreach (var membershipApplication in applications)
+        {
+            await Remove(membershipApplication);
+        }
+
+        return applications;
+    }
 }

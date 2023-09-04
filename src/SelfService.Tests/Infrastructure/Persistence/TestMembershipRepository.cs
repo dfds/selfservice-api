@@ -1,5 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using SelfService.Tests.Comparers;
+using SelfService.Tests.TestDoubles;
+using Microsoft.Extensions.Logging; //for our own homemade things
+using SelfService.Infrastructure.BackgroundJobs;
+using SelfService.Infrastructure.Persistence;
+using SelfService.Domain;
 
 namespace SelfService.Tests.Infrastructure.Persistence;
 
@@ -29,7 +34,7 @@ public class TestMembershipRepository
         Assert.Contains(memberA, inserted, new MembershipComparer());
         Assert.Contains(memberB, inserted, new MembershipComparer());
 
-        await repo.Cancel(memberA.CapabilityId, memberA.UserId);
+        await repo.CancelWithCapabilityId(memberA.CapabilityId, memberA.UserId);
         await dbContext.SaveChangesAsync();
 
         var remaining = await dbContext.Memberships.ToListAsync();
@@ -58,7 +63,7 @@ public class TestMembershipRepository
         var inserted = await dbContext.Memberships.ToListAsync();
         Assert.Contains(member, inserted, new MembershipComparer());
 
-        await repo.Cancel(member.CapabilityId, member.UserId);
+        await repo.CancelWithCapabilityId(member.CapabilityId, member.UserId);
         await dbContext.SaveChangesAsync();
 
         var remaining = await dbContext.Memberships.ToListAsync();

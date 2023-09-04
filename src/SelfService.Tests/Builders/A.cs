@@ -22,4 +22,5 @@ public static class A
 
     public static KafkaTopicApplicationServiceBuilder KafkaTopicApplicationService => new();
     public static MembershipRepositoryBuilder MembershipRepository => new();
+    public static DeactivatedMemberCleanerApplicationServiceBuilder DeactivatedMemberCleanerApplicationService => new();
 }

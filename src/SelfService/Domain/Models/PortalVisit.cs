@@ -18,15 +18,6 @@ public class PortalVisit : AggregateRoot<Guid>
     {
         var instance = new PortalVisit(Guid.NewGuid(), visitedBy, visitedAt);
 
-        // NOTE [jandr@2023-04-21]: eeh, we don't need this right now
-
-        //instance.Raise(new NewPortalVisitRegistered
-        //{
-        //    PortalVisitId = instance.Id.ToString("N"),
-        //    VisitedBy = instance.VisitedBy,
-        //    VisitedAt = instance.VisitedAt.ToUniversalTime().ToString("O"),
-        //});
-
         return instance;
     }
 }

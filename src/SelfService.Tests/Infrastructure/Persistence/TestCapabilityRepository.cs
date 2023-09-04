@@ -48,7 +48,7 @@ public class TestCapabilityRepository
         var allCapabilities = await repo.GetAll(); // does not get deleted
         var readyForDeletion = await repo.GetAllPendingDeletionFor(days: 7);
 
-        Assert.Equal(3, allCapabilities.Count());
+        Assert.Equal(4, allCapabilities.Count());
         Assert.Single(readyForDeletion);
         Assert.Equal("pending-old", readyForDeletion.First().Id);
     }

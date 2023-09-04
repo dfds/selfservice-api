@@ -2,13 +2,15 @@ using SelfService.Application;
 
 namespace SelfService.Infrastructure.BackgroundJobs;
 
-public class CancelExpiredMembershipApplications : BackgroundService
+public class RemoveDeactivatedMemberships : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<RemoveDeactivatedMemberships> _logger;
 
-    public CancelExpiredMembershipApplications(IServiceProvider serviceProvider)
+    public RemoveDeactivatedMemberships(IServiceProvider serviceProvider, ILogger<RemoveDeactivatedMemberships> logger)
     {
         _serviceProvider = serviceProvider;
+        _logger = logger;
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -19,7 +21,7 @@ public class CancelExpiredMembershipApplications : BackgroundService
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     await DoWork(stoppingToken);
-                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                    await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
                 }
             },
             stoppingToken
@@ -29,16 +31,15 @@ public class CancelExpiredMembershipApplications : BackgroundService
     private async Task DoWork(CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<CancelExpiredMembershipApplications>>();
 
-        using var _ = logger.BeginScope(
+        using var _ = _logger.BeginScope(
             "{BackgroundJob} {CorrelationId}",
-            nameof(CancelExpiredMembershipApplications),
+            nameof(RemoveDeactivatedMemberships),
             Guid.NewGuid()
         );
-        var applicationService = scope.ServiceProvider.GetRequiredService<IMembershipApplicationService>();
+        UserStatusChecker userStatusChecker = new UserStatusChecker(_logger);
+        var membershipCleaner = scope.ServiceProvider.GetRequiredService<DeactivatedMemberCleanerApplicationService>();
 
-        logger.LogDebug("Cancelling any expired membership applications...");
-        await applicationService.CancelExpiredMembershipApplications();
+        await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
     }
 }

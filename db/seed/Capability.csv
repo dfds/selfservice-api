@@ -1,5 +1,10 @@
 Id;Name;Description;CreatedAt;CreatedBy;Status;ModifiedAt,ModifiedBy
-cloudengineering-xxx;CloudEngineering-xxx;This is cloud stuff;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript
+cloudengineering-xxx;CloudEngineering;This is cloud stuff;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript
 marketing-department-xxx;Marketing-Department;We send emails;2023-02-10T08:00:00;SeedScript;Deleted;2023-07-25T08:00:00;SeedScript
-pending-deletion-xxx;pending-deletion-xxx;Pending Deletion;2023-02-10T08:00:00;SeedScript;Pending Deletion;2023-02-10T08:00:00;SeedScript
 cool-beans-xxx;Cool-beans-xxx;Only Bean enthusiasts;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript
+pending-deletion-xxx;pending-deletion;Pending Deletion;2023-02-10T08:00:00;SeedScript;Pending Deletion;2023-02-10T08:00:00;SeedScript
+notmycapability-xx1;Not My Capability 1;Something you are not a member of;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript
+notmycapability-xx2;Not My Capability 2;Something you are not a member of;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript
+notmycapability-xx3;Not My Capability 3;Something you are not a member of;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript
+notmycapability-xx4;Not My Capability 4;Something you are not a member of;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript
+notmycapability-xx5;Not My Capability 5;Something you are not a member of;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript
