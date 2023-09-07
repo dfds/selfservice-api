@@ -175,7 +175,9 @@ public class ApiResourceFactory
     public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
     {
         var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
-            capabilities = showDeleted? capabilities : capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted);
+        capabilities = showDeleted
+            ? capabilities
+            : capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted);
 
         return new CapabilityListApiResource(
             items: capabilities.Select(ConvertToListItem).ToArray(),
