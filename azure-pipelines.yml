@@ -34,7 +34,7 @@ stages:
             displayName: "Push Docker Images"
             condition: succeeded()
           - bash: |
-              make manifests BUILD_NUMBER="$(Build.BuildNumber)"
+              make manifests BUILD_NUMBER="$(Build.BuildNumber)" ECR_AWS_ACCOUNT_ID="$(ECR_AWS_ACCOUNT_ID)"
             displayName: 'Create k8s manifests'
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: manifests"

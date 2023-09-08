@@ -16,6 +16,7 @@ spec:
         prometheus.io/port: "8888"
         prometheus.io/scrape: "true"
     spec:
+      serviceAccountName: selfservice-api
       initContainers:
         - name: dbmigration
           image: 579478677147.dkr.ecr.eu-central-1.amazonaws.com/selfservice-api/dbmigrations:${BUILD_NUMBER}

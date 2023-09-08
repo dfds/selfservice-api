@@ -64,6 +64,7 @@ public static class Domain
 
         // aad-aws-sync
         builder.Services.AddTransient<IAadAwsSyncCapabilityQuery, AadAwsSyncCapabilityQuery>();
+        builder.Services.AddTransient<IAwsECRRepoApplicationService, AwsECRRepoApplicationService>();
 
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
