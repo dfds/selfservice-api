@@ -34,8 +34,6 @@
     <Folder Include="Application\KafkaTopicApplicationService\" />
     <Folder Include="Comparers\" />
     <Folder Include="Infrastructure\Queries\" />
-    <Folder Include="Infrastructure\Persistence\" />
-    <Folder Include="Builders\" />
   </ItemGroup>
 
 </Project>

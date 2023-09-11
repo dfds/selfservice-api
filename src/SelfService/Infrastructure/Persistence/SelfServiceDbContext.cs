@@ -53,6 +53,8 @@ public class SelfServiceDbContext : DbContext
 
     public DbSet<ServiceDescription> ServiceCatalog { get; set; } = null!; // suppress parameterless constructor warning
 
+    public DbSet<ECRRepositoryRepository> ECRRepositories { get; set; } = null!; // suppress parameterless constructor warning
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
@@ -282,6 +284,17 @@ public class SelfServiceDbContext : DbContext
         modelBuilder.Entity<ServiceDescription>(cfg =>
         {
             cfg.ToTable("ServiceCatalog");
+        });
+
+        modelBuilder.Entity<ECRRepository>(cfg =>
+        {
+            cfg.ToTable("ECRRepository");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.Name);
+            cfg.Property(x => x.Description);
+            cfg.Property(x => x.RepositoryName);
+            cfg.Property(x => x.CreatedBy);
         });
     }
 }
