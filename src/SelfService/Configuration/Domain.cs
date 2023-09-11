@@ -96,5 +96,8 @@ public static class Domain
             client.BaseAddress = platformDataEndpoint;
             client.DefaultRequestHeaders.Add("x-api-key", dataApiKey);
         });
+
+        // services that use aws credentials
+        builder.Services.AddTransient<IAwsECRRepoApplicationService, AwsECRRepoApplicationService>();
     }
 }
