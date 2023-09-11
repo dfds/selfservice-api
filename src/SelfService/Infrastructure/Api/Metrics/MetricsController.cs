@@ -13,39 +13,10 @@ namespace SelfService.Infrastructure.Api.Metrics;
 public class MetricsController : ControllerBase
 {
     private readonly IPlatformDataApiRequesterService _platformDataApiRequesterService;
-    private readonly IAwsECRRepoApplicationService _awsECRRepoApplicationService;
 
-    public MetricsController(
-        IPlatformDataApiRequesterService platformDataApiRequesterService,
-        IAwsECRRepoApplicationService awsECRRepoApplicationService
-    )
+    public MetricsController(IPlatformDataApiRequesterService platformDataApiRequesterService)
     {
         _platformDataApiRequesterService = platformDataApiRequesterService;
-        _awsECRRepoApplicationService = awsECRRepoApplicationService;
-    }
-
-    [HttpPost("ecr/{reponame}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> CreateECRRepo(string reponame)
-    {
-        try
-        {
-            await _awsECRRepoApplicationService.CreateECRRepo(reponame);
-        }
-        catch (RepositoryAlreadyExistsException)
-        {
-            return BadRequest(
-                new ProblemDetails
-                {
-                    Title = "Repository already exists",
-                    Detail = $"Repository \"{reponame}\" already exists in ECR."
-                }
-            );
-        }
-
-        return Ok();
     }
 
     [HttpGet("my-capabilities-costs")]
