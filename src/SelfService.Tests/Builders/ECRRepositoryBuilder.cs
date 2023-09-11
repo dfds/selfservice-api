@@ -7,13 +7,15 @@ public class ECRRepositoryBuilder
     private ECRRepositoryId _id;
     private string _name;
     private string _description;
+    private string _repositoryName;
     private string _createdBy;
 
     public ECRRepositoryBuilder()
     {
-        _id = ECRRepositoryId.New();
+        _id = Guid.NewGuid();
         _name = "ecr repo test";
         _description = "this is the description for ecr repo test";
+        _repositoryName = "myteam/ecr-repo-test";
         _createdBy = nameof(ECRRepositoryBuilder);
     }
 
@@ -41,8 +43,20 @@ public class ECRRepositoryBuilder
         return this;
     }
 
+    public ECRRepositoryBuilder WithRepositoryName(string repoName)
+    {
+        _repositoryName = repoName;
+        return this;
+    }
+
     public ECRRepository Build()
     {
-        return new ECRRepository(id: _id, name: _name, description: _description, createdBy: _createdBy);
+        return new ECRRepository(
+            id: _id,
+            name: _name,
+            description: _description,
+            repositoryName: _repositoryName,
+            createdBy: _createdBy
+        );
     }
 }

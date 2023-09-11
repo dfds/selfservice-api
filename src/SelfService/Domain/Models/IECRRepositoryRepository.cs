@@ -4,6 +4,6 @@ namespace SelfService.Domain.Models;
 
 public interface IECRRepositoryRepository
 {
-    IEnumerable<ECRRepositoryRepository> GetAll();
-    void Add(ECRRepositoryRepository ecr);
+    IEnumerable<ECRRepository> GetAll();
+    void Add(ECRRepository ecr);
 }

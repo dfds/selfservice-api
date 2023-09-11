@@ -9,6 +9,11 @@ public class ECRRepositoryId : ValueObject
         _value = value;
     }
 
+    public ECRRepositoryId()
+    {
+        _value = Guid.NewGuid();
+    }
+
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return _value;
@@ -17,11 +22,6 @@ public class ECRRepositoryId : ValueObject
     public override string ToString()
     {
         return _value.ToString("N");
-    }
-
-    public static ECRRepositoryId New()
-    {
-        return new ECRRepositoryId(Guid.NewGuid());
     }
 
     public static ECRRepositoryId Parse(string? text)

@@ -12,12 +12,12 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
         _dbContext = dbContext;
     }
 
-    public IEnumerable<ECRRepositoryRepository> GetAll()
+    public IEnumerable<ECRRepository> GetAll()
     {
         return _dbContext.ECRRepositories.ToList();
     }
 
-    public void Add(ECRRepositoryRepository ecr)
+    public void Add(ECRRepository ecr)
     {
         _dbContext.ECRRepositories.Add(ecr);
     }

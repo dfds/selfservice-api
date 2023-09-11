@@ -41,11 +41,15 @@ public class SelfServiceDbContext : DbContext
     public DbSet<Capability> Capabilities { get; set; } = null!; // suppress parameterless constructor warning
     public DbSet<Member> Members { get; set; } = null!; // suppress parameterless constructor warning
     public DbSet<Membership> Memberships { get; set; } = null!; // suppress parameterless constructor warning
+
     public DbSet<MembershipApplication> MembershipApplications { get; set; } = null!; // suppress parameterless constructor warning
+
     public DbSet<AwsAccount> AwsAccounts { get; set; } = null!; // suppress parameterless constructor warning
 
     public DbSet<KafkaCluster> KafkaClusters { get; set; } = null!; // suppress parameterless constructor warning
+
     public DbSet<KafkaClusterAccess> KafkaClusterAccess { get; set; } = null!; // suppress parameterless constructor warning
+
     public DbSet<KafkaTopic> KafkaTopics { get; set; } = null!; // suppress parameterless constructor warning
     public DbSet<MessageContract> MessageContracts { get; set; } = null!; // suppress parameterless constructor warning
 
@@ -53,7 +57,7 @@ public class SelfServiceDbContext : DbContext
 
     public DbSet<ServiceDescription> ServiceCatalog { get; set; } = null!; // suppress parameterless constructor warning
 
-    public DbSet<ECRRepositoryRepository> ECRRepositories { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<ECRRepository> ECRRepositories { get; set; } = null!; // suppress parameterless constructor warning
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -102,6 +106,8 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<MessageContractSchema>().HaveConversion<MessageContractSchemaConverter>();
 
         configurationBuilder.Properties<MessageContractStatus>().HaveConversion<MessageContractStatusConverter>();
+
+        configurationBuilder.Properties<ECRRepositoryId>().HaveConversion<ECRRepositoryIdConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
