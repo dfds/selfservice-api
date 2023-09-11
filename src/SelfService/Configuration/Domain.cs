@@ -64,7 +64,6 @@ public static class Domain
 
         // aad-aws-sync
         builder.Services.AddTransient<IAadAwsSyncCapabilityQuery, AadAwsSyncCapabilityQuery>();
-        builder.Services.AddTransient<IAwsECRRepoApplicationService, AwsECRRepoApplicationService>();
 
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
@@ -97,5 +96,8 @@ public static class Domain
             client.BaseAddress = platformDataEndpoint;
             client.DefaultRequestHeaders.Add("x-api-key", dataApiKey);
         });
+
+        // services that use aws credentials
+        builder.Services.AddTransient<IAwsECRRepoApplicationService, AwsECRRepoApplicationService>();
     }
 }
