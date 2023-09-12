@@ -2,16 +2,16 @@ using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
 
-namespace SelfService.Infrastructure.Api.ECSRepositories;
+namespace SelfService.Infrastructure.Api.ECRRepositories;
 
-[Route("ecs")]
+[Route("ecr")]
 [Produces("application/json")]
 [ApiController]
-public class ECSRepositoriesController : ControllerBase
+public class ECRRepositoriesController : ControllerBase
 {
     private readonly IECRRepositoryService _ecrRepositoryService;
 
-    public ECSRepositoriesController(IECRRepositoryService ecrRepositoryService)
+    public ECRRepositoriesController(IECRRepositoryService ecrRepositoryService)
     {
         _ecrRepositoryService = ecrRepositoryService;
     }
@@ -21,7 +21,7 @@ public class ECSRepositoriesController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> GetECSRepositories()
+    public async Task<IActionResult> GetECRRepositories()
     {
         try
         {
@@ -31,16 +31,16 @@ public class ECSRepositoriesController : ControllerBase
         catch (Exception e)
         {
             return CustomObjectResults.InternalServerError(
-                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetECSRepositories: {e.Message}." }
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetECRRepositories: {e.Message}." }
             );
         }
     }
 
-    private bool IsValidRequest(NewECSRepositoryRequest request)
+    private bool IsValidRequest(NewECRRepositoryRequest request)
     {
         return !string.IsNullOrEmpty(request.RepositoryName)
-            && !string.IsNullOrEmpty(request.Name)
-            && !string.IsNullOrEmpty(request.Description);
+               && !string.IsNullOrEmpty(request.Name)
+               && !string.IsNullOrEmpty(request.Description);
     }
 
     [HttpPost("repositories")]
@@ -48,7 +48,7 @@ public class ECSRepositoriesController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> CreateECSRepository([FromBody] NewECSRepositoryRequest request)
+    public async Task<IActionResult> CreateECRRepository([FromBody] NewECRRepositoryRequest request)
     {
         try
         {
@@ -73,7 +73,7 @@ public class ECSRepositoriesController : ControllerBase
         catch (Exception e)
         {
             return CustomObjectResults.InternalServerError(
-                new ProblemDetails { Title = "Uncaught Exception", Detail = $"CreateECSRepository: {e.Message}." }
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"CreateECRRepository: {e.Message}." }
             );
         }
     }

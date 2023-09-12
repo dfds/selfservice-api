@@ -38,8 +38,8 @@ public class ECRRepositoryService : IECRRepositoryService
             await _awsEcrRepositoryApplicationService.CreateECRRepo(repositoryName);
             var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
             _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", repositoryName);
-            _ecrRepositoryRepository.Add(newRepo);
-            return newRepo;
+            _ecrRepositoryRepository.Add(newRepository);
+            return newRepository;
         }
         catch (Exception e)
         {

@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SelfService.Infrastructure.Api.ECSRepositories;
+namespace SelfService.Infrastructure.Api.ECRRepositories;
 
-public class NewECSRepositoryRequest
+public class NewECRRepositoryRequest
 {
     [Required]
     public string? Name { get; set; }
