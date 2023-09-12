@@ -1,27 +1,18 @@
-using Amazon.ECR.Model;
 using Microsoft.AspNetCore.Mvc;
-using SelfService.Application;
-using SelfService.Domain.Exceptions;
-using SelfService.Domain.Models;
+using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
-using SelfService.Infrastructure.Api.ECSRepositories;
 
-namespace SelfService.Infrastructure.Api.Metrics;
+namespace SelfService.Infrastructure.Api.ECSRepositories;
 
 [Route("ecs")]
 [Produces("application/json")]
 [ApiController]
 public class ECSRepositoriesController : ControllerBase
 {
-    private readonly IAwsECRRepositoryApplicationService _awsEcrRepositoryApplicationService;
     private readonly IECRRepositoryService _ecrRepositoryService;
 
-    public ECSRepositoriesController(
-        IAwsECRRepositoryApplicationService awsEcrRepositoryApplicationService,
-        IECRRepositoryService ecrRepositoryService
-    )
+    public ECSRepositoriesController(IECRRepositoryService ecrRepositoryService)
     {
-        _awsEcrRepositoryApplicationService = awsEcrRepositoryApplicationService;
         _ecrRepositoryService = ecrRepositoryService;
     }
 
@@ -35,7 +26,6 @@ public class ECSRepositoriesController : ControllerBase
         try
         {
             var repositories = await _ecrRepositoryService.GetAllECRRepositories();
-
             return Ok(repositories);
         }
         catch (Exception e)
@@ -77,18 +67,8 @@ public class ECSRepositoriesController : ControllerBase
             var description = request.Description!;
             var repositoryName = request.RepositoryName!;
 
-            await _awsEcrRepositoryApplicationService.CreateECRRepo(name);
-            try
-            {
-                var newRepo = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
-                _ecrRepositoryService.AddRepository(newRepo);
-                return Ok(newRepo);
-            }
-            catch (Exception e)
-            {
-                await _awsEcrRepositoryApplicationService.DeleteECRRepo(repositoryName);
-                throw new Exception($"Error creating repo {repositoryName}: {e.Message}");
-            }
+            var newRepo = await _ecrRepositoryService.AddRepository(name, description, repositoryName, userId);
+            return Ok(newRepo);
         }
         catch (Exception e)
         {
