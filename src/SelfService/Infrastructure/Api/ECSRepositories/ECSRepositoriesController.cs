@@ -13,15 +13,15 @@ namespace SelfService.Infrastructure.Api.Metrics;
 public class ECSRepositoriesController : ControllerBase
 {
     private readonly IAwsECRRepoApplicationService _awsECRRepoApplicationService;
-    private readonly IECRRepositoryRepository _ecrRepositoryRepository;
+    private readonly IECRRepositoryService _ecrRepositoryService;
 
     public ECSRepositoriesController(
         IAwsECRRepoApplicationService awsECRRepoApplicationService,
-        IECRRepositoryRepository ecrRepositoryRepository
+        IECRRepositoryService ecrRepositoryService
     )
     {
         _awsECRRepoApplicationService = awsECRRepoApplicationService;
-        _ecrRepositoryRepository = ecrRepositoryRepository;
+        _ecrRepositoryService = ecrRepositoryService;
     }
 
     [HttpGet("repositories")]
@@ -33,7 +33,7 @@ public class ECSRepositoriesController : ControllerBase
     {
         try
         {
-            var repositories = await _ecrRepositoryRepository.GetAll();
+            var repositories = await _ecrRepositoryService.GetAllECRRepositories();
 
             return Ok(repositories);
         }
@@ -79,9 +79,8 @@ public class ECSRepositoriesController : ControllerBase
             await _awsECRRepoApplicationService.CreateECRRepo(name);
             try
             {
-                var newRepo = _ecrRepositoryRepository.AddRepository(
-                    new ECSRepository(Guid.NewGuid(), name, description, repositoryName, userId)
-                );
+                var newRepo = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
+                _ecrRepositoryService.AddRepository(newRepo);
                 return Ok(newRepo);
             }
             catch (Exception e)

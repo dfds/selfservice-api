@@ -31,6 +31,11 @@ public class AwsECRRepoApplicationService : IAwsECRRepoApplicationService
                  """;
     }
 
+    private AmazonECRClient NewAwsECRClient()
+    {
+        return new AmazonECRClient(new AmazonECRConfig { RegionEndpoint = RegionEndpoint.EUCentral1, });
+    }
+
     /// <summary>
     /// 1. We create the repo
     /// 2. We set the policy to allow the account to pull from the repo
@@ -39,7 +44,7 @@ public class AwsECRRepoApplicationService : IAwsECRRepoApplicationService
     /// </summary>
     public async Task CreateECRRepo(string repositoryName)
     {
-        AmazonECRClient client = new(new AmazonECRConfig { RegionEndpoint = RegionEndpoint.EUCentral1, });
+        var client = NewAwsECRClient();
         var accountId = Environment.GetEnvironmentVariable("ECR_PULL_PERMISSION_AWS_ACCOUNT_ID");
         if (accountId == null)
             throw new Exception("ECR_PULL_PERMISSION_AWS_ACCOUNT_ID environment variable is not set");
@@ -67,9 +72,29 @@ public class AwsECRRepoApplicationService : IAwsECRRepoApplicationService
         }
     }
 
+    /// <summary>
+    /// Only for system use, and currently used if adding ECR repository to db fails
+    /// </summary>
     public async Task DeleteECRRepo(string repositoryName)
     {
         AmazonECRClient client = new(new AmazonECRConfig { RegionEndpoint = RegionEndpoint.EUCentral1, });
         await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = repositoryName, });
+    }
+
+    public async Task<List<string>> GetECRRepositories()
+    {
+        var client = NewAwsECRClient();
+        HashSet<string> repos = new();
+        string? nextToken = null;
+        do
+        {
+            var response = await client.DescribeRepositoriesAsync(
+                new DescribeRepositoriesRequest() { NextToken = nextToken }
+            );
+            response.Repositories.ForEach(x => repos.Add(x.RepositoryName));
+            nextToken = response.NextToken;
+        } while (nextToken != null);
+
+        return repos.ToList();
     }
 }
