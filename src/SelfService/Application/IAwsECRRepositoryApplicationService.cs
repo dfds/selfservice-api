@@ -1,6 +1,6 @@
 namespace SelfService.Application;
 
-public interface IAwsECRRepoApplicationService
+public interface IAwsECRRepositoryApplicationService
 {
     Task CreateECRRepo(string repositoryName);
     Task DeleteECRRepo(string repositoryName);

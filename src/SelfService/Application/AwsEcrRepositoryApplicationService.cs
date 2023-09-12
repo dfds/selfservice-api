@@ -4,7 +4,7 @@ using Amazon.ECR.Model;
 
 namespace SelfService.Application;
 
-public class AwsECRRepoApplicationService : IAwsECRRepoApplicationService
+public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationService
 {
     private string GetPermissionJson(string awsAccountId)
     {

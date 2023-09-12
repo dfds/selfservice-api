@@ -4,6 +4,7 @@ using SelfService.Application;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Capabilities;
+using SelfService.Infrastructure.Api.ECSRepositories;
 
 namespace SelfService.Infrastructure.Api.Metrics;
 
@@ -12,15 +13,15 @@ namespace SelfService.Infrastructure.Api.Metrics;
 [ApiController]
 public class ECSRepositoriesController : ControllerBase
 {
-    private readonly IAwsECRRepoApplicationService _awsECRRepoApplicationService;
+    private readonly IAwsECRRepositoryApplicationService _awsEcrRepositoryApplicationService;
     private readonly IECRRepositoryService _ecrRepositoryService;
 
     public ECSRepositoriesController(
-        IAwsECRRepoApplicationService awsECRRepoApplicationService,
+        IAwsECRRepositoryApplicationService awsEcrRepositoryApplicationService,
         IECRRepositoryService ecrRepositoryService
     )
     {
-        _awsECRRepoApplicationService = awsECRRepoApplicationService;
+        _awsEcrRepositoryApplicationService = awsEcrRepositoryApplicationService;
         _ecrRepositoryService = ecrRepositoryService;
     }
 
@@ -40,7 +41,7 @@ public class ECSRepositoriesController : ControllerBase
         catch (Exception e)
         {
             return CustomObjectResults.InternalServerError(
-                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetCapabilityCosts: {e.Message}." }
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetECSRepositories: {e.Message}." }
             );
         }
     }
@@ -76,7 +77,7 @@ public class ECSRepositoriesController : ControllerBase
             var description = request.Description!;
             var repositoryName = request.RepositoryName!;
 
-            await _awsECRRepoApplicationService.CreateECRRepo(name);
+            await _awsEcrRepositoryApplicationService.CreateECRRepo(name);
             try
             {
                 var newRepo = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
@@ -85,24 +86,14 @@ public class ECSRepositoriesController : ControllerBase
             }
             catch (Exception e)
             {
-                await _awsECRRepoApplicationService.DeleteECRRepo(repositoryName);
+                await _awsEcrRepositoryApplicationService.DeleteECRRepo(repositoryName);
                 throw new Exception($"Error creating repo {repositoryName}: {e.Message}");
             }
-        }
-        catch (PlatformDataApiUnavailableException e)
-        {
-            return CustomObjectResults.InternalServerError(
-                new ProblemDetails
-                {
-                    Title = "PlatformDataApi unreachable",
-                    Detail = $"PlatformDataApi error: {e.Message}."
-                }
-            );
         }
         catch (Exception e)
         {
             return CustomObjectResults.InternalServerError(
-                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetCapabilityCosts: {e.Message}." }
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"CreateECSRepository: {e.Message}." }
             );
         }
     }

@@ -5,15 +5,10 @@ namespace SelfService.Application;
 public class ECRRepositoryService : IECRRepositoryService
 {
     private IECRRepositoryRepository _ecrRepositoryRepository;
-    private IAwsECRRepoApplicationService _awsECRRepoApplicationService;
 
-    public ECRRepositoryService(
-        IECRRepositoryRepository ecrRepositoryRepository,
-        IAwsECRRepoApplicationService awsECRRepoApplicationService
-    )
+    public ECRRepositoryService(IECRRepositoryRepository ecrRepositoryRepository)
     {
         _ecrRepositoryRepository = ecrRepositoryRepository;
-        _awsECRRepoApplicationService = awsECRRepoApplicationService;
     }
 
     public Task<IEnumerable<ECRRepository>> GetAllECRRepositories()

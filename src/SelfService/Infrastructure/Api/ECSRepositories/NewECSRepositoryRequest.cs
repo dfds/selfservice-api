@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SelfService.Infrastructure.Api.Metrics;
+namespace SelfService.Infrastructure.Api.ECSRepositories;
 
 public class NewECSRepositoryRequest
 {

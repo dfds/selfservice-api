@@ -98,6 +98,6 @@ public static class Domain
         });
 
         // services that use aws credentials
-        builder.Services.AddTransient<IAwsECRRepoApplicationService, AwsECRRepoApplicationService>();
+        builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
     }
 }
