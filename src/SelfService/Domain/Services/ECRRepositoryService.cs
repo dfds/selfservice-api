@@ -9,7 +9,7 @@ public class ECRRepositoryService : IECRRepositoryService
     private readonly IECRRepositoryRepository _ecrRepositoryRepository;
     private readonly IAwsECRRepositoryApplicationService _awsEcrRepositoryApplicationService;
 
-    private bool _updateRepositoriesOnStateMismatch = false;
+    private readonly bool _updateRepositoriesOnStateMismatch = false;
 
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
@@ -27,6 +27,29 @@ public class ECRRepositoryService : IECRRepositoryService
     public Task<IEnumerable<ECRRepository>> GetAllECRRepositories()
     {
         return _ecrRepositoryRepository.GetAll();
+    }
+
+    public async Task<ECRRepository> AddRepository(
+        string name,
+        string description,
+        string repositoryName,
+        UserId userId
+    )
+    {
+        try
+        {
+            _logger.LogInformation("Adding new ECRRepository in aws: {ECRRepositoryName}", repositoryName);
+            await _awsEcrRepositoryApplicationService.CreateECRRepo(repositoryName);
+            var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
+            _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", repositoryName);
+            _ecrRepositoryRepository.Add(newRepository);
+            return newRepository;
+        }
+        catch (Exception e)
+        {
+            await _awsEcrRepositoryApplicationService.DeleteECRRepo(repositoryName);
+            throw new Exception($"Error creating repo {repositoryName}: {e.Message}");
+        }
     }
 
     public async Task SynchronizeAwsECRAndDatabase()
@@ -66,12 +89,19 @@ public class ECRRepositoryService : IECRRepositoryService
 
         if (!_updateRepositoriesOnStateMismatch)
         {
+            if (repositoriesNotInAws.Count > 0 || repositoriesNotInDb.Count > 0)
+            {
+                _logger.LogInformation(
+                    "Mismatch between aws ECR repositories and database ECR repositories, but not updating because UPDATE_REPOSITORIES_ON_STATE_MISMATCH is not set to true"
+                );
+            }
+
             if (repositoriesNotInAws.Count > 0)
             {
                 _logger.LogError(
                     "Found {NumberOfDbRepositories} repositories in the database that do not exist in aws: {RepositoriesNotInAws}",
                     repositoriesNotInAws.Count,
-                    repositoriesNotInAws
+                    string.Join(',', repositoriesNotInAws)
                 );
             }
 
@@ -80,13 +110,16 @@ public class ECRRepositoryService : IECRRepositoryService
                 _logger.LogWarning(
                     "Found {NumberOfAwsRepositories} repositories in aws that do not exist in the database: {RepositoriesNotInDb}",
                     repositoriesNotInDb.Count,
-                    repositoriesNotInDb
+                    string.Join(',', repositoriesNotInDb)
                 );
             }
 
             return;
         }
 
+        // Path: Updating enabled
+        // 1. Delete repositories that exist in the database but not in aws
+        // 2. Add repositories that exist in aws but not in the database
         if (repositoriesNotInAws.Count > 0)
         {
             _logger.LogWarning(
@@ -131,29 +164,6 @@ public class ECRRepositoryService : IECRRepositoryService
                     )
                 );
             }
-        }
-    }
-
-    public async Task<ECRRepository> AddRepository(
-        string name,
-        string description,
-        string repositoryName,
-        UserId userId
-    )
-    {
-        try
-        {
-            _logger.LogInformation("Adding new ECRRepository in aws: {ECRRepositoryName}", repositoryName);
-            await _awsEcrRepositoryApplicationService.CreateECRRepo(repositoryName);
-            var newRepo = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
-            _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", repositoryName);
-            _ecrRepositoryRepository.Add(newRepo);
-            return newRepo;
-        }
-        catch (Exception e)
-        {
-            await _awsEcrRepositoryApplicationService.DeleteECRRepo(repositoryName);
-            throw new Exception($"Error creating repo {repositoryName}: {e.Message}");
         }
     }
 }
