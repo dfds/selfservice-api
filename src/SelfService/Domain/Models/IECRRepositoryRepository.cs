@@ -6,4 +6,5 @@ public interface IECRRepositoryRepository
 {
     IEnumerable<ECRRepository> GetAll();
     void Add(ECRRepository ecr);
+    Task RemoveWithRepositoryName(string repositoryName);
 }

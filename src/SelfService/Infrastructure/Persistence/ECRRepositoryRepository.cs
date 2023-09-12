@@ -21,4 +21,11 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
     {
         _dbContext.ECRRepositories.Add(ecr);
     }
+
+    public Task RemoveWithRepositoryName(string repositoryName)
+    {
+        var repo = _dbContext.ECRRepositories.Single(x => x.RepositoryName == repositoryName);
+        _dbContext.Remove(repo);
+        return Task.CompletedTask;
+    }
 }
