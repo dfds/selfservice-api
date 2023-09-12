@@ -1,3 +1,4 @@
+using Amazon.ECR.Model;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
