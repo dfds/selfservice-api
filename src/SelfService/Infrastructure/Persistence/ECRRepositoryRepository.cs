@@ -12,9 +12,9 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
         _dbContext = dbContext;
     }
 
-    public IEnumerable<ECRRepository> GetAll()
+    public async Task<IEnumerable<ECRRepository>> GetAll()
     {
-        return _dbContext.ECRRepositories.ToList();
+        return await _dbContext.ECRRepositories.ToListAsync();
     }
 
     public void Add(ECRRepository ecr)
