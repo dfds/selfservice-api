@@ -36,7 +36,7 @@ public class ECRRepositoryService : IECRRepositoryService
         {
             _logger.LogInformation("Adding new ECRRepository in aws: {ECRRepositoryName}", repositoryName);
             await _awsEcrRepositoryApplicationService.CreateECRRepo(repositoryName);
-            var newRepo = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
+            var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
             _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", repositoryName);
             _ecrRepositoryRepository.Add(newRepo);
             return newRepo;
