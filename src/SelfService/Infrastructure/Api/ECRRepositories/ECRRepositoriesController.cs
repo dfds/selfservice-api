@@ -39,8 +39,8 @@ public class ECRRepositoriesController : ControllerBase
     private bool IsValidRequest(NewECRRepositoryRequest request)
     {
         return !string.IsNullOrEmpty(request.RepositoryName)
-               && !string.IsNullOrEmpty(request.Name)
-               && !string.IsNullOrEmpty(request.Description);
+            && !string.IsNullOrEmpty(request.Name)
+            && !string.IsNullOrEmpty(request.Description);
     }
 
     [HttpPost("repositories")]
