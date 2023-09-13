@@ -43,6 +43,7 @@ public class TestECRRepositoryRepository
         await dbContext.SaveChangesAsync();
 
         var inserted = await dbContext.ECRRepositories.ToListAsync();
+        inserted.Sort((x, y) => string.Compare(x.RepositoryName, y.RepositoryName, StringComparison.Ordinal));
         Assert.Equal(2, inserted.Count);
         Assert.True(ECRRepositoriesAreEqual(stubs[0], inserted[0]));
         Assert.True(ECRRepositoriesAreEqual(stubs[1], inserted[1]));
