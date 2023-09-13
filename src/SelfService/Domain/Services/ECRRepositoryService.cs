@@ -38,7 +38,7 @@ public class ECRRepositoryService : IECRRepositoryService
             await _awsEcrRepositoryApplicationService.CreateECRRepo(repositoryName);
             var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
             _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", repositoryName);
-            _ecrRepositoryRepository.Add(newRepository);
+            await _ecrRepositoryRepository.Add(newRepository);
             return newRepository;
         }
         catch (Exception e)
@@ -88,7 +88,7 @@ public class ECRRepositoryService : IECRRepositoryService
             if (repositoriesNotInAws.Count > 0 || repositoriesNotInDb.Count > 0)
             {
                 _logger.LogInformation(
-                    "Mismatch between aws ECR repositories and database ECR repositories, but not updating because UPDATE_REPOSITORIES_ON_STATE_MISMATCH is not set to true"
+                    "Mismatch between aws ECR repositories and database ECR repositories, but not updating because `performUpdateOnMismatch` is false"
                 );
             }
 
@@ -147,10 +147,12 @@ public class ECRRepositoryService : IECRRepositoryService
                 repositoriesNotInDb.Count
             );
             var cloudEngineeringUserId = UserId.Parse("cloud-engineering");
+            List<ECRRepository> newRepositories = new();
+
             foreach (var repositoryName in repositoriesNotInDb)
             {
                 _logger.LogInformation("Adding ECRRepository {ECRRepositoryName} to the database", repositoryName);
-                _ecrRepositoryRepository.Add(
+                newRepositories.Add(
                     new ECRRepository(
                         new ECRRepositoryId(),
                         repositoryName,
@@ -160,6 +162,8 @@ public class ECRRepositoryService : IECRRepositoryService
                     )
                 );
             }
+
+            await _ecrRepositoryRepository.AddRange(newRepositories);
         }
     }
 }

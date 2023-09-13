@@ -17,9 +17,16 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
         return await _dbContext.ECRRepositories.ToListAsync();
     }
 
-    public void Add(ECRRepository ecr)
+    public async Task Add(ECRRepository ecrRepository)
     {
-        _dbContext.ECRRepositories.Add(ecr);
+        await _dbContext.ECRRepositories.AddAsync(ecrRepository);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task AddRange(List<ECRRepository> ecrRepositories)
+    {
+        await _dbContext.AddRangeAsync(ecrRepositories);
+        await _dbContext.SaveChangesAsync();
     }
 
     public Task RemoveWithRepositoryName(string repositoryName)

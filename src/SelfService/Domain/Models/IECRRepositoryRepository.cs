@@ -3,6 +3,7 @@ namespace SelfService.Domain.Models;
 public interface IECRRepositoryRepository
 {
     Task<IEnumerable<ECRRepository>> GetAll();
-    void Add(ECRRepository ecr);
+    Task Add(ECRRepository ecrRepository);
+    Task AddRange(List<ECRRepository> ecrRepositories);
     Task RemoveWithRepositoryName(string repositoryName);
 }
