@@ -6,5 +6,5 @@ public interface IECRRepositoryService
 {
     Task<IEnumerable<ECRRepository>> GetAllECRRepositories();
     Task<ECRRepository> AddRepository(string name, string description, string repositoryName, UserId userId);
-    Task SynchronizeAwsECRAndDatabase();
+    Task SynchronizeAwsECRAndDatabase(bool performUpdateOnMismatch = false);
 }

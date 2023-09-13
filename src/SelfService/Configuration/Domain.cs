@@ -73,6 +73,7 @@ public static class Domain
         builder.Services.AddHostedService<RemoveDeactivatedMemberships>();
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
         builder.Services.AddHostedService<ActOnPendingCapabilityDeletions>();
+        builder.Services.AddHostedService<ECRRepositorySynchronizer>();
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();

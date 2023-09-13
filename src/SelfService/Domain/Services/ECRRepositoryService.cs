@@ -9,8 +9,6 @@ public class ECRRepositoryService : IECRRepositoryService
     private readonly IECRRepositoryRepository _ecrRepositoryRepository;
     private readonly IAwsECRRepositoryApplicationService _awsEcrRepositoryApplicationService;
 
-    private readonly bool _updateRepositoriesOnStateMismatch;
-
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
         IECRRepositoryRepository ecrRepositoryRepository,
@@ -20,8 +18,6 @@ public class ECRRepositoryService : IECRRepositoryService
         _logger = logger;
         _ecrRepositoryRepository = ecrRepositoryRepository;
         _awsEcrRepositoryApplicationService = awsEcrRepositoryApplicationService;
-        _updateRepositoriesOnStateMismatch =
-            Environment.GetEnvironmentVariable("UPDATE_REPOSITORIES_ON_STATE_MISMATCH") == "true";
     }
 
     public Task<IEnumerable<ECRRepository>> GetAllECRRepositories()
@@ -52,7 +48,7 @@ public class ECRRepositoryService : IECRRepositoryService
         }
     }
 
-    public async Task SynchronizeAwsECRAndDatabase()
+    public async Task SynchronizeAwsECRAndDatabase(bool performUpdateOnMismatch)
     {
         var awsRepositoriesSet = new HashSet<string>(await _awsEcrRepositoryApplicationService.GetECRRepositories());
 
@@ -87,7 +83,7 @@ public class ECRRepositoryService : IECRRepositoryService
                 }
             });
 
-        if (!_updateRepositoriesOnStateMismatch)
+        if (!performUpdateOnMismatch)
         {
             if (repositoriesNotInAws.Count > 0 || repositoriesNotInDb.Count > 0)
             {
