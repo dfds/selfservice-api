@@ -43,6 +43,13 @@ public class ECRRepositorySynchronizer : BackgroundService
         );
         var ecrRepositoryService = scope.ServiceProvider.GetRequiredService<IECRRepositoryService>();
 
-        await ecrRepositoryService.SynchronizeAwsECRAndDatabase(_updateRepositoriesOnStateMismatch);
+        try
+        {
+            await ecrRepositoryService.SynchronizeAwsECRAndDatabase(_updateRepositoriesOnStateMismatch);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error synchronizing ECR repositories");
+        }
     }
 }
