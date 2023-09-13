@@ -9,7 +9,7 @@ public class ECRRepositoryService : IECRRepositoryService
     private readonly IECRRepositoryRepository _ecrRepositoryRepository;
     private readonly IAwsECRRepositoryApplicationService _awsEcrRepositoryApplicationService;
 
-    private readonly bool _updateRepositoriesOnStateMismatch = false;
+    private readonly bool _updateRepositoriesOnStateMismatch;
 
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
