@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SelfService.Domain;
 using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Persistence;
@@ -17,15 +18,22 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
         return await _dbContext.ECRRepositories.ToListAsync();
     }
 
-    public void Add(ECRRepository ecr)
+    [TransactionalBoundary]
+    public async Task Add(ECRRepository ecrRepository)
     {
-        _dbContext.ECRRepositories.Add(ecr);
+        await _dbContext.ECRRepositories.AddAsync(ecrRepository);
     }
 
-    public Task RemoveWithRepositoryName(string repositoryName)
+    [TransactionalBoundary]
+    public async Task AddRange(List<ECRRepository> ecrRepositories)
     {
-        var repo = _dbContext.ECRRepositories.Single(x => x.RepositoryName == repositoryName);
-        _dbContext.ECRRepositories.Remove(repo);
-        return Task.CompletedTask;
+        await _dbContext.ECRRepositories.AddRangeAsync(ecrRepositories);
+    }
+
+    [TransactionalBoundary]
+    public void RemoveRangeWithRepositoryName(List<string> repositoryNames)
+    {
+        var repositories = _dbContext.ECRRepositories.Where(x => repositoryNames.Contains(x.RepositoryName));
+        _dbContext.ECRRepositories.RemoveRange(repositories);
     }
 }

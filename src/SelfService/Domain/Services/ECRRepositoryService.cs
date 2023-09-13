@@ -9,7 +9,10 @@ public class ECRRepositoryService : IECRRepositoryService
     private readonly IECRRepositoryRepository _ecrRepositoryRepository;
     private readonly IAwsECRRepositoryApplicationService _awsEcrRepositoryApplicationService;
 
-    private readonly bool _updateRepositoriesOnStateMismatch;
+    private readonly UserId _cloudEngineeringTeamUserId = UserId.Parse("cloud-engineering");
+
+    private const string CreatedByCloudEngineeringTeamDescription =
+        "Repository created automatically by the SelfService Team";
 
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
@@ -20,8 +23,6 @@ public class ECRRepositoryService : IECRRepositoryService
         _logger = logger;
         _ecrRepositoryRepository = ecrRepositoryRepository;
         _awsEcrRepositoryApplicationService = awsEcrRepositoryApplicationService;
-        _updateRepositoriesOnStateMismatch =
-            Environment.GetEnvironmentVariable("UPDATE_REPOSITORIES_ON_STATE_MISMATCH") == "true";
     }
 
     public Task<IEnumerable<ECRRepository>> GetAllECRRepositories()
@@ -42,7 +43,7 @@ public class ECRRepositoryService : IECRRepositoryService
             await _awsEcrRepositoryApplicationService.CreateECRRepo(repositoryName);
             var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
             _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", repositoryName);
-            _ecrRepositoryRepository.Add(newRepository);
+            await _ecrRepositoryRepository.Add(newRepository);
             return newRepository;
         }
         catch (Exception e)
@@ -52,7 +53,7 @@ public class ECRRepositoryService : IECRRepositoryService
         }
     }
 
-    public async Task SynchronizeAwsECRAndDatabase()
+    public async Task SynchronizeAwsECRAndDatabase(bool performUpdateOnMismatch)
     {
         var awsRepositoriesSet = new HashSet<string>(await _awsEcrRepositoryApplicationService.GetECRRepositories());
 
@@ -87,12 +88,12 @@ public class ECRRepositoryService : IECRRepositoryService
                 }
             });
 
-        if (!_updateRepositoriesOnStateMismatch)
+        if (!performUpdateOnMismatch)
         {
             if (repositoriesNotInAws.Count > 0 || repositoriesNotInDb.Count > 0)
             {
                 _logger.LogInformation(
-                    "Mismatch between aws ECR repositories and database ECR repositories, but not updating because UPDATE_REPOSITORIES_ON_STATE_MISMATCH is not set to true"
+                    "Mismatch between aws ECR repositories and database ECR repositories, but not updating because `performUpdateOnMismatch` is false"
                 );
             }
 
@@ -123,47 +124,36 @@ public class ECRRepositoryService : IECRRepositoryService
         if (repositoriesNotInAws.Count > 0)
         {
             _logger.LogWarning(
-                "Deleting {NumberOfDbRepositories} repositories from the database that do not exist in aws",
-                repositoriesNotInAws.Count
+                "Deleting {NumberOfDbRepositories} repositories in the database that do not exist in aws: {RepositoriesNotInAws}",
+                repositoriesNotInAws.Count,
+                string.Join(',', repositoriesNotInAws)
             );
-            foreach (var repositoryName in repositoriesNotInAws)
-            {
-                try
-                {
-                    _logger.LogInformation("Deleting ECRRepository {ECRRepositoryName} from database", repositoryName);
-                    await _ecrRepositoryRepository.RemoveWithRepositoryName(repositoryName);
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(
-                        "Error deleting ECRRepository {ECRRepositoryName} from database: {Exception} ",
-                        repositoryName,
-                        e.Message
-                    );
-                }
-            }
+            _ecrRepositoryRepository.RemoveRangeWithRepositoryName(repositoriesNotInAws);
         }
 
         if (repositoriesNotInDb.Count > 0)
         {
-            _logger.LogWarning(
-                "Adding {NumberOfAwsRepositories} repositories to the database that do not exist in the database",
-                repositoriesNotInDb.Count
-            );
-            var cloudEngineeringUserId = UserId.Parse("cloud-engineering");
+            List<ECRRepository> newRepositories = new();
+
             foreach (var repositoryName in repositoriesNotInDb)
             {
-                _logger.LogInformation("Adding ECRRepository {ECRRepositoryName} to the database", repositoryName);
-                _ecrRepositoryRepository.Add(
+                newRepositories.Add(
                     new ECRRepository(
                         new ECRRepositoryId(),
                         repositoryName,
-                        "Repository created automatically by the SelfService Team",
+                        CreatedByCloudEngineeringTeamDescription,
                         repositoryName,
-                        cloudEngineeringUserId
+                        _cloudEngineeringTeamUserId
                     )
                 );
             }
+
+            _logger.LogInformation(
+                "Adding {NumberOfAwsRepositories} repositories in aws that do not exist in the database: {RepositoriesNotInDb}",
+                repositoriesNotInDb.Count,
+                string.Join(',', repositoriesNotInDb)
+            );
+            await _ecrRepositoryRepository.AddRange(newRepositories);
         }
     }
 }

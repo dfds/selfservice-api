@@ -10,10 +10,18 @@ namespace SelfService.Infrastructure.Api.ECRRepositories;
 public class ECRRepositoriesController : ControllerBase
 {
     private readonly IECRRepositoryService _ecrRepositoryService;
+    private readonly IAuthorizationService _authorizationService;
+    private readonly IHostEnvironment _environment;
 
-    public ECRRepositoriesController(IECRRepositoryService ecrRepositoryService)
+    public ECRRepositoriesController(
+        IECRRepositoryService ecrRepositoryService,
+        IAuthorizationService authorizationService,
+        IHostEnvironment environment
+    )
     {
         _ecrRepositoryService = ecrRepositoryService;
+        _authorizationService = authorizationService;
+        _environment = environment;
     }
 
     [HttpGet("repositories")]
@@ -69,6 +77,34 @@ public class ECRRepositoriesController : ControllerBase
 
             var newRepo = await _ecrRepositoryService.AddRepository(name, description, repositoryName, userId);
             return Ok(newRepo);
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResults.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"CreateECRRepository: {e.Message}." }
+            );
+        }
+    }
+
+    [HttpPost("synchronize")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    public async Task<IActionResult> SynchronizeAwsAndDatabase([FromQuery] bool updateOnMismatch)
+    {
+        try
+        {
+            // user wish to potentially delete/add records to the database: lets check credentials
+            if (updateOnMismatch)
+            {
+                var isCloudEngineer = _authorizationService.CanSynchronizeAwsECRAndDatabaseECR(User.ToPortalUser());
+                if (!isCloudEngineer)
+                    return Unauthorized();
+            }
+
+            await _ecrRepositoryService.SynchronizeAwsECRAndDatabase(updateOnMismatch);
+            return Ok();
         }
         catch (Exception e)
         {

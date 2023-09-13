@@ -181,4 +181,9 @@ public class AuthorizationService : IAuthorizationService
     {
         return await _membershipQuery.HasActiveMembership(userId, capabilityId);
     }
+
+    public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
+    {
+        return portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+    }
 }

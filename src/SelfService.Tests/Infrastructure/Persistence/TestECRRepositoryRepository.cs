@@ -16,12 +16,37 @@ public class TestECRRepositoryRepository
 
         var sut = A.ECRRepositoryRepository.WithDbContext(dbContext).Build();
 
-        sut.Add(stub);
+        await sut.Add(stub);
 
         await dbContext.SaveChangesAsync();
 
         var inserted = Assert.Single(await dbContext.ECRRepositories.ToListAsync());
         Assert.True(ECRRepositoriesAreEqual(stub, inserted));
+    }
+
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task add_range_inserts_expected_ecr_repositories_into_database()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext();
+
+        var stubs = new List<ECRRepository>()
+        {
+            A.ECRRepository.WithRepositoryName("first stub").Build(),
+            A.ECRRepository.WithRepositoryName("second stub").Build()
+        };
+        var sut = A.ECRRepositoryRepository.WithDbContext(dbContext).Build();
+
+        await sut.AddRange(stubs);
+
+        await dbContext.SaveChangesAsync();
+
+        var inserted = await dbContext.ECRRepositories.ToListAsync();
+        inserted.Sort((x, y) => string.Compare(x.RepositoryName, y.RepositoryName, StringComparison.Ordinal));
+        Assert.Equal(2, inserted.Count);
+        Assert.True(ECRRepositoriesAreEqual(stubs[0], inserted[0]));
+        Assert.True(ECRRepositoriesAreEqual(stubs[1], inserted[1]));
     }
 
     [Fact]
@@ -39,11 +64,11 @@ public class TestECRRepositoryRepository
 
         var sut = A.ECRRepositoryRepository.WithDbContext(dbContext).Build();
 
-        sut.Add(repositoryToBeDeleted);
-        sut.Add(repositoryToNotBeDeleted);
+        await sut.Add(repositoryToBeDeleted);
+        await sut.Add(repositoryToNotBeDeleted);
         await dbContext.SaveChangesAsync();
 
-        await sut.RemoveWithRepositoryName(toBeDeletedRepositoryName);
+        sut.RemoveRangeWithRepositoryName(new List<string> { toBeDeletedRepositoryName });
         await dbContext.SaveChangesAsync();
 
         var repositories = await dbContext.ECRRepositories.ToListAsync();
