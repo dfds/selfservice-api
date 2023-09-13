@@ -9,6 +9,11 @@ public class ECRRepositoryService : IECRRepositoryService
     private readonly IECRRepositoryRepository _ecrRepositoryRepository;
     private readonly IAwsECRRepositoryApplicationService _awsEcrRepositoryApplicationService;
 
+    private readonly UserId _cloudEngineeringTeamUserId = UserId.Parse("cloud-engineering");
+
+    private const string CreatedByCloudEngineeringTeamDescription =
+        "Repository created automatically by the SelfService Team";
+
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
         IECRRepositoryRepository ecrRepositoryRepository,
@@ -119,50 +124,35 @@ public class ECRRepositoryService : IECRRepositoryService
         if (repositoriesNotInAws.Count > 0)
         {
             _logger.LogWarning(
-                "Deleting {NumberOfDbRepositories} repositories from the database that do not exist in aws",
-                repositoriesNotInAws.Count
+                "Deleting {NumberOfDbRepositories} repositories in the database that do not exist in aws: {RepositoriesNotInAws}",
+                repositoriesNotInAws.Count,
+                string.Join(',', repositoriesNotInAws)
             );
-            foreach (var repositoryName in repositoriesNotInAws)
-            {
-                try
-                {
-                    _logger.LogInformation("Deleting ECRRepository {ECRRepositoryName} from database", repositoryName);
-                    await _ecrRepositoryRepository.RemoveWithRepositoryName(repositoryName);
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(
-                        "Error deleting ECRRepository {ECRRepositoryName} from database: {Exception} ",
-                        repositoryName,
-                        e.Message
-                    );
-                }
-            }
+            _ecrRepositoryRepository.RemoveRangeWithRepositoryName(repositoriesNotInAws);
         }
 
         if (repositoriesNotInDb.Count > 0)
         {
-            _logger.LogWarning(
-                "Adding {NumberOfAwsRepositories} repositories to the database that do not exist in the database",
-                repositoriesNotInDb.Count
-            );
-            var cloudEngineeringUserId = UserId.Parse("cloud-engineering");
             List<ECRRepository> newRepositories = new();
 
             foreach (var repositoryName in repositoriesNotInDb)
             {
-                _logger.LogInformation("Adding ECRRepository {ECRRepositoryName} to the database", repositoryName);
                 newRepositories.Add(
                     new ECRRepository(
                         new ECRRepositoryId(),
                         repositoryName,
-                        "Repository created automatically by the SelfService Team",
+                        CreatedByCloudEngineeringTeamDescription,
                         repositoryName,
-                        cloudEngineeringUserId
+                        _cloudEngineeringTeamUserId
                     )
                 );
             }
 
+            _logger.LogInformation(
+                "Adding {NumberOfAwsRepositories} repositories in aws that do not exist in the database: {RepositoriesNotInDb}",
+                repositoriesNotInDb.Count,
+                string.Join(',', repositoriesNotInDb)
+            );
             await _ecrRepositoryRepository.AddRange(newRepositories);
         }
     }
