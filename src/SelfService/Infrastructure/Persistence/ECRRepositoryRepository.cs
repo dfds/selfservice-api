@@ -33,6 +33,6 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
     {
         var repo = _dbContext.ECRRepositories.Single(x => x.RepositoryName == repositoryName);
         _dbContext.ECRRepositories.Remove(repo);
-        return Task.CompletedTask;
+        return _dbContext.SaveChangesAsync();
     }
 }
