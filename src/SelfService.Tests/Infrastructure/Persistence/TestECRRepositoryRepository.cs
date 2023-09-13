@@ -39,12 +39,11 @@ public class TestECRRepositoryRepository
 
         var sut = A.ECRRepositoryRepository.WithDbContext(dbContext).Build();
 
-        sut.Add(repositoryToBeDeleted);
-        sut.Add(repositoryToNotBeDeleted);
+        await sut.Add(repositoryToBeDeleted);
+        await sut.Add(repositoryToNotBeDeleted);
         await dbContext.SaveChangesAsync();
 
         await sut.RemoveWithRepositoryName(toBeDeletedRepositoryName);
-        await dbContext.SaveChangesAsync();
 
         var repositories = await dbContext.ECRRepositories.ToListAsync();
         Assert.Single(repositories);
