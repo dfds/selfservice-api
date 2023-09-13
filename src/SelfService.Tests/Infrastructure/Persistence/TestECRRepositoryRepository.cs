@@ -24,6 +24,33 @@ public class TestECRRepositoryRepository
         Assert.True(ECRRepositoriesAreEqual(stub, inserted));
     }
 
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task remove_with_repository_name_removes_expected_ecr_repository_from_database()
+    {
+        const string toBeDeletedRepositoryName = "to be deleted";
+        const string notToBeDeletedRepositoryName = "not to be deleted";
+
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext();
+
+        var repositoryToBeDeleted = A.ECRRepository.WithRepositoryName(toBeDeletedRepositoryName).Build();
+        var repositoryToNotBeDeleted = A.ECRRepository.WithRepositoryName(notToBeDeletedRepositoryName).Build();
+
+        var sut = A.ECRRepositoryRepository.WithDbContext(dbContext).Build();
+
+        sut.Add(repositoryToBeDeleted);
+        sut.Add(repositoryToNotBeDeleted);
+        await dbContext.SaveChangesAsync();
+
+        await sut.RemoveWithRepositoryName(toBeDeletedRepositoryName);
+        await dbContext.SaveChangesAsync();
+
+        var repositories = await dbContext.ECRRepositories.ToListAsync();
+        Assert.Single(repositories);
+        Assert.Equal(notToBeDeletedRepositoryName, repositories[0].RepositoryName);
+    }
+
     private bool ECRRepositoriesAreEqual(ECRRepository mine, ECRRepository theirs)
     {
         return mine.Id == theirs.Id
