@@ -16,7 +16,7 @@ public class TestECRRepositoryRepository
 
         var sut = A.ECRRepositoryRepository.WithDbContext(dbContext).Build();
 
-        sut.Add(stub);
+        await sut.Add(stub);
 
         await dbContext.SaveChangesAsync();
 
