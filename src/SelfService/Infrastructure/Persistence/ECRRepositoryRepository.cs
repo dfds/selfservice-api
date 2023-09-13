@@ -27,7 +27,7 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
     [TransactionalBoundary]
     public async Task AddRange(List<ECRRepository> ecrRepositories)
     {
-        await _dbContext.AddRangeAsync(ecrRepositories);
+        await _dbContext.ECRRepositories.AddRangeAsync(ecrRepositories);
     }
 
     [TransactionalBoundary]

@@ -68,6 +68,7 @@ public class TestECRRepositoryRepository
         await dbContext.SaveChangesAsync();
 
         sut.RemoveRangeWithRepositoryName(new List<string> { toBeDeletedRepositoryName });
+        await dbContext.SaveChangesAsync();
 
         var repositories = await dbContext.ECRRepositories.ToListAsync();
         Assert.Single(repositories);
