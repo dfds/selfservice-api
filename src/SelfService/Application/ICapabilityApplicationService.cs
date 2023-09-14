@@ -9,7 +9,8 @@ public interface ICapabilityApplicationService
         string name,
         string description,
         string requestedBy,
-        string jsonMetadata
+        string jsonMetadata,
+        int jsonSchemaVersion
     );
 
     // NOTE [jandr@2023-03-27]: should this be moved to a more topic-centric use-case (e.g. topic application service)?

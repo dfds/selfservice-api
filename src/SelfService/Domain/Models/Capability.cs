@@ -11,7 +11,8 @@ public class Capability : AggregateRoot<CapabilityId>
         string description,
         DateTime createdAt,
         string createdBy,
-        string jsonMetadata
+        string jsonMetadata,
+        int jsonMetadataSchemaVersion
     )
         : base(id)
     {
@@ -23,6 +24,7 @@ public class Capability : AggregateRoot<CapabilityId>
         ModifiedAt = createdAt; // this will always be the same as CreatedAt for a new Capability
         ModifiedBy = createdBy;
         JsonMetadata = jsonMetadata;
+        JsonMetadataSchemaVersion = jsonMetadataSchemaVersion;
     }
 
     public static Capability CreateCapability(
@@ -31,10 +33,19 @@ public class Capability : AggregateRoot<CapabilityId>
         string description,
         DateTime creationTime,
         string requestedBy,
-        string jsonMetadata
+        string jsonMetadata,
+        int jsonMetadataSchemaVersion
     )
     {
-        var capability = new Capability(capabilityId, name, description, creationTime, requestedBy, jsonMetadata);
+        var capability = new Capability(
+            capabilityId,
+            name,
+            description,
+            creationTime,
+            requestedBy,
+            jsonMetadata,
+            jsonMetadataSchemaVersion
+        );
         capability.Raise(new CapabilityCreated(capabilityId, requestedBy));
         return capability;
     }
@@ -49,6 +60,8 @@ public class Capability : AggregateRoot<CapabilityId>
 
     [Column(TypeName = "jsonb")]
     public string JsonMetadata { get; private set; }
+
+    public int JsonMetadataSchemaVersion { get; private set; }
 
     public override string ToString()
     {

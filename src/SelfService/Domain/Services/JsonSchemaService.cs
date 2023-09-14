@@ -105,13 +105,18 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 
             return ParsedJsonMetadataResult.CreateSuccess(
                 requestJsonMetadata,
+                ISelfServiceJsonSchemaService.LatestVersionNumber,
                 ParsedJsonMetadataResultCode.SuccessFromRequest
             );
         }
 
         var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
         if (latestSchema == null)
-            return ParsedJsonMetadataResult.CreateSuccess("", ParsedJsonMetadataResultCode.SuccessNoSchema);
+            return ParsedJsonMetadataResult.CreateSuccess(
+                "",
+                ISelfServiceJsonSchemaService.LatestVersionNumber,
+                ParsedJsonMetadataResultCode.SuccessNoSchema
+            );
 
         _logger.LogInformation(
             "Attempting to construct JsonMetadata from JsonSchema for {JsonSchemaObjectId}",
@@ -137,6 +142,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 
         return ParsedJsonMetadataResult.CreateSuccess(
             constructedJsonString,
+            latestSchema.SchemaVersion,
             ParsedJsonMetadataResultCode.SuccessConstructed
         );
     }

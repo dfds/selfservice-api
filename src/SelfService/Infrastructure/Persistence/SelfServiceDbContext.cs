@@ -139,6 +139,8 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedAt);
             cfg.Property(x => x.ModifiedAt);
             cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.JsonMetadata);
+            cfg.Property(x => x.JsonMetadataSchemaVersion);
         });
 
         modelBuilder.Entity<Member>(cfg =>

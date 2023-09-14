@@ -120,7 +120,8 @@ public class CapabilityController : ControllerBase
                 request.Name!,
                 request.Description ?? "",
                 userId,
-                jsonMetadataResult.JsonMetadata
+                jsonMetadataResult.JsonMetadata,
+                jsonMetadataResult.JsonSchemaVersion
             );
         }
         catch (EntityAlreadyExistsException)

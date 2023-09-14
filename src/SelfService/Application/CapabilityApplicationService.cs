@@ -40,7 +40,8 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         string name,
         string description,
         string requestedBy,
-        string jsonMetadata
+        string jsonMetadata,
+        int jsonSchemaVersion
     )
     {
         if (await _capabilityRepository.Exists(capabilityId))
@@ -48,6 +49,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             _logger.LogError("Capability with id {CapabilityId} already exists", capabilityId);
             throw EntityAlreadyExistsException<Capability>.WithProperty(x => x.Name, name);
         }
+
         var creationTime = _systemTime.Now;
         var capability = Capability.CreateCapability(
             capabilityId,
@@ -55,7 +57,8 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             description,
             creationTime,
             requestedBy,
-            jsonMetadata
+            jsonMetadata,
+            jsonSchemaVersion
         );
         await _capabilityRepository.Add(capability);
 
@@ -174,6 +177,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         {
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
+
         var modificationTime = _systemTime.Now;
         capability.RequestDeletion(userId);
     }
@@ -186,6 +190,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         {
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
+
         var modificationTime = _systemTime.Now;
         capability.CancelDeletionRequest(userId);
     }

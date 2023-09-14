@@ -12,6 +12,7 @@ public class CapabilityBuilder
     private DateTime _modifiedAt;
     private string _createdBy;
     private string _jsonMetadata;
+    private int _jsonSchemaVersion;
 
     public CapabilityBuilder()
     {
@@ -22,7 +23,8 @@ public class CapabilityBuilder
         _createdAt = DateTime.Now;
         _modifiedAt = DateTime.Now;
         _createdBy = nameof(CapabilityBuilder);
-        _jsonMetadata = "";
+        _jsonMetadata = "{}";
+        _jsonSchemaVersion = 0;
     }
 
     public CapabilityBuilder WithId(CapabilityId id)
@@ -69,7 +71,8 @@ public class CapabilityBuilder
             description: _description,
             createdAt: _createdAt,
             createdBy: _createdBy,
-            jsonMetadata: _jsonMetadata
+            jsonMetadata: _jsonMetadata,
+            jsonMetadataSchemaVersion: _jsonSchemaVersion
         );
         c.Status = _status;
         c.SetModifiedDate(_modifiedAt);
