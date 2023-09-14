@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using SelfService.Domain.Models;
 using Json.Schema;
@@ -49,9 +50,13 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         }
 
         var jsonSchema = JsonSchema.FromText(latestSchema.Schema);
+        var requiredFields = jsonSchema.GetRequired();
+        if (requiredFields != null && requiredFields.Any())
+        {
+            return null;
+        }
 
-        var data = jsonSchema.GenerateData();
-        return (JsonObject?)data.Result;
+        return JsonObject.Create(new JsonElement());
     }
 
     public async Task<bool> IsJsonDataValid(SelfServiceJsonSchemaObjectId objectId, string jsonData)
