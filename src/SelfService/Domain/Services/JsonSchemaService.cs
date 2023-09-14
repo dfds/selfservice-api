@@ -19,20 +19,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         _selfServiceJsonSchemaRepository = selfServiceJsonSchemaRepository;
     }
 
-    public bool HasJsonSchema(SelfServiceJsonSchemaObjectId objectId)
-    {
-        try
-        {
-            _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
-
-    public Task<SelfServiceJsonSchema> GetSchema(
+    public Task<SelfServiceJsonSchema?> GetSchema(
         SelfServiceJsonSchemaObjectId objectId,
         int schemaVersion = ISelfServiceJsonSchemaService.LatestVersionNumber
     )
@@ -45,16 +32,8 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
     [TransactionalBoundary]
     public async Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema)
     {
-        var latestVersionNumber = ISelfServiceJsonSchemaService.LatestVersionNumber;
-        try
-        {
-            var latest = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
-            latestVersionNumber = latest.SchemaVersion;
-        }
-        catch (InvalidOperationException)
-        {
-            // No schema exists yet, ignore the exception and create the first version
-        }
+        var latest = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
+        var latestVersionNumber = latest?.SchemaVersion ?? ISelfServiceJsonSchemaService.LatestVersionNumber;
 
         var newSchema = new SelfServiceJsonSchema(latestVersionNumber + 1, objectId, schema);
         _logger.LogInformation("Adding new SelfServiceJsonSchema to the database: {SelfServiceJsonSchema}", newSchema);
@@ -63,12 +42,12 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 
     public async Task<JsonObject?> GetEmptyJsonDataObjectFromLatestSchema(SelfServiceJsonSchemaObjectId objectId)
     {
-        if (!HasJsonSchema(objectId))
+        var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
+        if (latestSchema == null)
         {
             return await Task.FromResult<JsonObject?>(null);
         }
 
-        var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
         var jsonSchema = JsonSchema.FromText(latestSchema.Schema);
 
         var data = jsonSchema.GenerateData();
@@ -78,6 +57,11 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
     public async Task<bool> IsJsonDataValid(SelfServiceJsonSchemaObjectId objectId, string jsonData)
     {
         var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
+        if (latestSchema == null)
+        {
+            return true;
+        }
+
         var jsonSchema = JsonSchema.FromText(latestSchema.Schema);
         var result = jsonSchema.Evaluate(jsonData);
         return result.IsValid;
@@ -107,7 +91,8 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
             );
         }
 
-        if (!HasJsonSchema(objectId))
+        var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
+        if (latestSchema == null)
             return ParsedJsonMetadataResult.CreateSuccess("", ParsedJsonMetadataResultCode.SuccessNoSchema);
 
         _logger.LogInformation(

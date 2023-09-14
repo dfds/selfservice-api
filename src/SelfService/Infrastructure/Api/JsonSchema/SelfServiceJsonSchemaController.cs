@@ -55,7 +55,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> AddSchema(string id, [FromBody] AddSelfServiceJsonSchemaRequest request)
+    public async Task<IActionResult> AddSchema(string id, [FromBody] AddSelfServiceJsonSchemaRequest? request)
     {
         if (!SelfServiceJsonSchemaObjectId.TryParse(id, out var parsedObjectId))
             return BadRequest(
@@ -67,12 +67,23 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 }
             );
 
-        if (request.Schema == null)
+        if (request?.Schema == null)
             return BadRequest(new ProblemDetails { Title = "Invalid Schema", Detail = "Schema in request is null" });
+
+        if (!request.Schema.TryGetPropertyValue("$schema", out _))
+        {
+            return BadRequest(
+                new ProblemDetails()
+                {
+                    Title = "Invalid Schema",
+                    Detail = "Schema in request does not contain a $schema property"
+                }
+            );
+        }
 
         try
         {
-            Json.Schema.JsonSchema.FromText(request.Schema);
+            Json.Schema.JsonSchema.FromText(request.Schema.ToJsonString());
         }
         catch (JsonException e)
         {
@@ -87,7 +98,10 @@ public class SelfServiceJsonSchemaController : ControllerBase
 
         try
         {
-            var selfServiceJsonSchema = await _selfServiceJsonSchemaService.AddSchema(parsedObjectId, request.Schema);
+            var selfServiceJsonSchema = await _selfServiceJsonSchemaService.AddSchema(
+                parsedObjectId,
+                request.Schema.ToJsonString()
+            );
             return Ok(selfServiceJsonSchema);
         }
         catch (Exception e)
