@@ -12,7 +12,11 @@ public interface ISelfServiceJsonSchemaService
         int schemaVersion = LatestVersionNumber
     );
 
-    public Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema);
+    public Task<SelfServiceJsonSchema> AddSchema(
+        SelfServiceJsonSchemaObjectId objectId,
+        string schema,
+        int requestedSchemaVersion
+    );
     public Task<JsonObject?> GetEmptyJsonDataObjectFromLatestSchema(SelfServiceJsonSchemaObjectId objectId);
     public Task<bool> IsJsonDataValid(SelfServiceJsonSchemaObjectId objectId, string jsonData);
 

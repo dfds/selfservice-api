@@ -31,10 +31,23 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
     }
 
     [TransactionalBoundary]
-    public async Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema)
+    public async Task<SelfServiceJsonSchema> AddSchema(
+        SelfServiceJsonSchemaObjectId objectId,
+        string schema,
+        int requestedSchemaVersion
+    )
     {
         var latest = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
         var latestVersionNumber = latest?.SchemaVersion ?? ISelfServiceJsonSchemaService.LatestVersionNumber;
+
+        var targetVersion = latestVersionNumber + 1;
+        if (targetVersion > requestedSchemaVersion)
+        {
+            // TODO: Create custom exception type
+            throw new Exception(
+                $"Requested schema version {requestedSchemaVersion} is lower than latest schema version {targetVersion}, fetch latest changes and try again"
+            );
+        }
 
         var newSchema = new SelfServiceJsonSchema(latestVersionNumber + 1, objectId, schema);
         _logger.LogInformation("Adding new SelfServiceJsonSchema to the database: {SelfServiceJsonSchema}", newSchema);

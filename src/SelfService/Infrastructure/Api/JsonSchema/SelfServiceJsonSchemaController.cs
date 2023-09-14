@@ -70,6 +70,16 @@ public class SelfServiceJsonSchemaController : ControllerBase
         if (request?.Schema == null)
             return BadRequest(new ProblemDetails { Title = "Invalid Schema", Detail = "Schema in request is null" });
 
+        if (request.SchemaVersion == ISelfServiceJsonSchemaService.LatestVersionNumber)
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid Schema Version",
+                    Detail =
+                        $"Schema version {ISelfServiceJsonSchemaService.LatestVersionNumber} is reserved for the latest schema version, please specify a different version number"
+                }
+            );
+
         if (!request.Schema.TryGetPropertyValue("$schema", out _))
         {
             return BadRequest(
@@ -100,7 +110,8 @@ public class SelfServiceJsonSchemaController : ControllerBase
         {
             var selfServiceJsonSchema = await _selfServiceJsonSchemaService.AddSchema(
                 parsedObjectId,
-                request.Schema.ToJsonString()
+                request.Schema.ToJsonString(),
+                request.SchemaVersion
             );
             return Ok(selfServiceJsonSchema);
         }
