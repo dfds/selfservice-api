@@ -18,19 +18,16 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
         return await _dbContext.ECRRepositories.ToListAsync();
     }
 
-    [TransactionalBoundary]
     public async Task Add(ECRRepository ecrRepository)
     {
         await _dbContext.ECRRepositories.AddAsync(ecrRepository);
     }
 
-    [TransactionalBoundary]
     public async Task AddRange(List<ECRRepository> ecrRepositories)
     {
         await _dbContext.ECRRepositories.AddRangeAsync(ecrRepositories);
     }
 
-    [TransactionalBoundary]
     public void RemoveRangeWithRepositoryName(List<string> repositoryNames)
     {
         var repositories = _dbContext.ECRRepositories.Where(x => repositoryNames.Contains(x.RepositoryName));

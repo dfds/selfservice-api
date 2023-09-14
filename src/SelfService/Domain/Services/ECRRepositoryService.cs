@@ -30,6 +30,7 @@ public class ECRRepositoryService : IECRRepositoryService
         return _ecrRepositoryRepository.GetAll();
     }
 
+    [TransactionalBoundary]
     public async Task<ECRRepository> AddRepository(
         string name,
         string description,
@@ -53,6 +54,7 @@ public class ECRRepositoryService : IECRRepositoryService
         }
     }
 
+    [TransactionalBoundary]
     public async Task SynchronizeAwsECRAndDatabase(bool performUpdateOnMismatch)
     {
         var awsRepositoriesSet = new HashSet<string>(await _awsEcrRepositoryApplicationService.GetECRRepositories());

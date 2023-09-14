@@ -59,6 +59,8 @@ public class SelfServiceDbContext : DbContext
 
     public DbSet<ECRRepository> ECRRepositories { get; set; } = null!; // suppress parameterless constructor warning
 
+    public DbSet<SelfServiceJsonSchema> SelfServiceJsonSchemas { get; set; } = null!; // suppress parameterless constructor warning
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
@@ -301,6 +303,16 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Description);
             cfg.Property(x => x.RepositoryName);
             cfg.Property(x => x.CreatedBy);
+        });
+
+        modelBuilder.Entity<SelfServiceJsonSchema>(cfg =>
+        {
+            cfg.ToTable("SelfServiceJsonSchema");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.ObjectId);
+            cfg.Property(x => x.SchemaVersion);
+            cfg.Property(x => x.Schema);
         });
     }
 }

@@ -39,7 +39,8 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         CapabilityId capabilityId,
         string name,
         string description,
-        string requestedBy
+        string requestedBy,
+        string jsonMetadata
     )
     {
         if (await _capabilityRepository.Exists(capabilityId))
@@ -48,7 +49,14 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             throw EntityAlreadyExistsException<Capability>.WithProperty(x => x.Name, name);
         }
         var creationTime = _systemTime.Now;
-        var capability = Capability.CreateCapability(capabilityId, name, description, creationTime, requestedBy);
+        var capability = Capability.CreateCapability(
+            capabilityId,
+            name,
+            description,
+            creationTime,
+            requestedBy,
+            jsonMetadata
+        );
         await _capabilityRepository.Add(capability);
 
         return capabilityId;
