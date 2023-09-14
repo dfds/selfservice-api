@@ -13,7 +13,7 @@ public interface ISelfServiceJsonSchemaService
     );
 
     public Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema);
-    public bool HasJsonSchema(string objectId);
+    public bool HasJsonSchema(SelfServiceJsonSchemaObjectId objectId);
     public Task<JsonObject?> GetEmptyJsonDataObjectFromLatestSchema(SelfServiceJsonSchemaObjectId objectId);
     public Task<bool> IsJsonDataValid(SelfServiceJsonSchemaObjectId objectId, string jsonData);
 

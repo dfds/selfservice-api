@@ -19,7 +19,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         _selfServiceJsonSchemaRepository = selfServiceJsonSchemaRepository;
     }
 
-    public bool HasJsonSchema(string objectId)
+    public bool HasJsonSchema(SelfServiceJsonSchemaObjectId objectId)
     {
         try
         {
@@ -39,7 +39,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
     {
         return schemaVersion == ISelfServiceJsonSchemaService.LatestVersionNumber
             ? _selfServiceJsonSchemaRepository.GetLatestSchema(objectId)
-            : _selfServiceJsonSchemaRepository.GetSchema(schemaVersion);
+            : _selfServiceJsonSchemaRepository.GetSchema(objectId, schemaVersion);
     }
 
     [TransactionalBoundary]

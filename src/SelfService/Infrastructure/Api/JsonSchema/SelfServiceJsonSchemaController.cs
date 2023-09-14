@@ -1,34 +1,41 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
-using SelfService.Infrastructure.Api.SelfServiceJsonSchema;
 
 namespace SelfService.Infrastructure.Api.JsonSchema;
 
-[Route("json-schema")]
+[Route("selfservice-json-schema")]
 [Produces("application/json")]
 [ApiController]
 public class SelfServiceJsonSchemaController : ControllerBase
 {
-    private ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
+    private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
 
     public SelfServiceJsonSchemaController(ISelfServiceJsonSchemaService selfServiceJsonSchemaService)
     {
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
     }
 
-    [HttpGet("{object_id:required}")]
+    [HttpGet("{id:required}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<IActionResult> GetSchema(
-        string objectId,
+        string id,
         [FromQuery] int schemaVersion = ISelfServiceJsonSchemaService.LatestVersionNumber
     )
     {
-        if (SelfServiceJsonSchemaObjectId.TryParse(objectId, out var parsedObjectId))
-            return BadRequest();
+        if (!SelfServiceJsonSchemaObjectId.TryParse(id, out var parsedObjectId))
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid object Id",
+                    Detail =
+                        $"{id} is not a valid object id, valid object ids are: {SelfServiceJsonSchemaObjectId.ValidTypesString()}"
+                }
+            );
 
         try
         {
@@ -43,28 +50,44 @@ public class SelfServiceJsonSchemaController : ControllerBase
         }
     }
 
-    [HttpPost("{object_id:required}")]
+    [HttpPost("{id:required}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> AddSchema(
-        string objectId,
-        [FromBody] AddSelfServiceJsonSchemaRequest addSelfServiceJsonSchemaRequest
-    )
+    public async Task<IActionResult> AddSchema(string id, [FromBody] AddSelfServiceJsonSchemaRequest request)
     {
-        if (SelfServiceJsonSchemaObjectId.TryParse(objectId, out var parsedObjectId))
-            return BadRequest();
+        if (!SelfServiceJsonSchemaObjectId.TryParse(id, out var parsedObjectId))
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid object Id",
+                    Detail =
+                        $"{id} is not a valid object id, valid object ids are: {SelfServiceJsonSchemaObjectId.ValidTypesString()}"
+                }
+            );
 
-        if (addSelfServiceJsonSchemaRequest.Schema == null)
-            return BadRequest();
+        if (request.Schema == null)
+            return BadRequest(new ProblemDetails { Title = "Invalid Schema", Detail = "Schema in request is null" });
 
         try
         {
-            var selfServiceJsonSchema = await _selfServiceJsonSchemaService.AddSchema(
-                parsedObjectId,
-                addSelfServiceJsonSchemaRequest.Schema
+            Json.Schema.JsonSchema.FromText(request.Schema);
+        }
+        catch (JsonException e)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid Schema",
+                    Detail = $"Schema in request could not be parsed: {e.Message}"
+                }
             );
+        }
+
+        try
+        {
+            var selfServiceJsonSchema = await _selfServiceJsonSchemaService.AddSchema(parsedObjectId, request.Schema);
             return Ok(selfServiceJsonSchema);
         }
         catch (Exception e)

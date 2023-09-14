@@ -12,15 +12,17 @@ public class SelfServiceJsonSchemaRepository : ISelfServiceJsonSchemaRepository
         _dbContext = dbContext;
     }
 
-    public Task<SelfServiceJsonSchema> GetSchema(int schemaVersion)
+    public Task<SelfServiceJsonSchema> GetSchema(SelfServiceJsonSchemaObjectId objectId, int schemaVersion)
     {
-        return _dbContext.SelfServiceJsonSchemas.SingleAsync(x => x.SchemaVersion == schemaVersion);
+        return _dbContext.SelfServiceJsonSchemas.SingleAsync(
+            x => x.SchemaVersion == schemaVersion && x.ObjectId == objectId
+        );
     }
 
-    public Task<SelfServiceJsonSchema> GetLatestSchema(string objectId)
+    public Task<SelfServiceJsonSchema> GetLatestSchema(SelfServiceJsonSchemaObjectId objectId)
     {
         var latestVersion = _dbContext.SelfServiceJsonSchemas.Max(x => x.SchemaVersion);
-        return GetSchema(latestVersion);
+        return GetSchema(objectId, latestVersion);
     }
 
     public Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchema selfServiceJsonSchema)

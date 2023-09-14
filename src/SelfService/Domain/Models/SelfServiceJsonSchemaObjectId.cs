@@ -37,5 +37,10 @@ public class SelfServiceJsonSchemaObjectId : ValueObject
         return _value;
     }
 
+    public static string ValidTypesString()
+    {
+        return string.Join(", ", _validValues.Select(v => v.ToString()));
+    }
+
     public static implicit operator string(SelfServiceJsonSchemaObjectId type) => type.ToString();
 }
