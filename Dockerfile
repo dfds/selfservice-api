@@ -13,7 +13,7 @@ WORKDIR /app
 RUN apt update && apt install -y curl librdkafka-dev
 
 # AWS RDS Certificate
-RUN curl -o /tmp/rds-combined-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem \
+RUN curl -o /tmp/rds-combined-ca-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
   && mv /tmp/rds-combined-ca-bundle.pem /usr/local/share/ca-certificates/rds-combined-ca-bundle.crt \
   && update-ca-certificates
 
