@@ -44,7 +44,7 @@ spec:
             - name: SS_PROMETHEUS_API_ENDPOINT
               value: http://monitoring-kube-prometheus-prometheus.monitoring:9090
             - name: ECR_PULL_PERMISSION_AWS_ACCOUNT_ID
-              value: ${ECR_PULL_PERMISSION_AWS_ACCOUNT_ID}
+              value: "${ECR_PULL_PERMISSION_AWS_ACCOUNT_ID}"
           envFrom:
             - secretRef:
                 name: kafka-credentials
