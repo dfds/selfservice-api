@@ -14,6 +14,8 @@ public class ECRRepositoryService : IECRRepositoryService
     private const string CreatedByCloudEngineeringTeamDescription =
         "Repository created automatically by the SelfService Team";
 
+    private readonly bool _localDevSkipAwsECRRepositoryCreation = false;
+
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
         IECRRepositoryRepository ecrRepositoryRepository,
@@ -23,6 +25,13 @@ public class ECRRepositoryService : IECRRepositoryService
         _logger = logger;
         _ecrRepositoryRepository = ecrRepositoryRepository;
         _awsEcrRepositoryApplicationService = awsEcrRepositoryApplicationService;
+        var envValue = Environment.GetEnvironmentVariable("LOCAL_DEV_SKIP_AWS_ECR_REPOSITORY_CREATION") ?? "false";
+        _localDevSkipAwsECRRepositoryCreation = envValue == "true";
+    }
+
+    public Task<bool> HasRepository(string repositoryName)
+    {
+        return _ecrRepositoryRepository.HasRepository(repositoryName);
     }
 
     public Task<IEnumerable<ECRRepository>> GetAllECRRepositories()
@@ -39,18 +48,26 @@ public class ECRRepositoryService : IECRRepositoryService
     {
         try
         {
-            _logger.LogInformation("Adding new ECRRepository in aws: {ECRRepositoryName}", repositoryName);
-            await _awsEcrRepositoryApplicationService.CreateECRRepo(repositoryName);
-            var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
-            _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", repositoryName);
-            await _ecrRepositoryRepository.Add(newRepository);
-            return newRepository;
+            if (_localDevSkipAwsECRRepositoryCreation)
+            {
+                _logger.LogInformation("Skipping AWS calls because LOCAL_DEV_SKIP_AWS_CALLS is true");
+            }
+            else
+            {
+                _logger.LogInformation("Adding new ECRRepository in aws: {ECRRepositoryName}", repositoryName);
+                await _awsEcrRepositoryApplicationService.CreateECRRepo(repositoryName);
+            }
         }
         catch (Exception e)
         {
             await _awsEcrRepositoryApplicationService.DeleteECRRepo(repositoryName);
             throw new Exception($"Error creating repo {repositoryName}: {e.Message}");
         }
+
+        var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
+        _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", repositoryName);
+        await _ecrRepositoryRepository.Add(newRepository);
+        return newRepository;
     }
 
     public async Task SynchronizeAwsECRAndDatabase(bool performUpdateOnMismatch)

@@ -1,6 +1,6 @@
 -- 2023-09-11 13:18:55 : add-table-for-ecr-repos
 
-create table "ECRRepository"
+CREATE TABLE "ECRRepository"
 (
     "Id"             UUID          NOT NULL,
     "Name"           VARCHAR(255)  NOT NULL,

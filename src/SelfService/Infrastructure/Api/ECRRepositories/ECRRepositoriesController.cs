@@ -11,17 +11,14 @@ public class ECRRepositoriesController : ControllerBase
 {
     private readonly IECRRepositoryService _ecrRepositoryService;
     private readonly IAuthorizationService _authorizationService;
-    private readonly IHostEnvironment _environment;
 
     public ECRRepositoriesController(
         IECRRepositoryService ecrRepositoryService,
-        IAuthorizationService authorizationService,
-        IHostEnvironment environment
+        IAuthorizationService authorizationService
     )
     {
         _ecrRepositoryService = ecrRepositoryService;
         _authorizationService = authorizationService;
-        _environment = environment;
     }
 
     [HttpGet("repositories")]
@@ -75,13 +72,30 @@ public class ECRRepositoriesController : ControllerBase
             var description = request.Description!;
             var repositoryName = request.RepositoryName!;
 
+            bool hasRepository = await _ecrRepositoryService.HasRepository(repositoryName);
+
+            if (hasRepository)
+            {
+                return BadRequest(
+                    new ProblemDetails()
+                    {
+                        Title = "Repository already exists",
+                        Detail = $"Repository with name {repositoryName} already exists",
+                    }
+                );
+            }
+
             var newRepo = await _ecrRepositoryService.AddRepository(name, description, repositoryName, userId);
             return Ok(newRepo);
         }
         catch (Exception e)
         {
             return CustomObjectResults.InternalServerError(
-                new ProblemDetails { Title = "Uncaught Exception", Detail = $"CreateECRRepository: {e.Message}." }
+                new ProblemDetails
+                {
+                    Title = "Uncaught Exception",
+                    Detail = $"CreateECRRepository: {e.InnerException}."
+                }
             );
         }
     }

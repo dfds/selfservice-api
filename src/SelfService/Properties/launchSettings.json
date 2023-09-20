@@ -18,7 +18,8 @@
         "SS_PLATFORM_DATA_API_KEY": "dummykey",
         "SS_PLATFORM_DATA_ENDPOINT": "http://localhost:8070",
         "ECR_PULL_PERMISSION_AWS_ACCOUNT_ID": "12341234",
-        "UPDATE_REPOSITORIES_ON_STATE_MISMATCH": "false"
+        "UPDATE_REPOSITORIES_ON_STATE_MISMATCH": "false",
+        "LOCAL_DEV_SKIP_AWS_ECR_REPOSITORY_CREATION": "true"
       }
     }
   }

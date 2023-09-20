@@ -13,6 +13,11 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
         _dbContext = dbContext;
     }
 
+    public Task<bool> HasRepository(string repositoryName)
+    {
+        return _dbContext.ECRRepositories.AnyAsync(x => x.RepositoryName == repositoryName);
+    }
+
     public async Task<IEnumerable<ECRRepository>> GetAll()
     {
         return await _dbContext.ECRRepositories.ToListAsync();
