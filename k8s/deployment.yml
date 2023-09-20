@@ -45,6 +45,8 @@ spec:
               value: http://monitoring-kube-prometheus-prometheus.monitoring:9090
             - name: ECR_PULL_PERMISSION_AWS_ACCOUNT_ID
               value: "${ECR_PULL_PERMISSION_AWS_ACCOUNT_ID}"
+            - name: LOCAL_DEV_SKIP_AWS_ECR_REPOSITORY_CREATION
+              value: "false"
           envFrom:
             - secretRef:
                 name: kafka-credentials

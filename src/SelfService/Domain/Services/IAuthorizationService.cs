@@ -24,4 +24,5 @@ public interface IAuthorizationService
     Task<bool> CanViewAllApplications(UserId userId, CapabilityId capabilityId);
     Task<bool> CanDeleteCapability(UserId userId, CapabilityId capabilityId);
     bool CanViewDeletedCapabilities(PortalUser portalUser);
+    bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser);
 }

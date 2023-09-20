@@ -26,10 +26,12 @@ public static class Domain
         builder.Services.AddTransient<IKafkaTopicApplicationService, KafkaTopicApplicationService>();
         builder.Services.AddTransient<IMemberApplicationService, MemberApplicationService>();
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
+        builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
 
         // domain services
         builder.Services.AddTransient<MembershipApplicationDomainService>();
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
+        builder.Services.AddTransient<IECRRepositoryService, ECRRepositoryService>();
 
         // domain repositories
         builder.Services.AddTransient<ICapabilityRepository, CapabilityRepository>();
@@ -42,6 +44,7 @@ public static class Domain
         builder.Services.AddTransient<IMessageContractRepository, MessageContractRepository>();
         builder.Services.AddTransient<IMemberRepository, MemberRepository>();
         builder.Services.AddTransient<IPortalVisitRepository, PortalVisitRepository>();
+        builder.Services.AddTransient<IECRRepositoryRepository, ECRRepositoryRepository>();
 
         builder.Services.AddTransient<TopVisitorsRepository>();
 
@@ -70,6 +73,7 @@ public static class Domain
         builder.Services.AddHostedService<RemoveDeactivatedMemberships>();
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
         builder.Services.AddHostedService<ActOnPendingCapabilityDeletions>();
+        builder.Services.AddHostedService<ECRRepositorySynchronizer>();
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
@@ -96,8 +100,5 @@ public static class Domain
             client.BaseAddress = platformDataEndpoint;
             client.DefaultRequestHeaders.Add("x-api-key", dataApiKey);
         });
-
-        // services that use aws credentials
-        builder.Services.AddTransient<IAwsECRRepoApplicationService, AwsECRRepoApplicationService>();
     }
 }
