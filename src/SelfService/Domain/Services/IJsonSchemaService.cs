@@ -18,7 +18,7 @@ public interface ISelfServiceJsonSchemaService
         int requestedSchemaVersion
     );
     public Task<JsonObject?> GetEmptyJsonDataObjectFromLatestSchema(SelfServiceJsonSchemaObjectId objectId);
-    public Task<bool> IsJsonDataValid(SelfServiceJsonSchemaObjectId objectId, string jsonData);
+    public Task<bool> IsJsonDataValid(string jsonSchemaString, string jsonData);
 
     public Task<ParsedJsonMetadataResult> GetOrCreateJsonMetadata(
         SelfServiceJsonSchemaObjectId objectId,

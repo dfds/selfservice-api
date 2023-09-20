@@ -51,6 +51,8 @@ public class CapabilityDetailsApiResource
         string name,
         string status,
         string description,
+        string jsonMetadata,
+        int jsonMetadataSchemaVersion,
         CapabilityDetailsLinks links
     )
     {

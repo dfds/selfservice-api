@@ -2,7 +2,7 @@ namespace SelfService.Domain.Models;
 
 public class SelfServiceJsonSchemaObjectId : ValueObject
 {
-    public static readonly SelfServiceJsonSchemaObjectId Capability = new("CAPABILITY");
+    public static readonly SelfServiceJsonSchemaObjectId Capability = new("capability");
 
     private static readonly HashSet<SelfServiceJsonSchemaObjectId> _validValues = new() { Capability };
 

@@ -1,11 +1,12 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 
 namespace SelfService.Infrastructure.Api.JsonSchema;
 
-[Route("selfservice-json-schema")]
+[Route("json-schema")]
 [Produces("application/json")]
 [ApiController]
 public class SelfServiceJsonSchemaController : ControllerBase
@@ -40,6 +41,13 @@ public class SelfServiceJsonSchemaController : ControllerBase
         try
         {
             var selfServiceJsonSchema = await _selfServiceJsonSchemaService.GetSchema(parsedObjectId, schemaVersion);
+            if (selfServiceJsonSchema == null)
+            {
+                return Ok(
+                    new SelfServiceJsonSchema(ISelfServiceJsonSchemaService.LatestVersionNumber, parsedObjectId, "{}")
+                );
+            }
+
             return Ok(selfServiceJsonSchema);
         }
         catch (Exception e)

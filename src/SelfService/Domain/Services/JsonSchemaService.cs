@@ -49,6 +49,13 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
             );
         }
 
+        if (targetVersion < requestedSchemaVersion)
+        {
+            throw new Exception(
+                $"Requested schema version {requestedSchemaVersion} is higher than latest schema version {targetVersion}, fetch latest changes and try again"
+            );
+        }
+
         var newSchema = new SelfServiceJsonSchema(latestVersionNumber + 1, objectId, schema);
         _logger.LogInformation("Adding new SelfServiceJsonSchema to the database: {SelfServiceJsonSchema}", newSchema);
         return await _selfServiceJsonSchemaRepository.AddSchema(newSchema);
@@ -72,17 +79,12 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         return JsonObject.Create(new JsonElement());
     }
 
-    public async Task<bool> IsJsonDataValid(SelfServiceJsonSchemaObjectId objectId, string jsonData)
+    public Task<bool> IsJsonDataValid(string jsonSchemaString, string jsonData)
     {
-        var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
-        if (latestSchema == null)
-        {
-            return true;
-        }
-
-        var jsonSchema = JsonSchema.FromText(latestSchema.Schema);
-        var result = jsonSchema.Evaluate(jsonData);
-        return result.IsValid;
+        var jsonSchema = JsonSchema.FromText(jsonSchemaString);
+        JsonNode? actualObj = JsonNode.Parse(jsonData);
+        var result = jsonSchema.Evaluate(actualObj);
+        return Task.FromResult(result.IsValid);
     }
 
     private JsonObject EmptyCustomModification(JsonObject jsonObject)
@@ -97,20 +99,22 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
     )
     {
         customGeneratedSchemaJsonObjectModifications ??= EmptyCustomModification;
-
+        var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
         if (requestJsonMetadata != null)
         {
-            if (!await IsJsonDataValid(objectId, requestJsonMetadata))
+            if (latestSchema == null)
+                return ParsedJsonMetadataResult.CreateError("Json metadata from request is not valid against schema");
+
+            if (!await IsJsonDataValid(latestSchema.Schema, requestJsonMetadata))
                 return ParsedJsonMetadataResult.CreateError("Json metadata from request is not valid against schema");
 
             return ParsedJsonMetadataResult.CreateSuccess(
                 requestJsonMetadata,
-                ISelfServiceJsonSchemaService.LatestVersionNumber,
+                latestSchema.SchemaVersion,
                 ParsedJsonMetadataResultCode.SuccessFromRequest
             );
         }
 
-        var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
         if (latestSchema == null)
             return ParsedJsonMetadataResult.CreateSuccess(
                 "",
@@ -135,7 +139,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 
         var constructedJsonString = jsonObject.ToJsonString();
 
-        if (!await IsJsonDataValid(objectId, constructedJsonString))
+        if (!await IsJsonDataValid(latestSchema.Schema, constructedJsonString))
         {
             return ParsedJsonMetadataResult.CreateError("Could not construct json metadata from schema");
         }
