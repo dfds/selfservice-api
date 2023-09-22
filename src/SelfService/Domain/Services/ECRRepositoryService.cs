@@ -60,7 +60,7 @@ public class ECRRepositoryService : IECRRepositoryService
         }
         catch (Exception e)
         {
-            await _awsEcrRepositoryApplicationService.DeleteECRRepo(repositoryName);
+            _logger.LogError(e, "Error creating repo {ECRRepositoryName}", repositoryName);
             throw new Exception($"Error creating repo {repositoryName}: {e.Message}");
         }
 
