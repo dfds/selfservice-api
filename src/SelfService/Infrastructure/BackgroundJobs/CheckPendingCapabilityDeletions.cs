@@ -40,6 +40,13 @@ public class ActOnPendingCapabilityDeletions : BackgroundService
         var applicationService = scope.ServiceProvider.GetRequiredService<ICapabilityApplicationService>();
 
         logger.LogDebug("Checking all currently pending deletion requests for capabilities...");
-        await applicationService.ActOnPendingCapabilityDeletions();
+        try
+        {
+            await applicationService.ActOnPendingCapabilityDeletions();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error acting on pending capability deletions");
+        }
     }
 }
