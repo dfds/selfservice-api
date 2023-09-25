@@ -4,7 +4,7 @@ public enum ParsedJsonMetadataResultCode
 {
     SuccessNoSchema,
     SuccessFromRequest,
-    SuccessConstructed,
+    SuccessSchemaHasNoRequiredFields,
     Error
 }
 

@@ -7,7 +7,4 @@ public class AddSelfServiceJsonSchemaRequest
 {
     [Required]
     public JsonObject? Schema { get; set; } = null;
-
-    [Required]
-    public int SchemaVersion { get; set; } = 0;
 }

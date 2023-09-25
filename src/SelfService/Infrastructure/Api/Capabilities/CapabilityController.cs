@@ -25,6 +25,7 @@ public class CapabilityController : ControllerBase
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
+    private readonly ILogger<CapabilityController> _logger;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -38,7 +39,8 @@ public class CapabilityController : ControllerBase
         IAwsAccountApplicationService awsAccountApplicationService,
         IMembershipApplicationService membershipApplicationService,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
-        ISelfServiceJsonSchemaService selfServiceJsonSchemaService
+        ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
+        ILogger<CapabilityController> logger
     )
     {
         _membersQuery = membersQuery;
@@ -53,6 +55,7 @@ public class CapabilityController : ControllerBase
         _membershipApplicationService = membershipApplicationService;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
+        _logger = logger;
     }
 
     [HttpGet("")]
@@ -89,10 +92,12 @@ public class CapabilityController : ControllerBase
             return ValidationProblem();
         }
 
-        var jsonMetadataResult = await _selfServiceJsonSchemaService.GetOrCreateJsonMetadata(
+        // See if request has valid json metadata
+        var jsonMetadataResult = await _selfServiceJsonSchemaService.ParseJsonMetadata(
             SelfServiceJsonSchemaObjectId.Capability,
             request.JsonMetadata
         );
+
         if (!jsonMetadataResult.IsValid())
         {
             return BadRequest(
@@ -104,6 +109,11 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
+
+        _logger.LogInformation(
+            "Successfully parsed json meta data: {ParseResultCode}",
+            jsonMetadataResult.ResultCode.ToString()
+        );
 
         // Sanity check: should not be possible if result is valid
         if (jsonMetadataResult.JsonMetadata == null)
@@ -394,6 +404,7 @@ public class CapabilityController : ControllerBase
         }
     }
 
+    [HttpPost("{id:required}/topics")] // TODO [jandr@2023-03-20]: refactor - have been "moved as is"
     [HttpPost("{id:required}/topics")] // TODO [jandr@2023-03-20]: refactor - have been "moved as is"
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]

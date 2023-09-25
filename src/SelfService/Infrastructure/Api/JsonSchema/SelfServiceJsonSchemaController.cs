@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
@@ -65,6 +64,23 @@ public class SelfServiceJsonSchemaController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<IActionResult> AddSchema(string id, [FromBody] AddSelfServiceJsonSchemaRequest? request)
     {
+        string? xApiKey = HttpContext.Request.Headers["x-api-key"];
+        if (string.IsNullOrEmpty(xApiKey))
+        {
+            return Unauthorized();
+        }
+        string? expected = Environment.GetEnvironmentVariable("SS_ADD_JSON_SCHEMA_API_KEY");
+        if (string.IsNullOrEmpty(expected))
+        {
+            return CustomObjectResults.InternalServerError(
+                new ProblemDetails() { Title = "Missing environment variable", Detail = "Adding schemas not allowed" }
+            );
+        }
+        if (xApiKey != expected)
+        {
+            return Unauthorized();
+        }
+
         if (!SelfServiceJsonSchemaObjectId.TryParse(id, out var parsedObjectId))
             return BadRequest(
                 new ProblemDetails
@@ -77,16 +93,6 @@ public class SelfServiceJsonSchemaController : ControllerBase
 
         if (request?.Schema == null)
             return BadRequest(new ProblemDetails { Title = "Invalid Schema", Detail = "Schema in request is null" });
-
-        if (request.SchemaVersion == ISelfServiceJsonSchemaService.LatestVersionNumber)
-            return BadRequest(
-                new ProblemDetails
-                {
-                    Title = "Invalid Schema Version",
-                    Detail =
-                        $"Schema version {ISelfServiceJsonSchemaService.LatestVersionNumber} is reserved for the latest schema version, please specify a different version number"
-                }
-            );
 
         if (!request.Schema.TryGetPropertyValue("$schema", out _))
         {
@@ -118,8 +124,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
         {
             var selfServiceJsonSchema = await _selfServiceJsonSchemaService.AddSchema(
                 parsedObjectId,
-                request.Schema.ToJsonString(),
-                request.SchemaVersion
+                request.Schema.ToJsonString()
             );
             return Ok(selfServiceJsonSchema);
         }

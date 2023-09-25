@@ -8,11 +8,13 @@ namespace SelfService.Domain.Services;
 
 public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 {
-    private readonly ILogger<ECRRepositoryService> _logger;
+    private const string EmptyJsonData = "{}";
+
+    private readonly ILogger<SelfServiceJsonSchemaService> _logger;
     private readonly ISelfServiceJsonSchemaRepository _selfServiceJsonSchemaRepository;
 
     public SelfServiceJsonSchemaService(
-        ILogger<ECRRepositoryService> logger,
+        ILogger<SelfServiceJsonSchemaService> logger,
         ISelfServiceJsonSchemaRepository selfServiceJsonSchemaRepository
     )
     {
@@ -31,32 +33,13 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
     }
 
     [TransactionalBoundary]
-    public async Task<SelfServiceJsonSchema> AddSchema(
-        SelfServiceJsonSchemaObjectId objectId,
-        string schema,
-        int requestedSchemaVersion
-    )
+    public async Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema)
     {
         var latest = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
         var latestVersionNumber = latest?.SchemaVersion ?? ISelfServiceJsonSchemaService.LatestVersionNumber;
 
         var targetVersion = latestVersionNumber + 1;
-        if (targetVersion > requestedSchemaVersion)
-        {
-            // TODO: Create custom exception type
-            throw new Exception(
-                $"Requested schema version {requestedSchemaVersion} is lower than latest schema version {targetVersion}, fetch latest changes and try again"
-            );
-        }
-
-        if (targetVersion < requestedSchemaVersion)
-        {
-            throw new Exception(
-                $"Requested schema version {requestedSchemaVersion} is higher than latest schema version {targetVersion}, fetch latest changes and try again"
-            );
-        }
-
-        var newSchema = new SelfServiceJsonSchema(latestVersionNumber + 1, objectId, schema);
+        var newSchema = new SelfServiceJsonSchema(targetVersion, objectId, schema);
         _logger.LogInformation("Adding new SelfServiceJsonSchema to the database: {SelfServiceJsonSchema}", newSchema);
         return await _selfServiceJsonSchemaRepository.AddSchema(newSchema);
     }
@@ -87,23 +70,18 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         return Task.FromResult(result.IsValid);
     }
 
-    private JsonObject EmptyCustomModification(JsonObject jsonObject)
-    {
-        return jsonObject;
-    }
-
-    public async Task<ParsedJsonMetadataResult> GetOrCreateJsonMetadata(
+    public async Task<ParsedJsonMetadataResult> ParseJsonMetadata(
         SelfServiceJsonSchemaObjectId objectId,
-        string? requestJsonMetadata,
-        Func<JsonObject, JsonObject>? customGeneratedSchemaJsonObjectModifications = null
+        string? requestJsonMetadata
     )
     {
-        customGeneratedSchemaJsonObjectModifications ??= EmptyCustomModification;
         var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
-        if (requestJsonMetadata != null)
+        if (!string.IsNullOrEmpty(requestJsonMetadata) && requestJsonMetadata != EmptyJsonData)
         {
             if (latestSchema == null)
-                return ParsedJsonMetadataResult.CreateError("Json metadata from request is not valid against schema");
+                return ParsedJsonMetadataResult.CreateError(
+                    "Json metadata from request is not empty, but no schema exists"
+                );
 
             if (!await IsJsonDataValid(latestSchema.Schema, requestJsonMetadata))
                 return ParsedJsonMetadataResult.CreateError("Json metadata from request is not valid against schema");
@@ -117,37 +95,23 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 
         if (latestSchema == null)
             return ParsedJsonMetadataResult.CreateSuccess(
-                "",
+                EmptyJsonData,
                 ISelfServiceJsonSchemaService.LatestVersionNumber,
                 ParsedJsonMetadataResultCode.SuccessNoSchema
             );
 
-        _logger.LogInformation(
-            "Attempting to construct JsonMetadata from JsonSchema for {JsonSchemaObjectId}",
-            objectId
-        );
-        // try constructing metadata from object schema
-        var jsonObject = await GetEmptyJsonDataObjectFromLatestSchema(objectId);
-        if (jsonObject == null)
+        // if json schema has no required fields, we can allow an empty json object
+        var jsonSchema = JsonSchema.FromText(latestSchema.Schema);
+        var requiredFields = jsonSchema.GetRequired();
+        if (requiredFields != null && requiredFields.Any())
         {
-            return ParsedJsonMetadataResult.CreateError("Could not construct json metadata from schema");
-        }
-
-        // Modify the json object according to input modifications
-        // This is relevant in cases where SelfService API have an idea of how the schema looks like
-        jsonObject = customGeneratedSchemaJsonObjectModifications(jsonObject);
-
-        var constructedJsonString = jsonObject.ToJsonString();
-
-        if (!await IsJsonDataValid(latestSchema.Schema, constructedJsonString))
-        {
-            return ParsedJsonMetadataResult.CreateError("Could not construct json metadata from schema");
+            return ParsedJsonMetadataResult.CreateError("Invalid Json Metadata");
         }
 
         return ParsedJsonMetadataResult.CreateSuccess(
-            constructedJsonString,
+            EmptyJsonData,
             latestSchema.SchemaVersion,
-            ParsedJsonMetadataResultCode.SuccessConstructed
+            ParsedJsonMetadataResultCode.SuccessSchemaHasNoRequiredFields
         );
     }
 }
