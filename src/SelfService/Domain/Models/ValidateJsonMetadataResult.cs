@@ -1,6 +1,6 @@
 namespace SelfService.Domain.Models;
 
-public enum ParsedJsonMetadataResultCode
+public enum ValidateJsonMetadataResultCode
 {
     SuccessNoSchema,
     SuccessValidJsonMetadata,
@@ -8,12 +8,12 @@ public enum ParsedJsonMetadataResultCode
     Error
 }
 
-public class ParsedJsonMetadataResult
+public class ValidateJsonMetadataResult
 {
     public string? JsonMetadata { get; set; }
     public int JsonSchemaVersion { get; set; }
     public string? Error { get; set; }
-    public ParsedJsonMetadataResultCode ResultCode { get; set; }
+    public ValidateJsonMetadataResultCode ResultCode { get; set; }
 
     public bool IsValid()
     {
@@ -25,18 +25,18 @@ public class ParsedJsonMetadataResult
         return Error == null ? "" : Error;
     }
 
-    public static ParsedJsonMetadataResult CreateError(string error)
+    public static ValidateJsonMetadataResult CreateError(string error)
     {
-        return new ParsedJsonMetadataResult { Error = error, ResultCode = ParsedJsonMetadataResultCode.Error };
+        return new ValidateJsonMetadataResult { Error = error, ResultCode = ValidateJsonMetadataResultCode.Error };
     }
 
-    public static ParsedJsonMetadataResult CreateSuccess(
+    public static ValidateJsonMetadataResult CreateSuccess(
         string jsonMetadata,
         int jsonSchemaVersion,
-        ParsedJsonMetadataResultCode resultCode
+        ValidateJsonMetadataResultCode resultCode
     )
     {
-        return new ParsedJsonMetadataResult
+        return new ValidateJsonMetadataResult
         {
             JsonMetadata = jsonMetadata,
             JsonSchemaVersion = jsonSchemaVersion,

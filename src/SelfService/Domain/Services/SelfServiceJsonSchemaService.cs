@@ -44,33 +44,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         return await _selfServiceJsonSchemaRepository.AddSchema(newSchema);
     }
 
-    public async Task<JsonObject?> GetEmptyJsonDataObjectFromLatestSchema(SelfServiceJsonSchemaObjectId objectId)
-    {
-        var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
-        if (latestSchema == null)
-        {
-            return await Task.FromResult<JsonObject?>(null);
-        }
-
-        var jsonSchema = JsonSchema.FromText(latestSchema.Schema);
-        var requiredFields = jsonSchema.GetRequired();
-        if (requiredFields != null && requiredFields.Any())
-        {
-            return null;
-        }
-
-        return JsonObject.Create(new JsonElement());
-    }
-
-    public Task<bool> IsJsonDataValid(string jsonSchemaString, string jsonData)
-    {
-        var jsonSchema = JsonSchema.FromText(jsonSchemaString);
-        JsonNode? actualObj = JsonNode.Parse(jsonData);
-        var result = jsonSchema.Evaluate(actualObj);
-        return Task.FromResult(result.IsValid);
-    }
-
-    public async Task<ParsedJsonMetadataResult> ParseJsonMetadata(
+    public async Task<ValidateJsonMetadataResult> ValidateJsonMetadata(
         SelfServiceJsonSchemaObjectId objectId,
         string? requestJsonMetadata
     )
@@ -79,7 +53,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         if (!string.IsNullOrEmpty(requestJsonMetadata) && requestJsonMetadata != EmptyJsonData)
         {
             if (latestSchema == null)
-                return ParsedJsonMetadataResult.CreateError(
+                return ValidateJsonMetadataResult.CreateError(
                     "Json metadata from request is not empty, but no schema exists"
                 );
 
@@ -87,22 +61,22 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
             JsonNode? actualObj = JsonNode.Parse(requestJsonMetadata);
             var result = parsedJsonSchema.Evaluate(actualObj);
             if (!result.IsValid)
-                return ParsedJsonMetadataResult.CreateError(
+                return ValidateJsonMetadataResult.CreateError(
                     $"Json metadata from request is not valid against schema: {result.Details}"
                 );
 
-            return ParsedJsonMetadataResult.CreateSuccess(
+            return ValidateJsonMetadataResult.CreateSuccess(
                 requestJsonMetadata,
                 latestSchema.SchemaVersion,
-                ParsedJsonMetadataResultCode.SuccessValidJsonMetadata
+                ValidateJsonMetadataResultCode.SuccessValidJsonMetadata
             );
         }
 
         if (latestSchema == null)
-            return ParsedJsonMetadataResult.CreateSuccess(
+            return ValidateJsonMetadataResult.CreateSuccess(
                 EmptyJsonData,
                 ISelfServiceJsonSchemaService.LatestVersionNumber,
-                ParsedJsonMetadataResultCode.SuccessNoSchema
+                ValidateJsonMetadataResultCode.SuccessNoSchema
             );
 
         // if json schema has no required fields, we can allow an empty json object
@@ -110,13 +84,13 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         var requiredFields = jsonSchema.GetRequired();
         if (requiredFields != null && requiredFields.Any())
         {
-            return ParsedJsonMetadataResult.CreateError("Invalid Json Metadata");
+            return ValidateJsonMetadataResult.CreateError("Invalid Json Metadata");
         }
 
-        return ParsedJsonMetadataResult.CreateSuccess(
+        return ValidateJsonMetadataResult.CreateSuccess(
             EmptyJsonData,
             latestSchema.SchemaVersion,
-            ParsedJsonMetadataResultCode.SuccessSchemaHasNoRequiredFields
+            ValidateJsonMetadataResultCode.SuccessSchemaHasNoRequiredFields
         );
     }
 }

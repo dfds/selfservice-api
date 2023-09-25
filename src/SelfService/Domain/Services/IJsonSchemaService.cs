@@ -14,7 +14,7 @@ public interface ISelfServiceJsonSchemaService
 
     public Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema);
 
-    public Task<ParsedJsonMetadataResult> ParseJsonMetadata(
+    public Task<ValidateJsonMetadataResult> ValidateJsonMetadata(
         SelfServiceJsonSchemaObjectId objectId,
         string? requestJsonMetadata
     );

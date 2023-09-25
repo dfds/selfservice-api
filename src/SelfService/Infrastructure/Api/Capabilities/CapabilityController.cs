@@ -93,7 +93,7 @@ public class CapabilityController : ControllerBase
         }
 
         // See if request has valid json metadata
-        var jsonMetadataResult = await _selfServiceJsonSchemaService.ParseJsonMetadata(
+        var jsonMetadataResult = await _selfServiceJsonSchemaService.ValidateJsonMetadata(
             SelfServiceJsonSchemaObjectId.Capability,
             request.JsonMetadata
         );

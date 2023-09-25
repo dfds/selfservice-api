@@ -13,20 +13,20 @@ public class TestJsonSchemaService
         _mock.Setup(x => x.GetLatestSchema(SelfServiceJsonSchemaObjectId.Capability)).ReturnsAsync(() => null);
         var sut = A.SelfServiceJsonSchemaService.WithJsonSchemaRepository(_mock.Object).Build();
 
-        var resultWhenEmpty = await sut.ParseJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "");
+        var resultWhenEmpty = await sut.ValidateJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "");
         Assert.True(resultWhenEmpty.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.SuccessNoSchema, resultWhenEmpty.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.SuccessNoSchema, resultWhenEmpty.ResultCode);
 
-        var resultWhenEmptyJsonObject = await sut.ParseJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "{}");
+        var resultWhenEmptyJsonObject = await sut.ValidateJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "{}");
         Assert.True(resultWhenEmptyJsonObject.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.SuccessNoSchema, resultWhenEmpty.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.SuccessNoSchema, resultWhenEmpty.ResultCode);
 
-        var resultWhenNotEmptyJsonMetadata = await sut.ParseJsonMetadata(
+        var resultWhenNotEmptyJsonMetadata = await sut.ValidateJsonMetadata(
             SelfServiceJsonSchemaObjectId.Capability,
             """{"foo": "bar"}"""
         );
         Assert.False(resultWhenNotEmptyJsonMetadata.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.Error, resultWhenNotEmptyJsonMetadata.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.Error, resultWhenNotEmptyJsonMetadata.ResultCode);
     }
 
     [Fact]
@@ -48,21 +48,21 @@ public class TestJsonSchemaService
         var sut = A.SelfServiceJsonSchemaService.WithJsonSchemaRepository(_mock.Object).Build();
 
         // No required fields, so allowed to be empty
-        var resultWhenEmpty = await sut.ParseJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "");
+        var resultWhenEmpty = await sut.ValidateJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "");
         Assert.True(resultWhenEmpty.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.SuccessSchemaHasNoRequiredFields, resultWhenEmpty.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.SuccessSchemaHasNoRequiredFields, resultWhenEmpty.ResultCode);
 
         // No required fields, so allowed to be empty
-        var resultWhenEmptyJsonObject = await sut.ParseJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "{}");
+        var resultWhenEmptyJsonObject = await sut.ValidateJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "{}");
         Assert.True(resultWhenEmptyJsonObject.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.SuccessSchemaHasNoRequiredFields, resultWhenEmpty.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.SuccessSchemaHasNoRequiredFields, resultWhenEmpty.ResultCode);
 
-        var resultWhenIncorrectJsonMetadata = await sut.ParseJsonMetadata(
+        var resultWhenIncorrectJsonMetadata = await sut.ValidateJsonMetadata(
             SelfServiceJsonSchemaObjectId.Capability,
             """{"foo": "bar"}"""
         );
         Assert.False(resultWhenIncorrectJsonMetadata.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.Error, resultWhenIncorrectJsonMetadata.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.Error, resultWhenIncorrectJsonMetadata.ResultCode);
     }
 
     [Fact]
@@ -92,23 +92,23 @@ public class TestJsonSchemaService
         var sut = A.SelfServiceJsonSchemaService.WithJsonSchemaRepository(_mock.Object).Build();
 
         // Not allowed to be empty, when we have required fields
-        var resultWhenEmpty = await sut.ParseJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "");
+        var resultWhenEmpty = await sut.ValidateJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "");
         Assert.False(resultWhenEmpty.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.Error, resultWhenEmpty.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.Error, resultWhenEmpty.ResultCode);
 
         // Not allowed to be empty, when we have required fields
-        var resultWhenEmptyJsonObject = await sut.ParseJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "{}");
+        var resultWhenEmptyJsonObject = await sut.ValidateJsonMetadata(SelfServiceJsonSchemaObjectId.Capability, "{}");
         Assert.False(resultWhenEmptyJsonObject.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.Error, resultWhenEmpty.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.Error, resultWhenEmpty.ResultCode);
 
-        var resultWhenIncorrectJsonMetadata = await sut.ParseJsonMetadata(
+        var resultWhenIncorrectJsonMetadata = await sut.ValidateJsonMetadata(
             SelfServiceJsonSchemaObjectId.Capability,
             """{"foo": "bar"}"""
         );
         Assert.False(resultWhenIncorrectJsonMetadata.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.Error, resultWhenIncorrectJsonMetadata.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.Error, resultWhenIncorrectJsonMetadata.ResultCode);
 
-        var resultWhenPartiallyCorrectJsonMetadata = await sut.ParseJsonMetadata(
+        var resultWhenPartiallyCorrectJsonMetadata = await sut.ValidateJsonMetadata(
             SelfServiceJsonSchemaObjectId.Capability,
             """
                 {
@@ -117,9 +117,9 @@ public class TestJsonSchemaService
                 """
         );
         Assert.False(resultWhenPartiallyCorrectJsonMetadata.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.Error, resultWhenPartiallyCorrectJsonMetadata.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.Error, resultWhenPartiallyCorrectJsonMetadata.ResultCode);
 
-        var resultWhenCorrectJsonMetadata = await sut.ParseJsonMetadata(
+        var resultWhenCorrectJsonMetadata = await sut.ValidateJsonMetadata(
             SelfServiceJsonSchemaObjectId.Capability,
             """
                 {
@@ -129,6 +129,6 @@ public class TestJsonSchemaService
                 """
         );
         Assert.True(resultWhenCorrectJsonMetadata.IsValid());
-        Assert.Equal(ParsedJsonMetadataResultCode.SuccessValidJsonMetadata, resultWhenCorrectJsonMetadata.ResultCode);
+        Assert.Equal(ValidateJsonMetadataResultCode.SuccessValidJsonMetadata, resultWhenCorrectJsonMetadata.ResultCode);
     }
 }
