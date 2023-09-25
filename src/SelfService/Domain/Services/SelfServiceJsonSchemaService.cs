@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using SelfService.Domain.Models;
@@ -8,6 +9,27 @@ namespace SelfService.Domain.Services;
 
 public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 {
+    public class InvalidJsonSchemaException : Exception
+    {
+        private static string ErrorDictionaryToString(IReadOnlyDictionary<string, string>? errors)
+        {
+            if (errors == null)
+                return "";
+
+            StringBuilder s = new StringBuilder();
+            foreach (var keyValuePair in errors)
+            {
+                s.AppendLine($"{keyValuePair.Key}: {keyValuePair.Value}");
+            }
+
+            return s.ToString();
+        }
+
+        public InvalidJsonSchemaException(EvaluationResults result)
+            : base($"Invalid Json Schema, errors: {(result.HasErrors ? ErrorDictionaryToString(result.Errors) : "")}")
+        { }
+    }
+
     private const string EmptyJsonData = "{}";
 
     private readonly ILogger<SelfServiceJsonSchemaService> _logger;
@@ -32,9 +54,23 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
             : _selfServiceJsonSchemaRepository.GetSchema(objectId, schemaVersion);
     }
 
+    public void MustValidateJsonSchemaAgainstMetaSchema(string schema)
+    {
+        JsonNode? actualObj = JsonNode.Parse(schema);
+
+        var result = MetaSchemas.Content202012.Evaluate(
+            actualObj,
+            new EvaluationOptions { ValidateAgainstMetaSchema = true, OutputFormat = OutputFormat.Hierarchical }
+        );
+        if (!result.IsValid)
+            throw new InvalidJsonSchemaException(result);
+    }
+
     [TransactionalBoundary]
     public async Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema)
     {
+        MustValidateJsonSchemaAgainstMetaSchema(schema);
+
         var latest = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
         var latestVersionNumber = latest?.SchemaVersion ?? ISelfServiceJsonSchemaService.LatestVersionNumber;
 

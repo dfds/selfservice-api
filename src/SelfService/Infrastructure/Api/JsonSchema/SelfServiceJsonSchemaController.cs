@@ -69,6 +69,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
         {
             return Unauthorized();
         }
+
         string? expected = Environment.GetEnvironmentVariable("SS_ADD_JSON_SCHEMA_API_KEY");
         if (string.IsNullOrEmpty(expected))
         {
@@ -76,6 +77,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 new ProblemDetails() { Title = "Missing environment variable", Detail = "Adding schemas not allowed" }
             );
         }
+
         if (xApiKey != expected)
         {
             return Unauthorized();
@@ -107,15 +109,15 @@ public class SelfServiceJsonSchemaController : ControllerBase
 
         try
         {
-            Json.Schema.JsonSchema.FromText(request.Schema.ToJsonString());
+            _selfServiceJsonSchemaService.MustValidateJsonSchemaAgainstMetaSchema(request.Schema.ToJsonString());
         }
-        catch (JsonException e)
+        catch (SelfServiceJsonSchemaService.InvalidJsonSchemaException e) // sanity check
         {
             return BadRequest(
                 new ProblemDetails
                 {
                     Title = "Invalid Schema",
-                    Detail = $"Schema in request could not be parsed: {e.Message}"
+                    Detail = $"Schema in request is not a valid json schema: {e.Message}"
                 }
             );
         }
@@ -127,6 +129,16 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 request.Schema.ToJsonString()
             );
             return Ok(selfServiceJsonSchema);
+        }
+        catch (SelfServiceJsonSchemaService.InvalidJsonSchemaException e) // sanity check
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid Schema",
+                    Detail = $"Schema in request is not a valid json schema: {e.Message}"
+                }
+            );
         }
         catch (Exception e)
         {

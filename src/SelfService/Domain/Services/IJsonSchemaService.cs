@@ -12,6 +12,8 @@ public interface ISelfServiceJsonSchemaService
         int schemaVersion = LatestVersionNumber
     );
 
+    public void MustValidateJsonSchemaAgainstMetaSchema(string schema);
+
     public Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema);
 
     public Task<ValidateJsonMetadataResult> ValidateJsonMetadata(
