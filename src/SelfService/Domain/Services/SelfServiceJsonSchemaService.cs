@@ -94,7 +94,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
             return ParsedJsonMetadataResult.CreateSuccess(
                 requestJsonMetadata,
                 latestSchema.SchemaVersion,
-                ParsedJsonMetadataResultCode.SuccessFromRequest
+                ParsedJsonMetadataResultCode.SuccessValidJsonMetadata
             );
         }
 

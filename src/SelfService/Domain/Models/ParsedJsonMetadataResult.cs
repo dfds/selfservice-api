@@ -3,7 +3,7 @@ namespace SelfService.Domain.Models;
 public enum ParsedJsonMetadataResultCode
 {
     SuccessNoSchema,
-    SuccessFromRequest,
+    SuccessValidJsonMetadata,
     SuccessSchemaHasNoRequiredFields,
     Error
 }
