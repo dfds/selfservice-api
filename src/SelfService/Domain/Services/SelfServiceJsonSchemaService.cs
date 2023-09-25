@@ -1,9 +1,7 @@
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using SelfService.Domain.Models;
 using Json.Schema;
-using Json.Schema.DataGeneration;
 
 namespace SelfService.Domain.Services;
 
