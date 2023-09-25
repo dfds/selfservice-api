@@ -83,8 +83,13 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
                     "Json metadata from request is not empty, but no schema exists"
                 );
 
-            if (!await IsJsonDataValid(latestSchema.Schema, requestJsonMetadata))
-                return ParsedJsonMetadataResult.CreateError("Json metadata from request is not valid against schema");
+            var parsedJsonSchema = JsonSchema.FromText(latestSchema.Schema);
+            JsonNode? actualObj = JsonNode.Parse(requestJsonMetadata);
+            var result = parsedJsonSchema.Evaluate(actualObj);
+            if (!result.IsValid)
+                return ParsedJsonMetadataResult.CreateError(
+                    $"Json metadata from request is not valid against schema: {result.Details}"
+                );
 
             return ParsedJsonMetadataResult.CreateSuccess(
                 requestJsonMetadata,
