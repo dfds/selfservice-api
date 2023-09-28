@@ -174,7 +174,7 @@ public class TestAwsAccountApplicationService
             throw new NotImplementedException();
         }
 
-        public Task SetJsonMetadata(CapabilityId id, string jsonMetadata)
+        public Task SetJsonMetadata(CapabilityId id, string jsonMetadata, int jsonSchemaVersion)
         {
             throw new NotImplementedException();
         }
