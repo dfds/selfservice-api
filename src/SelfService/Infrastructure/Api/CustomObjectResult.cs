@@ -12,7 +12,7 @@ public class CustomObjectResult : ObjectResult
 
     [NonAction]
     public static CustomObjectResult InternalServerError(object error) =>
-        new(StatusCodes.Status405MethodNotAllowed, error);
+        new(StatusCodes.Status500InternalServerError, error);
 
     [NonAction]
     public static CustomObjectResult MethodNotAllowedError(object error) =>
