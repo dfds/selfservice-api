@@ -29,6 +29,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
     }
 
     private const string EmptyJsonData = "{}";
+    private const int EmptyJsonSchemaVersion = 0;
 
     private readonly ILogger<SelfServiceJsonSchemaService> _logger;
     private readonly ISelfServiceJsonSchemaRepository _selfServiceJsonSchemaRepository;
@@ -42,14 +43,14 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         _selfServiceJsonSchemaRepository = selfServiceJsonSchemaRepository;
     }
 
-    public Task<SelfServiceJsonSchema?> GetSchema(
-        SelfServiceJsonSchemaObjectId objectId,
-        int schemaVersion = ISelfServiceJsonSchemaService.LatestVersionNumber
-    )
+    public Task<SelfServiceJsonSchema?> GetLatestSchema(SelfServiceJsonSchemaObjectId objectId)
     {
-        return schemaVersion == ISelfServiceJsonSchemaService.LatestVersionNumber
-            ? _selfServiceJsonSchemaRepository.GetLatestSchema(objectId)
-            : _selfServiceJsonSchemaRepository.GetSchema(objectId, schemaVersion);
+        return _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
+    }
+
+    public Task<SelfServiceJsonSchema?> GetSchema(SelfServiceJsonSchemaObjectId objectId, int schemaVersion)
+    {
+        return _selfServiceJsonSchemaRepository.GetSchema(objectId, schemaVersion);
     }
 
     public void MustValidateJsonSchemaAgainstMetaSchema(string schema)
@@ -70,7 +71,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         MustValidateJsonSchemaAgainstMetaSchema(schema);
 
         var latest = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
-        var latestVersionNumber = latest?.SchemaVersion ?? ISelfServiceJsonSchemaService.LatestVersionNumber;
+        var latestVersionNumber = latest?.SchemaVersion ?? EmptyJsonSchemaVersion;
 
         var targetVersion = latestVersionNumber + 1;
         var newSchema = new SelfServiceJsonSchema(targetVersion, objectId, schema);
@@ -118,7 +119,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         if (latestSchema == null)
             return ValidateJsonMetadataResult.CreateSuccess(
                 EmptyJsonData,
-                ISelfServiceJsonSchemaService.LatestVersionNumber,
+                EmptyJsonSchemaVersion,
                 ValidateJsonMetadataResultCode.SuccessNoSchema
             );
 

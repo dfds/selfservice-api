@@ -5,12 +5,9 @@ namespace SelfService.Domain.Services;
 
 public interface ISelfServiceJsonSchemaService
 {
-    public const int LatestVersionNumber = 0;
+    public Task<SelfServiceJsonSchema?> GetLatestSchema(SelfServiceJsonSchemaObjectId objectId);
 
-    public Task<SelfServiceJsonSchema?> GetSchema(
-        SelfServiceJsonSchemaObjectId objectId,
-        int schemaVersion = LatestVersionNumber
-    );
+    public Task<SelfServiceJsonSchema?> GetSchema(SelfServiceJsonSchemaObjectId objectId, int schemaVersion);
 
     public void MustValidateJsonSchemaAgainstMetaSchema(string schema);
 

@@ -18,4 +18,9 @@ public class SelfServiceJsonSchema
         SchemaVersion = schemaVersion;
         Schema = schema;
     }
+
+    public static SelfServiceJsonSchema CreateEmptyJsonSchema(SelfServiceJsonSchemaObjectId objectId)
+    {
+        return new SelfServiceJsonSchema(0, objectId, "{}");
+    }
 }

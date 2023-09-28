@@ -22,10 +22,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> GetSchema(
-        string id,
-        [FromQuery] int schemaVersion = ISelfServiceJsonSchemaService.LatestVersionNumber
-    )
+    public async Task<IActionResult> GetSchema(string id, [FromQuery] int schemaVersion)
     {
         if (!SelfServiceJsonSchemaObjectId.TryParse(id, out var parsedObjectId))
             return BadRequest(
@@ -39,12 +36,15 @@ public class SelfServiceJsonSchemaController : ControllerBase
 
         try
         {
-            var selfServiceJsonSchema = await _selfServiceJsonSchemaService.GetSchema(parsedObjectId, schemaVersion);
+            // Interpret no specified schema version as getting the latest
+            var selfServiceJsonSchema =
+                schemaVersion == 0
+                    ? await _selfServiceJsonSchemaService.GetLatestSchema(parsedObjectId)
+                    : await _selfServiceJsonSchemaService.GetSchema(parsedObjectId, schemaVersion);
+
             if (selfServiceJsonSchema == null)
             {
-                return Ok(
-                    new SelfServiceJsonSchema(ISelfServiceJsonSchemaService.LatestVersionNumber, parsedObjectId, "{}")
-                );
+                return Ok(SelfServiceJsonSchema.CreateEmptyJsonSchema(parsedObjectId));
             }
 
             return Ok(selfServiceJsonSchema);
