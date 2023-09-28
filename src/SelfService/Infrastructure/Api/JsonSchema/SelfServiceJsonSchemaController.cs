@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
@@ -51,7 +50,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
         }
         catch (Exception e)
         {
-            return CustomObjectResults.InternalServerError(
+            return CustomObjectResult.InternalServerError(
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetSchema: {e.Message}." }
             );
         }
@@ -62,27 +61,12 @@ public class SelfServiceJsonSchemaController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status501NotImplemented, "application/problem+json")]
     public async Task<IActionResult> AddSchema(string id, [FromBody] AddSelfServiceJsonSchemaRequest? request)
     {
-        string? xApiKey = HttpContext.Request.Headers["x-api-key"];
-        if (string.IsNullOrEmpty(xApiKey))
-        {
-            return Unauthorized();
-        }
+        return CustomObjectResult.NotImplemented(new ProblemDetails { Title = null, Detail = null, });
 
-        string? expected = Environment.GetEnvironmentVariable("SS_ADD_JSON_SCHEMA_API_KEY");
-        if (string.IsNullOrEmpty(expected))
-        {
-            return CustomObjectResults.InternalServerError(
-                new ProblemDetails() { Title = "Missing environment variable", Detail = "Adding schemas not allowed" }
-            );
-        }
-
-        if (xApiKey != expected)
-        {
-            return Unauthorized();
-        }
-
+#pragma warning disable CS0162 // Unreachable code detected
         if (!SelfServiceJsonSchemaObjectId.TryParse(id, out var parsedObjectId))
             return BadRequest(
                 new ProblemDetails
@@ -142,9 +126,10 @@ public class SelfServiceJsonSchemaController : ControllerBase
         }
         catch (Exception e)
         {
-            return CustomObjectResults.InternalServerError(
+            return CustomObjectResult.InternalServerError(
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"AddSchema: {e.Message}." }
             );
         }
+#pragma warning restore CS0162 // Unreachable code detected
     }
 }

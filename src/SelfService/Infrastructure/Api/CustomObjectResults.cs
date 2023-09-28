@@ -2,33 +2,22 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SelfService.Infrastructure.Api;
 
-public static class CustomObjectResults
+public class CustomObjectResult : ObjectResult
 {
-    [NonAction]
-    public static InternalServerErrorResult InternalServerError(object error) => new(error);
-
-    [NonAction]
-    public static MethodNotAllowedErrorResult MethodNotAllowedError(object error) => new(error);
-}
-
-public class InternalServerErrorResult : ObjectResult
-{
-    private const int DefaultStatusCode = StatusCodes.Status500InternalServerError;
-
-    public InternalServerErrorResult(object error)
+    private CustomObjectResult(int statusCode, object error)
         : base(error)
     {
-        StatusCode = DefaultStatusCode;
+        StatusCode = statusCode;
     }
-}
 
-public class MethodNotAllowedErrorResult : ObjectResult
-{
-    private const int DefaultStatusCode = StatusCodes.Status405MethodNotAllowed;
+    [NonAction]
+    public static CustomObjectResult InternalServerError(object error) =>
+        new(StatusCodes.Status405MethodNotAllowed, error);
 
-    public MethodNotAllowedErrorResult(object error)
-        : base(error)
-    {
-        StatusCode = DefaultStatusCode;
-    }
+    [NonAction]
+    public static CustomObjectResult MethodNotAllowedError(object error) =>
+        new(StatusCodes.Status405MethodNotAllowed, error);
+
+    [NonAction]
+    public static CustomObjectResult NotImplemented(object error) => new(StatusCodes.Status501NotImplemented, error);
 }

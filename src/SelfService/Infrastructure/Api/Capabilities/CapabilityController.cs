@@ -118,7 +118,7 @@ public class CapabilityController : ControllerBase
         // Sanity check: should not be possible if result is valid
         if (jsonMetadataResult.JsonMetadata == null)
         {
-            return CustomObjectResults.InternalServerError(
+            return CustomObjectResult.InternalServerError(
                 new ProblemDetails() { Title = "Internal server error", Detail = "JsonMetadataResult is null", }
             );
         }
