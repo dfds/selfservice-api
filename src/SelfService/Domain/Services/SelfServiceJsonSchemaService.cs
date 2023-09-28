@@ -78,21 +78,29 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         return await _selfServiceJsonSchemaRepository.AddSchema(newSchema);
     }
 
+    private static bool IsEmptyJsonData(string? json)
+    {
+        return string.IsNullOrEmpty(json) || json == EmptyJsonData;
+    }
+
     public async Task<ValidateJsonMetadataResult> ValidateJsonMetadata(
         SelfServiceJsonSchemaObjectId objectId,
         string? requestJsonMetadata
     )
     {
         var latestSchema = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
-        if (!string.IsNullOrEmpty(requestJsonMetadata) && requestJsonMetadata != EmptyJsonData)
+
+        // if json metadata is not empty, we need to validate it against the latest schema
+        if (!IsEmptyJsonData(requestJsonMetadata))
         {
             if (latestSchema == null)
                 return ValidateJsonMetadataResult.CreateError(
                     "Json metadata from request is not empty, but no schema exists"
                 );
+            var notNullRequestJsonData = requestJsonMetadata!;
 
             var parsedJsonSchema = JsonSchema.FromText(latestSchema.Schema);
-            JsonNode? actualObj = JsonNode.Parse(requestJsonMetadata);
+            JsonNode? actualObj = JsonNode.Parse(notNullRequestJsonData);
             var result = parsedJsonSchema.Evaluate(actualObj);
             if (!result.IsValid)
                 return ValidateJsonMetadataResult.CreateError(
@@ -100,12 +108,13 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
                 );
 
             return ValidateJsonMetadataResult.CreateSuccess(
-                requestJsonMetadata,
+                notNullRequestJsonData,
                 latestSchema.SchemaVersion,
                 ValidateJsonMetadataResultCode.SuccessValidJsonMetadata
             );
         }
 
+        // if json metadata is empty, we can allow it if the latest schema has no required fields
         if (latestSchema == null)
             return ValidateJsonMetadataResult.CreateSuccess(
                 EmptyJsonData,
