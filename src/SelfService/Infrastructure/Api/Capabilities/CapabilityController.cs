@@ -793,7 +793,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("{id}/canceldeletionrequest")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> CancelCapabilityDeletionRequest(string id)
@@ -854,5 +854,94 @@ public class CapabilityController : ControllerBase
             // users triggering this are trying to circumvent the system and we ignore them
             return NoContent();
         }
+    }
+
+    [HttpPost("{id}/metadata")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> GetCapabilityMetadata(string id)
+    {
+        // Check that capability with provided id exists
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+        }
+
+        var metadata = await _capabilityRepository.GetJsonMetadata(capabilityId);
+        return Ok(metadata);
+    }
+
+    [HttpPost("{id}/metadata")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> SetCapabilityMetadata(string id, [FromBody] SetCapabilityMetadataRequest request)
+    {
+        // Verify user and fetch userId
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and thus set capability metadata.",
+                }
+            );
+        }
+
+        // Check that capability with provided id exists
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+        }
+
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!_authorizationService.CanSetCapabilityJsonMetadata(portalUser))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Not authorized",
+                    Detail = $"User \"{userId}\" is not authorized to set capability metadata."
+                }
+            );
+        }
+
+        // See if request has valid json metadata
+        var result = await _selfServiceJsonSchemaService.ValidateJsonMetadata(
+            SelfServiceJsonSchemaObjectId.Capability,
+            request.JsonMetadata
+        );
+        if (!result.IsValid())
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid metadata",
+                    Detail = result.GetErrorString(),
+                    Status = StatusCodes.Status400BadRequest
+                }
+            );
+        }
+
+        await _capabilityRepository.SetJsonMetadata(capabilityId, result.JsonMetadata!, result.JsonSchemaVersion);
+
+        return Ok();
     }
 }

@@ -80,9 +80,10 @@ public class Capability : AggregateRoot<CapabilityId>
         ModifiedBy = userId;
     }
 
-    public void SetJsonMetadata(string jsonMetadata)
+    public void SetJsonMetadata(string jsonMetadata, int jsonMetadataSchemaVersion)
     {
         JsonMetadata = jsonMetadata;
+        JsonMetadataSchemaVersion = jsonMetadataSchemaVersion;
     }
 
     public void SetModifiedDate(DateTime modifiedAt)

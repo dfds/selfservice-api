@@ -186,4 +186,9 @@ public class AuthorizationService : IAuthorizationService
     {
         return portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
     }
+
+    public bool CanSetCapabilityJsonMetadata(PortalUser portalUser)
+    {
+        return portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+    }
 }
