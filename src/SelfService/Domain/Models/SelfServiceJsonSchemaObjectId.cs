@@ -18,9 +18,9 @@ public class SelfServiceJsonSchemaObjectId : ValueObject
         yield return _value;
     }
 
-    public static bool TryParse(string? text, out SelfServiceJsonSchemaObjectId accountId)
+    public static bool TryParse(string? text, out SelfServiceJsonSchemaObjectId objectId)
     {
-        accountId = null!;
+        objectId = null!;
         if (string.IsNullOrEmpty(text))
         {
             return false;
@@ -28,7 +28,7 @@ public class SelfServiceJsonSchemaObjectId : ValueObject
 
         if (!_validValues.TryGetValue(new SelfServiceJsonSchemaObjectId(text), out var parsedValue))
             return false;
-        accountId = parsedValue;
+        objectId = parsedValue;
         return true;
     }
 
