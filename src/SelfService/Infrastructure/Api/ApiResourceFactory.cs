@@ -373,6 +373,8 @@ public class ApiResourceFactory
             name: capability.Name,
             status: capability.Status.ToString(),
             description: capability.Description,
+            jsonMetadata: capability.JsonMetadata,
+            jsonMetadataSchemaVersion: capability.JsonMetadataSchemaVersion,
             links: new CapabilityDetailsApiResource.CapabilityDetailsLinks(
                 self: CreateSelfLinkFor(capability),
                 members: CreateMembersLinkFor(capability),

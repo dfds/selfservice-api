@@ -1,10 +1,19 @@
-﻿using SelfService.Domain.Events;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using SelfService.Domain.Events;
 
 namespace SelfService.Domain.Models;
 
 public class Capability : AggregateRoot<CapabilityId>
 {
-    public Capability(CapabilityId id, string name, string description, DateTime createdAt, string createdBy)
+    public Capability(
+        CapabilityId id,
+        string name,
+        string description,
+        DateTime createdAt,
+        string createdBy,
+        string jsonMetadata,
+        int jsonMetadataSchemaVersion
+    )
         : base(id)
     {
         Name = name;
@@ -14,6 +23,8 @@ public class Capability : AggregateRoot<CapabilityId>
         CreatedBy = createdBy;
         ModifiedAt = createdAt; // this will always be the same as CreatedAt for a new Capability
         ModifiedBy = createdBy;
+        JsonMetadata = jsonMetadata;
+        JsonMetadataSchemaVersion = jsonMetadataSchemaVersion;
     }
 
     public static Capability CreateCapability(
@@ -21,10 +32,20 @@ public class Capability : AggregateRoot<CapabilityId>
         string name,
         string description,
         DateTime creationTime,
-        string requestedBy
+        string requestedBy,
+        string jsonMetadata,
+        int jsonMetadataSchemaVersion
     )
     {
-        var capability = new Capability(capabilityId, name, description, creationTime, requestedBy);
+        var capability = new Capability(
+            capabilityId,
+            name,
+            description,
+            creationTime,
+            requestedBy,
+            jsonMetadata,
+            jsonMetadataSchemaVersion
+        );
         capability.Raise(new CapabilityCreated(capabilityId, requestedBy));
         return capability;
     }
@@ -36,6 +57,11 @@ public class Capability : AggregateRoot<CapabilityId>
     public DateTime ModifiedAt { get; private set; }
     public string CreatedBy { get; private set; }
     public string ModifiedBy { get; private set; }
+
+    [Column(TypeName = "jsonb")]
+    public string JsonMetadata { get; private set; }
+
+    public int JsonMetadataSchemaVersion { get; private set; }
 
     public override string ToString()
     {
@@ -52,6 +78,11 @@ public class Capability : AggregateRoot<CapabilityId>
         Status = CapabilityStatusOptions.PendingDeletion;
         ModifiedAt = DateTime.UtcNow;
         ModifiedBy = userId;
+    }
+
+    public void SetJsonMetadata(string jsonMetadata)
+    {
+        JsonMetadata = jsonMetadata;
     }
 
     public void SetModifiedDate(DateTime modifiedAt)

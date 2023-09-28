@@ -1,4 +1,5 @@
 ﻿using SelfService.Domain.Models;
+using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.Application.KafkaTopicApplicationService;
 
 namespace SelfService.Tests.Builders;
@@ -23,6 +24,7 @@ public static class A
     public static KafkaTopicApplicationServiceBuilder KafkaTopicApplicationService => new();
     public static MembershipRepositoryBuilder MembershipRepository => new();
     public static DeactivatedMemberCleanerApplicationServiceBuilder DeactivatedMemberCleanerApplicationService => new();
+    public static SelfServiceJsonSchemaServiceBuilder SelfServiceJsonSchemaService => new();
 
     public static ECRRepositoryBuilder ECRRepository => new();
     public static ECRRepositoryRepositoryBuilder ECRRepositoryRepository => new();

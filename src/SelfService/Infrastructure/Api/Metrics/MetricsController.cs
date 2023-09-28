@@ -40,7 +40,7 @@ public class MetricsController : ControllerBase
         }
         catch (PlatformDataApiUnavailableException e)
         {
-            return CustomObjectResults.InternalServerError(
+            return CustomObjectResult.InternalServerError(
                 new ProblemDetails
                 {
                     Title = "PlatformDataApi unreachable",
@@ -50,7 +50,7 @@ public class MetricsController : ControllerBase
         }
         catch (Exception e)
         {
-            return CustomObjectResults.InternalServerError(
+            return CustomObjectResult.InternalServerError(
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetCapabilityCosts: {e.Message}." }
             );
         }
@@ -95,7 +95,7 @@ public class MetricsController : ControllerBase
         }
         catch (PlatformDataApiUnavailableException e)
         {
-            return CustomObjectResults.InternalServerError(
+            return CustomObjectResult.InternalServerError(
                 new ProblemDetails
                 {
                     Title = "PlatformDataApi unreachable",
@@ -105,7 +105,7 @@ public class MetricsController : ControllerBase
         }
         catch (Exception e)
         {
-            return CustomObjectResults.InternalServerError(
+            return CustomObjectResult.InternalServerError(
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetCapabilityCosts: {e.Message}." }
             );
         }

@@ -52,4 +52,28 @@ public class CapabilityRepository : ICapabilityRepository
             .OrderBy(x => x.Name)
             .ToListAsync();
     }
+
+    public async Task SetJsonMetadata(CapabilityId id, string jsonMetadata)
+    {
+        var found = await _dbContext.Capabilities.FindAsync(id);
+        if (found is null)
+        {
+            throw EntityNotFoundException<Capability>.UsingId(id);
+        }
+
+        found.SetJsonMetadata(jsonMetadata);
+
+        _dbContext.Capabilities.Update(found);
+    }
+
+    public async Task<string> GetJsonMetadata(CapabilityId id)
+    {
+        var found = await _dbContext.Capabilities.FindAsync(id);
+        if (found is null)
+        {
+            throw EntityNotFoundException<Capability>.UsingId(id);
+        }
+
+        return found.JsonMetadata;
+    }
 }

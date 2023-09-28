@@ -24,6 +24,8 @@ public class CapabilityController : ControllerBase
     private readonly IAwsAccountApplicationService _awsAccountApplicationService;
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
+    private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
+    private readonly ILogger<CapabilityController> _logger;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -36,7 +38,9 @@ public class CapabilityController : ControllerBase
         IAwsAccountRepository awsAccountRepository,
         IAwsAccountApplicationService awsAccountApplicationService,
         IMembershipApplicationService membershipApplicationService,
-        IKafkaClusterAccessRepository kafkaClusterAccessRepository
+        IKafkaClusterAccessRepository kafkaClusterAccessRepository,
+        ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
+        ILogger<CapabilityController> logger
     )
     {
         _membersQuery = membersQuery;
@@ -50,6 +54,8 @@ public class CapabilityController : ControllerBase
         _awsAccountApplicationService = awsAccountApplicationService;
         _membershipApplicationService = membershipApplicationService;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
+        _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
+        _logger = logger;
     }
 
     [HttpGet("")]
@@ -86,13 +92,46 @@ public class CapabilityController : ControllerBase
             return ValidationProblem();
         }
 
+        // See if request has valid json metadata
+        var jsonMetadataResult = await _selfServiceJsonSchemaService.ValidateJsonMetadata(
+            SelfServiceJsonSchemaObjectId.Capability,
+            request.JsonMetadata
+        );
+
+        if (!jsonMetadataResult.IsValid())
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid metadata",
+                    Detail = jsonMetadataResult.GetErrorString(),
+                    Status = StatusCodes.Status400BadRequest
+                }
+            );
+        }
+
+        _logger.LogInformation(
+            "Successfully parsed json meta data: {ParseResultCode}",
+            jsonMetadataResult.ResultCode.ToString()
+        );
+
+        // Sanity check: should not be possible if result is valid
+        if (jsonMetadataResult.JsonMetadata == null)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails() { Title = "Internal server error", Detail = "JsonMetadataResult is null", }
+            );
+        }
+
         try
         {
             await _capabilityApplicationService.CreateNewCapability(
                 capabilityId,
                 request.Name!,
                 request.Description ?? "",
-                userId
+                userId,
+                jsonMetadataResult.JsonMetadata,
+                jsonMetadataResult.JsonSchemaVersion
             );
         }
         catch (EntityAlreadyExistsException)
@@ -105,7 +144,6 @@ public class CapabilityController : ControllerBase
         }
 
         var capability = await _capabilityRepository.Get(capabilityId);
-
         return CreatedAtAction(
             actionName: nameof(GetCapabilityById),
             controllerName: "Capability",
