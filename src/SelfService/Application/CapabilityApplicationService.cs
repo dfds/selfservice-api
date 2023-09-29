@@ -241,4 +241,15 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             );
         }
     }
+
+    [TransactionalBoundary]
+    public async Task SetJsonMetadata(CapabilityId id, string jsonMetadata, int jsonSchemaVersion)
+    {
+        await _capabilityRepository.SetJsonMetadata(id, jsonMetadata, jsonSchemaVersion);
+    }
+
+    public async Task<string> GetJsonMetadata(CapabilityId id)
+    {
+        return await _capabilityRepository.GetJsonMetadata(id);
+    }
 }

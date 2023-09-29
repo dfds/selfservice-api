@@ -64,9 +64,6 @@ public class SelfServiceJsonSchemaController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status501NotImplemented, "application/problem+json")]
     public async Task<IActionResult> AddSchema(string id, [FromBody] AddSelfServiceJsonSchemaRequest? request)
     {
-        return CustomObjectResult.NotImplemented(new ProblemDetails { Title = null, Detail = null, });
-
-#pragma warning disable CS0162 // Unreachable code detected
         if (!SelfServiceJsonSchemaObjectId.TryParse(id, out var parsedObjectId))
             return BadRequest(
                 new ProblemDetails

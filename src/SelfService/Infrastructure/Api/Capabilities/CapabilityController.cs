@@ -856,7 +856,7 @@ public class CapabilityController : ControllerBase
         }
     }
 
-    [HttpPost("{id}/metadata")]
+    [HttpGet("{id}/metadata")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
@@ -876,7 +876,7 @@ public class CapabilityController : ControllerBase
             );
         }
 
-        var metadata = await _capabilityRepository.GetJsonMetadata(capabilityId);
+        var metadata = await _capabilityApplicationService.GetJsonMetadata(capabilityId);
         return Ok(metadata);
     }
 
@@ -923,10 +923,22 @@ public class CapabilityController : ControllerBase
             );
         }
 
+        if (request?.JsonMetadata == null)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid metadata",
+                    Detail = "Request body is empty",
+                    Status = StatusCodes.Status400BadRequest
+                }
+            );
+        }
+
         // See if request has valid json metadata
         var result = await _selfServiceJsonSchemaService.ValidateJsonMetadata(
             SelfServiceJsonSchemaObjectId.Capability,
-            request.JsonMetadata
+            request.JsonMetadata.ToJsonString()
         );
         if (!result.IsValid())
         {
@@ -940,7 +952,11 @@ public class CapabilityController : ControllerBase
             );
         }
 
-        await _capabilityRepository.SetJsonMetadata(capabilityId, result.JsonMetadata!, result.JsonSchemaVersion);
+        await _capabilityApplicationService.SetJsonMetadata(
+            capabilityId,
+            result.JsonMetadata!,
+            result.JsonSchemaVersion
+        );
 
         return Ok();
     }

@@ -64,6 +64,7 @@ public class CapabilityRepository : ICapabilityRepository
         found.SetJsonMetadata(jsonMetadata, jsonSchemaVersion);
 
         _dbContext.Capabilities.Update(found);
+        await _dbContext.SaveChangesAsync();
     }
 
     public async Task<string> GetJsonMetadata(CapabilityId id)

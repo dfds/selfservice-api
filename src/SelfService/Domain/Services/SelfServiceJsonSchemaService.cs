@@ -55,14 +55,17 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 
     public void MustValidateJsonSchemaAgainstMetaSchema(string schema)
     {
+        // Check if json is valid
         JsonNode? actualObj = JsonNode.Parse(schema);
-
         var result = MetaSchemas.Content202012.Evaluate(
             actualObj,
             new EvaluationOptions { ValidateAgainstMetaSchema = true, OutputFormat = OutputFormat.Hierarchical }
         );
         if (!result.IsValid)
             throw new InvalidJsonSchemaException(result);
+
+        // Check if json can be parsed
+        JsonSchema.FromText(schema);
     }
 
     [TransactionalBoundary]
