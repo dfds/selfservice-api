@@ -1,33 +1,12 @@
-using System.Text;
 using System.Text.Json.Nodes;
 using SelfService.Domain.Models;
 using Json.Schema;
+using SelfService.Domain.Exceptions;
 
 namespace SelfService.Domain.Services;
 
 public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 {
-    public class InvalidJsonSchemaException : Exception
-    {
-        private static string ErrorDictionaryToString(IReadOnlyDictionary<string, string>? errors)
-        {
-            if (errors == null)
-                return "";
-
-            StringBuilder s = new StringBuilder();
-            foreach (var keyValuePair in errors)
-            {
-                s.AppendLine($"{keyValuePair.Key}: {keyValuePair.Value}");
-            }
-
-            return s.ToString();
-        }
-
-        public InvalidJsonSchemaException(EvaluationResults result)
-            : base($"Invalid Json Schema, errors: {(result.HasErrors ? ErrorDictionaryToString(result.Errors) : "")}")
-        { }
-    }
-
     private const string EmptyJsonData = "{}";
     private const int EmptyJsonSchemaVersion = 0;
 

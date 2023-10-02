@@ -29,6 +29,6 @@ public interface ICapabilityApplicationService
     Task RequestCapabilityDeletion(CapabilityId capabilityId, UserId userId);
     Task CancelCapabilityDeletionRequest(CapabilityId capabilityId, UserId userId);
     Task ActOnPendingCapabilityDeletions();
-    Task SetJsonMetadata(CapabilityId capabilityId, string jsonMetadata, int jsonSchemaVersion);
+    Task SetJsonMetadata(CapabilityId capabilityId, string jsonMetadata);
     Task<string> GetJsonMetadata(CapabilityId capabilityId);
 }

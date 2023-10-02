@@ -14,6 +14,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
     private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
+    private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
 
     private const int PendingDaysUntilDeletion = 7;
 
@@ -23,7 +24,8 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         IKafkaTopicRepository kafkaTopicRepository,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ITicketingSystem ticketingSystem,
-        SystemTime systemTime
+        SystemTime systemTime,
+        ISelfServiceJsonSchemaService selfServiceJsonSchemaService
     )
     {
         _logger = logger;
@@ -32,6 +34,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
+        _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
     }
 
     [TransactionalBoundary, Outboxed]
@@ -243,9 +246,20 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     }
 
     [TransactionalBoundary]
-    public async Task SetJsonMetadata(CapabilityId id, string jsonMetadata, int jsonSchemaVersion)
+    public async Task SetJsonMetadata(CapabilityId id, string jsonMetadata)
     {
-        await _capabilityRepository.SetJsonMetadata(id, jsonMetadata, jsonSchemaVersion);
+        // See if request has valid json metadata
+        var result = await _selfServiceJsonSchemaService.ValidateJsonMetadata(
+            SelfServiceJsonSchemaObjectId.Capability,
+            jsonMetadata
+        );
+
+        if (!result.IsValid())
+        {
+            throw new InvalidJsonMetadataException(result);
+        }
+
+        await _capabilityRepository.SetJsonMetadata(id, result.JsonMetadata!, result.JsonSchemaVersion);
     }
 
     public async Task<string> GetJsonMetadata(CapabilityId id)

@@ -934,28 +934,27 @@ public class CapabilityController : ControllerBase
             );
         }
 
-        // See if request has valid json metadata
-        var result = await _selfServiceJsonSchemaService.ValidateJsonMetadata(
-            SelfServiceJsonSchemaObjectId.Capability,
-            request.JsonMetadata.ToJsonString()
-        );
-        if (!result.IsValid())
+        try
+        {
+            await _capabilityApplicationService.SetJsonMetadata(capabilityId, request.JsonMetadata.ToJsonString());
+        }
+        catch (InvalidJsonMetadataException e)
         {
             return BadRequest(
                 new ProblemDetails
                 {
-                    Title = "Invalid metadata",
-                    Detail = result.GetErrorString(),
+                    Title = "Invalid json metadata",
+                    Detail = e.Message,
                     Status = StatusCodes.Status400BadRequest
                 }
             );
         }
-
-        await _capabilityApplicationService.SetJsonMetadata(
-            capabilityId,
-            result.JsonMetadata!,
-            result.JsonSchemaVersion
-        );
+        catch (Exception e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"SetCapabilityMetadata: {e.Message}." }
+            );
+        }
 
         return Ok();
     }
