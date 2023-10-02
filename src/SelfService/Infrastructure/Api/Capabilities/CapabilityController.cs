@@ -793,7 +793,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("{id}/canceldeletionrequest")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> CancelCapabilityDeletionRequest(string id)
@@ -858,7 +858,6 @@ public class CapabilityController : ControllerBase
 
     [HttpGet("{id}/metadata")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
@@ -881,7 +880,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("{id}/metadata")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
