@@ -1,33 +1,12 @@
-using System.Text;
 using System.Text.Json.Nodes;
 using SelfService.Domain.Models;
 using Json.Schema;
+using SelfService.Domain.Exceptions;
 
 namespace SelfService.Domain.Services;
 
 public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 {
-    public class InvalidJsonSchemaException : Exception
-    {
-        private static string ErrorDictionaryToString(IReadOnlyDictionary<string, string>? errors)
-        {
-            if (errors == null)
-                return "";
-
-            StringBuilder s = new StringBuilder();
-            foreach (var keyValuePair in errors)
-            {
-                s.AppendLine($"{keyValuePair.Key}: {keyValuePair.Value}");
-            }
-
-            return s.ToString();
-        }
-
-        public InvalidJsonSchemaException(EvaluationResults result)
-            : base($"Invalid Json Schema, errors: {(result.HasErrors ? ErrorDictionaryToString(result.Errors) : "")}")
-        { }
-    }
-
     private const string EmptyJsonData = "{}";
     private const int EmptyJsonSchemaVersion = 0;
 
@@ -55,14 +34,17 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 
     public void MustValidateJsonSchemaAgainstMetaSchema(string schema)
     {
+        // Check if json is valid
         JsonNode? actualObj = JsonNode.Parse(schema);
-
         var result = MetaSchemas.Content202012.Evaluate(
             actualObj,
             new EvaluationOptions { ValidateAgainstMetaSchema = true, OutputFormat = OutputFormat.Hierarchical }
         );
         if (!result.IsValid)
             throw new InvalidJsonSchemaException(result);
+
+        // Check if json can be parsed
+        JsonSchema.FromText(schema);
     }
 
     [TransactionalBoundary]

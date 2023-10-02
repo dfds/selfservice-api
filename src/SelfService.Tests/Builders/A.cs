@@ -25,6 +25,7 @@ public static class A
     public static MembershipRepositoryBuilder MembershipRepository => new();
     public static DeactivatedMemberCleanerApplicationServiceBuilder DeactivatedMemberCleanerApplicationService => new();
     public static SelfServiceJsonSchemaServiceBuilder SelfServiceJsonSchemaService => new();
+    public static CapabilityApplicationServiceBuilder CapabilityApplicationService => new();
 
     public static ECRRepositoryBuilder ECRRepository => new();
     public static ECRRepositoryRepositoryBuilder ECRRepositoryRepository => new();

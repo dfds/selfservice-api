@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 
@@ -64,9 +65,6 @@ public class SelfServiceJsonSchemaController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status501NotImplemented, "application/problem+json")]
     public async Task<IActionResult> AddSchema(string id, [FromBody] AddSelfServiceJsonSchemaRequest? request)
     {
-        return CustomObjectResult.NotImplemented(new ProblemDetails { Title = null, Detail = null, });
-
-#pragma warning disable CS0162 // Unreachable code detected
         if (!SelfServiceJsonSchemaObjectId.TryParse(id, out var parsedObjectId))
             return BadRequest(
                 new ProblemDetails
@@ -95,7 +93,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
         {
             _selfServiceJsonSchemaService.MustValidateJsonSchemaAgainstMetaSchema(request.Schema.ToJsonString());
         }
-        catch (SelfServiceJsonSchemaService.InvalidJsonSchemaException e) // sanity check
+        catch (InvalidJsonSchemaException e) // sanity check
         {
             return BadRequest(
                 new ProblemDetails
@@ -114,7 +112,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
             );
             return Ok(selfServiceJsonSchema);
         }
-        catch (SelfServiceJsonSchemaService.InvalidJsonSchemaException e) // sanity check
+        catch (InvalidJsonSchemaException e) // sanity check
         {
             return BadRequest(
                 new ProblemDetails

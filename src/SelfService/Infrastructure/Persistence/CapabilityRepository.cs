@@ -53,7 +53,7 @@ public class CapabilityRepository : ICapabilityRepository
             .ToListAsync();
     }
 
-    public async Task SetJsonMetadata(CapabilityId id, string jsonMetadata)
+    public async Task SetJsonMetadata(CapabilityId id, string jsonMetadata, int jsonSchemaVersion)
     {
         var found = await _dbContext.Capabilities.FindAsync(id);
         if (found is null)
@@ -61,9 +61,10 @@ public class CapabilityRepository : ICapabilityRepository
             throw EntityNotFoundException<Capability>.UsingId(id);
         }
 
-        found.SetJsonMetadata(jsonMetadata);
+        found.SetJsonMetadata(jsonMetadata, jsonSchemaVersion);
 
         _dbContext.Capabilities.Update(found);
+        await _dbContext.SaveChangesAsync();
     }
 
     public async Task<string> GetJsonMetadata(CapabilityId id)

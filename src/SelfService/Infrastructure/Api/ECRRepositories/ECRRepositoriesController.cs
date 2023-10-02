@@ -123,7 +123,7 @@ public class ECRRepositoriesController : ControllerBase
         catch (Exception e)
         {
             return CustomObjectResult.InternalServerError(
-                new ProblemDetails { Title = "Uncaught Exception", Detail = $"CreateECRRepository: {e.Message}." }
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"SynchronizeAwsAndDatabase: {e.Message}." }
             );
         }
     }
