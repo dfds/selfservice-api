@@ -14,7 +14,7 @@ public class StubUserStatusChecker : IUserStatusChecker
         SetAuthToken();
     }
 
-    public bool TrySetAuthToken()
+    public Task<bool> TrySetAuthToken()
     {
         return false;
     }
