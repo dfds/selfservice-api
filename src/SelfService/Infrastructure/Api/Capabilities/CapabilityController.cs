@@ -24,6 +24,8 @@ public class CapabilityController : ControllerBase
     private readonly IAwsAccountApplicationService _awsAccountApplicationService;
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
+    private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
+    private readonly ILogger<CapabilityController> _logger;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -36,7 +38,9 @@ public class CapabilityController : ControllerBase
         IAwsAccountRepository awsAccountRepository,
         IAwsAccountApplicationService awsAccountApplicationService,
         IMembershipApplicationService membershipApplicationService,
-        IKafkaClusterAccessRepository kafkaClusterAccessRepository
+        IKafkaClusterAccessRepository kafkaClusterAccessRepository,
+        ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
+        ILogger<CapabilityController> logger
     )
     {
         _membersQuery = membersQuery;
@@ -50,6 +54,8 @@ public class CapabilityController : ControllerBase
         _awsAccountApplicationService = awsAccountApplicationService;
         _membershipApplicationService = membershipApplicationService;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
+        _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
+        _logger = logger;
     }
 
     [HttpGet("")]
@@ -86,13 +92,46 @@ public class CapabilityController : ControllerBase
             return ValidationProblem();
         }
 
+        // See if request has valid json metadata
+        var jsonMetadataResult = await _selfServiceJsonSchemaService.ValidateJsonMetadata(
+            SelfServiceJsonSchemaObjectId.Capability,
+            request.JsonMetadata
+        );
+
+        if (!jsonMetadataResult.IsValid())
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid metadata",
+                    Detail = jsonMetadataResult.GetErrorString(),
+                    Status = StatusCodes.Status400BadRequest
+                }
+            );
+        }
+
+        _logger.LogInformation(
+            "Successfully parsed json meta data: {ParseResultCode}",
+            jsonMetadataResult.ResultCode.ToString()
+        );
+
+        // Sanity check: should not be possible if result is valid
+        if (jsonMetadataResult.JsonMetadata == null)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails() { Title = "Internal server error", Detail = "JsonMetadataResult is null", }
+            );
+        }
+
         try
         {
             await _capabilityApplicationService.CreateNewCapability(
                 capabilityId,
                 request.Name!,
                 request.Description ?? "",
-                userId
+                userId,
+                jsonMetadataResult.JsonMetadata,
+                jsonMetadataResult.JsonSchemaVersion
             );
         }
         catch (EntityAlreadyExistsException)
@@ -105,7 +144,6 @@ public class CapabilityController : ControllerBase
         }
 
         var capability = await _capabilityRepository.Get(capabilityId);
-
         return CreatedAtAction(
             actionName: nameof(GetCapabilityById),
             controllerName: "Capability",
@@ -816,5 +854,108 @@ public class CapabilityController : ControllerBase
             // users triggering this are trying to circumvent the system and we ignore them
             return NoContent();
         }
+    }
+
+    [HttpGet("{id}/metadata")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> GetCapabilityMetadata(string id)
+    {
+        // Check that capability with provided id exists
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+        }
+
+        var metadata = await _capabilityApplicationService.GetJsonMetadata(capabilityId);
+        return Ok(metadata);
+    }
+
+    [HttpPost("{id}/metadata")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> SetCapabilityMetadata(string id, [FromBody] SetCapabilityMetadataRequest request)
+    {
+        // Verify user and fetch userId
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and thus set capability metadata.",
+                }
+            );
+        }
+
+        // Check that capability with provided id exists
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+        }
+
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!_authorizationService.CanSetCapabilityJsonMetadata(portalUser))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Not authorized",
+                    Detail = $"User \"{userId}\" is not authorized to set capability metadata."
+                }
+            );
+        }
+
+        if (request?.JsonMetadata == null)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid metadata",
+                    Detail = "Request body is empty",
+                    Status = StatusCodes.Status400BadRequest
+                }
+            );
+        }
+
+        try
+        {
+            await _capabilityApplicationService.SetJsonMetadata(capabilityId, request.JsonMetadata.ToJsonString());
+        }
+        catch (InvalidJsonMetadataException e)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid json metadata",
+                    Detail = e.Message,
+                    Status = StatusCodes.Status400BadRequest
+                }
+            );
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"SetCapabilityMetadata: {e.Message}." }
+            );
+        }
+
+        return Ok();
     }
 }

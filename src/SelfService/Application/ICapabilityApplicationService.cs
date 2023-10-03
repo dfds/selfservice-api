@@ -8,7 +8,9 @@ public interface ICapabilityApplicationService
         CapabilityId capabilityId,
         string name,
         string description,
-        string requestedBy
+        string requestedBy,
+        string jsonMetadata,
+        int jsonSchemaVersion
     );
 
     // NOTE [jandr@2023-03-27]: should this be moved to a more topic-centric use-case (e.g. topic application service)?
@@ -21,9 +23,12 @@ public interface ICapabilityApplicationService
         KafkaTopicRetention retention,
         string requestedBy
     );
+
     Task RequestKafkaClusterAccess(CapabilityId capabilityId, KafkaClusterId kafkaClusterId, UserId requestedBy);
     Task RegisterKafkaClusterAccessGranted(CapabilityId capabilityId, KafkaClusterId kafkaClusterId);
     Task RequestCapabilityDeletion(CapabilityId capabilityId, UserId userId);
     Task CancelCapabilityDeletionRequest(CapabilityId capabilityId, UserId userId);
     Task ActOnPendingCapabilityDeletions();
+    Task SetJsonMetadata(CapabilityId capabilityId, string jsonMetadata);
+    Task<string> GetJsonMetadata(CapabilityId capabilityId);
 }

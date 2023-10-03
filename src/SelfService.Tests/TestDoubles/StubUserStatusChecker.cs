@@ -6,23 +6,11 @@ namespace SelfService.Tests.TestDoubles;
 
 public class StubUserStatusChecker : IUserStatusChecker
 {
-    private readonly ILogger<RemoveDeactivatedMemberships> _logger; //depends on that background job
-
-    public StubUserStatusChecker(ILogger<RemoveDeactivatedMemberships> logger)
+    public Task<bool> TrySetAuthToken()
     {
-        _logger = logger;
-        SetAuthToken();
+        return Task.FromResult(false);
     }
-
-    public bool TrySetAuthToken()
-    {
-        return false;
-    }
-
-    private void SetAuthToken()
-    {
-        return; //so we can await it
-    }
+    
 
     private Task<bool> BusyWait()
     {

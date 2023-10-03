@@ -35,7 +35,7 @@ public class ECRRepositoriesController : ControllerBase
         }
         catch (Exception e)
         {
-            return CustomObjectResults.InternalServerError(
+            return CustomObjectResult.InternalServerError(
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetECRRepositories: {e.Message}." }
             );
         }
@@ -90,7 +90,7 @@ public class ECRRepositoriesController : ControllerBase
         }
         catch (Exception e)
         {
-            return CustomObjectResults.InternalServerError(
+            return CustomObjectResult.InternalServerError(
                 new ProblemDetails
                 {
                     Title = "Uncaught Exception",
@@ -122,8 +122,8 @@ public class ECRRepositoriesController : ControllerBase
         }
         catch (Exception e)
         {
-            return CustomObjectResults.InternalServerError(
-                new ProblemDetails { Title = "Uncaught Exception", Detail = $"CreateECRRepository: {e.Message}." }
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"SynchronizeAwsAndDatabase: {e.Message}." }
             );
         }
     }

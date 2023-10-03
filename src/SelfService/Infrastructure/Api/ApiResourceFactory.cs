@@ -273,6 +273,34 @@ public class ApiResourceFactory
         );
     }
 
+    private ResourceLink CreateSetMetadataLinkFor(Capability capability)
+    {
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.SetCapabilityMetadata),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: Allow.Post
+        );
+    }
+
+    private ResourceLink CreateGetMetadataLinkFor(Capability capability)
+    {
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCapabilityMetadata),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: Allow.Get
+        );
+    }
+
     private async Task<ResourceLink> CreateRequestDeletionLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
@@ -280,6 +308,7 @@ public class ApiResourceFactory
         {
             allowedInteractions += Post;
         }
+
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
@@ -373,6 +402,8 @@ public class ApiResourceFactory
             name: capability.Name,
             status: capability.Status.ToString(),
             description: capability.Description,
+            jsonMetadata: capability.JsonMetadata,
+            jsonMetadataSchemaVersion: capability.JsonMetadataSchemaVersion,
             links: new CapabilityDetailsApiResource.CapabilityDetailsLinks(
                 self: CreateSelfLinkFor(capability),
                 members: CreateMembersLinkFor(capability),
@@ -381,7 +412,9 @@ public class ApiResourceFactory
                 leaveCapability: await CreateLeaveCapabilityLinkFor(capability),
                 awsAccount: await CreateAwsAccountLinkFor(capability),
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
-                cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability)
+                cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
+                setCapabilityMetadata: CreateSetMetadataLinkFor(capability),
+                getCapabilityMetadata: CreateGetMetadataLinkFor(capability)
             )
         );
     }

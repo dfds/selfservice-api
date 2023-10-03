@@ -14,6 +14,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
     private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
+    private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
 
     private const int PendingDaysUntilDeletion = 7;
 
@@ -23,7 +24,8 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         IKafkaTopicRepository kafkaTopicRepository,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ITicketingSystem ticketingSystem,
-        SystemTime systemTime
+        SystemTime systemTime,
+        ISelfServiceJsonSchemaService selfServiceJsonSchemaService
     )
     {
         _logger = logger;
@@ -32,6 +34,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
+        _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
     }
 
     [TransactionalBoundary, Outboxed]
@@ -39,7 +42,9 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         CapabilityId capabilityId,
         string name,
         string description,
-        string requestedBy
+        string requestedBy,
+        string jsonMetadata,
+        int jsonSchemaVersion
     )
     {
         if (await _capabilityRepository.Exists(capabilityId))
@@ -47,8 +52,17 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             _logger.LogError("Capability with id {CapabilityId} already exists", capabilityId);
             throw EntityAlreadyExistsException<Capability>.WithProperty(x => x.Name, name);
         }
+
         var creationTime = _systemTime.Now;
-        var capability = Capability.CreateCapability(capabilityId, name, description, creationTime, requestedBy);
+        var capability = Capability.CreateCapability(
+            capabilityId,
+            name,
+            description,
+            creationTime,
+            requestedBy,
+            jsonMetadata,
+            jsonSchemaVersion
+        );
         await _capabilityRepository.Add(capability);
 
         return capabilityId;
@@ -166,6 +180,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         {
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
+
         var modificationTime = _systemTime.Now;
         capability.RequestDeletion(userId);
     }
@@ -178,6 +193,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         {
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
+
         var modificationTime = _systemTime.Now;
         capability.CancelDeletionRequest(userId);
     }
@@ -227,5 +243,27 @@ public class CapabilityApplicationService : ICapabilityApplicationService
                 capability.ModifiedBy
             );
         }
+    }
+
+    [TransactionalBoundary]
+    public async Task SetJsonMetadata(CapabilityId id, string jsonMetadata)
+    {
+        // See if request has valid json metadata
+        var result = await _selfServiceJsonSchemaService.ValidateJsonMetadata(
+            SelfServiceJsonSchemaObjectId.Capability,
+            jsonMetadata
+        );
+
+        if (!result.IsValid())
+        {
+            throw new InvalidJsonMetadataException(result);
+        }
+
+        await _capabilityRepository.SetJsonMetadata(id, result.JsonMetadata!, result.JsonSchemaVersion);
+    }
+
+    public async Task<string> GetJsonMetadata(CapabilityId id)
+    {
+        return await _capabilityRepository.GetJsonMetadata(id);
     }
 }

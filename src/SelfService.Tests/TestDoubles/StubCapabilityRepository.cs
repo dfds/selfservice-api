@@ -40,4 +40,14 @@ public class StubCapabilityRepository : ICapabilityRepository
     {
         throw new NotImplementedException();
     }
+
+    public Task SetJsonMetadata(CapabilityId id, string jsonMetadata, int jsonSchemaVersion)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string> GetJsonMetadata(CapabilityId id)
+    {
+        throw new NotImplementedException();
+    }
 }

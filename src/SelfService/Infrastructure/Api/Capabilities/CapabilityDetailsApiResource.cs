@@ -10,6 +10,9 @@ public class CapabilityDetailsApiResource
     public string Status { get; set; }
     public string Description { get; set; }
 
+    public string JsonMetadata { get; set; } = "";
+    public int JsonMetadataSchemaVersion { get; set; }
+
     [JsonPropertyName("_links")]
     public CapabilityDetailsLinks Links { get; set; }
 
@@ -23,6 +26,8 @@ public class CapabilityDetailsApiResource
         public ResourceLink AwsAccount { get; set; }
         public ResourceLink RequestCapabilityDeletion { get; set; }
         public ResourceLink CancelCapabilityDeletionRequest { get; set; }
+        public ResourceLink SetCapabilityMetadata { get; set; }
+        public ResourceLink GetCapabilityMetadata { get; set; }
 
         public CapabilityDetailsLinks(
             ResourceLink self,
@@ -32,7 +37,9 @@ public class CapabilityDetailsApiResource
             ResourceLink leaveCapability,
             ResourceLink awsAccount,
             ResourceLink requestCapabilityDeletion,
-            ResourceLink cancelCapabilityDeletionRequest
+            ResourceLink cancelCapabilityDeletionRequest,
+            ResourceLink setCapabilityMetadata,
+            ResourceLink getCapabilityMetadata
         )
         {
             Self = self;
@@ -43,6 +50,8 @@ public class CapabilityDetailsApiResource
             AwsAccount = awsAccount;
             RequestCapabilityDeletion = requestCapabilityDeletion;
             CancelCapabilityDeletionRequest = cancelCapabilityDeletionRequest;
+            SetCapabilityMetadata = setCapabilityMetadata;
+            GetCapabilityMetadata = getCapabilityMetadata;
         }
     }
 
@@ -51,6 +60,8 @@ public class CapabilityDetailsApiResource
         string name,
         string status,
         string description,
+        string jsonMetadata,
+        int jsonMetadataSchemaVersion,
         CapabilityDetailsLinks links
     )
     {
@@ -59,6 +70,8 @@ public class CapabilityDetailsApiResource
         Status = status;
         Description = description;
         Links = links;
+        JsonMetadata = jsonMetadata;
+        JsonMetadataSchemaVersion = jsonMetadataSchemaVersion;
     }
 }
 

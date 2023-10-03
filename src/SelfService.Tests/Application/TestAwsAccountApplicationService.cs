@@ -173,6 +173,16 @@ public class TestAwsAccountApplicationService
         {
             throw new NotImplementedException();
         }
+
+        public Task SetJsonMetadata(CapabilityId id, string jsonMetadata, int jsonSchemaVersion)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> GetJsonMetadata(CapabilityId id)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     private class TicketingSystemSpy : ITicketingSystem

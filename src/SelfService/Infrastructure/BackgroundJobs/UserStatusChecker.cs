@@ -15,10 +15,9 @@ public class UserStatusChecker : IUserStatusChecker
     public UserStatusChecker(ILogger<RemoveDeactivatedMemberships> logger)
     {
         _logger = logger;
-        SetAuthToken();
     }
 
-    private async void SetAuthToken()
+    private async Task SetAuthToken()
     {
         /*
             makes an MS-Graph request to get the temporary creds
@@ -94,11 +93,11 @@ public class UserStatusChecker : IUserStatusChecker
     }
 
     /// <returns> true if AuthToken is set or was set sucessfully</returns>
-    public bool TrySetAuthToken()
+    public async Task<bool> TrySetAuthToken()
     {
         if (_authToken == null)
         {
-            SetAuthToken();
+            await SetAuthToken();
         }
         return _authToken != null;
     }
@@ -113,7 +112,7 @@ public class UserStatusChecker : IUserStatusChecker
             _logger.LogError(
                 "[UserStatusChecker] cannot make user request, `authToken` is not set, attempting to set `authToken`"
             );
-            if (!TrySetAuthToken())
+            if (!(await TrySetAuthToken()))
             {
                 _logger.LogError("[UserStatusChecker] Failed setting authToken: cancelling CheckUserStatus");
                 return UserStatusCheckerStatus.NoAuthToken;
