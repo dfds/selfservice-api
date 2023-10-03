@@ -24,50 +24,43 @@ public class TestMemberCleaner
             .WithMembershipRepository(new MembershipRepository(dbContext))
             .WithMembershipApplicationRepository(new MembershipApplicationRepository(dbContext, systemTime))
             .Build();
-
-        var logger = LoggerFactory
-            .Create(loggerConfig =>
-            {
-                loggerConfig.AddConsole().AddFilter(DbLoggerCategory.Database.Command.Name, LogLevel.Information);
-            })
-            .CreateLogger<RemoveDeactivatedMemberships>();
-
+        
         var capability = A.Capability.Build();
 
-        var member_active = A.Membership.WithCapabilityId(capability.Id).WithUserId("useractive@dfds.com").Build();
-        var member_deact = A.Membership.WithCapabilityId(capability.Id).WithUserId("userdeactivated@dfds.com").Build();
-        var member_notfound1 = A.Membership
+        var memberActive = A.Membership.WithCapabilityId(capability.Id).WithUserId("useractive@dfds.com").Build();
+        var memberDeactivated = A.Membership.WithCapabilityId(capability.Id).WithUserId("userdeactivated@dfds.com").Build();
+        var memberNotfound1 = A.Membership
             .WithCapabilityId(capability.Id)
             .WithUserId("usernotinazure1@dfds.com")
             .Build();
-        var member_notfound2 = A.Membership
+        var memberNotfound2 = A.Membership
             .WithCapabilityId(capability.Id)
             .WithUserId("usernotinazure2@dfds.com")
             .Build();
-        var member_notfound3 = A.Membership
+        var memberNotfound3 = A.Membership
             .WithCapabilityId(capability.Id)
             .WithUserId("usernotinazure2@dfds.com")
             .Build();
 
         var repo = A.MembershipRepository.WithDbContext(dbContext).Build();
 
-        await repo.Add(member_active);
-        await repo.Add(member_deact);
-        await repo.Add(member_notfound1);
-        await repo.Add(member_notfound2);
-        await repo.Add(member_notfound3);
+        await repo.Add(memberActive);
+        await repo.Add(memberDeactivated);
+        await repo.Add(memberNotfound1);
+        await repo.Add(memberNotfound2);
+        await repo.Add(memberNotfound3);
 
         await dbContext.SaveChangesAsync();
 
         // create stub/mock
-        var userStatusChecker = new StubUserStatusChecker(logger);
+        var userStatusChecker = new StubUserStatusChecker();
         await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
 
         var remaining = await dbContext.Memberships.ToListAsync();
-        Assert.Contains(member_active, remaining, new MembershipComparer());
+        Assert.Contains(memberActive, remaining, new MembershipComparer());
         // [TRIAL] currently we do not delete users for which 404 happened in Azure AD
-        Assert.Contains(member_notfound1, remaining, new MembershipComparer());
-        Assert.Contains(member_notfound2, remaining, new MembershipComparer());
-        Assert.Contains(member_notfound3, remaining, new MembershipComparer());
+        Assert.Contains(memberNotfound1, remaining, new MembershipComparer());
+        Assert.Contains(memberNotfound2, remaining, new MembershipComparer());
+        Assert.Contains(memberNotfound3, remaining, new MembershipComparer());
     }
 }
