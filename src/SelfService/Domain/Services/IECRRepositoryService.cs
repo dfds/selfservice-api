@@ -6,6 +6,6 @@ public interface IECRRepositoryService
 {
     Task<bool> HasRepository(string repositoryName);
     Task<IEnumerable<ECRRepository>> GetAllECRRepositories();
-    Task<ECRRepository> AddRepository(string name, string description, string repositoryName, UserId userId);
+    Task<ECRRepository> AddRepository(string name, string description, UserId userId);
     Task SynchronizeAwsECRAndDatabase(bool performUpdateOnMismatch = false);
 }

@@ -42,7 +42,7 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
     ///
     /// In case of failure setting the policy we delete the repo to not have orphaned repos
     /// </summary>
-    public async Task CreateECRRepo(string repositoryName)
+    public async Task CreateECRRepo(string name)
     {
         var client = NewAwsECRClient();
         var accountId = Environment.GetEnvironmentVariable("ECR_PULL_PERMISSION_AWS_ACCOUNT_ID");
@@ -53,20 +53,20 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
             new CreateRepositoryRequest
             {
                 ImageScanningConfiguration = new ImageScanningConfiguration() { ScanOnPush = true },
-                RepositoryName = repositoryName,
+                RepositoryName = name,
             }
         );
         try
         {
             var policyJson = GetPermissionJson(accountId);
             await client.SetRepositoryPolicyAsync(
-                new SetRepositoryPolicyRequest { RepositoryName = repositoryName, PolicyText = policyJson, }
+                new SetRepositoryPolicyRequest { RepositoryName = name, PolicyText = policyJson, }
             );
         }
         catch (Exception e)
         {
             // To not have orphaned repos, delete the repo if setting the policy fails
-            await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = repositoryName, });
+            await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = name, });
 
             throw new Exception($"Unable to set ECR repo policy, deleting repo: {e}");
         }
@@ -75,10 +75,10 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
     /// <summary>
     /// Only for system use, and currently used if adding ECR repository to db fails
     /// </summary>
-    public async Task DeleteECRRepo(string repositoryName)
+    public async Task DeleteECRRepo(string name)
     {
         AmazonECRClient client = new(new AmazonECRConfig { RegionEndpoint = RegionEndpoint.EUCentral1, });
-        await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = repositoryName, });
+        await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = name, });
     }
 
     public async Task<List<string>> GetECRRepositories()

@@ -43,12 +43,7 @@ public class ECRRepositoryService : IECRRepositoryService
     }
 
     [TransactionalBoundary]
-    public async Task<ECRRepository> AddRepository(
-        string name,
-        string description,
-        string repositoryName,
-        UserId userId
-    )
+    public async Task<ECRRepository> AddRepository(string name, string description, UserId userId)
     {
         try
         {
@@ -58,25 +53,18 @@ public class ECRRepositoryService : IECRRepositoryService
             }
             else
             {
-                _logger.LogInformation("Adding new ECRRepository in aws: {ECRRepositoryName}", repositoryName);
-                await _awsEcrRepositoryApplicationService.CreateECRRepo(repositoryName);
+                _logger.LogInformation("Adding new ECRRepository in aws: {ECRRepositoryName}", name);
+                await _awsEcrRepositoryApplicationService.CreateECRRepo(name);
             }
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error creating repo {ECRRepositoryName}", repositoryName);
-            throw new Exception($"Error creating repo {repositoryName}: {e.Message}");
+            _logger.LogError(e, "Error creating repo {ECRRepositoryName}", name);
+            throw new Exception($"Error creating repo {name}: {e.Message}");
         }
 
-        var newRepository = new ECRRepository(
-            new ECRRepositoryId(),
-            name,
-            description,
-            repositoryName,
-            userId,
-            _systemTime.Now
-        );
-        _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", repositoryName);
+        var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, userId);
+        _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", name);
         await _ecrRepositoryRepository.Add(newRepository);
         return newRepository;
     }
@@ -90,7 +78,7 @@ public class ECRRepositoryService : IECRRepositoryService
         var dbRepositoriesSet = new HashSet<string>();
         foreach (var ecrRepository in repositoriesInDb)
         {
-            dbRepositoriesSet.Add(ecrRepository.RepositoryName);
+            dbRepositoriesSet.Add(ecrRepository.Name);
         }
 
         // Find repositories that exist in the database but not in aws
@@ -164,16 +152,14 @@ public class ECRRepositoryService : IECRRepositoryService
         {
             List<ECRRepository> newRepositories = new();
 
-            foreach (var repositoryName in repositoriesNotInDb)
+            foreach (var name in repositoriesNotInDb)
             {
                 newRepositories.Add(
                     new ECRRepository(
                         new ECRRepositoryId(),
-                        repositoryName,
+                        name,
                         CreatedByCloudEngineeringTeamDescription,
-                        repositoryName,
-                        _cloudEngineeringTeamUserId,
-                        null
+                        _cloudEngineeringTeamUserId
                     )
                 );
             }
