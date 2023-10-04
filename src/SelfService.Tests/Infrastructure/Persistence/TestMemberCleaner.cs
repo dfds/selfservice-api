@@ -24,11 +24,14 @@ public class TestMemberCleaner
             .WithMembershipRepository(new MembershipRepository(dbContext))
             .WithMembershipApplicationRepository(new MembershipApplicationRepository(dbContext, systemTime))
             .Build();
-        
+
         var capability = A.Capability.Build();
 
         var memberActive = A.Membership.WithCapabilityId(capability.Id).WithUserId("useractive@dfds.com").Build();
-        var memberDeactivated = A.Membership.WithCapabilityId(capability.Id).WithUserId("userdeactivated@dfds.com").Build();
+        var memberDeactivated = A.Membership
+            .WithCapabilityId(capability.Id)
+            .WithUserId("userdeactivated@dfds.com")
+            .Build();
         var memberNotfound1 = A.Membership
             .WithCapabilityId(capability.Id)
             .WithUserId("usernotinazure1@dfds.com")
