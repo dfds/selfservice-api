@@ -8,6 +8,7 @@ public class ECRRepositoryService : IECRRepositoryService
     private readonly ILogger<ECRRepositoryService> _logger;
     private readonly IECRRepositoryRepository _ecrRepositoryRepository;
     private readonly IAwsECRRepositoryApplicationService _awsEcrRepositoryApplicationService;
+    private SystemTime _systemTime;
 
     private readonly UserId _cloudEngineeringTeamUserId = UserId.Parse("cloud-engineering");
 
@@ -19,12 +20,14 @@ public class ECRRepositoryService : IECRRepositoryService
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
         IECRRepositoryRepository ecrRepositoryRepository,
-        IAwsECRRepositoryApplicationService awsEcrRepositoryApplicationService
+        IAwsECRRepositoryApplicationService awsEcrRepositoryApplicationService,
+        SystemTime systemTime
     )
     {
         _logger = logger;
         _ecrRepositoryRepository = ecrRepositoryRepository;
         _awsEcrRepositoryApplicationService = awsEcrRepositoryApplicationService;
+        _systemTime = systemTime;
         var envValue = Environment.GetEnvironmentVariable("LOCAL_DEV_SKIP_AWS_ECR_REPOSITORY_CREATION") ?? "false";
         _localDevSkipAwsECRRepositoryCreation = envValue == "true";
     }
@@ -65,7 +68,14 @@ public class ECRRepositoryService : IECRRepositoryService
             throw new Exception($"Error creating repo {repositoryName}: {e.Message}");
         }
 
-        var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, repositoryName, userId);
+        var newRepository = new ECRRepository(
+            new ECRRepositoryId(),
+            name,
+            description,
+            repositoryName,
+            userId,
+            _systemTime.Now
+        );
         _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", repositoryName);
         await _ecrRepositoryRepository.Add(newRepository);
         return newRepository;
@@ -162,7 +172,8 @@ public class ECRRepositoryService : IECRRepositoryService
                         repositoryName,
                         CreatedByCloudEngineeringTeamDescription,
                         repositoryName,
-                        _cloudEngineeringTeamUserId
+                        _cloudEngineeringTeamUserId,
+                        null
                     )
                 );
             }

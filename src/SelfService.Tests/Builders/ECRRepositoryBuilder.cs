@@ -9,6 +9,7 @@ public class ECRRepositoryBuilder
     private string _description;
     private string _repositoryName;
     private string _createdBy;
+    private DateTime? _requestedAt;
 
     public ECRRepositoryBuilder()
     {
@@ -17,6 +18,7 @@ public class ECRRepositoryBuilder
         _description = "this is the description for ecr repo test";
         _repositoryName = "myteam/ecr-repo-test";
         _createdBy = nameof(ECRRepositoryBuilder);
+        _requestedAt = DateTime.UtcNow;
     }
 
     public ECRRepositoryBuilder WithId(ECRRepositoryId id)
@@ -56,7 +58,8 @@ public class ECRRepositoryBuilder
             name: _name,
             description: _description,
             repositoryName: _repositoryName,
-            createdBy: _createdBy
+            createdBy: _createdBy,
+            requestedAt: _requestedAt
         );
     }
 }
