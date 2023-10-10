@@ -4,20 +4,11 @@ public class ValueObjectEnum : ValueObject
 {
     private readonly string _value;
 
-    private static Dictionary<string, ValueObjectEnum> AllowedValues { get; } = new();
+    protected virtual Dictionary<string, ValueObjectEnum> AllowedValues => new();
 
     protected ValueObjectEnum(string value)
     {
         _value = value;
-    }
-
-    protected static void SetAllowedValues(params ValueObjectEnum[] values)
-    {
-        AllowedValues.Clear();
-        foreach (var value in values)
-        {
-            AllowedValues.Add(value.ToString(), value);
-        }
     }
 
     protected override IEnumerable<object> GetEqualityComponents()
