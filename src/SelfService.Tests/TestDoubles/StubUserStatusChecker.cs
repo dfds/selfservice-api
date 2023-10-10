@@ -10,7 +10,6 @@ public class StubUserStatusChecker : IUserStatusChecker
     {
         return Task.FromResult(false);
     }
-    
 
     private Task<bool> BusyWait()
     {

@@ -1,0 +1,148 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "selfservice-api.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "selfservice-api.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "selfservice-api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "selfservice-api.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "selfservice-api.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: dbmigration
+          image: "{{ .Values.dbMigration.image.repository }}:{{ .Values.dbMigration.image.tag | default .Chart.AppVersion }}"
+          envFrom:
+            - secretRef:
+                name: {{ .Values.dbMigration.secretRef }}
+      containers:
+        - name: app
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.app.environment }}
+          env:
+            - name: ECR_PULL_PERMISSION_AWS_ACCOUNT_ID
+              value: "{{ $.Values.app.config.ecrPullPermissionAwsAccountId }}"
+            {{- toYaml . | nindent 12}}
+          {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.app.config.kafkaSecretRef }}
+            - secretRef:
+                name: {{ .Values.app.config.topdeskSecretRef }}
+            - secretRef:
+                name: {{ .Values.app.config.msgraphSecretRef }}
+            - secretRef:
+                name: {{ .Values.app.config.platformdataSecretRef }}
+          ports:
+            - name: web
+              protocol: TCP
+              containerPort: {{ .Values.service.port }}
+            - name: metrics
+              protocol: TCP
+              containerPort: {{ .Values.service.metricsPort }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+{{- if .Values.gendis.enabled }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "selfservice-api.fullname" . }}-gendis
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "selfservice-api-gendis.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "selfservice-api-gendis.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "selfservice-api-gendis.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "selfservice-api-gendis.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: app
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.gendis.image.repository }}:{{ .Values.gendis.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.gendis.environment }}
+          env:
+            {{- toYaml . | nindent 12}}
+          {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.app.config.kafkaSecretRef }}
+          ports:
+            - name: metrics
+              protocol: TCP
+              containerPort: {{ .Values.gendis.service.port }}
+          resources:
+            {{- toYaml .Values.gendis.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
