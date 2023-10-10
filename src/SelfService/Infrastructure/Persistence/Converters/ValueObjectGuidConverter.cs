@@ -13,12 +13,3 @@ public class ValueObjectGuidConverter<T> : ValueConverter<T, Guid>
     private static Expression<Func<T, Guid>> ToDatabaseType => id => id;
     private static Expression<Func<Guid, T>> FromDatabaseType => value => (T)value;
 }
-
-public class TeamIdConverter : ValueConverter<TeamId, Guid>
-{
-    public TeamIdConverter()
-        : base(ToDatabaseType, FromDatabaseType) { }
-
-    private static Expression<Func<TeamId, Guid>> ToDatabaseType => id => id;
-    private static Expression<Func<Guid, TeamId>> FromDatabaseType => value => TeamId.Parse(value.ToString());
-}
