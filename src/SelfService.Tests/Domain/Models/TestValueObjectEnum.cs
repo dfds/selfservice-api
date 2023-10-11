@@ -33,8 +33,10 @@ public class TestValueObjectEnum
     [MemberData(nameof(InvalidInputValues))]
     public void parse_returns_expected_when_parsing_invalid_input(string validInput)
     {
-        var sut = DummyEnum.Parse(validInput);
-        Assert.Null(sut);
+        Assert.Throws<FormatException>(() =>
+        {
+            DummyEnum.Parse(validInput);
+        });
     }
 
     [Fact]
