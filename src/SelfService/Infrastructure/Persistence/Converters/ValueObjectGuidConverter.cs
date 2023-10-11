@@ -5,7 +5,7 @@ using SelfService.Domain.Models;
 namespace SelfService.Infrastructure.Persistence.Converters;
 
 public class ValueObjectGuidConverter<T> : ValueConverter<T, Guid>
-    where T : ValueObjectGuid
+    where T : ValueObjectGuid<T>
 {
     public ValueObjectGuidConverter()
         : base(ToDatabaseType, FromDatabaseType) { }

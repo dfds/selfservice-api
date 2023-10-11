@@ -16,7 +16,7 @@ public class TestMemberCleaner
     {
         //create dbContext which also is provides stub argument for MembershipRepository
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         SystemTime systemTime = SystemTime.Default;
         var membershipCleaner = A.DeactivatedMemberCleanerApplicationService
