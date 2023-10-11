@@ -1,10 +1,12 @@
+using System.Reflection;
+
 namespace SelfService.Domain.Models;
 
-public class ValueObjectEnum : ValueObject
+public class ValueObjectEnum<TEnumeration> : ValueObject
+    where TEnumeration : class
 {
     private readonly string _value;
-
-    protected virtual Dictionary<string, ValueObjectEnum> AllowedValues => new();
+    private static readonly TEnumeration[] Enumerations = GetEnumerations();
 
     protected ValueObjectEnum(string value)
     {
@@ -21,24 +23,47 @@ public class ValueObjectEnum : ValueObject
         return _value;
     }
 
-    public static bool TryParse(string? text, out ValueObjectEnum role)
+    public static bool TryParse(string? text, out TEnumeration outValue)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            role = null!;
+            outValue = null!;
             return false;
         }
 
-        bool success = AllowedValues.TryGetValue(text, out var mappedRole);
-        role = success ? mappedRole! : null!;
-        return success;
+        var enums = Enumerations;
+
+        var parsed = enums.FirstOrDefault(x => x?.ToString() == text);
+        if (parsed != null)
+        {
+            outValue = parsed;
+            return true;
+        }
+
+        outValue = null!;
+        return false;
     }
 
-    public static implicit operator string(ValueObjectEnum type) => type.ToString();
-
-    public static ValueObjectEnum Parse(string value)
+    // NOTE: From https://gist.github.com/spewu/5933739
+    private static TEnumeration[] GetEnumerations()
     {
-        TryParse(value, out var result);
-        return result;
+        var enumerationType = typeof(TEnumeration);
+
+        return enumerationType
+            .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
+            .Where(info => enumerationType.IsAssignableFrom(info.FieldType))
+            .Select(info => info.GetValue(null))
+            .Cast<TEnumeration>()
+            .ToArray();
+    }
+
+    public static TEnumeration Parse(string value)
+    {
+        if (TryParse(value, out var result))
+        {
+            return result;
+        }
+
+        throw new FormatException($"Value \"{value}\" is not valid.");
     }
 }
