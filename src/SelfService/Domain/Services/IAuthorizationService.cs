@@ -26,4 +26,5 @@ public interface IAuthorizationService
     bool CanViewDeletedCapabilities(PortalUser portalUser);
     bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser);
     bool CanSetCapabilityJsonMetadata(PortalUser portalUser);
+    bool CanBypassMembershipApprovals(PortalUser portalUser);
 }

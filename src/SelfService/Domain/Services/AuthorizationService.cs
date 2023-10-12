@@ -191,4 +191,9 @@ public class AuthorizationService : IAuthorizationService
     {
         return portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
     }
+
+    public bool CanBypassMembershipApprovals(PortalUser portalUser)
+    {
+        return portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+    }
 }
