@@ -745,8 +745,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
-
-        // Check that capability with provided id exists
+        
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
@@ -809,8 +808,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
-
-        // Check that capability with provided id exists
+        
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
@@ -863,7 +861,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityMetadata(string id)
     {
-        // Check that capability with provided id exists
+
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
@@ -897,8 +895,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
-
-        // Check that capability with provided id exists
+        
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
@@ -954,6 +951,44 @@ public class CapabilityController : ControllerBase
             return CustomObjectResult.InternalServerError(
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"SetCapabilityMetadata: {e.Message}." }
             );
+        }
+
+        return Ok();
+    }
+
+    [HttpPost("{id}/adduser")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> AddUserToCapability(string id)
+    {
+
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and thus set capability metadata.",
+                }
+            );
+        }
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+        }
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (_authorizationService.CanBypassMembershipApprovals(portalUser))
+        {
+            await _membershipApplicationService.AddUserToCapability(capabilityId, userId);
         }
 
         return Ok();
