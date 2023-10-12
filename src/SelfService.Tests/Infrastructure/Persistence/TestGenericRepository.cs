@@ -9,8 +9,8 @@ public class TestGenericRepository
 {
     private class TestGenericRepositoryModelId : ValueObjectGuid<TestGenericRepositoryModelId>
     {
-        public TestGenericRepositoryModelId()
-            : base(new Guid()) { }
+        public TestGenericRepositoryModelId(Guid guid)
+            : base(guid) { }
     }
 
     private class TestGenericRepositoryModel : Entity<TestGenericRepositoryModelId>
@@ -67,7 +67,7 @@ public class TestGenericRepository
             dbContext.TestGenericRepositoryModels
         );
 
-        var id = new TestGenericRepositoryModelId();
+        var id = TestGenericRepositoryModelId.New();
         await repo.Add(new TestGenericRepositoryModel(id, "foo", 1));
         await dbContext.SaveChangesAsync();
 

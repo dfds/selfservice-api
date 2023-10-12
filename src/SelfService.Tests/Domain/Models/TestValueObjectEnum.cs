@@ -16,7 +16,7 @@ public class TestValueObjectEnum
     }
 
     public static IEnumerable<object[]> ValidInputValues =>
-        new object[] { "Value1", "Value2" }.Select(x => new[] { x });
+        new object[] { DummyEnum.Value1, DummyEnum.Value2 }.Select(x => new[] { x });
 
     public static IEnumerable<object[]> InvalidInputValues =>
         new object[] { "", "val", "value1", "value2", "value3" }.Select(x => new[] { x });

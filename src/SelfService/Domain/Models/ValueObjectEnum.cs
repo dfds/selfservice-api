@@ -2,7 +2,7 @@ using System.Reflection;
 
 namespace SelfService.Domain.Models;
 
-public class ValueObjectEnum<TEnumeration> : ValueObject
+public abstract class ValueObjectEnum<TEnumeration> : ValueObject
     where TEnumeration : class
 {
     private readonly string _value;
