@@ -38,16 +38,31 @@ public class MembershipApplicationService : IMembershipApplicationService
         _membershipApplicationDomainService = membershipApplicationDomainService;
     }
 
-    [TransactionalBoundary, Outboxed]
-    public async Task AddCreatorAsInitialMember(CapabilityId capabilityId, UserId creatorId)
-    {
+    private async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId){
         var newMembership = Membership.CreateFor(
             capabilityId: capabilityId,
-            userId: creatorId,
+            userId: userId,
             createdAt: _systemTime.Now
         );
 
         await _membershipRepository.Add(newMembership);
+
+        _logger.LogInformation(
+            "User {UserId} has joined capability {CapabilityId}",
+            userId,
+            capabilityId
+        );
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task AddCreatorAsInitialMember(CapabilityId capabilityId, UserId creatorId)
+    {
+        _logger.LogInformation(
+            "Creator {CreatorId} is added as initial member to capability {CapabilityId}",
+            creatorId,
+            capabilityId
+        );
+        await CreateAndAddMembership(capabilityId, creatorId);
     }
 
     [TransactionalBoundary, Outboxed]
@@ -85,14 +100,7 @@ public class MembershipApplicationService : IMembershipApplicationService
             createdAt: _systemTime.Now
         );
 
-        await _membershipRepository.Add(newMembership);
-
-        _logger.LogInformation(
-            "User {UserId} has joined capability {CapabilityId}",
-            membershipApplication.Applicant,
-            membershipApplication.CapabilityId
-        );
-
+        await CreateAndAddMembership(membershipApplication.CapabilityId, membershipApplication.Applicant);
         return newMembership.Id;
     }
 
@@ -117,6 +125,10 @@ public class MembershipApplicationService : IMembershipApplicationService
                 $"User \"{userId}\" is already member of \"{capabilityId}\"."
             );
         }
+
+        // if (_authorizationService.CanBypassMembershipApprovals(userId)){
+        //      await creatAndAddMembership(userId, capabilityId);
+        // }
 
         var existingApplication = await _membershipApplicationRepository.FindPendingBy(capabilityId, userId);
         if (existingApplication != null)
@@ -265,5 +277,12 @@ public class MembershipApplicationService : IMembershipApplicationService
                 capabilityId
             );
         }
+    }
+    
+    [TransactionalBoundary, Outboxed]
+    public async Task AddUserToCapability(CapabilityId capabilityId, UserId userId)
+    {
+        _logger.LogInformation("User {userId} was directly added as a member of capability {capabilityId}", userId);
+        await CreateAndAddMembership(capabilityId, userId);
     }
 }
