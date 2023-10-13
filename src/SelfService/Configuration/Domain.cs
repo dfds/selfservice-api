@@ -27,6 +27,7 @@ public static class Domain
         builder.Services.AddTransient<IMemberApplicationService, MemberApplicationService>();
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
         builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
+        builder.Services.AddTransient<ITeamApplicationService, TeamApplicationService>();
 
         // domain services
         builder.Services.AddTransient<MembershipApplicationDomainService>();
