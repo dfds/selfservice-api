@@ -15,7 +15,7 @@ public class MembershipApplicationService : IMembershipApplicationService
     private readonly IAuthorizationService _authorizationService;
     private readonly SystemTime _systemTime;
     private readonly IMembershipQuery _membershipQuery;
-    private readonly MembershipApplicationDomainService _membershipApplicationDomainService;
+    private readonly IMembershipApplicationDomainService _membershipApplicationDomainService;
 
     public MembershipApplicationService(
         ILogger<MembershipApplicationService> logger,
@@ -25,7 +25,7 @@ public class MembershipApplicationService : IMembershipApplicationService
         IAuthorizationService authorizationService,
         SystemTime systemTime,
         IMembershipQuery membershipQuery,
-        MembershipApplicationDomainService membershipApplicationDomainService
+        IMembershipApplicationDomainService membershipApplicationDomainService
     )
     {
         _logger = logger;
@@ -38,7 +38,7 @@ public class MembershipApplicationService : IMembershipApplicationService
         _membershipApplicationDomainService = membershipApplicationDomainService;
     }
 
-    private async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId){
+    public async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId){
         var newMembership = Membership.CreateFor(
             capabilityId: capabilityId,
             userId: userId,
