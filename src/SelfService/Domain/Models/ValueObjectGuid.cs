@@ -51,11 +51,11 @@ public abstract class ValueObjectGuid<T> : ValueObject
                 return (T)constructorInfo.Invoke(new object[] { guid });
             }
 
-            throw new InvalidOperationException("No suitable constructor found for type T.");
+            throw new InvalidOperationException($"No suitable constructor found for type {typeof(T).Name}");
         }
         catch (Exception)
         {
-            throw new InvalidOperationException("Unable to create an instance of type T.");
+            throw new InvalidOperationException($"Unable to create an instance of type {typeof(T).Name}");
         }
     }
 
