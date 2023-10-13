@@ -11,4 +11,4 @@ CREATE TABLE "TeamCapabilityAssociation"
     CONSTRAINT "TeamCapabilityAssociation_PK" PRIMARY KEY ("Id"),
     CONSTRAINT "TeamCapabilityAssociation_TeamId_FK" FOREIGN KEY ("TeamId") REFERENCES "Team" ("Id") ON DELETE CASCADE,
     CONSTRAINT "TeamCapabilityAssociation_CapabilityId_FK" FOREIGN KEY ("CapabilityId") REFERENCES "Capability" ("Id") ON DELETE CASCADE
-)
+);
