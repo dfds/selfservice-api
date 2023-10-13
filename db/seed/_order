@@ -10,3 +10,5 @@ MembershipApplication.csv
 ServiceCatalog.csv
 ECRRepository.csv
 SelfServiceJsonSchema.csv
+Team.csv
+TeamCapabilityAssociation.csv
