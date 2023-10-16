@@ -16,7 +16,7 @@ public class TestMembershipRepository
     {
         //setup
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var capability = A.Capability.Build();
         var memberA = A.Membership.WithCapabilityId(capability.Id).WithUserId("MA").Build();
@@ -48,7 +48,7 @@ public class TestMembershipRepository
     {
         //setup
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var capability = A.Capability.Build();
         var member = A.Membership.WithCapabilityId(capability.Id).Build();

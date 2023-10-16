@@ -11,7 +11,7 @@ public class TestMembershipApplicationRepository
     public async Task add_inserts_expected_capability_into_database()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var stubApprovals = new[] { A.MembershipApproval.Build(), A.MembershipApproval.Build(), };
 
