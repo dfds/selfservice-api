@@ -1,3 +1,5 @@
+using SelfService.Domain;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
 namespace SelfService.Application;
@@ -32,28 +34,9 @@ public class TeamApplicationService : ITeamApplicationService
         return _teamRepository.FindBy(id);
     }
 
-    public async Task<Team> AddTeam(string name, string description, UserId createdBy)
-    {
-        var teamWithThisName = await _teamRepository.FindByName(name);
-        if (teamWithThisName != null)
-        {
-            throw new ArgumentException(
-                $"Team with name {name} already exists, please use the other team or choose a different name."
-            );
-        }
-
-        var newTeam = new Team(TeamId.New(), name, description, createdBy, DateTime.UtcNow);
-        await _teamRepository.Add(newTeam);
-        return newTeam;
-    }
-
-    public Task RemoveTeam(TeamId id)
-    {
-        _teamRepository.Remove(id);
-        return Task.CompletedTask;
-    }
-
-    public async Task AddLinkToCapability(TeamId teamId, CapabilityId capabilityId)
+    // This function exists in order for interface functions to be able to add links with their own transactional boundaries,
+    // since nesting transactional boundaries does not work.
+    private async Task<TeamCapabilityLink> AddLinkToCapabilityInternal(TeamId teamId, CapabilityId capabilityId)
     {
         var team = await _teamRepository.FindBy(teamId);
         if (team == null)
@@ -71,17 +54,57 @@ public class TeamApplicationService : ITeamApplicationService
 
         if (linking != null)
         {
-            _logger.LogWarning(
-                "Attempted to add a link between team {teamId} and capability {capabilityId}, but such linking already exists.",
-                teamId,
-                capabilityId
+            throw new EntityAlreadyExistsException(
+                $"Attempted to add a link between team {teamId} and capability {capabilityId}, but such linking already exists."
             );
-            return;
         }
 
-        await _teamCapabilityLinkingRepository.Add(new TeamCapabilityLink(teamId, capabilityId));
+        var newLinking = new TeamCapabilityLink(teamId, capabilityId);
+        await _teamCapabilityLinkingRepository.Add(newLinking);
+        return newLinking;
     }
 
+    [TransactionalBoundary]
+    public async Task<Team> AddTeam(
+        string name,
+        string description,
+        UserId createdBy,
+        List<CapabilityId> linkedCapabilityIds
+    )
+    {
+        var teamWithThisName = await _teamRepository.FindByName(name);
+        if (teamWithThisName != null)
+        {
+            throw new ArgumentException(
+                $"Team with name {name} already exists, please use the other team or choose a different name."
+            );
+        }
+
+        var newTeam = new Team(TeamId.New(), name, description, createdBy, DateTime.UtcNow);
+        await _teamRepository.Add(newTeam);
+
+        foreach (var capabilityId in linkedCapabilityIds)
+        {
+            await AddLinkToCapabilityInternal(newTeam.Id, capabilityId);
+        }
+
+        return newTeam;
+    }
+
+    [TransactionalBoundary]
+    public Task RemoveTeam(TeamId id)
+    {
+        _teamRepository.Remove(id);
+        return Task.CompletedTask;
+    }
+
+    [TransactionalBoundary]
+    public async Task<TeamCapabilityLink> AddLinkToCapability(TeamId teamId, CapabilityId capabilityId)
+    {
+        return await AddLinkToCapabilityInternal(teamId, capabilityId);
+    }
+
+    [TransactionalBoundary]
     public async Task RemoveLinkToCapability(TeamId teamId, CapabilityId capabilityId)
     {
         var linking = await _teamCapabilityLinkingRepository.FindByTeamAndCapabilityIds(teamId, capabilityId);
