@@ -16,7 +16,7 @@ public class TestMembershipApplicationService
         // i.e., within a single transaction it could still be called twice
 
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         UserId userId = "chungus@dfds.com";
         CapabilityId capabilityId = "reflect2improve-GPU-cluster-mgmt-qxyz";
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
@@ -45,7 +45,7 @@ public class TestMembershipApplicationService
         // i.e., within a single transaction it could still be called twice
 
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         UserId userId = "chungus@dfds.com";
         CapabilityId capabilityId = "reflect2improve-GPU-cluster-mgmt-qxyz";
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
