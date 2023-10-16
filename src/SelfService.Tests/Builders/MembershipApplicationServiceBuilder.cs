@@ -13,15 +13,6 @@ public class MembershipApplicationServiceBuilder
 {
     private IMembershipRepository _membershipRepository;
 
-    /*
-    //uncomment if other functionality needs to be tested
-    private ICapabilityRepository _capabilityRepository;
-    private readonly IMembershipApplicationRepository _membershipApplicationRepository;
-    private IAuthorizationService _authorizationService;
-    private IMembershipQuery _membershipQuery;
-    private MembershipApplicationDomainService _membershipApplicationDomainService;
-    */
-
     public MembershipApplicationServiceBuilder()
     {
         _membershipRepository = Dummy.Of<IMembershipRepository>();

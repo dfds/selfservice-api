@@ -40,10 +40,6 @@ public class TestMembershipApplicationService
     [Trait("Category", "InMemoryDatabase")]
     public async Task add_user_cant_create_duplicate_membership()
     {
-        // [!] this doesn't protect against duplicate calls in between two
-        // `SaveChangesAsync` calls to the db context.
-        // i.e., within a single transaction it could still be called twice
-
         await using var databaseFactory = new InMemoryDatabaseFactory();
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         UserId userId = "chungus@dfds.com";
