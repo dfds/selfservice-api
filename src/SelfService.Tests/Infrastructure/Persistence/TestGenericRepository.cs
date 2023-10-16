@@ -28,7 +28,7 @@ public class TestGenericRepository
 
     private class TestDbContext : SelfServiceDbContext
     {
-        public DbSet<TestGenericRepositoryModel> TestGenericRepositoryModels { get; set; } = null!;
+        public DbSet<TestGenericRepositoryModel> GenericRepositoryModels => Set<TestGenericRepositoryModel>();
 
         public TestDbContext(DbContextOptions<SelfServiceDbContext> options)
             : base(options) { }
@@ -63,7 +63,7 @@ public class TestGenericRepository
     > CreateGenericRepoAndAddOne(TestDbContext dbContext)
     {
         var repo = new GenericRepository<TestGenericRepositoryModel, TestGenericRepositoryModelId>(
-            dbContext.TestGenericRepositoryModels
+            dbContext.GenericRepositoryModels
         );
 
         await repo.Add(new TestGenericRepositoryModel(TestId, "foo", 1));

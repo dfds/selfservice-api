@@ -4,7 +4,7 @@ namespace SelfService.Application;
 
 public interface ITeamApplicationService
 {
-    Task<IEnumerable<Team>> GetAllTeams();
+    Task<List<Team>> GetAllTeams();
     Task<Team?> GetTeam(TeamId id);
     Task<Team> AddTeam(string name, string description, UserId createdBy);
     Task RemoveTeam(TeamId id);

@@ -7,13 +7,13 @@ public class TeamApplicationService : ITeamApplicationService
     private readonly ITeamRepository _teamRepository;
     private readonly ITeamCapabilityLinkingRepository _teamCapabilityLinkingRepository;
     private readonly ICapabilityRepository _capabilityRepository;
-    private readonly Logger<TeamApplicationService> _logger;
+    private readonly ILogger<TeamApplicationService> _logger;
 
     public TeamApplicationService(
         ITeamRepository teamRepository,
         ITeamCapabilityLinkingRepository teamCapabilityLinkingRepository,
         ICapabilityRepository capabilityRepository,
-        Logger<TeamApplicationService> logger
+        ILogger<TeamApplicationService> logger
     )
     {
         _teamRepository = teamRepository;
@@ -22,7 +22,7 @@ public class TeamApplicationService : ITeamApplicationService
         _logger = logger;
     }
 
-    public Task<IEnumerable<Team>> GetAllTeams()
+    public Task<List<Team>> GetAllTeams()
     {
         return _teamRepository.GetAll();
     }
@@ -42,7 +42,7 @@ public class TeamApplicationService : ITeamApplicationService
             );
         }
 
-        var newTeam = new Team(TeamId.Create(), name, description, createdBy, DateTime.UtcNow);
+        var newTeam = new Team(TeamId.New(), name, description, createdBy, DateTime.UtcNow);
         await _teamRepository.Add(newTeam);
         return newTeam;
     }
@@ -96,6 +96,6 @@ public class TeamApplicationService : ITeamApplicationService
             return;
         }
 
-        await _teamCapabilityLinkingRepository.Remove(linking);
+        await _teamCapabilityLinkingRepository.Remove(linking.Id);
     }
 }

@@ -1,9 +1,6 @@
 namespace SelfService.Domain.Models;
 
-public interface ITeamCapabilityLinkingRepository
+public interface ITeamCapabilityLinkingRepository : IGenericRepository<TeamCapabilityLink, Guid>
 {
-    Task Add(TeamCapabilityLink link);
-    Task Remove(TeamCapabilityLink link);
-    Task<IEnumerable<TeamCapabilityLink>> GetAll();
     Task<TeamCapabilityLink?> FindByTeamAndCapabilityIds(TeamId teamId, CapabilityId capabilityId);
 }

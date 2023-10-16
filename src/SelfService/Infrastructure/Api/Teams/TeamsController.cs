@@ -26,7 +26,7 @@ public class TeamsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetTeam([FromRoute] Guid id)
+    public async Task<IActionResult> GetTeam([FromRoute] string id)
     {
         if (!TeamId.TryParse(id, out var teamId))
         {
@@ -61,7 +61,7 @@ public class TeamsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> RemoveTeam([FromRoute] Guid id)
+    public async Task<IActionResult> RemoveTeam([FromRoute] string id)
     {
         if (!TeamId.TryParse(id, out var teamId))
         {
@@ -76,7 +76,7 @@ public class TeamsController : ControllerBase
     }
 
     [HttpPost("{id}/capability-link/{capabilityId}")]
-    public async Task<IActionResult> AddLinkToCapability([FromRoute] Guid id, [FromRoute] string capabilityId)
+    public async Task<IActionResult> AddLinkToCapability([FromRoute] string id, [FromRoute] string capabilityId)
     {
         if (!TeamId.TryParse(id, out var teamId))
         {
@@ -102,7 +102,7 @@ public class TeamsController : ControllerBase
     }
 
     [HttpDelete("{id}/capability-link/{capabilityId}")]
-    public async Task<IActionResult> RemoveLinkToCapability([FromRoute] Guid id, [FromRoute] string capabilityId)
+    public async Task<IActionResult> RemoveLinkToCapability([FromRoute] string id, [FromRoute] string capabilityId)
     {
         if (!TeamId.TryParse(id, out var teamId))
         {

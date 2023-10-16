@@ -7,7 +7,7 @@ namespace SelfService.Infrastructure.Persistence;
 public class GenericRepository<T, TId> : IGenericRepository<T, TId>
     where T : Entity<TId>
 {
-    private readonly DbSet<T> _dbSetReference;
+    protected readonly DbSet<T> _dbSetReference;
 
     public GenericRepository(DbSet<T> dbSetReference)
     {
