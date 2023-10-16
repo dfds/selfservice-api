@@ -11,12 +11,11 @@ public class TestValueObjectGuid
             : base(newGuid) { }
     }
 
-    // test if dummy value object guids work
     [Fact]
     public void dummy_value_object_guids_work()
     {
-        var sut = DummyValueObjectGuid.New();
-        Assert.NotNull(sut);
+        var newId = DummyValueObjectGuid.New();
+        Assert.NotNull(newId);
     }
 
     [Fact]
