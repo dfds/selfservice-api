@@ -38,7 +38,14 @@ public class MembershipApplicationService : IMembershipApplicationService
         _membershipApplicationDomainService = membershipApplicationDomainService;
     }
 
-    public async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId){
+    public async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId)
+    {
+        if (await _membershipRepository.IsAlreadyMember(capabilityId, userId))
+        {
+            throw new AlreadyHasActiveMembershipException(
+                $"User \"{userId}\" is already member of \"{capabilityId}\"."
+            );
+        }
         var newMembership = Membership.CreateFor(
             capabilityId: capabilityId,
             userId: userId,
@@ -47,11 +54,7 @@ public class MembershipApplicationService : IMembershipApplicationService
 
         await _membershipRepository.Add(newMembership);
 
-        _logger.LogInformation(
-            "User {UserId} has joined capability {CapabilityId}",
-            userId,
-            capabilityId
-        );
+        _logger.LogInformation("User {UserId} has joined capability {CapabilityId}", userId, capabilityId);
     }
 
     [TransactionalBoundary, Outboxed]
@@ -125,10 +128,6 @@ public class MembershipApplicationService : IMembershipApplicationService
                 $"User \"{userId}\" is already member of \"{capabilityId}\"."
             );
         }
-
-        // if (_authorizationService.CanBypassMembershipApprovals(userId)){
-        //      await creatAndAddMembership(userId, capabilityId);
-        // }
 
         var existingApplication = await _membershipApplicationRepository.FindPendingBy(capabilityId, userId);
         if (existingApplication != null)
@@ -278,7 +277,7 @@ public class MembershipApplicationService : IMembershipApplicationService
             );
         }
     }
-    
+
     [TransactionalBoundary, Outboxed]
     public async Task AddUserToCapability(CapabilityId capabilityId, UserId userId)
     {

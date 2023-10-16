@@ -12,6 +12,7 @@ namespace SelfService.Tests.Builders;
 public class MembershipApplicationServiceBuilder
 {
     private IMembershipRepository _membershipRepository;
+
     /*
     //uncomment if other functionality needs to be tested
     private ICapabilityRepository _capabilityRepository;
@@ -21,7 +22,8 @@ public class MembershipApplicationServiceBuilder
     private MembershipApplicationDomainService _membershipApplicationDomainService;
     */
 
-    public MembershipApplicationServiceBuilder(){
+    public MembershipApplicationServiceBuilder()
+    {
         _membershipRepository = Dummy.Of<IMembershipRepository>();
     }
 
@@ -37,14 +39,14 @@ public class MembershipApplicationServiceBuilder
             logger: NullLogger<MembershipApplicationService>.Instance,
             capabilityRepository: Mock.Of<ICapabilityRepository>(),
             membershipRepository: _membershipRepository,
-            membershipApplicationRepository:Mock.Of<IMembershipApplicationRepository>(),
-            authorizationService:Mock.Of<IAuthorizationService>(),
+            membershipApplicationRepository: Mock.Of<IMembershipApplicationRepository>(),
+            authorizationService: Mock.Of<IAuthorizationService>(),
             systemTime: SystemTime.Default,
-            membershipQuery:Mock.Of<IMembershipQuery>(),
-            membershipApplicationDomainService:Mock.Of<IMembershipApplicationDomainService>()
+            membershipQuery: Mock.Of<IMembershipQuery>(),
+            membershipApplicationDomainService: Mock.Of<IMembershipApplicationDomainService>()
         );
     }
-    
+
     public static implicit operator MembershipApplicationService(MembershipApplicationServiceBuilder builder) =>
         builder.Build();
 }

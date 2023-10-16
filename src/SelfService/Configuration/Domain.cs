@@ -29,7 +29,7 @@ public static class Domain
         builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
 
         // domain services
-        builder.Services.AddTransient<MembershipApplicationDomainService>();
+        builder.Services.AddTransient<IMembershipApplicationDomainService, MembershipApplicationDomainService>();
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
         builder.Services.AddTransient<IECRRepositoryService, ECRRepositoryService>();
         builder.Services.AddTransient<ISelfServiceJsonSchemaService, SelfServiceJsonSchemaService>();

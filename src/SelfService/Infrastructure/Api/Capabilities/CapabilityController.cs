@@ -74,7 +74,8 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
     public async Task<IActionResult> CreateNewCapability([FromBody] NewCapabilityRequest request)
     {
-        if (!User.TryGetUserId(out var userId)) return Unauthorized();
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
 
         if (!CapabilityId.TryCreateFrom(request.Name, out var capabilityId))
             ModelState.AddModelError(
@@ -82,7 +83,8 @@ public class CapabilityController : ControllerBase
                 $"unable to create capability ID from name \"{request.Name}\""
             );
 
-        if (!ModelState.IsValid) return ValidationProblem();
+        if (!ModelState.IsValid)
+            return ValidationProblem();
 
         // See if request has valid json metadata
         var jsonMetadataResult = await _selfServiceJsonSchemaService.ValidateJsonMetadata(
@@ -188,7 +190,8 @@ public class CapabilityController : ControllerBase
         if (!CapabilityId.TryParse(id, out var capabilityId))
             ModelState.AddModelError(nameof(id), $"Value \"{id}\" is not a valid capability id.");
 
-        if (!ModelState.IsValid) return ValidationProblem();
+        if (!ModelState.IsValid)
+            return ValidationProblem();
 
         var members = await _membersQuery.FindBy(capabilityId);
 
@@ -201,16 +204,21 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityAwsAccount(string id)
     {
-        if (!User.TryGetUserId(out var userId)) return Unauthorized();
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
 
-        if (!CapabilityId.TryParse(id, out var capabilityId)) return NotFound();
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
 
-        if (!await _capabilityRepository.Exists(capabilityId)) return NotFound();
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
 
-        if (!await _authorizationService.CanViewAwsAccount(userId, capabilityId)) return Unauthorized();
+        if (!await _authorizationService.CanViewAwsAccount(userId, capabilityId))
+            return Unauthorized();
 
         var account = await _awsAccountRepository.FindBy(capabilityId);
-        if (account is null) return NotFound();
+        if (account is null)
+            return NotFound();
 
         return Ok(await _apiResourceFactory.Convert(account));
     }
@@ -222,13 +230,17 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
     public async Task<IActionResult> RequestAwsAccount(string id, [FromServices] SelfServiceDbContext dbContext)
     {
-        if (!User.TryGetUserId(out var userId)) return Unauthorized();
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
 
-        if (!CapabilityId.TryParse(id, out var capabilityId)) return NotFound();
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
 
-        if (!await _capabilityRepository.Exists(capabilityId)) return NotFound();
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
 
-        if (!await _authorizationService.CanRequestAwsAccount(userId, capabilityId)) return Unauthorized();
+        if (!await _authorizationService.CanRequestAwsAccount(userId, capabilityId))
+            return Unauthorized();
 
         try
         {
@@ -253,11 +265,14 @@ public class CapabilityController : ControllerBase
         [FromServices] ICapabilityMembershipApplicationQuery query
     )
     {
-        if (!User.TryGetUserId(out var userId)) return Unauthorized();
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
 
-        if (!CapabilityId.TryParse(id, out var capabilityId)) return NotFound();
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
 
-        if (!await _capabilityRepository.Exists(capabilityId)) return NotFound();
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
 
         var applications = await query.FindPendingBy(capabilityId);
 
@@ -282,11 +297,14 @@ public class CapabilityController : ControllerBase
         [FromServices] IMembershipApplicationRepository membershipApplicationRepository
     )
     {
-        if (!User.TryGetUserId(out var userId)) return Unauthorized();
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
 
-        if (!CapabilityId.TryParse(id, out var capabilityId)) return NotFound();
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
 
-        if (!await _capabilityRepository.Exists(capabilityId)) return NotFound();
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
 
         try
         {
@@ -342,11 +360,14 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
     public async Task<IActionResult> AddCapabilityTopic(string id, [FromBody] NewKafkaTopicRequest topicRequest)
     {
-        if (!User.TryGetUserId(out var userId)) return Unauthorized();
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
 
-        if (!CapabilityId.TryParse(id, out var capabilityId)) return NotFound();
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
 
-        if (!await _capabilityRepository.Exists(capabilityId)) return NotFound();
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
 
         if (!KafkaClusterId.TryParse(topicRequest.KafkaClusterId, out var kafkaClusterId))
             ModelState.AddModelError(
@@ -378,9 +399,11 @@ public class CapabilityController : ControllerBase
                 $"Kafka cluster with id \"{kafkaClusterId}\" is unknown to the system."
             );
 
-        if (!ModelState.IsValid) return ValidationProblem();
+        if (!ModelState.IsValid)
+            return ValidationProblem();
 
-        if (!await _authorizationService.CanAdd(userId, capabilityId, kafkaClusterId)) return Unauthorized();
+        if (!await _authorizationService.CanAdd(userId, capabilityId, kafkaClusterId))
+            return Unauthorized();
 
         try
         {
@@ -547,11 +570,7 @@ public class CapabilityController : ControllerBase
 
         if (clusterAccess.IsAccessGranted)
             return Ok(
-                new KafkaClusterAccessApiResource(
-                    kafkaCluster.BootstrapServers,
-                    kafkaCluster.SchemaRegistryUrl,
-                    null
-                )
+                new KafkaClusterAccessApiResource(kafkaCluster.BootstrapServers, kafkaCluster.SchemaRegistryUrl, null)
             );
 
         return AcceptedAtAction(

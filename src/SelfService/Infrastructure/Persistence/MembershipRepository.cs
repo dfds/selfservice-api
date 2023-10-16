@@ -23,6 +23,12 @@ public class MembershipRepository : IMembershipRepository
         return await _dbContext.Memberships.Where(x => x.CapabilityId == capabilityId).ToListAsync();
     }
 
+    public async Task<bool> IsAlreadyMember(CapabilityId capabilityId, UserId userId)
+    {
+        var count = await _dbContext.Memberships.Where(x => x.CapabilityId == capabilityId && x.UserId == userId).CountAsync();
+        return (count > 0);
+    }
+
     public async Task<Membership?> CancelWithCapabilityId(CapabilityId capabilityId, UserId userId)
     {
         var membershipCount = await _dbContext.Memberships.Where(x => x.CapabilityId == capabilityId).CountAsync();
