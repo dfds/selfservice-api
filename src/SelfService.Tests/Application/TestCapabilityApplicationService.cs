@@ -73,7 +73,7 @@ public class TestCapabilityApplicationService
     public async Task can_set_json_metadata()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         var (capability, repo, service) = await SetupCapabilityMetadataTesting(CreateSchema(0, SchemaEmpty), dbContext);
 
         await service.SetJsonMetadata(capability.Id, JsonMetadata);
@@ -86,7 +86,7 @@ public class TestCapabilityApplicationService
     public async Task can_set_json_metadata_with_schema_check()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         var (capability, repo, service) = await SetupCapabilityMetadataTesting(
             CreateSchema(1, SchemaWithRequiredField),
             dbContext
@@ -103,7 +103,7 @@ public class TestCapabilityApplicationService
     public async Task fails_to_set_json_metadata_with_schema_check()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         var (capability, _, service) = await SetupCapabilityMetadataTesting(
             CreateSchema(1, SchemaWithRequiredField),
             dbContext

@@ -10,7 +10,7 @@ public class TestCapabilityMembersQuery
     public async Task returns_expected_when_no_capabilities_match()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var sut = new CapabilityMembersQuery(dbContext);
 
@@ -25,7 +25,7 @@ public class TestCapabilityMembersQuery
         using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var stubCapability = A.Capability.Build();
 
@@ -45,7 +45,7 @@ public class TestCapabilityMembersQuery
         using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var expectedMember = A.Member.Build();
         var stubOtherMember = A.Member.WithUserId("other-member-id").Build();
@@ -73,7 +73,7 @@ public class TestCapabilityMembersQuery
         using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var expectedMembers = new[] { A.Member.WithUserId("1").Build(), A.Member.WithUserId("2").Build(), };
 
@@ -102,7 +102,7 @@ public class TestMyCapabilitiesQuery
     public async Task returns_expected_when_user_is_unknown()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var sut = new MyCapabilitiesQuery(dbContext);
 
@@ -117,7 +117,7 @@ public class TestMyCapabilitiesQuery
         using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var stubMember = A.Member.Build();
         await dbContext.Members.AddAsync(stubMember, cancellationTokenSource.Token);
@@ -135,7 +135,7 @@ public class TestMyCapabilitiesQuery
         using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var stubMember = A.Member.Build();
         var stubCapability = A.Capability.Build();
@@ -159,7 +159,7 @@ public class TestMyCapabilitiesQuery
         using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var stubMember = A.Member.Build();
 

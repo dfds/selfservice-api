@@ -7,22 +7,34 @@ namespace SelfService.Tests;
 public class InMemoryDatabaseFactory : IDisposable, IAsyncDisposable
 {
     private SqliteConnection? _connection;
-    private SelfServiceDbContext? _dbContext;
+    private DbContext? _dbContext;
 
-    public async Task<SelfServiceDbContext> CreateDbContext(bool initializeSchema = true)
+    public Task<SelfServiceDbContext> CreateSelfServiceDbContext(bool initializeSchema = true)
+    {
+        return CreateDbContext<SelfServiceDbContext>(options => new SelfServiceDbContext(options), initializeSchema);
+    }
+
+    public async Task<T> CreateDbContext<T>(
+        Func<DbContextOptions<SelfServiceDbContext>, T> constructorFunc,
+        bool initializeSchema = true
+    )
+        where T : DbContext
     {
         _connection = new SqliteConnection("Filename=:memory:");
         await _connection.OpenAsync();
 
         var options = new DbContextOptionsBuilder<SelfServiceDbContext>().UseSqlite(_connection).Options;
-        _dbContext = new SelfServiceDbContext(options);
+        _dbContext = constructorFunc.Invoke(options);
+
+        if (_dbContext is null)
+            throw new Exception("Could not create DbContext");
 
         if (initializeSchema)
         {
             await _dbContext.Database.EnsureCreatedAsync();
         }
 
-        return _dbContext;
+        return (T)_dbContext;
     }
 
     public void Dispose()

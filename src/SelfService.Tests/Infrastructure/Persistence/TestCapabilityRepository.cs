@@ -11,7 +11,7 @@ public class TestCapabilityRepository
     public async Task add_inserts_expected_capability_into_database()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var stub = A.Capability;
 
@@ -30,7 +30,7 @@ public class TestCapabilityRepository
     public async Task getting_pending_deletions_with_days_return_only_capabilities_ready_for_deletion()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         var repo = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
         await repo.Add(A.Capability.WithId("active"));
