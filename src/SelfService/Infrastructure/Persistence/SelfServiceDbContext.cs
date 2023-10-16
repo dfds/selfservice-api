@@ -1,5 +1,6 @@
 ﻿using Dafda.Outbox;
 using Microsoft.EntityFrameworkCore;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence.Converters;
 
@@ -319,6 +320,26 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.ObjectId);
             cfg.Property(x => x.SchemaVersion);
             cfg.Property(x => x.Schema);
+        });
+
+        modelBuilder.Entity<Team>(cfg =>
+        {
+            cfg.ToTable("Team");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.Name);
+            cfg.Property(x => x.Description);
+            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<TeamCapabilityLink>(cfg =>
+        {
+            cfg.ToTable("TeamCapabilityLinking");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.TeamId);
+            cfg.Property(x => x.CapabilityId);
         });
     }
 }

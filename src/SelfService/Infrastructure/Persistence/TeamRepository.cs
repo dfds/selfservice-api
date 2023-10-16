@@ -10,6 +10,6 @@ public class TeamRepository : GenericRepository<Team, TeamId>, ITeamRepository
 
     public Task<Team?> FindByName(string name)
     {
-        return _dbSetReference.FirstOrDefaultAsync(t => t.Name == name);
+        return DbSetReference.FirstOrDefaultAsync(t => t.Name == name);
     }
 }

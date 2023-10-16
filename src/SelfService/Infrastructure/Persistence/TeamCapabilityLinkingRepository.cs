@@ -3,7 +3,6 @@ using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Persistence;
 
-//TODO: Replace with generic repository
 public class TeamCapabilityLinkingRepository
     : GenericRepository<TeamCapabilityLink, Guid>,
         ITeamCapabilityLinkingRepository
@@ -13,6 +12,6 @@ public class TeamCapabilityLinkingRepository
 
     public Task<TeamCapabilityLink?> FindByTeamAndCapabilityIds(TeamId teamId, CapabilityId capabilityId)
     {
-        throw new NotImplementedException();
+        return DbSetReference.FirstOrDefaultAsync(x => x.TeamId == teamId && x.CapabilityId == capabilityId);
     }
 }
