@@ -75,8 +75,8 @@ public class TeamsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("{id}/associate-capability/{capabilityId}")]
-    public async Task<IActionResult> AddAssociationWithCapability([FromRoute] Guid id, [FromRoute] string capabilityId)
+    [HttpPost("{id}/capability-link/{capabilityId}")]
+    public async Task<IActionResult> AddLinkToCapability([FromRoute] Guid id, [FromRoute] string capabilityId)
     {
         if (!TeamId.TryParse(id, out var teamId))
         {
@@ -96,16 +96,13 @@ public class TeamsController : ControllerBase
             );
         }
 
-        await _teamApplicationService.AddAssociationWithCapability(teamId, capabilityIdParsed);
+        await _teamApplicationService.AddLinkToCapability(teamId, capabilityIdParsed);
 
         return NoContent();
     }
 
-    [HttpDelete("{id}/associate-capability/{capabilityId}")]
-    public async Task<IActionResult> RemoveAssociationWithCapability(
-        [FromRoute] Guid id,
-        [FromRoute] string capabilityId
-    )
+    [HttpDelete("{id}/capability-link/{capabilityId}")]
+    public async Task<IActionResult> RemoveLinkToCapability([FromRoute] Guid id, [FromRoute] string capabilityId)
     {
         if (!TeamId.TryParse(id, out var teamId))
         {
@@ -125,7 +122,7 @@ public class TeamsController : ControllerBase
             );
         }
 
-        await _teamApplicationService.RemoveAssociationWithCapability(teamId, capabilityIdParsed);
+        await _teamApplicationService.RemoveLinkToCapability(teamId, capabilityIdParsed);
 
         return NoContent();
     }

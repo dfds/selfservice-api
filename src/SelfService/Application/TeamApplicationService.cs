@@ -5,19 +5,19 @@ namespace SelfService.Application;
 public class TeamApplicationService : ITeamApplicationService
 {
     private readonly ITeamRepository _teamRepository;
-    private readonly ITeamCapabilityAssociationRepository _teamCapabilityAssociationRepository;
+    private readonly ITeamCapabilityLinkingRepository _teamCapabilityLinkingRepository;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly Logger<TeamApplicationService> _logger;
 
     public TeamApplicationService(
         ITeamRepository teamRepository,
-        ITeamCapabilityAssociationRepository teamCapabilityAssociationRepository,
+        ITeamCapabilityLinkingRepository teamCapabilityLinkingRepository,
         ICapabilityRepository capabilityRepository,
         Logger<TeamApplicationService> logger
     )
     {
         _teamRepository = teamRepository;
-        _teamCapabilityAssociationRepository = teamCapabilityAssociationRepository;
+        _teamCapabilityLinkingRepository = teamCapabilityLinkingRepository;
         _capabilityRepository = capabilityRepository;
         _logger = logger;
     }
@@ -53,7 +53,7 @@ public class TeamApplicationService : ITeamApplicationService
         return Task.CompletedTask;
     }
 
-    public async Task AddAssociationWithCapability(TeamId teamId, CapabilityId capabilityId)
+    public async Task AddLinkToCapability(TeamId teamId, CapabilityId capabilityId)
     {
         var team = await _teamRepository.FindBy(teamId);
         if (team == null)
@@ -67,35 +67,35 @@ public class TeamApplicationService : ITeamApplicationService
             throw new ArgumentException("Capability does not exist");
         }
 
-        var association = await _teamCapabilityAssociationRepository.FindByTeamAndCapabilityIds(teamId, capabilityId);
+        var linking = await _teamCapabilityLinkingRepository.FindByTeamAndCapabilityIds(teamId, capabilityId);
 
-        if (association != null)
+        if (linking != null)
         {
             _logger.LogWarning(
-                "Attempted to add association between team {teamId} and capability {capabilityId}, but such association already exists.",
+                "Attempted to add a link between team {teamId} and capability {capabilityId}, but such linking already exists.",
                 teamId,
                 capabilityId
             );
             return;
         }
 
-        await _teamCapabilityAssociationRepository.Add(new TeamCapabilityAssociation(teamId, capabilityId));
+        await _teamCapabilityLinkingRepository.Add(new TeamCapabilityLink(teamId, capabilityId));
     }
 
-    public async Task RemoveAssociationWithCapability(TeamId teamId, CapabilityId capabilityId)
+    public async Task RemoveLinkToCapability(TeamId teamId, CapabilityId capabilityId)
     {
-        var association = await _teamCapabilityAssociationRepository.FindByTeamAndCapabilityIds(teamId, capabilityId);
+        var linking = await _teamCapabilityLinkingRepository.FindByTeamAndCapabilityIds(teamId, capabilityId);
 
-        if (association == null)
+        if (linking == null)
         {
             _logger.LogWarning(
-                "Attempted to delete association between team {teamId} and capability {capabilityId}, but could not find such association.",
+                "Attempted to delete the link between team {teamId} and capability {capabilityId}, but could not find such linking.",
                 teamId,
                 capabilityId
             );
             return;
         }
 
-        await _teamCapabilityAssociationRepository.Remove(association);
+        await _teamCapabilityLinkingRepository.Remove(linking);
     }
 }

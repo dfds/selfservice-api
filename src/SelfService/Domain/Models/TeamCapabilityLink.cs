@@ -1,11 +1,11 @@
 namespace SelfService.Domain.Models;
 
-public class TeamCapabilityAssociation : Entity<Guid>
+public class TeamCapabilityLink : Entity<Guid>
 {
     public TeamId TeamId { get; set; }
     public CapabilityId CapabilityId { get; set; }
 
-    public TeamCapabilityAssociation(TeamId teamId, CapabilityId capabilityId)
+    public TeamCapabilityLink(TeamId teamId, CapabilityId capabilityId)
     {
         TeamId = teamId;
         CapabilityId = capabilityId;
@@ -13,6 +13,6 @@ public class TeamCapabilityAssociation : Entity<Guid>
 
     public override string ToString()
     {
-        return $"Association {TeamId} - {CapabilityId}";
+        return $"Link {TeamId} - {CapabilityId}";
     }
 }

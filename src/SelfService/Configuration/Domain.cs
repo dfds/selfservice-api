@@ -48,6 +48,7 @@ public static class Domain
         builder.Services.AddTransient<IPortalVisitRepository, PortalVisitRepository>();
         builder.Services.AddTransient<IECRRepositoryRepository, ECRRepositoryRepository>();
         builder.Services.AddTransient<ISelfServiceJsonSchemaRepository, SelfServiceJsonSchemaRepository>();
+        builder.Services.AddTransient<ITeamRepository, TeamRepository>();
 
         builder.Services.AddTransient<TopVisitorsRepository>();
 

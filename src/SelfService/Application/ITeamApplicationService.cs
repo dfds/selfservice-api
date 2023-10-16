@@ -8,6 +8,6 @@ public interface ITeamApplicationService
     Task<Team?> GetTeam(TeamId id);
     Task<Team> AddTeam(string name, string description, UserId createdBy);
     Task RemoveTeam(TeamId id);
-    Task AddAssociationWithCapability(TeamId teamId, CapabilityId capabilityId);
-    Task RemoveAssociationWithCapability(TeamId teamId, CapabilityId capabilityId);
+    Task AddLinkToCapability(TeamId teamId, CapabilityId capabilityId);
+    Task RemoveLinkToCapability(TeamId teamId, CapabilityId capabilityId);
 }
