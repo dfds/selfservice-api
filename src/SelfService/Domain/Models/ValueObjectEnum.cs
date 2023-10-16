@@ -6,7 +6,6 @@ public abstract class ValueObjectEnum<TEnumeration> : ValueObject
     where TEnumeration : class
 {
     private readonly string _value;
-    private static readonly TEnumeration[] Enumerations = GetEnumerations();
 
     protected ValueObjectEnum(string value)
     {
@@ -31,9 +30,9 @@ public abstract class ValueObjectEnum<TEnumeration> : ValueObject
             return false;
         }
 
-        var enums = Enumerations;
+        var enums = GetEnumerationsUsingReflection();
 
-        var parsed = enums.FirstOrDefault(x => x?.ToString() == text);
+        var parsed = enums.FirstOrDefault(x => x.ToString() == text);
         if (parsed != null)
         {
             outValue = parsed;
@@ -45,7 +44,7 @@ public abstract class ValueObjectEnum<TEnumeration> : ValueObject
     }
 
     // NOTE: From https://gist.github.com/spewu/5933739
-    private static TEnumeration[] GetEnumerations()
+    private static TEnumeration[] GetEnumerationsUsingReflection()
     {
         var enumerationType = typeof(TEnumeration);
 
