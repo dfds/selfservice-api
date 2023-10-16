@@ -35,8 +35,7 @@ public class TestMembershipApplicationService
         var memberships = await dbContext.Memberships.ToListAsync();
         Assert.Single(memberships);
     }
-    
-    
+
     [Fact]
     [Trait("Category", "InMemoryDatabase")]
     public async Task add_user_cant_create_duplicate_membership()
