@@ -38,7 +38,7 @@ public class MembershipApplicationService : IMembershipApplicationService
         _membershipApplicationDomainService = membershipApplicationDomainService;
     }
 
-    public async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId)
+    private async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId)
     {
         if (await _membershipRepository.IsAlreadyMember(capabilityId, userId))
         {

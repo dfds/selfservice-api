@@ -25,7 +25,9 @@ public class MembershipRepository : IMembershipRepository
 
     public async Task<bool> IsAlreadyMember(CapabilityId capabilityId, UserId userId)
     {
-        var count = await _dbContext.Memberships.Where(x => x.CapabilityId == capabilityId && x.UserId == userId).CountAsync();
+        var count = await _dbContext.Memberships
+            .Where(x => x.CapabilityId == capabilityId && x.UserId == userId)
+            .CountAsync();
         return (count > 0);
     }
 

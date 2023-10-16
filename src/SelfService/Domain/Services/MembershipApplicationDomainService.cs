@@ -28,29 +28,4 @@ public class MembershipApplicationDomainService : IMembershipApplicationDomainSe
 
         return false;
     }
-
-    public async Task<bool> CanApprove(UserId userId, MembershipApplication application)
-    {
-        if (application.IsFinalized || application.IsCancelled)
-        {
-            return false;
-        }
-
-        if (userId == application.Applicant)
-        {
-            return false;
-        }
-
-        if (application.HasApproved(userId))
-        {
-            return false;
-        }
-
-        if (!await _membershipQuery.HasActiveMembership(userId, application.CapabilityId))
-        {
-            return false;
-        }
-
-        return true;
-    }
 }
