@@ -119,9 +119,9 @@ public class TestGenericRepository
         var otherId = TestGenericRepositoryModelId.New();
         await repo.Add(new TestGenericRepositoryModel(otherId, "woo", 10));
         await dbContext.SaveChangesAsync();
-        var toBeFound = await repo.FindBy(TestId);
+        var toBeFound = await repo.FindById(TestId);
         Assert.NotNull(toBeFound);
-        var toNotBeFound = await repo.FindBy(TestGenericRepositoryModelId.New());
+        var toNotBeFound = await repo.FindById(TestGenericRepositoryModelId.New());
         Assert.Null(toNotBeFound);
     }
 

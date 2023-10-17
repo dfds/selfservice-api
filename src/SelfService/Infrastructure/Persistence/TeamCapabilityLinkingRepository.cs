@@ -9,9 +9,4 @@ public class TeamCapabilityLinkingRepository
 {
     public TeamCapabilityLinkingRepository(SelfServiceDbContext dbContext)
         : base(dbContext.TeamCapabilityLinks) { }
-
-    public Task<TeamCapabilityLink?> FindByTeamAndCapabilityIds(TeamId teamId, CapabilityId capabilityId)
-    {
-        return DbSetReference.FirstOrDefaultAsync(x => x.TeamId == teamId && x.CapabilityId == capabilityId);
-    }
 }

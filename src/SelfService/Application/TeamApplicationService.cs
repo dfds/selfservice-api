@@ -31,26 +31,28 @@ public class TeamApplicationService : ITeamApplicationService
 
     public Task<Team?> GetTeam(TeamId id)
     {
-        return _teamRepository.FindBy(id);
+        return _teamRepository.FindById(id);
     }
 
     // This function exists in order for interface functions to be able to add links with their own transactional boundaries,
     // since nesting transactional boundaries does not work.
     private async Task<TeamCapabilityLink> AddLinkToCapabilityInternal(TeamId teamId, CapabilityId capabilityId)
     {
-        var team = await _teamRepository.FindBy(teamId);
+        var team = await _teamRepository.FindById(teamId);
         if (team == null)
         {
-            throw new ArgumentException("Team does not exist");
+            throw new EntityNotFoundException("Team does not exist");
         }
 
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability == null)
         {
-            throw new ArgumentException("Capability does not exist");
+            throw new EntityNotFoundException("Capability does not exist");
         }
 
-        var linking = await _teamCapabilityLinkingRepository.FindByTeamAndCapabilityIds(teamId, capabilityId);
+        var linking = await _teamCapabilityLinkingRepository.FindByPredicate(
+            x => x.TeamId == teamId && x.CapabilityId == capabilityId
+        );
 
         if (linking != null)
         {
@@ -72,7 +74,7 @@ public class TeamApplicationService : ITeamApplicationService
         List<CapabilityId> linkedCapabilityIds
     )
     {
-        var teamWithThisName = await _teamRepository.FindByName(name);
+        var teamWithThisName = await _teamRepository.FindByPredicate(x => x.Name == name);
         if (teamWithThisName != null)
         {
             throw new ArgumentException(
@@ -107,7 +109,9 @@ public class TeamApplicationService : ITeamApplicationService
     [TransactionalBoundary]
     public async Task RemoveLinkToCapability(TeamId teamId, CapabilityId capabilityId)
     {
-        var linking = await _teamCapabilityLinkingRepository.FindByTeamAndCapabilityIds(teamId, capabilityId);
+        var linking = await _teamCapabilityLinkingRepository.FindByPredicate(
+            x => x.TeamId == teamId && x.CapabilityId == capabilityId
+        );
 
         if (linking == null)
         {

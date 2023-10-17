@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
@@ -25,14 +26,19 @@ public class GenericRepository<T, TId> : IGenericRepository<T, TId>
         return found != null;
     }
 
-    public async Task<T?> FindBy(TId id)
+    public async Task<T?> FindById(TId id)
     {
         return await DbSetReference.FindAsync(id);
     }
 
+    public async Task<T?> FindByPredicate(Func<T, bool> predicate)
+    {
+        return await DbSetReference.FirstOrDefaultAsync(x => predicate(x));
+    }
+
     public async Task<T> Remove(TId id)
     {
-        var objectT = await FindBy(id);
+        var objectT = await FindById(id);
         if (objectT is null)
         {
             throw EntityNotFoundException<TId>.UsingId(id?.ToString());

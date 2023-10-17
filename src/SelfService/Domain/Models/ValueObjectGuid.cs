@@ -64,6 +64,11 @@ public abstract class ValueObjectGuid<T> : ValueObject
         return UseReflectionToConstructObject(Guid.NewGuid());
     }
 
+    public static T NewFrom(Guid guid)
+    {
+        return UseReflectionToConstructObject(guid);
+    }
+
     public static T Parse(string? text)
     {
         if (TryParse(text, out var id))
@@ -85,4 +90,12 @@ public abstract class ValueObjectGuid<T> : ValueObject
         id = null!;
         return false;
     }
+
+    public static implicit operator ValueObjectGuid<T>(string text) => Parse(text);
+
+    public static implicit operator string(ValueObjectGuid<T> id) => id.ToString();
+
+    public static implicit operator Guid(ValueObjectGuid<T> id) => id.Id;
+
+    public static implicit operator ValueObjectGuid<T>(Guid idValue) => UseReflectionToConstructObject(idValue);
 }
