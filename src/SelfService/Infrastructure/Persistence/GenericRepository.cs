@@ -33,7 +33,9 @@ public class GenericRepository<T, TId> : IGenericRepository<T, TId>
 
     public async Task<T?> FindByPredicate(Func<T, bool> predicate)
     {
-        return await DbSetReference.FirstOrDefaultAsync(x => predicate(x));
+        // Done in two steps to avoid Entity Framework Core from choking on the predicate.
+        var ts = await DbSetReference.ToListAsync();
+        return ts.FirstOrDefault(predicate);
     }
 
     public async Task<T> Remove(TId id)
@@ -54,8 +56,10 @@ public class GenericRepository<T, TId> : IGenericRepository<T, TId>
         return DbSetReference.ToListAsync();
     }
 
-    public Task<List<T>> GetAllWithPredicate(Func<T, bool> predicate)
+    public async Task<List<T>> GetAllWithPredicate(Func<T, bool> predicate)
     {
-        return DbSetReference.Where(x => predicate(x)).ToListAsync();
+        // Done in two steps to avoid Entity Framework Core from choking on the predicate.
+        var ts = await DbSetReference.ToListAsync();
+        return ts.Where(predicate).ToList();
     }
 }
