@@ -30,8 +30,8 @@ public class CapabilityDetailsApiResource
         public ResourceLink GetCapabilityMetadata { get; set; }
         public ResourceLink JoinCapability { get; set; }
 
-
-        public CapabilityDetailsLinks(ResourceLink self,
+        public CapabilityDetailsLinks(
+            ResourceLink self,
             ResourceLink members,
             ResourceLink clusters,
             ResourceLink membershipApplications,
@@ -40,8 +40,9 @@ public class CapabilityDetailsApiResource
             ResourceLink requestCapabilityDeletion,
             ResourceLink cancelCapabilityDeletionRequest,
             ResourceLink setCapabilityMetadata,
-            ResourceLink getCapabilityMetadata, 
-            ResourceLink joinCapability)
+            ResourceLink getCapabilityMetadata,
+            ResourceLink joinCapability
+        )
         {
             Self = self;
             Members = members;

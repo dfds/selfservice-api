@@ -305,7 +305,7 @@ public class ApiResourceFactory
     {
         var allowedInteractions = Allow.None;
 
-        if  (_authorizationService.CanBypassMembershipApprovals(PortalUser))
+        if (_authorizationService.CanBypassMembershipApprovals(PortalUser))
         {
             allowedInteractions += Post;
         }
