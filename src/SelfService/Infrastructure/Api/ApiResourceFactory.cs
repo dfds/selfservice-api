@@ -436,7 +436,7 @@ public class ApiResourceFactory
                 setCapabilityMetadata: CreateSetMetadataLinkFor(capability),
                 getCapabilityMetadata: CreateGetMetadataLinkFor(capability),
                 joinCapability: CreateJoinLinkFor(capability)
-            ) // [pausegh] - waypoint
+            )
         );
     }
 
