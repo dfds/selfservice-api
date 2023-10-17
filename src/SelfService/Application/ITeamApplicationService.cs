@@ -10,4 +10,5 @@ public interface ITeamApplicationService
     Task RemoveTeam(TeamId id);
     Task<TeamCapabilityLink> AddLinkToCapability(TeamId teamId, CapabilityId capabilityId);
     Task RemoveLinkToCapability(TeamId teamId, CapabilityId capabilityId);
+    Task<List<Team>> GetLinkedTeams(CapabilityId capabilityId);
 }

@@ -25,7 +25,7 @@ public class CapabilityController : ControllerBase
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
-    private readonly ITeamCapabilityLinkingRepository _teamCapabilityLinkingRepository;
+    private readonly ITeamApplicationService _teamApplicationService;
     private readonly ILogger<CapabilityController> _logger;
 
     public CapabilityController(
@@ -42,7 +42,7 @@ public class CapabilityController : ControllerBase
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
         ILogger<CapabilityController> logger,
-        ITeamCapabilityLinkingRepository teamCapabilityLinkingRepository
+        ITeamApplicationService teamApplicationService
     )
     {
         _membersQuery = membersQuery;
@@ -58,7 +58,7 @@ public class CapabilityController : ControllerBase
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
         _logger = logger;
-        _teamCapabilityLinkingRepository = teamCapabilityLinkingRepository;
+        _teamApplicationService = teamApplicationService;
     }
 
     [HttpGet("")]
@@ -980,7 +980,7 @@ public class CapabilityController : ControllerBase
             );
         }
 
-        var teams = await _teamCapabilityLinkingRepository.GetAllWithPredicate(x => x.CapabilityId == capabilityId);
+        var teams = await _teamApplicationService.GetLinkedTeams(capabilityId);
         return Ok(teams);
     }
 }

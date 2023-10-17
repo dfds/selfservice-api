@@ -125,4 +125,20 @@ public class TeamApplicationService : ITeamApplicationService
 
         await _teamCapabilityLinkingRepository.Remove(linking.Id);
     }
+
+    public async Task<List<Team>> GetLinkedTeams(CapabilityId capabilityId)
+    {
+        List<Team> linkedTeams = new List<Team>();
+        var links = await _teamCapabilityLinkingRepository.GetAllWithPredicate(x => x.CapabilityId == capabilityId);
+
+        foreach (var teamCapabilityLink in links)
+        {
+            var team = await _teamRepository.FindById(teamCapabilityLink.TeamId);
+            if (team == null)
+                continue;
+            linkedTeams.Add(team);
+        }
+
+        return linkedTeams;
+    }
 }
