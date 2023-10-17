@@ -28,9 +28,10 @@ public class CapabilityDetailsApiResource
         public ResourceLink CancelCapabilityDeletionRequest { get; set; }
         public ResourceLink SetCapabilityMetadata { get; set; }
         public ResourceLink GetCapabilityMetadata { get; set; }
+        public ResourceLink JoinCapability { get; set; }
 
-        public CapabilityDetailsLinks(
-            ResourceLink self,
+
+        public CapabilityDetailsLinks(ResourceLink self,
             ResourceLink members,
             ResourceLink clusters,
             ResourceLink membershipApplications,
@@ -39,8 +40,8 @@ public class CapabilityDetailsApiResource
             ResourceLink requestCapabilityDeletion,
             ResourceLink cancelCapabilityDeletionRequest,
             ResourceLink setCapabilityMetadata,
-            ResourceLink getCapabilityMetadata
-        )
+            ResourceLink getCapabilityMetadata, 
+            ResourceLink joinCapability)
         {
             Self = self;
             Members = members;
@@ -52,6 +53,7 @@ public class CapabilityDetailsApiResource
             CancelCapabilityDeletionRequest = cancelCapabilityDeletionRequest;
             SetCapabilityMetadata = setCapabilityMetadata;
             GetCapabilityMetadata = getCapabilityMetadata;
+            JoinCapability = joinCapability;
         }
     }
 
