@@ -1,8 +1,4 @@
-using Microsoft.Extensions.Logging;
-using Moq;
-using SelfService.Application;
 using SelfService.Domain.Models;
-using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Tests.Application;
 
