@@ -968,7 +968,6 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     public async Task<IActionResult> GetLinkedTeams(string id)
     {
-        // Check that capability with provided id exists
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return NotFound(
