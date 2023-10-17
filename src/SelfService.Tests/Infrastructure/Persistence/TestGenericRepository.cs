@@ -163,4 +163,39 @@ public class TestGenericRepository
         Assert.Equal(kafkaTopic.CreatedBy, allObjects[0].CreatedBy);
         Assert.Equal(kafkaTopic.KafkaClusterId, allObjects[0].KafkaClusterId);
     }
+
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task can_find_with_predicate()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext<TestDbContext>(options => new TestDbContext(options));
+
+        var repo = await CreateGenericRepoAndAddOne(dbContext);
+        var doesExist = await repo.FindByPredicate(x => x.Foo == "foo");
+        Assert.NotNull(doesExist);
+        var doesNotExist = await repo.FindByPredicate(x => x.Foo == "bar");
+        Assert.Null(doesNotExist);
+    }
+
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task can_get_all_with_predicate()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext<TestDbContext>(options => new TestDbContext(options));
+
+        var repo = await CreateGenericRepoAndAddOne(dbContext);
+
+        await repo.Add(new TestGenericRepositoryModel(TestGenericRepositoryModelId.New(), "foo", 2));
+        await repo.Add(new TestGenericRepositoryModel(TestGenericRepositoryModelId.New(), "foo", 3));
+        await repo.Add(new TestGenericRepositoryModel(TestGenericRepositoryModelId.New(), "bar", 1));
+        await dbContext.SaveChangesAsync();
+
+        var allObjects2 = await repo.GetAllWithPredicate(x => x.Foo == "foo");
+        Assert.Equal(3, allObjects2.Count);
+
+        var allObjects3 = await repo.GetAllWithPredicate(x => x.Foo == "bar");
+        Assert.Single(allObjects3);
+    }
 }
