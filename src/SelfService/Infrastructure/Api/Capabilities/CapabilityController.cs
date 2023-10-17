@@ -25,6 +25,7 @@ public class CapabilityController : ControllerBase
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
+    private readonly ITeamCapabilityLinkingRepository _teamCapabilityLinkingRepository;
     private readonly ILogger<CapabilityController> _logger;
 
     public CapabilityController(
@@ -40,7 +41,8 @@ public class CapabilityController : ControllerBase
         IMembershipApplicationService membershipApplicationService,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
-        ILogger<CapabilityController> logger
+        ILogger<CapabilityController> logger,
+        ITeamCapabilityLinkingRepository teamCapabilityLinkingRepository
     )
     {
         _membersQuery = membersQuery;
@@ -56,6 +58,7 @@ public class CapabilityController : ControllerBase
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
         _logger = logger;
+        _teamCapabilityLinkingRepository = teamCapabilityLinkingRepository;
     }
 
     [HttpGet("")]
@@ -957,5 +960,27 @@ public class CapabilityController : ControllerBase
         }
 
         return Ok();
+    }
+
+    [HttpGet("{id}/teams")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    public async Task<IActionResult> GetLinkedTeams(string id)
+    {
+        // Check that capability with provided id exists
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+        }
+
+        var teams = await _teamCapabilityLinkingRepository.GetAllWithPredicate(x => x.CapabilityId == capabilityId);
+        return Ok(teams);
     }
 }

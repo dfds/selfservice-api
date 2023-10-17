@@ -301,6 +301,20 @@ public class ApiResourceFactory
         );
     }
 
+    private ResourceLink GetLinkedTeams(Capability capability)
+    {
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetLinkedTeams),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { capabilityId = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: Allow.Get
+        );
+    }
+
     private async Task<ResourceLink> CreateRequestDeletionLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
@@ -414,7 +428,8 @@ public class ApiResourceFactory
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
                 setCapabilityMetadata: CreateSetMetadataLinkFor(capability),
-                getCapabilityMetadata: CreateGetMetadataLinkFor(capability)
+                getCapabilityMetadata: CreateGetMetadataLinkFor(capability),
+                getLinkedTeams: GetLinkedTeams(capability)
             )
         );
     }

@@ -9,4 +9,5 @@ public interface IGenericRepository<T, TId>
     Task<T?> FindByPredicate(Func<T, bool> predicate);
     Task<T> Remove(TId id);
     Task<List<T>> GetAll();
+    Task<List<T>> GetAllWithPredicate(Func<T, bool> predicate);
 }
