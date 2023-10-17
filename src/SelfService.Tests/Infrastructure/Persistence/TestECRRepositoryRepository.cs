@@ -10,7 +10,7 @@ public class TestECRRepositoryRepository
     public async Task add_inserts_expected_ecr_repository_into_database()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var stub = A.ECRRepository.Build();
 
@@ -29,7 +29,7 @@ public class TestECRRepositoryRepository
     public async Task add_range_inserts_expected_ecr_repositories_into_database()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var stubs = new List<ECRRepository>()
         {
@@ -57,7 +57,7 @@ public class TestECRRepositoryRepository
         const string notToBeDeletedRepositoryName = "not to be deleted";
 
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var repositoryToBeDeleted = A.ECRRepository.WithRepositoryName(toBeDeletedRepositoryName).Build();
         var repositoryToNotBeDeleted = A.ECRRepository.WithRepositoryName(notToBeDeletedRepositoryName).Build();
