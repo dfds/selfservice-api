@@ -68,7 +68,13 @@ public class TeamApplicationService : ITeamApplicationService
             );
         }
 
-        var newLinking = new TeamCapabilityLink(Guid.NewGuid(), teamId, capabilityId, createdBy, _systemTime.Now);
+        var newLinking = new TeamCapabilityLink(
+            TeamCapabilityLinkId.New(),
+            teamId,
+            capabilityId,
+            createdBy,
+            _systemTime.Now
+        );
         await _teamCapabilityLinkingRepository.Add(newLinking);
         return newLinking;
     }

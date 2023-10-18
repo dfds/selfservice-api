@@ -115,6 +115,10 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<ECRRepositoryId>().HaveConversion<ECRRepositoryIdConverter>();
 
         configurationBuilder.Properties<TeamId>().HaveConversion<ValueObjectGuidConverter<TeamId>>();
+
+        configurationBuilder
+            .Properties<TeamCapabilityLinkId>()
+            .HaveConversion<ValueObjectGuidConverter<TeamCapabilityLinkId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

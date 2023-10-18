@@ -1,6 +1,6 @@
 namespace SelfService.Domain.Models;
 
-public class TeamCapabilityLink : Entity<Guid>
+public class TeamCapabilityLink : Entity<TeamCapabilityLinkId>
 {
     public TeamId TeamId { get; set; }
     public CapabilityId CapabilityId { get; set; }
@@ -10,13 +10,13 @@ public class TeamCapabilityLink : Entity<Guid>
     public DateTime CreatedAt { get; private set; }
 
     public TeamCapabilityLink(
-        Guid linkId,
+        TeamCapabilityLinkId id,
         TeamId teamId,
         CapabilityId capabilityId,
         string createdBy,
         DateTime createdAt
     )
-        : base(linkId)
+        : base(id)
     {
         TeamId = teamId;
         CapabilityId = capabilityId;
