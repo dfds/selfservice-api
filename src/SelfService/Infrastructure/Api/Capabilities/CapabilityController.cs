@@ -853,15 +853,9 @@ public class CapabilityController : ControllerBase
                     Detail = $"A capability with id \"{id}\" could not be found."
                 }
             );
-        try
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!_authorizationService.CanBypassMembershipApprovals(portalUser))
         {
-            var portalUser = HttpContext.User.ToPortalUser();
-            if (_authorizationService.CanBypassMembershipApprovals(portalUser))
-            {
-                await _membershipApplicationService.JoinCapability(id, portalUser.Id);
-                return Ok();
-            }
-
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -870,11 +864,21 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
-        catch (AlreadyHasActiveMembershipException e)
+        try
+        {
+            await _membershipApplicationService.JoinCapability(id, portalUser.Id);
+        }catch (AlreadyHasActiveMembershipException e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "User already in capability", Detail = $"AddUserToCapability: {e.Message}." }
+            );
+        }catch (Exception e)
         {
             return CustomObjectResult.InternalServerError(
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"AddUserToCapability: {e.Message}." }
             );
         }
+        return Ok();
     }
+
 }
