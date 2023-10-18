@@ -27,6 +27,7 @@ public static class Domain
         builder.Services.AddTransient<IMemberApplicationService, MemberApplicationService>();
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
         builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
+        builder.Services.AddTransient<ITeamApplicationService, TeamApplicationService>();
 
         // domain services
         builder.Services.AddTransient<MembershipApplicationDomainService>();
@@ -47,7 +48,8 @@ public static class Domain
         builder.Services.AddTransient<IPortalVisitRepository, PortalVisitRepository>();
         builder.Services.AddTransient<IECRRepositoryRepository, ECRRepositoryRepository>();
         builder.Services.AddTransient<ISelfServiceJsonSchemaRepository, SelfServiceJsonSchemaRepository>();
-
+        builder.Services.AddTransient<ITeamRepository, TeamRepository>();
+        builder.Services.AddTransient<ITeamCapabilityLinkingRepository, TeamCapabilityLinkingRepository>();
         builder.Services.AddTransient<TopVisitorsRepository>();
 
         // domain queries

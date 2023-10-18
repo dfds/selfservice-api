@@ -29,4 +29,7 @@ public static class A
 
     public static ECRRepositoryBuilder ECRRepository => new();
     public static ECRRepositoryRepositoryBuilder ECRRepositoryRepository => new();
+
+    public static TeamBuilder Team = new();
+    public static TeamApplicationServiceBuilder TeamApplicationService = new();
 }
