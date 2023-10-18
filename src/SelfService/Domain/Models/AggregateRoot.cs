@@ -4,8 +4,6 @@ public abstract class AggregateRoot<TId> : Entity<TId>, IEventSource
 {
     private readonly LinkedList<IDomainEvent> _domainEvents = new();
 
-    protected AggregateRoot() { }
-
     protected AggregateRoot(TId id)
         : base(id) { }
 

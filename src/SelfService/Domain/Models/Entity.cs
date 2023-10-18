@@ -1,13 +1,11 @@
 ﻿public abstract class Entity<TId> : IEquatable<Entity<TId>>
 {
-    protected Entity() { }
-
     protected Entity(TId id)
     {
         Id = id;
     }
 
-    public TId Id { get; private set; } = default!;
+    public TId Id { get; private set; }
 
     #region equality members
 

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using SelfService.Application;
+using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
@@ -10,13 +11,16 @@ namespace SelfService.Tests.Builders;
 
 public class TeamApplicationServiceBuilder
 {
-    private ITeamRepository? _teamRepository;
-    private ITeamCapabilityLinkingRepository? _teamCapabilityLinkingRepository;
-    private ICapabilityRepository? _capabilityRepository;
-    private ILogger<TeamApplicationService>? _logger;
+    private ITeamRepository _teamRepository;
+    private ITeamCapabilityLinkingRepository _teamCapabilityLinkingRepository;
+    private ICapabilityRepository _capabilityRepository;
+    private ILogger<TeamApplicationService> _logger;
 
     public TeamApplicationServiceBuilder()
     {
+        _teamRepository = Dummy.Of<ITeamRepository>();
+        _teamCapabilityLinkingRepository = Dummy.Of<ITeamCapabilityLinkingRepository>();
+        _capabilityRepository = Dummy.Of<ICapabilityRepository>();
         _logger = Dummy.Of<ILogger<TeamApplicationService>>();
     }
 
@@ -57,11 +61,11 @@ public class TeamApplicationServiceBuilder
     public TeamApplicationService Build()
     {
         return new(
-            _teamRepository ?? throw new InvalidOperationException("TeamRepository not set"),
-            _teamCapabilityLinkingRepository
-                ?? throw new InvalidOperationException("TeamCapabilityLinkingRepository not set"),
-            _capabilityRepository ?? throw new InvalidOperationException("CapabilityRepository not set"),
-            _logger ?? throw new InvalidOperationException("Logger not set")
+            _teamRepository,
+            _teamCapabilityLinkingRepository,
+            _capabilityRepository,
+            _logger,
+            Dummy.Of<SystemTime>()
         );
     }
 }

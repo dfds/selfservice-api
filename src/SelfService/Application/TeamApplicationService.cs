@@ -10,18 +10,21 @@ public class TeamApplicationService : ITeamApplicationService
     private readonly ITeamCapabilityLinkingRepository _teamCapabilityLinkingRepository;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly ILogger<TeamApplicationService> _logger;
+    private readonly SystemTime _systemTime;
 
     public TeamApplicationService(
         ITeamRepository teamRepository,
         ITeamCapabilityLinkingRepository teamCapabilityLinkingRepository,
         ICapabilityRepository capabilityRepository,
-        ILogger<TeamApplicationService> logger
+        ILogger<TeamApplicationService> logger,
+        SystemTime systemTime
     )
     {
         _teamRepository = teamRepository;
         _teamCapabilityLinkingRepository = teamCapabilityLinkingRepository;
         _capabilityRepository = capabilityRepository;
         _logger = logger;
+        _systemTime = systemTime;
     }
 
     public Task<List<Team>> GetAllTeams()
@@ -36,7 +39,11 @@ public class TeamApplicationService : ITeamApplicationService
 
     // This function exists in order for interface functions to be able to add links with their own transactional boundaries,
     // since nesting transactional boundaries does not work.
-    private async Task<TeamCapabilityLink> AddLinkToCapabilityInternal(TeamId teamId, CapabilityId capabilityId)
+    private async Task<TeamCapabilityLink> AddLinkToCapabilityInternal(
+        TeamId teamId,
+        CapabilityId capabilityId,
+        UserId createdBy
+    )
     {
         var team = await _teamRepository.FindById(teamId);
         if (team == null)
@@ -61,7 +68,7 @@ public class TeamApplicationService : ITeamApplicationService
             );
         }
 
-        var newLinking = new TeamCapabilityLink(teamId, capabilityId);
+        var newLinking = new TeamCapabilityLink(Guid.NewGuid(), teamId, capabilityId, createdBy, _systemTime.Now);
         await _teamCapabilityLinkingRepository.Add(newLinking);
         return newLinking;
     }
@@ -87,7 +94,7 @@ public class TeamApplicationService : ITeamApplicationService
 
         foreach (var capabilityId in linkedCapabilityIds)
         {
-            await AddLinkToCapabilityInternal(newTeam.Id, capabilityId);
+            await AddLinkToCapabilityInternal(newTeam.Id, capabilityId, createdBy);
         }
 
         return newTeam;
@@ -101,9 +108,13 @@ public class TeamApplicationService : ITeamApplicationService
     }
 
     [TransactionalBoundary]
-    public async Task<TeamCapabilityLink> AddLinkToCapability(TeamId teamId, CapabilityId capabilityId)
+    public async Task<TeamCapabilityLink> AddLinkToCapability(
+        TeamId teamId,
+        CapabilityId capabilityId,
+        UserId createdBy
+    )
     {
-        return await AddLinkToCapabilityInternal(teamId, capabilityId);
+        return await AddLinkToCapabilityInternal(teamId, capabilityId, createdBy);
     }
 
     [TransactionalBoundary]
@@ -135,7 +146,15 @@ public class TeamApplicationService : ITeamApplicationService
         {
             var team = await _teamRepository.FindById(teamCapabilityLink.TeamId);
             if (team == null)
+            {
+                _logger.LogWarning(
+                    "Found a link between team {teamId} and capability {capabilityId}, but could not find the team.",
+                    teamCapabilityLink.TeamId,
+                    capabilityId
+                );
                 continue;
+            }
+
             linkedTeams.Add(team);
         }
 

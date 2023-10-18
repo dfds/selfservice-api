@@ -68,7 +68,7 @@ public class TestTeamApplicationService
         var linkedTeams = await teamService.GetLinkedTeams(testCapability.Id);
         Assert.Empty(linkedTeams);
 
-        await teamService.AddLinkToCapability(testTeam.Id, testCapability.Id);
+        await teamService.AddLinkToCapability(testTeam.Id, testCapability.Id, A.UserId);
         await dbContext.SaveChangesAsync();
 
         var linkedTeamsAfterAdding = await teamService.GetLinkedTeams(testCapability.Id);
