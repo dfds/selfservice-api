@@ -344,6 +344,8 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.TeamId);
             cfg.Property(x => x.CapabilityId);
+            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.CreatedAt);
         });
     }
 }
