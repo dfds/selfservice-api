@@ -10,21 +10,18 @@ public class TeamApplicationService : ITeamApplicationService
     private readonly ITeamCapabilityLinkingRepository _teamCapabilityLinkingRepository;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly ILogger<TeamApplicationService> _logger;
-    private readonly SystemTime _systemTime;
 
     public TeamApplicationService(
         ITeamRepository teamRepository,
         ITeamCapabilityLinkingRepository teamCapabilityLinkingRepository,
         ICapabilityRepository capabilityRepository,
-        ILogger<TeamApplicationService> logger,
-        SystemTime systemTime
+        ILogger<TeamApplicationService> logger
     )
     {
         _teamRepository = teamRepository;
         _teamCapabilityLinkingRepository = teamCapabilityLinkingRepository;
         _capabilityRepository = capabilityRepository;
         _logger = logger;
-        _systemTime = systemTime;
     }
 
     public Task<List<Team>> GetAllTeams()
@@ -73,7 +70,7 @@ public class TeamApplicationService : ITeamApplicationService
             teamId,
             capabilityId,
             createdBy,
-            _systemTime.Now
+            DateTime.UtcNow
         );
         await _teamCapabilityLinkingRepository.Add(newLinking);
         return newLinking;
