@@ -49,11 +49,11 @@ public class TestMembershipApplicationService
             .WithMembershipRepository(membershipRepo)
             .Build();
 
-        await membershipApplicationService.AddUserToCapability(capabilityId, userId);
+        await membershipApplicationService.JoinCapability(capabilityId, userId);
         await dbContext.SaveChangesAsync();
 
         await Assert.ThrowsAsync<AlreadyHasActiveMembershipException>(
-            async () => await membershipApplicationService.AddUserToCapability(capabilityId, userId)
+            async () => await membershipApplicationService.JoinCapability(capabilityId, userId)
         );
         await dbContext.SaveChangesAsync();
 

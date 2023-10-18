@@ -858,7 +858,7 @@ public class CapabilityController : ControllerBase
             var portalUser = HttpContext.User.ToPortalUser();
             if (_authorizationService.CanBypassMembershipApprovals(portalUser))
             {
-                await _membershipApplicationService.AddUserToCapability(id, portalUser.Id);
+                await _membershipApplicationService.JoinCapability(id, portalUser.Id);
                 return Ok();
             }
 
