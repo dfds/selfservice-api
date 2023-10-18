@@ -834,7 +834,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> AddUserToCapability(string id)
+    public async Task<IActionResult> Join(string id)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized(
@@ -867,12 +867,18 @@ public class CapabilityController : ControllerBase
         try
         {
             await _membershipApplicationService.JoinCapability(id, portalUser.Id);
-        }catch (AlreadyHasActiveMembershipException e)
+        }
+        catch (AlreadyHasActiveMembershipException e)
         {
             return CustomObjectResult.InternalServerError(
-                new ProblemDetails { Title = "User already in capability", Detail = $"AddUserToCapability: {e.Message}." }
+                new ProblemDetails
+                {
+                    Title = "User already in capability",
+                    Detail = $"AddUserToCapability: {e.Message}."
+                }
             );
-        }catch (Exception e)
+        }
+        catch (Exception e)
         {
             return CustomObjectResult.InternalServerError(
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"AddUserToCapability: {e.Message}." }
@@ -880,5 +886,4 @@ public class CapabilityController : ControllerBase
         }
         return Ok();
     }
-
 }

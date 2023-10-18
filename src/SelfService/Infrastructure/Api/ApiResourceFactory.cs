@@ -312,7 +312,7 @@ public class ApiResourceFactory
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
-                action: nameof(CapabilityController.AddUserToCapability),
+                action: nameof(CapabilityController.Join),
                 controller: GetNameOf<CapabilityController>(),
                 values: new { id = capability.Id }
             ) ?? "",
