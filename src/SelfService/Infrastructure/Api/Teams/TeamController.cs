@@ -186,7 +186,7 @@ public class TeamController : ControllerBase
         return Ok(_apiResourceFactory.Convert(capabilities));
     }
 
-    [HttpGet("{id}/users")]
+    [HttpGet("{id}/members")]
     public async Task<IActionResult> GetMembers([FromRoute] string id)
     {
         if (!TeamId.TryParse(id, out var teamId))
