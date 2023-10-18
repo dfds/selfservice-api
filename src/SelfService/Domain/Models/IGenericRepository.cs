@@ -5,7 +5,9 @@ public interface IGenericRepository<T, TId>
 {
     Task Add(T model);
     Task<bool> Exists(TId id);
-    Task<T?> FindBy(TId id);
+    Task<T?> FindById(TId id);
+    Task<T?> FindByPredicate(Func<T, bool> predicate);
     Task<T> Remove(TId id);
     Task<List<T>> GetAll();
+    Task<List<T>> GetAllWithPredicate(Func<T, bool> predicate);
 }
