@@ -129,7 +129,14 @@ public class TeamsController : ControllerBase
             );
         }
 
-        await _teamApplicationService.AddLinkToCapability(teamId, capabilityIdParsed);
+        if (UserId.TryParse(User.Identity?.Name, out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails { Title = "Unauthorized", Detail = "You are not authorized to perform this action" }
+            );
+        }
+
+        await _teamApplicationService.AddLinkToCapability(teamId, capabilityIdParsed, userId);
 
         return NoContent();
     }
