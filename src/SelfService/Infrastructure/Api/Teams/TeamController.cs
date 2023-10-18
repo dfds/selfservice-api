@@ -8,13 +8,15 @@ namespace SelfService.Infrastructure.Api.Teams;
 [Route("teams")]
 [Produces("application/json")]
 [ApiController]
-public class TeamsController : ControllerBase
+public class TeamController : ControllerBase
 {
     private readonly ITeamApplicationService _teamApplicationService;
+    private readonly ApiResourceFactory _apiResourceFactory;
 
-    public TeamsController(ITeamApplicationService teamApplicationService)
+    public TeamController(ITeamApplicationService teamApplicationService, ApiResourceFactory apiResourceFactory)
     {
         _teamApplicationService = teamApplicationService;
+        _apiResourceFactory = apiResourceFactory;
     }
 
     [HttpGet("")]
@@ -23,7 +25,7 @@ public class TeamsController : ControllerBase
     {
         var teams = await _teamApplicationService.GetAllTeams();
 
-        return Ok(teams);
+        return Ok(_apiResourceFactory.Convert(teams));
     }
 
     [HttpGet("{id}")]
@@ -46,7 +48,7 @@ public class TeamsController : ControllerBase
             return NotFound();
         }
 
-        return Ok(team);
+        return Ok(_apiResourceFactory.Convert(team));
     }
 
     [HttpPost("")]
@@ -106,7 +108,7 @@ public class TeamsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("{id}/capability-link/{capabilityId}")]
+    [HttpPost("{id}/capability-links/{capabilityId}")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     public async Task<IActionResult> AddLinkToCapability([FromRoute] string id, [FromRoute] string capabilityId)
@@ -141,7 +143,7 @@ public class TeamsController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id}/capability-link/{capabilityId}")]
+    [HttpDelete("{id}/capability-links/{capabilityId}")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     public async Task<IActionResult> RemoveLinkToCapability([FromRoute] string id, [FromRoute] string capabilityId)
@@ -167,5 +169,35 @@ public class TeamsController : ControllerBase
         await _teamApplicationService.RemoveLinkToCapability(teamId, capabilityIdParsed);
 
         return NoContent();
+    }
+
+    [HttpGet("{id}/capability-links")]
+    public async Task<IActionResult> GetLinkedCapabilities([FromRoute] string id)
+    {
+        if (!TeamId.TryParse(id, out var teamId))
+        {
+            return BadRequest(
+                new ProblemDetails() { Title = "Invalid team id", Detail = $"The team id {id} is not valid" }
+            );
+        }
+
+        var capabilities = await _teamApplicationService.GetLinkedCapabilities(teamId);
+
+        return Ok(_apiResourceFactory.Convert(capabilities));
+    }
+
+    [HttpGet("{id}/users")]
+    public async Task<IActionResult> GetMembers([FromRoute] string id)
+    {
+        if (!TeamId.TryParse(id, out var teamId))
+        {
+            return BadRequest(
+                new ProblemDetails() { Title = "Invalid team id", Detail = $"The team id {id} is not valid" }
+            );
+        }
+
+        var users = await _teamApplicationService.GetMembers(teamId);
+
+        return Ok(users);
     }
 }

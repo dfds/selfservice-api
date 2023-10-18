@@ -11,4 +11,6 @@ public interface ITeamApplicationService
     Task<TeamCapabilityLink> AddLinkToCapability(TeamId teamId, CapabilityId capabilityId, UserId createdBy);
     Task RemoveLinkToCapability(TeamId teamId, CapabilityId capabilityId);
     Task<List<Team>> GetLinkedTeams(CapabilityId capabilityId);
+    Task<List<Capability>> GetLinkedCapabilities(TeamId teamId);
+    Task<IEnumerable<UserId>> GetMembers(TeamId teamId);
 }

@@ -9,18 +9,21 @@ public class TeamApplicationService : ITeamApplicationService
     private readonly ITeamRepository _teamRepository;
     private readonly ITeamCapabilityLinkingRepository _teamCapabilityLinkingRepository;
     private readonly ICapabilityRepository _capabilityRepository;
+    private readonly IMembershipRepository _membershipRepository;
     private readonly ILogger<TeamApplicationService> _logger;
 
     public TeamApplicationService(
         ITeamRepository teamRepository,
         ITeamCapabilityLinkingRepository teamCapabilityLinkingRepository,
         ICapabilityRepository capabilityRepository,
+        IMembershipRepository membershipRepository,
         ILogger<TeamApplicationService> logger
     )
     {
         _teamRepository = teamRepository;
         _teamCapabilityLinkingRepository = teamCapabilityLinkingRepository;
         _capabilityRepository = capabilityRepository;
+        _membershipRepository = membershipRepository;
         _logger = logger;
     }
 
@@ -162,5 +165,43 @@ public class TeamApplicationService : ITeamApplicationService
         }
 
         return linkedTeams;
+    }
+
+    public async Task<List<Capability>> GetLinkedCapabilities(TeamId teamId)
+    {
+        List<Capability> linkedCapabilities = new List<Capability>();
+        var links = await _teamCapabilityLinkingRepository.GetAllWithPredicate(x => x.TeamId == teamId);
+
+        foreach (var teamCapabilityLink in links)
+        {
+            var capability = await _capabilityRepository.FindBy(teamCapabilityLink.CapabilityId);
+            if (capability == null)
+            {
+                _logger.LogWarning(
+                    "Found a link between team {teamId} and capability {capabilityId}, but could not find the capability.",
+                    teamId,
+                    teamCapabilityLink.CapabilityId
+                );
+                continue;
+            }
+
+            linkedCapabilities.Add(capability);
+        }
+
+        return linkedCapabilities;
+    }
+
+    public async Task<IEnumerable<UserId>> GetMembers(TeamId teamId)
+    {
+        var links = await _teamCapabilityLinkingRepository.GetAllWithPredicate(x => x.TeamId == teamId);
+
+        HashSet<UserId> userIds = new HashSet<UserId>();
+        foreach (var link in links)
+        {
+            var members = await _membershipRepository.FindBy(link.CapabilityId);
+            members.ToList().ForEach(x => userIds.Add(x.UserId));
+        }
+
+        return userIds.ToList();
     }
 }

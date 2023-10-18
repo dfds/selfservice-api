@@ -9,10 +9,13 @@ namespace SelfService.Tests.Builders;
 public class TeamApplicationServiceBuilder
 {
     private ITeamRepository _teamRepository = Dummy.Of<ITeamRepository>();
+
     private ITeamCapabilityLinkingRepository _teamCapabilityLinkingRepository =
         Dummy.Of<ITeamCapabilityLinkingRepository>();
+
     private ICapabilityRepository _capabilityRepository = Dummy.Of<ICapabilityRepository>();
     private ILogger<TeamApplicationService> _logger = Dummy.Of<ILogger<TeamApplicationService>>();
+    private IMembershipRepository _membershipRepository = Dummy.Of<IMembershipRepository>();
 
     public TeamApplicationServiceBuilder WithTeamRepository(ITeamRepository teamRepository)
     {
@@ -33,12 +36,19 @@ public class TeamApplicationServiceBuilder
         _teamRepository = new TeamRepository(dbContext);
         _teamCapabilityLinkingRepository = new TeamCapabilityLinkingRepository(dbContext);
         _capabilityRepository = new CapabilityRepository(dbContext);
+        _membershipRepository = new MembershipRepository(dbContext);
         return this;
     }
 
     public TeamApplicationServiceBuilder WithCapabilityRepository(ICapabilityRepository capabilityRepository)
     {
         _capabilityRepository = capabilityRepository;
+        return this;
+    }
+
+    public TeamApplicationServiceBuilder WithMembershipRepository(IMembershipRepository membershipRepository)
+    {
+        _membershipRepository = membershipRepository;
         return this;
     }
 
@@ -50,6 +60,12 @@ public class TeamApplicationServiceBuilder
 
     public TeamApplicationService Build()
     {
-        return new(_teamRepository, _teamCapabilityLinkingRepository, _capabilityRepository, _logger);
+        return new(
+            _teamRepository,
+            _teamCapabilityLinkingRepository,
+            _capabilityRepository,
+            _membershipRepository,
+            _logger
+        );
     }
 }
