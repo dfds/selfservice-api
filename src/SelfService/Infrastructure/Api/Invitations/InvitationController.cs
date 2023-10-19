@@ -13,7 +13,10 @@ public class InvitationController : ControllerBase
     private readonly IInvitationApplicationService _invitationApplicationService;
     private readonly ApiResourceFactory _apiResourceFactory;
 
-    public InvitationController(IInvitationApplicationService invitationApplicationService, ApiResourceFactory apiResourceFactory)
+    public InvitationController(
+        IInvitationApplicationService invitationApplicationService,
+        ApiResourceFactory apiResourceFactory
+    )
     {
         _invitationApplicationService = invitationApplicationService;
         _apiResourceFactory = apiResourceFactory;
@@ -44,7 +47,10 @@ public class InvitationController : ControllerBase
 
     [HttpGet("user/{userId}/type/{targetType}")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    public async Task<IActionResult> GetActiveInvitationsForUserAndType([FromRoute] string userId, [FromRoute] string targetType)
+    public async Task<IActionResult> GetActiveInvitationsForUserAndType(
+        [FromRoute] string userId,
+        [FromRoute] string targetType
+    )
     {
         if (!User.TryGetUserId(out var principalId))
         {
@@ -63,7 +69,11 @@ public class InvitationController : ControllerBase
         if (!InvitationTargetTypeOptions.TryParse(targetType, out var targetTypeOption))
         {
             return BadRequest(
-                new ProblemDetails() { Title = "Invalid target type", Detail = $"The target type {targetType} is not valid" }
+                new ProblemDetails()
+                {
+                    Title = "Invalid target type",
+                    Detail = $"The target type {targetType} is not valid"
+                }
             );
         }
 
@@ -84,16 +94,20 @@ public class InvitationController : ControllerBase
                 new ProblemDetails { Title = "Unauthorized", Detail = "You are not authorized to perform this action" }
             );
         }
-        
+
         if (!InvitationId.TryParse(id, out var invitationId))
         {
             return BadRequest(
-                new ProblemDetails() { Title = "Invalid invitation id", Detail = $"The invitation id {id} is not valid" }
+                new ProblemDetails()
+                {
+                    Title = "Invalid invitation id",
+                    Detail = $"The invitation id {id} is not valid"
+                }
             );
         }
 
         var invitation = await _invitationApplicationService.GetInvitation(invitationId);
-        
+
         return Ok(_apiResourceFactory.Convert(invitation));
     }
 
@@ -109,16 +123,20 @@ public class InvitationController : ControllerBase
                 new ProblemDetails { Title = "Unauthorized", Detail = "You are not authorized to perform this action" }
             );
         }
-        
+
         if (!InvitationId.TryParse(id, out var invitationId))
         {
             return BadRequest(
-                new ProblemDetails() { Title = "Invalid invitation id", Detail = $"The invitation id {id} is not valid" }
+                new ProblemDetails()
+                {
+                    Title = "Invalid invitation id",
+                    Detail = $"The invitation id {id} is not valid"
+                }
             );
         }
 
         var invitation = await _invitationApplicationService.AcceptInvitation(invitationId);
-        
+
         return Ok(_apiResourceFactory.Convert(invitation));
     }
 
@@ -134,11 +152,15 @@ public class InvitationController : ControllerBase
                 new ProblemDetails { Title = "Unauthorized", Detail = "You are not authorized to perform this action" }
             );
         }
-        
+
         if (!InvitationId.TryParse(id, out var invitationId))
         {
             return BadRequest(
-                new ProblemDetails() { Title = "Invalid invitation id", Detail = $"The invitation id {id} is not valid" }
+                new ProblemDetails()
+                {
+                    Title = "Invalid invitation id",
+                    Detail = $"The invitation id {id} is not valid"
+                }
             );
         }
 

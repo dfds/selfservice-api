@@ -4,7 +4,7 @@ public class InvitationTargetTypeOptions : ValueObjectEnum<InvitationTargetTypeO
 {
     public static readonly InvitationTargetTypeOptions Unknown = new("Unknown");
     public static readonly InvitationTargetTypeOptions Capability = new("Capability");
-    
+
     private InvitationTargetTypeOptions(string value)
         : base(value) { }
 }

@@ -963,8 +963,7 @@ public class ApiResourceFactory
         );
     }
 
-    public InvitationListApiResource Convert(
-        IEnumerable<Invitation> invitations, string userId)
+    public InvitationListApiResource Convert(IEnumerable<Invitation> invitations, string userId)
     {
         return new InvitationListApiResource(
             items: invitations.Select(Convert).ToArray(),
@@ -982,10 +981,8 @@ public class ApiResourceFactory
             )
         );
     }
-    public InvitationListApiResource Convert(
-        IEnumerable<Invitation> invitations,
-        string userId,
-        string targetType)
+
+    public InvitationListApiResource Convert(IEnumerable<Invitation> invitations, string userId, string targetType)
     {
         return new InvitationListApiResource(
             items: invitations.Select(Convert).ToArray(),
@@ -1046,5 +1043,4 @@ public class ApiResourceFactory
             )
         );
     }
-
 }

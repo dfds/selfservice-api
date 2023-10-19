@@ -32,7 +32,11 @@ public class InvitationApplicationService : IInvitationApplicationService
 
         return invitations;
     }
-    public async Task<List<Invitation>> GetActiveInvitationsForType(UserId userId, InvitationTargetTypeOptions targetType)
+
+    public async Task<List<Invitation>> GetActiveInvitationsForType(
+        UserId userId,
+        InvitationTargetTypeOptions targetType
+    )
     {
         var invitations = await _invitationRepository.GetAllWithPredicate(
             x => x.Invitee == userId && x.Status == InvitationStatusOptions.Active && x.TargetType == targetType
@@ -75,7 +79,8 @@ public class InvitationApplicationService : IInvitationApplicationService
             throw new EntityNotFoundException("Invitation does not exist");
         }
 
-        if (invitation.TargetType == InvitationTargetTypeOptions.Capability) {
+        if (invitation.TargetType == InvitationTargetTypeOptions.Capability)
+        {
             CapabilityId.TryParse(invitation.TargetId.ToString(), out var capabilityId);
             if (capabilityId == null)
             {
@@ -106,7 +111,13 @@ public class InvitationApplicationService : IInvitationApplicationService
     }
 
     [TransactionalBoundary]
-    public async Task<Invitation> CreateInvitation(UserId invitee, string description, Guid targetId, InvitationTargetTypeOptions targetType, UserId createdBy)
+    public async Task<Invitation> CreateInvitation(
+        UserId invitee,
+        string description,
+        Guid targetId,
+        InvitationTargetTypeOptions targetType,
+        UserId createdBy
+    )
     {
         var invitation = new Invitation(
             id: InvitationId.New(),
