@@ -63,6 +63,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<SelfServiceJsonSchema> SelfServiceJsonSchemas => Set<SelfServiceJsonSchema>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<TeamCapabilityLink> TeamCapabilityLinks => Set<TeamCapabilityLink>();
+    public DbSet<Invitation> Invitations => Set<Invitation>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -119,6 +120,8 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder
             .Properties<TeamCapabilityLinkId>()
             .HaveConversion<ValueObjectGuidConverter<TeamCapabilityLinkId>>();
+
+        configurationBuilder.Properties<InvitationId>().HaveConversion<ValueObjectGuidConverter<InvitationId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -344,6 +347,18 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.TeamId);
             cfg.Property(x => x.CapabilityId);
+            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<Invitation>(cfg =>
+        {
+            cfg.ToTable("Invitation");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.Invitee);
+            cfg.Property(x => x.Target);
+            cfg.Property(x => x.Status);
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.CreatedAt);
         });
