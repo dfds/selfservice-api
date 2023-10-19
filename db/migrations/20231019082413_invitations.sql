@@ -8,6 +8,7 @@ CREATE TABLE "Invitation"
     "Status"      VARCHAR(255)  NOT NULL,
     "CreatedBy"   VARCHAR(255)  NOT NULL,
     "CreatedAt"   TIMESTAMP     NOT NULL,
+    "ModifiedAt"  TIMESTAMP     NOT NULL,
 
     CONSTRAINT "Invitation_PK" PRIMARY KEY ("Id")
 );

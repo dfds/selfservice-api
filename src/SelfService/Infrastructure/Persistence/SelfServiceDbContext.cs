@@ -361,6 +361,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Status);
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.ModifiedAt);
         });
     }
 }
