@@ -93,8 +93,8 @@ run:
 	@cd src && dotnet run --configuration $(CONFIGURATION) --project $(APP_PROJECT)
 
 newmigration:
-	@echo "Enter name of migration (e.g. add-table-for-xxx):" && read && \
-		echo "-- $(shell date +'%4Y-%m-%d %H:%M:%S') : $$REPLY" > db/migrations/$(shell date +'%4Y%m%d%H%M%S')_$$REPLY.sql
+	@read -p "Enter name of migration (e.g. add-table-for-xxx):" REPLY; \
+	   echo "-- $(shell date +'%4Y-%m-%d %H:%M:%S') : $$REPLY" > db/migrations/$(shell date +'%4Y%m%d%H%M%S')_$$REPLY.sql
 
 nm: newmigration
 
