@@ -128,6 +128,8 @@ public static class RequestParserRegistry
         StringToValueObject.Add<CapabilityId>(CapabilityId.Parse);
         StringToValueObject.Add<KafkaTopicId>(KafkaTopicId.Parse);
         StringToValueObject.Add<KafkaClusterId>(KafkaClusterId.Parse);
+        StringToValueObject.Add<KafkaTopicName>(KafkaTopicName.Parse);
+        StringToValueObject.Add<KafkaTopicRetention>(KafkaTopicRetention.Parse);
         StringToValueObject.Add<ECRRepositoryId>(ECRRepositoryId.Parse);
         HasInit = true;
     }
