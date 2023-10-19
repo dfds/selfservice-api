@@ -32,6 +32,25 @@ public class InvitationApplicationService : IInvitationApplicationService
 
         return invitations;
     }
+    public async Task<List<Invitation>> GetActiveInvitationsForType(UserId userId, InvitationTargetTypeOptions targetType)
+    {
+        var invitations = await _invitationRepository.GetAllWithPredicate(
+            x => x.Invitee == userId && x.Status == InvitationStatusOptions.Active && x.TargetType == targetType
+        );
+
+        return invitations;
+    }
+
+    public async Task<Invitation> GetInvitation(InvitationId invitationId)
+    {
+        var invitation = await _invitationRepository.FindById(invitationId);
+        if (invitation == null)
+        {
+            throw new EntityNotFoundException("Invitation does not exist");
+        }
+
+        return invitation;
+    }
 
     [TransactionalBoundary]
     public async Task<Invitation> DeclineInvitation(InvitationId invitationId)
@@ -56,41 +75,45 @@ public class InvitationApplicationService : IInvitationApplicationService
             throw new EntityNotFoundException("Invitation does not exist");
         }
 
+        if (invitation.TargetType == InvitationTargetTypeOptions.Capability) {
+            CapabilityId.TryParse(invitation.TargetId.ToString(), out var capabilityId);
+            if (capabilityId == null)
+            {
+                throw new EntityNotFoundException("Invalid capability Id");
+            }
+
+            var capability = await _capabilityRepository.FindBy(capabilityId);
+            if (capability == null)
+            {
+                throw new EntityNotFoundException("Capability does not exist");
+            }
+
+            invitation.Accept();
+
+            var membership = new Membership(
+                id: MembershipId.New(),
+                capabilityId: capabilityId,
+                userId: invitation.Invitee,
+                createdAt: DateTime.UtcNow
+            );
+            await _membershipRepository.Add(membership);
+
+            return invitation;
+        }
+
         // Currently we only have memberships for capabilities.
-        // In the future we may have other types of memberships, so we need to check the type of the target.
-        // The type is implicit; If the target exists as id in a table, that is the type of the target.
-        CapabilityId.TryParse(invitation.Target.ToString(), out var capabilityId);
-        if (capabilityId == null)
-        {
-            throw new EntityNotFoundException("Invalid capability Id");
-        }
-
-        var capability = await _capabilityRepository.FindBy(capabilityId);
-        if (capability == null)
-        {
-            throw new EntityNotFoundException("Capability does not exist");
-        }
-
-        invitation.Accept();
-
-        var membership = new Membership(
-            id: MembershipId.New(),
-            capabilityId: capabilityId,
-            userId: invitation.Invitee,
-            createdAt: DateTime.UtcNow
-        );
-        await _membershipRepository.Add(membership);
-
-        return invitation;
+        throw new NotSupportedException("Only capabilities are supported for invitations");
     }
 
     [TransactionalBoundary]
-    public async Task<Invitation> CreateInvitation(UserId invitee, Guid target, UserId createdBy)
+    public async Task<Invitation> CreateInvitation(UserId invitee, string description, Guid targetId, InvitationTargetTypeOptions targetType, UserId createdBy)
     {
         var invitation = new Invitation(
             id: InvitationId.New(),
             invitee: invitee,
-            target: target,
+            description: description,
+            targetId: targetId,
+            targetType: targetType,
             status: InvitationStatusOptions.Active,
             createdBy: createdBy,
             createdAt: DateTime.UtcNow,

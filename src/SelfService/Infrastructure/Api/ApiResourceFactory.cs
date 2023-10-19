@@ -8,6 +8,7 @@ using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.Api.Teams;
+using SelfService.Infrastructure.Api.Invitations;
 using static SelfService.Infrastructure.Api.Method;
 
 namespace SelfService.Infrastructure.Api;
@@ -961,4 +962,89 @@ public class ApiResourceFactory
             )
         );
     }
+
+    public InvitationListApiResource Convert(
+        IEnumerable<Invitation> invitations, string userId)
+    {
+        return new InvitationListApiResource(
+            items: invitations.Select(Convert).ToArray(),
+            links: new InvitationListApiResource.InvitationListLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<InvitationController>(),
+                        action: nameof(InvitationController.GetActiveInvitationsForUser),
+                        values: new { userId }
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                )
+            )
+        );
+    }
+    public InvitationListApiResource Convert(
+        IEnumerable<Invitation> invitations,
+        string userId,
+        string targetType)
+    {
+        return new InvitationListApiResource(
+            items: invitations.Select(Convert).ToArray(),
+            links: new InvitationListApiResource.InvitationListLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<InvitationController>(),
+                        action: nameof(InvitationController.GetActiveInvitationsForUserAndType),
+                        values: new { userId, targetType }
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                )
+            )
+        );
+    }
+
+    public InvitationApiResource Convert(Invitation invitation)
+    {
+        return new InvitationApiResource(
+            invitation.Id,
+            invitation.Invitee,
+            invitation.Description,
+            invitation.CreatedBy,
+            invitation.CreatedAt.ToUniversalTime().ToString("O"),
+            new InvitationApiResource.InvitationLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(InvitationController.GetInvitation),
+                        controller: GetNameOf<InvitationController>(),
+                        values: new { id = invitation.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                ),
+                accept: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(InvitationController.AcceptInvitation),
+                        controller: GetNameOf<TeamController>(),
+                        values: new { id = invitation.Id }
+                    ) ?? "",
+                    rel: "related",
+                    allow: Allow.Post
+                ),
+                decline: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(InvitationController.DeclineInvitation),
+                        controller: GetNameOf<TeamController>(),
+                        values: new { id = invitation.Id }
+                    ) ?? "",
+                    rel: "related",
+                    allow: Allow.Post
+                )
+            )
+        );
+    }
+
 }
