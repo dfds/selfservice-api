@@ -315,6 +315,26 @@ public class ApiResourceFactory
         );
     }
 
+    private ResourceLink CreateJoinLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+
+        if (_authorizationService.CanBypassMembershipApprovals(PortalUser))
+        {
+            allowedInteractions += Post;
+        }
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.Join),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: allowedInteractions
+        );
+    }
+
     private async Task<ResourceLink> CreateRequestDeletionLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
@@ -429,7 +449,8 @@ public class ApiResourceFactory
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
                 setCapabilityMetadata: CreateSetMetadataLinkFor(capability),
                 getCapabilityMetadata: CreateGetMetadataLinkFor(capability),
-                getLinkedTeams: GetLinkedTeams(capability)
+                getLinkedTeams: GetLinkedTeams(capability),
+                joinCapability: CreateJoinLinkFor(capability)
             )
         );
     }

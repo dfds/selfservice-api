@@ -13,20 +13,20 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 [ApiController]
 public class CapabilityController : ControllerBase
 {
-    private readonly ICapabilityMembersQuery _membersQuery;
-    private readonly ICapabilityRepository _capabilityRepository;
-    private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IAuthorizationService _authorizationService;
-    private readonly IKafkaClusterRepository _kafkaClusterRepository;
-    private readonly ICapabilityApplicationService _capabilityApplicationService;
-    private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly IAwsAccountApplicationService _awsAccountApplicationService;
-    private readonly IMembershipApplicationService _membershipApplicationService;
+    private readonly IAwsAccountRepository _awsAccountRepository;
+    private readonly ICapabilityApplicationService _capabilityApplicationService;
+    private readonly ICapabilityRepository _capabilityRepository;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
-    private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
+    private readonly IKafkaClusterRepository _kafkaClusterRepository;
+    private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly ITeamApplicationService _teamApplicationService;
     private readonly ILogger<CapabilityController> _logger;
+    private readonly IMembershipApplicationService _membershipApplicationService;
+    private readonly ICapabilityMembersQuery _membersQuery;
+    private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -78,22 +78,16 @@ public class CapabilityController : ControllerBase
     public async Task<IActionResult> CreateNewCapability([FromBody] NewCapabilityRequest request)
     {
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized();
-        }
 
         if (!CapabilityId.TryCreateFrom(request.Name, out var capabilityId))
-        {
             ModelState.AddModelError(
                 nameof(request.Name),
                 $"unable to create capability ID from name \"{request.Name}\""
             );
-        }
 
         if (!ModelState.IsValid)
-        {
             return ValidationProblem();
-        }
 
         // See if request has valid json metadata
         var jsonMetadataResult = await _selfServiceJsonSchemaService.ValidateJsonMetadata(
@@ -102,7 +96,6 @@ public class CapabilityController : ControllerBase
         );
 
         if (!jsonMetadataResult.IsValid())
-        {
             return BadRequest(
                 new ProblemDetails
                 {
@@ -111,7 +104,6 @@ public class CapabilityController : ControllerBase
                     Status = StatusCodes.Status400BadRequest
                 }
             );
-        }
 
         _logger.LogInformation(
             "Successfully parsed json meta data: {ParseResultCode}",
@@ -120,11 +112,9 @@ public class CapabilityController : ControllerBase
 
         // Sanity check: should not be possible if result is valid
         if (jsonMetadataResult.JsonMetadata == null)
-        {
             return CustomObjectResult.InternalServerError(
-                new ProblemDetails() { Title = "Internal server error", Detail = "JsonMetadataResult is null", }
+                new ProblemDetails { Title = "Internal server error", Detail = "JsonMetadataResult is null" }
             );
-        }
 
         try
         {
@@ -148,10 +138,10 @@ public class CapabilityController : ControllerBase
 
         var capability = await _capabilityRepository.Get(capabilityId);
         return CreatedAtAction(
-            actionName: nameof(GetCapabilityById),
-            controllerName: "Capability",
-            routeValues: new { id = capability.Id },
-            value: await _apiResourceFactory.Convert(capability)
+            nameof(GetCapabilityById),
+            "Capability",
+            new { id = capability.Id },
+            await _apiResourceFactory.Convert(capability)
         );
     }
 
@@ -162,19 +152,16 @@ public class CapabilityController : ControllerBase
     public async Task<IActionResult> GetCapabilityById(string id)
     {
         if (!User.TryGetUserId(out _))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "Access denied!",
-                    Detail = $"The user id is not valid and access to the resource cannot be granted.",
+                    Detail = "The user id is not valid and access to the resource cannot be granted.",
                     Status = StatusCodes.Status401Unauthorized
                 }
             );
-        }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -183,11 +170,9 @@ public class CapabilityController : ControllerBase
                     Status = StatusCodes.Status404NotFound
                 }
             );
-        }
 
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability is null)
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -196,7 +181,6 @@ public class CapabilityController : ControllerBase
                     Status = StatusCodes.Status404NotFound
                 }
             );
-        }
 
         return Ok(await _apiResourceFactory.Convert(capability));
     }
@@ -207,14 +191,10 @@ public class CapabilityController : ControllerBase
     public async Task<IActionResult> GetCapabilityMembers(string id)
     {
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             ModelState.AddModelError(nameof(id), $"Value \"{id}\" is not a valid capability id.");
-        }
 
         if (!ModelState.IsValid)
-        {
             return ValidationProblem();
-        }
 
         var members = await _membersQuery.FindBy(capabilityId);
 
@@ -228,30 +208,20 @@ public class CapabilityController : ControllerBase
     public async Task<IActionResult> GetCapabilityAwsAccount(string id)
     {
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized();
-        }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound();
-        }
 
         if (!await _capabilityRepository.Exists(capabilityId))
-        {
             return NotFound();
-        }
 
         if (!await _authorizationService.CanViewAwsAccount(userId, capabilityId))
-        {
             return Unauthorized();
-        }
 
         var account = await _awsAccountRepository.FindBy(capabilityId);
         if (account is null)
-        {
             return NotFound();
-        }
 
         return Ok(await _apiResourceFactory.Convert(account));
     }
@@ -264,24 +234,16 @@ public class CapabilityController : ControllerBase
     public async Task<IActionResult> RequestAwsAccount(string id, [FromServices] SelfServiceDbContext dbContext)
     {
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized();
-        }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound();
-        }
 
         if (!await _capabilityRepository.Exists(capabilityId))
-        {
             return NotFound();
-        }
 
         if (!await _authorizationService.CanRequestAwsAccount(userId, capabilityId))
-        {
             return Unauthorized();
-        }
 
         try
         {
@@ -307,27 +269,19 @@ public class CapabilityController : ControllerBase
     )
     {
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized();
-        }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound();
-        }
 
         if (!await _capabilityRepository.Exists(capabilityId))
-        {
             return NotFound();
-        }
 
         var applications = await query.FindPendingBy(capabilityId);
 
         if (!await _authorizationService.CanViewAllApplications(userId, capabilityId))
-        {
             // only allow the current users own application(s)
             applications = applications.Where(x => x.Applicant == userId).ToList();
-        }
 
         var resource = await _apiResourceFactory.Convert(capabilityId, applications, userId);
 
@@ -347,19 +301,13 @@ public class CapabilityController : ControllerBase
     )
     {
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized();
-        }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound();
-        }
 
         if (!await _capabilityRepository.Exists(capabilityId))
-        {
             return NotFound();
-        }
 
         try
         {
@@ -368,10 +316,10 @@ public class CapabilityController : ControllerBase
 
             // TODO [jandr@2023-04-12]: refactor this! this is intimate knowledge of another controller
             return CreatedAtAction(
-                actionName: "GetById",
-                controllerName: "MembershipApplication",
-                routeValues: new { id = applicationId.ToString() },
-                value: _apiResourceFactory.Convert(membershipApplication, userId)
+                "GetById",
+                "MembershipApplication",
+                new { id = applicationId.ToString() },
+                _apiResourceFactory.Convert(membershipApplication, userId)
             );
         }
         catch (EntityNotFoundException<Capability>)
@@ -416,94 +364,74 @@ public class CapabilityController : ControllerBase
     public async Task<IActionResult> AddCapabilityTopic(string id, [FromBody] NewKafkaTopicRequest topicRequest)
     {
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized();
-        }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound();
-        }
 
         if (!await _capabilityRepository.Exists(capabilityId))
-        {
             return NotFound();
-        }
 
         if (!KafkaClusterId.TryParse(topicRequest.KafkaClusterId, out var kafkaClusterId))
-        {
             ModelState.AddModelError(
                 nameof(topicRequest.KafkaClusterId),
                 $"Value \"{topicRequest.KafkaClusterId}\" is not a valid kafka cluster id."
             );
-        }
 
         if (!KafkaTopicName.TryParse(topicRequest.Name, out var kafkaTopicName))
-        {
             ModelState.AddModelError(
                 nameof(topicRequest.Name),
                 $"Value \"{topicRequest.Name}\" is not a valid kafka topic name."
             );
-        }
 
         if (!KafkaTopicPartitions.TryCreate(topicRequest.Partitions ?? 0, out var topicPartitions))
-        {
             ModelState.AddModelError(
                 nameof(topicRequest.Partitions),
                 $"Value \"{topicRequest.Partitions}\" is invalid for kafka topic partitions."
             );
-        }
 
         if (!KafkaTopicRetention.TryParse(topicRequest.Retention, out var topicRetention))
-        {
             ModelState.AddModelError(
                 nameof(topicRequest.Retention),
                 $"Value \"{topicRequest.Retention}\" is invalid for kafka topic retention."
             );
-        }
 
         if (!await _kafkaClusterRepository.Exists(kafkaClusterId))
-        {
             ModelState.AddModelError(
                 nameof(topicRequest.KafkaClusterId),
                 $"Kafka cluster with id \"{kafkaClusterId}\" is unknown to the system."
             );
-        }
 
         if (!ModelState.IsValid)
-        {
             return ValidationProblem();
-        }
 
         if (!await _authorizationService.CanAdd(userId, capabilityId, kafkaClusterId))
-        {
             return Unauthorized();
-        }
 
         try
         {
             var topicId = await _capabilityApplicationService.RequestNewTopic(
-                capabilityId: capabilityId,
-                kafkaClusterId: kafkaClusterId,
-                name: kafkaTopicName,
-                description: topicRequest.Description ?? "",
-                partitions: topicPartitions,
-                retention: topicRetention,
-                requestedBy: userId
+                capabilityId,
+                kafkaClusterId,
+                kafkaTopicName,
+                topicRequest.Description ?? "",
+                topicPartitions,
+                topicRetention,
+                userId
             );
 
             var topic = await _kafkaTopicRepository.Get(topicId);
 
             return CreatedAtAction(
-                actionName: "GetTopic",
-                controllerName: "KafkaTopic",
-                routeValues: new { id = topic.Id },
-                value: await _apiResourceFactory.Convert(topic)
+                "GetTopic",
+                "KafkaTopic",
+                new { id = topic.Id },
+                await _apiResourceFactory.Convert(topic)
             );
         }
         catch (EntityAlreadyExistsException err)
         {
-            return Conflict(new ProblemDetails { Title = "Topic already exists", Detail = err.Message, });
+            return Conflict(new ProblemDetails { Title = "Topic already exists", Detail = err.Message });
         }
     }
 
@@ -515,19 +443,16 @@ public class CapabilityController : ControllerBase
     {
         // Verify user and fetch userId
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                    Detail = "User id is not valid and thus cannot leave any capabilities."
                 }
             );
-        }
 
         // Check that capability with provided id exists
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -535,7 +460,6 @@ public class CapabilityController : ControllerBase
                     Detail = $"A capability with id \"{id}\" could not be found."
                 }
             );
-        }
 
         // Leave capability
         try
@@ -561,18 +485,15 @@ public class CapabilityController : ControllerBase
     public async Task<IActionResult> GetKafkaClusterAccessList(string id)
     {
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                    Detail = "User id is not valid and thus cannot leave any capabilities."
                 }
             );
-        }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -580,7 +501,6 @@ public class CapabilityController : ControllerBase
                     Detail = $"A capability with id \"{id}\" could not be found."
                 }
             );
-        }
 
         var clusters = await _kafkaClusterRepository.GetAll();
 
@@ -595,18 +515,15 @@ public class CapabilityController : ControllerBase
     public async Task<IActionResult> GetKafkaClusterAccess(string id, string clusterId)
     {
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                    Detail = "User id is not valid and thus cannot leave any capabilities."
                 }
             );
-        }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -614,10 +531,8 @@ public class CapabilityController : ControllerBase
                     Detail = $"A capability with id \"{id}\" could not be found."
                 }
             );
-        }
 
         if (!KafkaClusterId.TryParse(clusterId, out var kafkaClusterId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -625,22 +540,18 @@ public class CapabilityController : ControllerBase
                     Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found."
                 }
             );
-        }
 
         if (!await _authorizationService.CanViewAccess(userId, capabilityId))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "Not a capability member",
-                    Detail = $"User is not a member of capability {capabilityId}",
+                    Detail = $"User is not a member of capability {capabilityId}"
                 }
             );
-        }
 
         var kafkaCluster = await _kafkaClusterRepository.FindBy(kafkaClusterId);
         if (kafkaCluster == null)
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -648,11 +559,9 @@ public class CapabilityController : ControllerBase
                     Detail = $"Kafka cluster \"{clusterId}\" could has not found."
                 }
             );
-        }
 
         var clusterAccess = await _kafkaClusterAccessRepository.FindBy(capabilityId, kafkaClusterId);
         if (clusterAccess == null)
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -661,24 +570,17 @@ public class CapabilityController : ControllerBase
                         $"Access to Kafka cluster \"{clusterId}\" for capability \"{capabilityId}\" has not been requested."
                 }
             );
-        }
 
         if (clusterAccess.IsAccessGranted)
-        {
             return Ok(
-                new KafkaClusterAccessApiResource(
-                    bootstrapServers: kafkaCluster.BootstrapServers,
-                    schemaRegistryUrl: kafkaCluster.SchemaRegistryUrl,
-                    links: null
-                )
+                new KafkaClusterAccessApiResource(kafkaCluster.BootstrapServers, kafkaCluster.SchemaRegistryUrl, null)
             );
-        }
 
         return AcceptedAtAction(
-            actionName: nameof(GetCapabilityById),
-            controllerName: "Capability",
-            routeValues: new { id, clusterId },
-            value: new { status = "Requested" }
+            nameof(GetCapabilityById),
+            "Capability",
+            new { id, clusterId },
+            new { status = "Requested" }
         );
     }
 
@@ -689,18 +591,15 @@ public class CapabilityController : ControllerBase
     public async Task<IActionResult> RequestKafkaClusterAccess(string id, string clusterId)
     {
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                    Detail = "User id is not valid and thus cannot leave any capabilities."
                 }
             );
-        }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -708,10 +607,8 @@ public class CapabilityController : ControllerBase
                     Detail = $"A capability with id \"{id}\" could not be found."
                 }
             );
-        }
 
         if (!KafkaClusterId.TryParse(clusterId, out var kafkaClusterId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -719,15 +616,14 @@ public class CapabilityController : ControllerBase
                     Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found."
                 }
             );
-        }
 
         await _capabilityApplicationService.RequestKafkaClusterAccess(capabilityId, kafkaClusterId, userId);
 
         return AcceptedAtAction(
-            actionName: nameof(GetCapabilityById),
-            controllerName: "Capability",
-            routeValues: new { id, clusterId },
-            value: new { status = "Requested" }
+            nameof(GetCapabilityById),
+            "Capability",
+            new { id, clusterId },
+            new { status = "Requested" }
         );
     }
 
@@ -739,19 +635,15 @@ public class CapabilityController : ControllerBase
     {
         // Verify user and fetch userId
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                    Detail = "User id is not valid and thus cannot leave any capabilities."
                 }
             );
-        }
 
-        // Check that capability with provided id exists
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -759,12 +651,10 @@ public class CapabilityController : ControllerBase
                     Detail = $"A capability with id \"{id}\" could not be found."
                 }
             );
-        }
 
         // deleting and canceling deletion are the same responsibility currently.
         // thus we use the same authorization check for both
         if (!await _authorizationService.CanDeleteCapability(userId, capabilityId))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -773,7 +663,6 @@ public class CapabilityController : ControllerBase
                         $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\"."
                 }
             );
-        }
 
         // Set capability status
         try
@@ -803,19 +692,15 @@ public class CapabilityController : ControllerBase
     {
         // Verify user and fetch userId
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = $"User id is not valid and thus cannot leave any capabilities.",
+                    Detail = "User id is not valid and thus cannot leave any capabilities."
                 }
             );
-        }
 
-        // Check that capability with provided id exists
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -823,12 +708,10 @@ public class CapabilityController : ControllerBase
                     Detail = $"A capability with id \"{id}\" could not be found."
                 }
             );
-        }
 
         // deleting and canceling deletion are the same responsibility currently.
         // thus we use the same authorization check for both -- if you can do one, you can do the other
         if (!await _authorizationService.CanDeleteCapability(userId, capabilityId))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -837,7 +720,6 @@ public class CapabilityController : ControllerBase
                         $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\"."
                 }
             );
-        }
 
         // Set capability status
         try
@@ -866,9 +748,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityMetadata(string id)
     {
-        // Check that capability with provided id exists
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -876,7 +756,6 @@ public class CapabilityController : ControllerBase
                     Detail = $"A capability with id \"{id}\" could not be found."
                 }
             );
-        }
 
         var metadata = await _capabilityApplicationService.GetJsonMetadata(capabilityId);
         return Ok(metadata);
@@ -891,19 +770,15 @@ public class CapabilityController : ControllerBase
     {
         // Verify user and fetch userId
         if (!User.TryGetUserId(out var userId))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = $"User id is not valid and thus set capability metadata.",
+                    Detail = "User id is not valid and thus set capability metadata."
                 }
             );
-        }
 
-        // Check that capability with provided id exists
         if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
             return NotFound(
                 new ProblemDetails
                 {
@@ -911,11 +786,9 @@ public class CapabilityController : ControllerBase
                     Detail = $"A capability with id \"{id}\" could not be found."
                 }
             );
-        }
 
         var portalUser = HttpContext.User.ToPortalUser();
         if (!_authorizationService.CanSetCapabilityJsonMetadata(portalUser))
-        {
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -923,10 +796,8 @@ public class CapabilityController : ControllerBase
                     Detail = $"User \"{userId}\" is not authorized to set capability metadata."
                 }
             );
-        }
 
         if (request?.JsonMetadata == null)
-        {
             return BadRequest(
                 new ProblemDetails
                 {
@@ -935,7 +806,6 @@ public class CapabilityController : ControllerBase
                     Status = StatusCodes.Status400BadRequest
                 }
             );
-        }
 
         try
         {
@@ -981,5 +851,63 @@ public class CapabilityController : ControllerBase
 
         var teams = await _teamApplicationService.GetLinkedTeams(capabilityId);
         return Ok(teams);
+    }
+
+    [HttpPost("{id}/join")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> Join(string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = "User id is not valid and thus set capability metadata."
+                }
+            );
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!_authorizationService.CanBypassMembershipApprovals(portalUser))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "User unauthorized",
+                    Detail = $"user \"{userId}\" isn't authorized to join capabilities directly."
+                }
+            );
+        }
+        try
+        {
+            await _membershipApplicationService.JoinCapability(id, portalUser.Id);
+        }
+        catch (AlreadyHasActiveMembershipException e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails
+                {
+                    Title = "User already in capability",
+                    Detail = $"AddUserToCapability: {e.Message}."
+                }
+            );
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"AddUserToCapability: {e.Message}." }
+            );
+        }
+        return Ok();
     }
 }

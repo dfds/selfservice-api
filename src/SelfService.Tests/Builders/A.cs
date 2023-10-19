@@ -7,7 +7,6 @@ namespace SelfService.Tests.Builders;
 public static class A
 {
     public static UserId UserId => UserId.Parse("foo");
-
     public static CapabilityBuilder Capability => new();
     public static MembershipBuilder Membership => new();
     public static MemberBuilder Member => new();
@@ -32,4 +31,5 @@ public static class A
 
     public static TeamBuilder Team = new();
     public static TeamApplicationServiceBuilder TeamApplicationService = new();
+    public static MembershipApplicationServiceBuilder MembershipApplicationService => new();
 }

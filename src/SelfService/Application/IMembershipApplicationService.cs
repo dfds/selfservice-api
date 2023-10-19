@@ -12,4 +12,5 @@ public interface IMembershipApplicationService
     Task AddCreatorAsInitialMember(CapabilityId capabilityId, UserId creatorId);
     Task RemoveMembershipApplication(MembershipApplicationId applicationId);
     Task LeaveCapability(CapabilityId capabilityId, UserId userId);
+    Task JoinCapability(CapabilityId capabilityId, UserId userId);
 }

@@ -3,7 +3,7 @@ using SelfService.Domain.Queries;
 
 namespace SelfService.Domain.Services;
 
-public class MembershipApplicationDomainService
+public class MembershipApplicationDomainService : IMembershipApplicationDomainService
 {
     private readonly IMembershipRepository _membershipRepository;
     private readonly IMembershipQuery _membershipQuery;
@@ -27,30 +27,5 @@ public class MembershipApplicationDomainService
         }
 
         return false;
-    }
-
-    public async Task<bool> CanApprove(UserId userId, MembershipApplication application)
-    {
-        if (application.IsFinalized || application.IsCancelled)
-        {
-            return false;
-        }
-
-        if (userId == application.Applicant)
-        {
-            return false;
-        }
-
-        if (application.HasApproved(userId))
-        {
-            return false;
-        }
-
-        if (!await _membershipQuery.HasActiveMembership(userId, application.CapabilityId))
-        {
-            return false;
-        }
-
-        return true;
     }
 }
