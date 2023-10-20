@@ -15,24 +15,33 @@ public class RequestParserHelper<TInput, TOutput>
     private Dictionary<Type, RequestParser<TInput, TOutput>> Parsers { get; } = new();
     private ModelStateDictionary ModalState { get; set; } = new();
 
-    private RequestParser<TInput, TOutput> GetParser(Type type)
-    {
-        if (Parsers.TryGetValue(type, out var parser))
-            return parser;
-
-        throw new MissingRequestParserException<TInput>(type);
-    }
-
-    public void Add<O>(Func<TInput, TOutput> converter)
+    private RequestParser<TInput, TOutput> GetParser<O>(Type type)
         where O : TOutput
     {
+        if (!Parsers.ContainsKey(type))
+        {
+            var missingParser = type.GetMethod("Parse");
+            if (missingParser == null)
+                throw new MissingRequestParserException<TInput>(type);
+
+            Ensure<O>(i => (O)missingParser.Invoke(null, new object[] { i! })!);
+        }
+
+        return Parsers[type];
+    }
+
+    public void Ensure<O>(Func<TInput, TOutput> converter)
+        where O : TOutput
+    {
+        if (Parsers.ContainsKey(typeof(O)))
+            return;
         Parsers.Add(typeof(O), new RequestParser<TInput, TOutput>(converter, typeof(O).Name));
     }
 
     private TOutput ParseInternal<U>(TInput i)
         where U : TOutput
     {
-        return GetParser(typeof(U)).TryParse(i, ModalState);
+        return GetParser<U>(typeof(U)).TryParse(i, ModalState);
     }
 
     public O1 Parse<O1>(TInput i1)
@@ -125,12 +134,13 @@ public static class RequestParserRegistry
     {
         if (HasInit)
             return;
-        StringToValueObject.Add<CapabilityId>(CapabilityId.Parse);
-        StringToValueObject.Add<KafkaTopicId>(KafkaTopicId.Parse);
-        StringToValueObject.Add<KafkaClusterId>(KafkaClusterId.Parse);
-        StringToValueObject.Add<KafkaTopicName>(KafkaTopicName.Parse);
-        StringToValueObject.Add<KafkaTopicRetention>(KafkaTopicRetention.Parse);
-        StringToValueObject.Add<ECRRepositoryId>(ECRRepositoryId.Parse);
+
+        StringToValueObject.Ensure<CapabilityId>(KafkaTopicId.Parse);
+        StringToValueObject.Ensure<KafkaTopicId>(KafkaTopicId.Parse);
+        StringToValueObject.Ensure<KafkaClusterId>(KafkaClusterId.Parse);
+        StringToValueObject.Ensure<KafkaTopicName>(KafkaTopicName.Parse);
+        StringToValueObject.Ensure<KafkaTopicRetention>(KafkaTopicRetention.Parse);
+        StringToValueObject.Ensure<ECRRepositoryId>(ECRRepositoryId.Parse);
         HasInit = true;
     }
 

@@ -19,7 +19,7 @@ public class TestRequestParser
 
         ModelStateDictionary dictionary = new ModelStateDictionary();
 
-        var (_, _) = RequestParserRegistry
+        RequestParserRegistry
             .StringToValueParser(dictionary)
             .Parse<CapabilityId, KafkaTopicId>(validCapabilityId, validKafkaTopicId);
         Assert.True(dictionary.IsValid);
@@ -48,5 +48,13 @@ public class TestRequestParser
             );
         Assert.False(dictionary.IsValid);
         Assert.Equal(2, dictionary.ErrorCount);
+    }
+
+    [Fact]
+    public void call_fall_back()
+    {
+        string invalidCapabilityId = "(+_+)";
+        Assert.False(CapabilityId.TryParse(invalidCapabilityId, out _));
+        RequestParserRegistry.StringToValueParser(new ModelStateDictionary()).Parse<CapabilityId>(invalidCapabilityId);
     }
 }
