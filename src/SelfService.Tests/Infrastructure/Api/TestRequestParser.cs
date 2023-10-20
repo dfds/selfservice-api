@@ -9,9 +9,6 @@ public class TestRequestParser
     [Fact]
     public void can_parse_valid()
     {
-        // Unknown when static constructor is called, so we need to call it explicitly
-        RequestParserRegistry.Init();
-
         string validCapabilityId = "valid";
         Assert.True(CapabilityId.TryParse(validCapabilityId, out _));
         string validKafkaTopicId = Guid.NewGuid().ToString();
@@ -28,9 +25,6 @@ public class TestRequestParser
     [Fact]
     public void fails_on_invalid()
     {
-        // Unknown when static constructor is called, so we need to call it explicitly
-        RequestParserRegistry.Init();
-
         string invalidCapabilityId = "(+_+)";
         Assert.False(CapabilityId.TryParse(invalidCapabilityId, out _));
         string validKafkaTopicId = Guid.NewGuid().ToString();
@@ -50,11 +44,20 @@ public class TestRequestParser
         Assert.Equal(2, dictionary.ErrorCount);
     }
 
+    public class TestId : ValueObjectGuid<TestId>
+    {
+        public TestId(Guid newGuid)
+            : base(newGuid) { }
+    }
+
     [Fact]
     public void call_fall_back()
     {
-        string invalidCapabilityId = "(+_+)";
-        Assert.False(CapabilityId.TryParse(invalidCapabilityId, out _));
-        RequestParserRegistry.StringToValueParser(new ModelStateDictionary()).Parse<CapabilityId>(invalidCapabilityId);
+        string validTestId = Guid.NewGuid().ToString();
+        Assert.True(TestId.TryParse(validTestId, out _));
+        var dictionary = new ModelStateDictionary();
+        RequestParserRegistry.StringToValueParser(dictionary).Parse<TestId>(validTestId);
+        Assert.True(dictionary.IsValid);
+        Assert.Equal(0, dictionary.ErrorCount);
     }
 }

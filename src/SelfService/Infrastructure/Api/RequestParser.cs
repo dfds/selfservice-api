@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SelfService.Domain.Models;
 
@@ -20,7 +21,10 @@ public class RequestParserHelper<TInput, TOutput>
     {
         if (!Parsers.ContainsKey(type))
         {
-            var missingParser = type.GetMethod("Parse");
+            var missingParser = type.GetMethod(
+                "Parse",
+                BindingFlags.FlattenHierarchy | BindingFlags.Public | BindingFlags.Static
+            );
             if (missingParser == null)
                 throw new MissingRequestParserException<TInput>(type);
 
@@ -41,7 +45,8 @@ public class RequestParserHelper<TInput, TOutput>
     private TOutput ParseInternal<U>(TInput i)
         where U : TOutput
     {
-        return GetParser<U>(typeof(U)).TryParse(i, ModalState);
+        var parser = GetParser<U>(typeof(U));
+        return parser.TryParse(i, ModalState);
     }
 
     public O1 Parse<O1>(TInput i1)
@@ -120,7 +125,6 @@ public class RequestParser<TInput, TOutput>
 public static class RequestParserRegistry
 {
     private static RequestParserHelper<string?, ValueObject> StringToValueObject { get; } = new();
-    private static bool HasInit { get; set; } = false;
 
     public static RequestParserHelper<string?, ValueObject> StringToValueParser(
         ModelStateDictionary modelStateDictionary
@@ -128,24 +132,5 @@ public static class RequestParserRegistry
     {
         StringToValueObject.SetModelStateParser(modelStateDictionary);
         return StringToValueObject;
-    }
-
-    public static void Init()
-    {
-        if (HasInit)
-            return;
-
-        StringToValueObject.Ensure<CapabilityId>(KafkaTopicId.Parse);
-        StringToValueObject.Ensure<KafkaTopicId>(KafkaTopicId.Parse);
-        StringToValueObject.Ensure<KafkaClusterId>(KafkaClusterId.Parse);
-        StringToValueObject.Ensure<KafkaTopicName>(KafkaTopicName.Parse);
-        StringToValueObject.Ensure<KafkaTopicRetention>(KafkaTopicRetention.Parse);
-        StringToValueObject.Ensure<ECRRepositoryId>(ECRRepositoryId.Parse);
-        HasInit = true;
-    }
-
-    static RequestParserRegistry()
-    {
-        Init();
     }
 }
