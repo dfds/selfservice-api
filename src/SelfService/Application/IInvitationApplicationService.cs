@@ -10,10 +10,11 @@ public interface IInvitationApplicationService
     Task<Invitation> CreateInvitation(
         UserId invitee,
         string description,
-        Guid targetId,
+        string targetId,
         InvitationTargetTypeOptions targetType,
         UserId createdBy
     );
+    Task<List<Invitation>> CreateCapabilityInvitations(List<string> invitees, UserId inviter, Capability capability);
     Task<Invitation> AcceptInvitation(InvitationId invitationId);
     Task<Invitation> DeclineInvitation(InvitationId invitationId);
 }

@@ -81,7 +81,7 @@ public class InvitationApplicationService : IInvitationApplicationService
 
         if (invitation.TargetType == InvitationTargetTypeOptions.Capability)
         {
-            CapabilityId.TryParse(invitation.TargetId.ToString(), out var capabilityId);
+            CapabilityId.TryParse(invitation.TargetId, out var capabilityId);
             if (capabilityId == null)
             {
                 throw new EntityNotFoundException("Invalid capability Id");
@@ -114,7 +114,7 @@ public class InvitationApplicationService : IInvitationApplicationService
     public async Task<Invitation> CreateInvitation(
         UserId invitee,
         string description,
-        Guid targetId,
+        string targetId,
         InvitationTargetTypeOptions targetType,
         UserId createdBy
     )
@@ -134,5 +134,35 @@ public class InvitationApplicationService : IInvitationApplicationService
         await _invitationRepository.Add(invitation);
 
         return invitation;
+    }
+
+    public async Task<List<Invitation>> CreateCapabilityInvitations(
+        List<string> invitees,
+        UserId inviter,
+        Capability capability
+    )
+    {
+        var description = $"\"{inviter}\" has invited you to join capability \"{capability.Description}\"";
+        var invitations = new List<Invitation>();
+        foreach (var invitee in invitees)
+        {
+            if (UserId.TryParse(invitee, out var inviteeId))
+            {
+                var invitation = await CreateInvitation(
+                    invitee: inviteeId,
+                    description: description,
+                    targetId: capability.Id.ToString(),
+                    targetType: InvitationTargetTypeOptions.Capability,
+                    createdBy: inviter
+                );
+                invitations.Add(invitation);
+            }
+            else
+            {
+                _logger.LogWarning($"Unable to parse invitee \"{invitee}\" as a valid user id", invitee);
+            }
+            ;
+        }
+        return invitations;
     }
 }

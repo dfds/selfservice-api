@@ -5,6 +5,7 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Persistence;
+using SelfService.Infrastructure.Api.Invitations;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
@@ -23,6 +24,7 @@ public class CapabilityController : ControllerBase
     private readonly IKafkaClusterRepository _kafkaClusterRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly ITeamApplicationService _teamApplicationService;
+    private readonly IInvitationApplicationService _invitationApplicationService;
     private readonly ILogger<CapabilityController> _logger;
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly ICapabilityMembersQuery _membersQuery;
@@ -42,7 +44,8 @@ public class CapabilityController : ControllerBase
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
         ILogger<CapabilityController> logger,
-        ITeamApplicationService teamApplicationService
+        ITeamApplicationService teamApplicationService,
+        IInvitationApplicationService invitationApplicationService
     )
     {
         _membersQuery = membersQuery;
@@ -59,6 +62,7 @@ public class CapabilityController : ControllerBase
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
         _logger = logger;
         _teamApplicationService = teamApplicationService;
+        _invitationApplicationService = invitationApplicationService;
     }
 
     [HttpGet("")]
@@ -137,6 +141,16 @@ public class CapabilityController : ControllerBase
         }
 
         var capability = await _capabilityRepository.Get(capabilityId);
+
+        if (request.Invitees != null)
+        {
+            await _invitationApplicationService.CreateCapabilityInvitations(
+                invitees: request.Invitees,
+                inviter: userId,
+                capability: capability
+            );
+        }
+
         return CreatedAtAction(
             nameof(GetCapabilityById),
             "Capability",
@@ -906,6 +920,54 @@ public class CapabilityController : ControllerBase
         {
             return CustomObjectResult.InternalServerError(
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"AddUserToCapability: {e.Message}." }
+            );
+        }
+        return Ok();
+    }
+
+    [HttpPost("{id}/invitations")]
+    [ProducesResponseType(typeof(CapabilityDetailsApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> CreateInvitations([FromRoute] string id, [FromBody] InvitationsRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return BadRequest(
+                new ProblemDetails { Title = "Invalid CapabilityId provided", Status = StatusCodes.Status400BadRequest }
+            );
+        }
+
+        if (!await _authorizationService.CanInviteToCapability(userId, capabilityId))
+        {
+            return Unauthorized();
+        }
+
+        var capability = await _capabilityRepository.Get(capabilityId);
+        if (capability is null)
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+        }
+        if (request.Invitees != null)
+        {
+            return Ok(
+                await _invitationApplicationService.CreateCapabilityInvitations(
+                    invitees: request.Invitees,
+                    inviter: userId,
+                    capability: capability
+                )
             );
         }
         return Ok();

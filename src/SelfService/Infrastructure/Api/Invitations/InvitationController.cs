@@ -5,6 +5,12 @@ using SelfService.Infrastructure.Api.Capabilities;
 
 namespace SelfService.Infrastructure.Api.Teams;
 
+public class InvitationQuery
+{
+    public string? UserId { get; set; }
+    public InvitationTargetTypeOptions? TargetType { get; set; }
+}
+
 [Route("invitations")]
 [Produces("application/json")]
 [ApiController]
@@ -22,10 +28,22 @@ public class InvitationController : ControllerBase
         _apiResourceFactory = apiResourceFactory;
     }
 
-    [HttpGet("user/{userId}")]
+    [HttpGet("")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    public async Task<IActionResult> GetActiveInvitationsForUser([FromRoute] string userId)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    public async Task<IActionResult> GetActiveInvitations([FromQuery] string? userId, [FromQuery] string? targetType)
     {
+        if (userId == null)
+        {
+            return BadRequest(
+                new ProblemDetails()
+                {
+                    Title = "No user id",
+                    Detail = $"A userId must be provided as a query parameter"
+                }
+            );
+        }
+
         if (!User.TryGetUserId(out var principalId))
         {
             return Unauthorized(
@@ -40,29 +58,10 @@ public class InvitationController : ControllerBase
             );
         }
 
-        var invitations = await _invitationApplicationService.GetActiveInvitations(userId);
-
-        return Ok(_apiResourceFactory.Convert(invitations, userId));
-    }
-
-    [HttpGet("user/{userId}/type/{targetType}")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    public async Task<IActionResult> GetActiveInvitationsForUserAndType(
-        [FromRoute] string userId,
-        [FromRoute] string targetType
-    )
-    {
-        if (!User.TryGetUserId(out var principalId))
+        if (targetType == null)
         {
-            return Unauthorized(
-                new ProblemDetails { Title = "Unauthorized", Detail = "You are not authorized to perform this action" }
-            );
-        }
-
-        if (principalId != userId)
-        {
-            return Unauthorized(
-                new ProblemDetails { Title = "Unauthorized", Detail = "You are not authorized to perform this action" }
+            return Ok(
+                _apiResourceFactory.Convert(await _invitationApplicationService.GetActiveInvitations(userId), userId)
             );
         }
 
@@ -77,9 +76,13 @@ public class InvitationController : ControllerBase
             );
         }
 
-        var invitations = await _invitationApplicationService.GetActiveInvitationsForType(userId, targetTypeOption);
-
-        return Ok(_apiResourceFactory.Convert(invitations, userId, targetTypeOption.ToString()));
+        return Ok(
+            _apiResourceFactory.Convert(
+                await _invitationApplicationService.GetActiveInvitationsForType(userId, targetTypeOption),
+                userId,
+                targetType
+            )
+        );
     }
 
     [HttpGet("{id}")]

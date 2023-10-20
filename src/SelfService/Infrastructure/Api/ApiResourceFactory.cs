@@ -302,6 +302,27 @@ public class ApiResourceFactory
         );
     }
 
+    private async Task<ResourceLink> CreateSendInvitationsLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+
+        if (await _authorizationService.CanInviteToCapability(CurrentUser, capability.Id))
+        {
+            allowedInteractions += Post;
+        }
+
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.CreateInvitations),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: allowedInteractions
+        );
+    }
+
     private ResourceLink GetLinkedTeams(Capability capability)
     {
         return new ResourceLink(
@@ -451,7 +472,11 @@ public class ApiResourceFactory
                 setCapabilityMetadata: CreateSetMetadataLinkFor(capability),
                 getCapabilityMetadata: CreateGetMetadataLinkFor(capability),
                 getLinkedTeams: GetLinkedTeams(capability),
+<<<<<<< HEAD
                 joinCapability: CreateJoinLinkFor(capability)
+=======
+                sendInvitations: await CreateSendInvitationsLinkFor(capability)
+>>>>>>> f406733 (Updated API, _links, permissions, and some structure)
             )
         );
     }
@@ -972,7 +997,7 @@ public class ApiResourceFactory
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         controller: GetNameOf<InvitationController>(),
-                        action: nameof(InvitationController.GetActiveInvitationsForUser),
+                        action: nameof(InvitationController.GetActiveInvitations),
                         values: new { userId }
                     ) ?? "",
                     rel: "self",
@@ -991,7 +1016,7 @@ public class ApiResourceFactory
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         controller: GetNameOf<InvitationController>(),
-                        action: nameof(InvitationController.GetActiveInvitationsForUserAndType),
+                        action: nameof(InvitationController.GetActiveInvitations),
                         values: new { userId, targetType }
                     ) ?? "",
                     rel: "self",

@@ -122,6 +122,14 @@ public class SelfServiceDbContext : DbContext
             .HaveConversion<ValueObjectGuidConverter<TeamCapabilityLinkId>>();
 
         configurationBuilder.Properties<InvitationId>().HaveConversion<ValueObjectGuidConverter<InvitationId>>();
+
+        configurationBuilder
+            .Properties<InvitationStatusOptions>()
+            .HaveConversion<ValueObjectEnumConverter<InvitationStatusOptions>>();
+
+        configurationBuilder
+            .Properties<InvitationTargetTypeOptions>()
+            .HaveConversion<ValueObjectEnumConverter<InvitationTargetTypeOptions>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -357,7 +365,7 @@ public class SelfServiceDbContext : DbContext
             cfg.HasKey(x => x.Id);
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.Invitee);
-            cfg.Property(x => x.Target);
+            cfg.Property(x => x.TargetId);
             cfg.Property(x => x.TargetType);
             cfg.Property(x => x.Status);
             cfg.Property(x => x.Description);

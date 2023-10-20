@@ -3,7 +3,7 @@ namespace SelfService.Domain.Models;
 public class Invitation : Entity<InvitationId>
 {
     public UserId Invitee { get; private set; }
-    public Guid TargetId { get; private set; }
+    public string TargetId { get; private set; }
     public InvitationTargetTypeOptions TargetType { get; private set; }
     public InvitationStatusOptions Status { get; private set; }
     public string Description { get; private set; }
@@ -14,7 +14,7 @@ public class Invitation : Entity<InvitationId>
     public Invitation(
         InvitationId id,
         UserId invitee,
-        Guid targetId,
+        string targetId,
         InvitationTargetTypeOptions targetType,
         InvitationStatusOptions status,
         string description,
