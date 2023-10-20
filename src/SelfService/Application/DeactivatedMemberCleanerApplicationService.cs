@@ -95,7 +95,7 @@ public class DeactivatedMemberCleanerApplicationService
 
         var membersToBeDeleted = new HashSet<Member>();
         deactivatedMembers.ForEach(x => membersToBeDeleted.Add(x));
-        //notFoundMembers.ForEach(x => membersToBeDeleted.Add(x)); // TODO: Enable when we deem it safe
+        notFoundMembers.ForEach(x => membersToBeDeleted.Add(x));
 
         if (membersToBeDeleted.Count <= 0)
             return;
