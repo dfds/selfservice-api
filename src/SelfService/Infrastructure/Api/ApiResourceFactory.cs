@@ -472,11 +472,8 @@ public class ApiResourceFactory
                 setCapabilityMetadata: CreateSetMetadataLinkFor(capability),
                 getCapabilityMetadata: CreateGetMetadataLinkFor(capability),
                 getLinkedTeams: GetLinkedTeams(capability),
-<<<<<<< HEAD
-                joinCapability: CreateJoinLinkFor(capability)
-=======
+                joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability)
->>>>>>> f406733 (Updated API, _links, permissions, and some structure)
             )
         );
     }
