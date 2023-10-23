@@ -8,7 +8,7 @@ public class ECRRepositoryBuilder
     private string _name;
     private string _description;
     private string _createdBy;
-    private DateTime? _requestedAt;
+    private DateTime _requestedAt;
 
     public ECRRepositoryBuilder()
     {
@@ -45,6 +45,12 @@ public class ECRRepositoryBuilder
 
     public ECRRepository Build()
     {
-        return new ECRRepository(id: _id, name: _name, description: _description, createdBy: _createdBy);
+        return new ECRRepository(
+            id: _id,
+            name: _name,
+            description: _description,
+            createdBy: _createdBy,
+            requestedAt: _requestedAt
+        );
     }
 }

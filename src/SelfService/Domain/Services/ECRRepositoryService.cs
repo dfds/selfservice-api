@@ -63,7 +63,7 @@ public class ECRRepositoryService : IECRRepositoryService
             throw new Exception($"Error creating repo {name}: {e.Message}");
         }
 
-        var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, userId);
+        var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, userId, DateTime.UtcNow);
         _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", name);
         await _ecrRepositoryRepository.Add(newRepository);
         return newRepository;
@@ -159,7 +159,8 @@ public class ECRRepositoryService : IECRRepositoryService
                         new ECRRepositoryId(),
                         name,
                         CreatedByCloudEngineeringTeamDescription,
-                        _cloudEngineeringTeamUserId
+                        _cloudEngineeringTeamUserId,
+                        DateTime.UtcNow
                     )
                 );
             }

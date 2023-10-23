@@ -13,9 +13,9 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
         _dbContext = dbContext;
     }
 
-    public Task<bool> HasRepository(string Name)
+    public Task<bool> HasRepository(string name)
     {
-        return _dbContext.ECRRepositories.AnyAsync(x => x.Name == Name);
+        return _dbContext.ECRRepositories.AnyAsync(x => x.Name == name);
     }
 
     public async Task<IEnumerable<ECRRepository>> GetAll()
@@ -33,7 +33,6 @@ public class ECRRepositoryRepository : IECRRepositoryRepository
         await _dbContext.ECRRepositories.AddRangeAsync(ecrRepositories);
     }
 
-    [TransactionalBoundary]
     public void RemoveRangeWithRepositoryName(List<string> names)
     {
         var repositories = _dbContext.ECRRepositories.Where(x => names.Contains(x.Name));
