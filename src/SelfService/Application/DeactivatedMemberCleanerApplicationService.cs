@@ -74,7 +74,7 @@ public class DeactivatedMemberCleanerApplicationService
         else
         {
             _logger.LogWarning(
-                "[TRIAL] following {NotFoundmembersCount} members not found in Azure AD:\n{notfoundMembers}\n NOT deleting for now",
+                "Removing {NotFoundmembersCount} members not found in Azure AD:\n{notfoundMembers}\n",
                 notFoundMembers.Count,
                 ToIdStringList(notFoundMembers)
             );
@@ -95,7 +95,7 @@ public class DeactivatedMemberCleanerApplicationService
 
         var membersToBeDeleted = new HashSet<Member>();
         deactivatedMembers.ForEach(x => membersToBeDeleted.Add(x));
-        //notFoundMembers.ForEach(x => membersToBeDeleted.Add(x)); // TODO: Enable when we deem it safe
+        notFoundMembers.ForEach(x => membersToBeDeleted.Add(x));
 
         if (membersToBeDeleted.Count <= 0)
             return;
