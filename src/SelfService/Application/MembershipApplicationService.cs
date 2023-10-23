@@ -15,7 +15,7 @@ public class MembershipApplicationService : IMembershipApplicationService
     private readonly IAuthorizationService _authorizationService;
     private readonly SystemTime _systemTime;
     private readonly IMembershipQuery _membershipQuery;
-    private readonly MembershipApplicationDomainService _membershipApplicationDomainService;
+    private readonly IMembershipApplicationDomainService _membershipApplicationDomainService;
 
     public MembershipApplicationService(
         ILogger<MembershipApplicationService> logger,
@@ -25,7 +25,7 @@ public class MembershipApplicationService : IMembershipApplicationService
         IAuthorizationService authorizationService,
         SystemTime systemTime,
         IMembershipQuery membershipQuery,
-        MembershipApplicationDomainService membershipApplicationDomainService
+        IMembershipApplicationDomainService membershipApplicationDomainService
     )
     {
         _logger = logger;
@@ -38,16 +38,34 @@ public class MembershipApplicationService : IMembershipApplicationService
         _membershipApplicationDomainService = membershipApplicationDomainService;
     }
 
-    [TransactionalBoundary, Outboxed]
-    public async Task AddCreatorAsInitialMember(CapabilityId capabilityId, UserId creatorId)
+    private async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId)
     {
+        if (await _membershipRepository.IsAlreadyMember(capabilityId, userId))
+        {
+            throw new AlreadyHasActiveMembershipException(
+                $"User \"{userId}\" is already member of \"{capabilityId}\"."
+            );
+        }
         var newMembership = Membership.CreateFor(
             capabilityId: capabilityId,
-            userId: creatorId,
+            userId: userId,
             createdAt: _systemTime.Now
         );
 
         await _membershipRepository.Add(newMembership);
+
+        _logger.LogInformation("User {UserId} has joined capability {CapabilityId}", userId, capabilityId);
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task AddCreatorAsInitialMember(CapabilityId capabilityId, UserId creatorId)
+    {
+        _logger.LogInformation(
+            "Creator {CreatorId} is added as initial member to capability {CapabilityId}",
+            creatorId,
+            capabilityId
+        );
+        await CreateAndAddMembership(capabilityId, creatorId);
     }
 
     [TransactionalBoundary, Outboxed]
@@ -85,14 +103,7 @@ public class MembershipApplicationService : IMembershipApplicationService
             createdAt: _systemTime.Now
         );
 
-        await _membershipRepository.Add(newMembership);
-
-        _logger.LogInformation(
-            "User {UserId} has joined capability {CapabilityId}",
-            membershipApplication.Applicant,
-            membershipApplication.CapabilityId
-        );
-
+        await CreateAndAddMembership(membershipApplication.CapabilityId, membershipApplication.Applicant);
         return newMembership.Id;
     }
 
@@ -265,5 +276,12 @@ public class MembershipApplicationService : IMembershipApplicationService
                 capabilityId
             );
         }
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task JoinCapability(CapabilityId capabilityId, UserId userId)
+    {
+        _logger.LogInformation("User {userId} was directly added as a member of capability {capabilityId}", userId);
+        await CreateAndAddMembership(capabilityId, userId);
     }
 }

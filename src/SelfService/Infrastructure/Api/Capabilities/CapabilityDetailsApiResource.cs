@@ -10,7 +10,7 @@ public class CapabilityDetailsApiResource
     public string Status { get; set; }
     public string Description { get; set; }
 
-    public string JsonMetadata { get; set; } = "";
+    public string JsonMetadata { get; set; }
     public int JsonMetadataSchemaVersion { get; set; }
 
     [JsonPropertyName("_links")]
@@ -28,6 +28,8 @@ public class CapabilityDetailsApiResource
         public ResourceLink CancelCapabilityDeletionRequest { get; set; }
         public ResourceLink SetCapabilityMetadata { get; set; }
         public ResourceLink GetCapabilityMetadata { get; set; }
+        public ResourceLink GetLinkedTeams { get; set; }
+        public ResourceLink JoinCapability { get; set; }
 
         public CapabilityDetailsLinks(
             ResourceLink self,
@@ -39,7 +41,9 @@ public class CapabilityDetailsApiResource
             ResourceLink requestCapabilityDeletion,
             ResourceLink cancelCapabilityDeletionRequest,
             ResourceLink setCapabilityMetadata,
-            ResourceLink getCapabilityMetadata
+            ResourceLink getCapabilityMetadata,
+            ResourceLink getLinkedTeams,
+            ResourceLink joinCapability
         )
         {
             Self = self;
@@ -52,6 +56,8 @@ public class CapabilityDetailsApiResource
             CancelCapabilityDeletionRequest = cancelCapabilityDeletionRequest;
             SetCapabilityMetadata = setCapabilityMetadata;
             GetCapabilityMetadata = getCapabilityMetadata;
+            GetLinkedTeams = getLinkedTeams;
+            JoinCapability = joinCapability;
         }
     }
 

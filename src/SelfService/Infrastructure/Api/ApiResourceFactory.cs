@@ -6,8 +6,8 @@ using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
-using SelfService.Infrastructure.Api.Metrics;
 using SelfService.Infrastructure.Api.System;
+using SelfService.Infrastructure.Api.Teams;
 using static SelfService.Infrastructure.Api.Method;
 
 namespace SelfService.Infrastructure.Api;
@@ -301,6 +301,40 @@ public class ApiResourceFactory
         );
     }
 
+    private ResourceLink GetLinkedTeams(Capability capability)
+    {
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetLinkedTeams),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { capabilityId = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: Allow.Get
+        );
+    }
+
+    private ResourceLink CreateJoinLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+
+        if (_authorizationService.CanBypassMembershipApprovals(PortalUser))
+        {
+            allowedInteractions += Post;
+        }
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.Join),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: allowedInteractions
+        );
+    }
+
     private async Task<ResourceLink> CreateRequestDeletionLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
@@ -414,7 +448,9 @@ public class ApiResourceFactory
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
                 setCapabilityMetadata: CreateSetMetadataLinkFor(capability),
-                getCapabilityMetadata: CreateGetMetadataLinkFor(capability)
+                getCapabilityMetadata: CreateGetMetadataLinkFor(capability),
+                getLinkedTeams: GetLinkedTeams(capability),
+                joinCapability: CreateJoinLinkFor(capability)
             )
         );
     }
@@ -859,6 +895,67 @@ public class ApiResourceFactory
                         action: nameof(SystemController.GetTopVisitors)
                     ) ?? "",
                     rel: "related",
+                    allow: Allow.Get
+                )
+            )
+        );
+    }
+
+    public TeamApiResource Convert(Team team)
+    {
+        return new TeamApiResource(
+            team.Id,
+            team.Name,
+            team.Description,
+            team.CreatedBy,
+            team.CreatedAt.ToUniversalTime().ToString("O"),
+            new TeamApiResource.TeamLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(TeamController.GetTeam),
+                        controller: GetNameOf<TeamController>(),
+                        values: new { id = team.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                ),
+                capabilities: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(TeamController.GetLinkedCapabilities),
+                        controller: GetNameOf<TeamController>(),
+                        values: new { id = team.Id }
+                    ) ?? "",
+                    rel: "related",
+                    allow: Allow.Get
+                ),
+                members: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(TeamController.GetMembers),
+                        controller: GetNameOf<TeamController>(),
+                        values: new { id = team.Id }
+                    ) ?? "",
+                    rel: "related",
+                    allow: Allow.Get
+                )
+            )
+        );
+    }
+
+    public TeamListApiResource Convert(List<Team> teams)
+    {
+        return new TeamListApiResource(
+            items: teams.Select(Convert).ToArray(),
+            links: new TeamListApiResource.TeamListLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(TeamController.GetAllTeams),
+                        controller: GetNameOf<TeamController>()
+                    ) ?? "",
+                    rel: "self",
                     allow: Allow.Get
                 )
             )

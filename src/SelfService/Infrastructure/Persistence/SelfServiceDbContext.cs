@@ -1,5 +1,6 @@
 ﻿using Dafda.Outbox;
 using Microsoft.EntityFrameworkCore;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence.Converters;
 
@@ -32,34 +33,36 @@ public static class DependencyInjection
 
 public class SelfServiceDbContext : DbContext
 {
-    // Parameterless constructor is required by EntityFramework
+    // Parameterless constructor is  by EntityFramework
     public SelfServiceDbContext(DbContextOptions<SelfServiceDbContext> options)
         : base(options) { }
 
-    public DbSet<OutboxEntry> OutboxEntries { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<OutboxEntry> OutboxEntries => Set<OutboxEntry>();
 
-    public DbSet<Capability> Capabilities { get; set; } = null!; // suppress parameterless constructor warning
-    public DbSet<Member> Members { get; set; } = null!; // suppress parameterless constructor warning
-    public DbSet<Membership> Memberships { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<Capability> Capabilities => Set<Capability>();
+    public DbSet<Member> Members => Set<Member>();
+    public DbSet<Membership> Memberships => Set<Membership>();
 
-    public DbSet<MembershipApplication> MembershipApplications { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<MembershipApplication> MembershipApplications => Set<MembershipApplication>();
 
-    public DbSet<AwsAccount> AwsAccounts { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<AwsAccount> AwsAccounts => Set<AwsAccount>();
 
-    public DbSet<KafkaCluster> KafkaClusters { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<KafkaCluster> KafkaClusters => Set<KafkaCluster>();
 
-    public DbSet<KafkaClusterAccess> KafkaClusterAccess { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<KafkaClusterAccess> KafkaClusterAccess => Set<KafkaClusterAccess>();
 
-    public DbSet<KafkaTopic> KafkaTopics { get; set; } = null!; // suppress parameterless constructor warning
-    public DbSet<MessageContract> MessageContracts { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<KafkaTopic> KafkaTopics => Set<KafkaTopic>();
+    public DbSet<MessageContract> MessageContracts => Set<MessageContract>();
 
-    public DbSet<PortalVisit> PortalVisits { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<PortalVisit> PortalVisits => Set<PortalVisit>();
 
-    public DbSet<ServiceDescription> ServiceCatalog { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<ServiceDescription> ServiceCatalog => Set<ServiceDescription>();
 
-    public DbSet<ECRRepository> ECRRepositories { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<ECRRepository> ECRRepositories => Set<ECRRepository>();
 
-    public DbSet<SelfServiceJsonSchema> SelfServiceJsonSchemas { get; set; } = null!; // suppress parameterless constructor warning
+    public DbSet<SelfServiceJsonSchema> SelfServiceJsonSchemas => Set<SelfServiceJsonSchema>();
+    public DbSet<Team> Teams => Set<Team>();
+    public DbSet<TeamCapabilityLink> TeamCapabilityLinks => Set<TeamCapabilityLink>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -110,6 +113,12 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<MessageContractStatus>().HaveConversion<MessageContractStatusConverter>();
 
         configurationBuilder.Properties<ECRRepositoryId>().HaveConversion<ECRRepositoryIdConverter>();
+
+        configurationBuilder.Properties<TeamId>().HaveConversion<ValueObjectGuidConverter<TeamId>>();
+
+        configurationBuilder
+            .Properties<TeamCapabilityLinkId>()
+            .HaveConversion<ValueObjectGuidConverter<TeamCapabilityLinkId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -315,6 +324,28 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.ObjectId);
             cfg.Property(x => x.SchemaVersion);
             cfg.Property(x => x.Schema);
+        });
+
+        modelBuilder.Entity<Team>(cfg =>
+        {
+            cfg.ToTable("Team");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.Name);
+            cfg.Property(x => x.Description);
+            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<TeamCapabilityLink>(cfg =>
+        {
+            cfg.ToTable("TeamCapabilityLinking");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.TeamId);
+            cfg.Property(x => x.CapabilityId);
+            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.CreatedAt);
         });
     }
 }
