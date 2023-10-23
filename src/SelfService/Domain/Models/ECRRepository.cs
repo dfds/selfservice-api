@@ -7,7 +7,7 @@ public class ECRRepository : Entity<ECRRepositoryId>
     public string CreatedBy { get; private set; }
 
     public ECRRepository(ECRRepositoryId id, string name, string description, string createdBy)
-         : base(id)
+        : base(id)
     {
         Name = name;
         Description = description;
