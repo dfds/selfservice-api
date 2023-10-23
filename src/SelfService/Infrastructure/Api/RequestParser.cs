@@ -14,7 +14,7 @@ public class RequestParserHelper<TInput, TOutput>
     where TOutput : ValueObject
 {
     private Dictionary<Type, RequestParser<TInput, TOutput>> Parsers { get; } = new();
-    private ModelStateDictionary ModalState { get; set; } = new();
+    private ModelStateDictionary ModelState { get; set; } = new();
 
     private RequestParser<TInput, TOutput> GetParser<O>(Type type)
         where O : TOutput
@@ -42,11 +42,11 @@ public class RequestParserHelper<TInput, TOutput>
         Parsers.Add(typeof(O), new RequestParser<TInput, TOutput>(converter, typeof(O).Name));
     }
 
-    private TOutput ParseInternal<U>(TInput i)
-        where U : TOutput
+    private TOutput ParseInternal<O>(TInput i)
+        where O : TOutput
     {
-        var parser = GetParser<U>(typeof(U));
-        return parser.TryParse(i, ModalState);
+        var parser = GetParser<O>(typeof(O));
+        return parser.TryParse(i, ModelState);
     }
 
     public O1 Parse<O1>(TInput i1)
@@ -86,7 +86,7 @@ public class RequestParserHelper<TInput, TOutput>
 
     public void SetModelStateParser(ModelStateDictionary modelStateDictionary)
     {
-        ModalState = modelStateDictionary;
+        ModelState = modelStateDictionary;
     }
 }
 
