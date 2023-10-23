@@ -5,7 +5,6 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Persistence;
-using SelfService.Infrastructure.Persistence.Converters;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
@@ -367,17 +366,23 @@ public class CapabilityController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        var (capabilityId, kafkaClusterId, kafkaTopicName, _) = RequestParserRegistry
-            .StringToValueParser(ModelState)
-            .Parse<CapabilityId, KafkaClusterId, KafkaTopicName, KafkaTopicRetention>(
-                id,
-                topicRequest.KafkaClusterId,
-                topicRequest.Name,
-                topicRequest.Retention
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        if (!KafkaClusterId.TryParse(topicRequest.KafkaClusterId, out var kafkaClusterId))
+            ModelState.AddModelError(
+                nameof(topicRequest.KafkaClusterId),
+                $"Value \"{topicRequest.KafkaClusterId}\" is not a valid kafka cluster id."
             );
 
-        if (!ModelState.IsValid)
-            return ValidationProblem(ModelState);
+        if (!KafkaTopicName.TryParse(topicRequest.Name, out var kafkaTopicName))
+            ModelState.AddModelError(
+                nameof(topicRequest.Name),
+                $"Value \"{topicRequest.Name}\" is not a valid kafka topic name."
+            );
 
         if (!KafkaTopicPartitions.TryCreate(topicRequest.Partitions ?? 0, out var topicPartitions))
             ModelState.AddModelError(
@@ -391,13 +396,14 @@ public class CapabilityController : ControllerBase
                 $"Value \"{topicRequest.Retention}\" is invalid for kafka topic retention."
             );
 
+        if (!await _kafkaClusterRepository.Exists(kafkaClusterId))
+            ModelState.AddModelError(
+                nameof(topicRequest.KafkaClusterId),
+                $"Kafka cluster with id \"{kafkaClusterId}\" is unknown to the system."
+            );
+
         if (!ModelState.IsValid)
             return ValidationProblem();
-
-        if (!await _capabilityRepository.Exists(capabilityId))
-        {
-            return NotFound();
-        }
 
         if (!await _authorizationService.CanAdd(userId, capabilityId, kafkaClusterId))
             return Unauthorized();
