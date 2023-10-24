@@ -1,4 +1,5 @@
 using System.Text;
+using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.BackgroundJobs;
 
@@ -38,7 +39,8 @@ public class DeactivatedMemberCleanerApplicationService
 
         return _sb.ToString();
     }
-
+    
+    [TransactionalBoundary]
     public async Task RemoveDeactivatedMemberships(IUserStatusChecker userStatusChecker)
     {
         _logger.LogDebug("Started looking for deactivated users");
