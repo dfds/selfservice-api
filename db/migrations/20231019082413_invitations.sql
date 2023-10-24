@@ -3,9 +3,9 @@
 CREATE TABLE "Invitation"
 (
     "Id"          UUID          NOT NULL,
-    "Invitee"     VARCHAR(20)   NOT NULL,
+    "Invitee"     VARCHAR(32)   NOT NULL,
     "Description" VARCHAR(255)  NOT NULL,
-    "TargetId"    UUID          NOT NULL,
+    "TargetId"    VARCHAR(255)  NOT NULL,
     "TargetType"  VARCHAR(255)  NOT NULL,
     "Status"      VARCHAR(255)  NOT NULL,
     "CreatedBy"   VARCHAR(255)  NOT NULL,
