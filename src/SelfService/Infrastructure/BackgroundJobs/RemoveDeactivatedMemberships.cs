@@ -38,7 +38,7 @@ public class RemoveDeactivatedMemberships : BackgroundService
             Guid.NewGuid()
         );
         UserStatusChecker userStatusChecker = new UserStatusChecker(_logger);
-        var membershipCleaner = scope.ServiceProvider.GetRequiredService<DeactivatedMemberCleanerApplicationService>();
+        var membershipCleaner = scope.ServiceProvider.GetRequiredService<IDeactivatedMemberCleanerApplicationService>();
 
         await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
     }
