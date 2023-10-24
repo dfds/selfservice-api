@@ -40,6 +40,13 @@ public class RemoveDeactivatedMemberships : BackgroundService
         UserStatusChecker userStatusChecker = new UserStatusChecker(_logger);
         var membershipCleaner = scope.ServiceProvider.GetRequiredService<IDeactivatedMemberCleanerApplicationService>();
 
-        await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
+        try
+        {
+            await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error while removing deactivated memberships");
+        }
     }
 }
