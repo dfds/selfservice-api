@@ -5,7 +5,7 @@ using SelfService.Infrastructure.BackgroundJobs;
 
 namespace SelfService.Application;
 
-public class DeactivatedMemberCleanerApplicationService
+public class DeactivatedMemberCleanerApplicationService : IDeactivatedMemberCleanerApplicationService
 {
     private readonly IMembershipRepository _membershipRepository;
     private readonly IMemberRepository _memberRepository;
