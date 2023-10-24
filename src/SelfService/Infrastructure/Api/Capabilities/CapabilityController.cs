@@ -6,6 +6,7 @@ using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Api.Invitations;
+using System.Text.Json;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
@@ -139,7 +140,7 @@ public class CapabilityController : ControllerBase
             );
             return ValidationProblem(statusCode: StatusCodes.Status409Conflict);
         }
-
+        
         var capability = await _capabilityRepository.Get(capabilityId);
 
         if (request.Invitees != null)
@@ -150,7 +151,6 @@ public class CapabilityController : ControllerBase
                 capability: capability
             );
         }
-
         return CreatedAtAction(
             nameof(GetCapabilityById),
             "Capability",

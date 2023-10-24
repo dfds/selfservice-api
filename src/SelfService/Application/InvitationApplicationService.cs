@@ -136,6 +136,7 @@ public class InvitationApplicationService : IInvitationApplicationService
         return invitation;
     }
 
+    [TransactionalBoundary]
     public async Task<List<Invitation>> CreateCapabilityInvitations(
         List<string> invitees,
         UserId inviter,
