@@ -55,7 +55,7 @@ integrationtests: build
 
 test: tests
 
-tests: unittests integrationtests
+tests : build unittests integrationtests
 
 publish:
 	@cd src && dotnet publish \

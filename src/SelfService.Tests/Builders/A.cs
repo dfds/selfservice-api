@@ -1,4 +1,6 @@
-﻿using SelfService.Domain.Models;
+﻿using SelfService.Application;
+using SelfService.Domain.Models;
+using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.Application.KafkaTopicApplicationService;
 
@@ -32,4 +34,7 @@ public static class A
     public static TeamBuilder Team = new();
     public static TeamApplicationServiceBuilder TeamApplicationService = new();
     public static MembershipApplicationServiceBuilder MembershipApplicationService => new();
+
+    public static InvitationRepositoryBuilder InvitationRepository => new();
+    public static InvitationApplicationServiceBuilder InvitationApplicationService => new();
 }
