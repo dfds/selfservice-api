@@ -25,11 +25,11 @@ public class CapabilityController : ControllerBase
     private readonly IKafkaClusterRepository _kafkaClusterRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly ITeamApplicationService _teamApplicationService;
-    private readonly IInvitationApplicationService _invitationApplicationService;
     private readonly ILogger<CapabilityController> _logger;
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
+    private readonly IInvitationApplicationService _invitationApplicationService;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -140,7 +140,7 @@ public class CapabilityController : ControllerBase
             );
             return ValidationProblem(statusCode: StatusCodes.Status409Conflict);
         }
-        
+
         var capability = await _capabilityRepository.Get(capabilityId);
 
         if (request.Invitees != null)
@@ -960,16 +960,23 @@ public class CapabilityController : ControllerBase
                 }
             );
         }
-        if (request.Invitees != null)
+        if (request.Invitees == null)
         {
-            return Ok(
-                await _invitationApplicationService.CreateCapabilityInvitations(
-                    invitees: request.Invitees,
-                    inviter: userId,
-                    capability: capability
-                )
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid request",
+                    Detail = "Request body Invitees is not provided",
+                    Status = StatusCodes.Status400BadRequest
+                }
             );
         }
-        return Ok();
+        return Ok(
+            await _invitationApplicationService.CreateCapabilityInvitations(
+                invitees: request.Invitees,
+                inviter: userId,
+                capability: capability
+            )
+        );
     }
 }

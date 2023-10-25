@@ -1046,7 +1046,7 @@ public class ApiResourceFactory
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(InvitationController.AcceptInvitation),
-                        controller: GetNameOf<TeamController>(),
+                        controller: GetNameOf<InvitationController>(),
                         values: new { id = invitation.Id }
                     ) ?? "",
                     rel: "related",
@@ -1056,7 +1056,7 @@ public class ApiResourceFactory
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
                         action: nameof(InvitationController.DeclineInvitation),
-                        controller: GetNameOf<TeamController>(),
+                        controller: GetNameOf<InvitationController>(),
                         values: new { id = invitation.Id }
                     ) ?? "",
                     rel: "related",

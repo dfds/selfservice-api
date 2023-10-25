@@ -5,12 +5,6 @@ using SelfService.Infrastructure.Api.Capabilities;
 
 namespace SelfService.Infrastructure.Api.Teams;
 
-public class InvitationQuery
-{
-    public string? UserId { get; set; }
-    public InvitationTargetTypeOptions? TargetType { get; set; }
-}
-
 [Route("invitations")]
 [Produces("application/json")]
 [ApiController]

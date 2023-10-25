@@ -81,14 +81,12 @@ public class InvitationApplicationService : IInvitationApplicationService
 
         if (invitation.TargetType == InvitationTargetTypeOptions.Capability)
         {
-            CapabilityId.TryParse(invitation.TargetId, out var capabilityId);
-            if (capabilityId == null)
+            if (!CapabilityId.TryParse(invitation.TargetId, out var capabilityId))
             {
                 throw new EntityNotFoundException("Invalid capability Id");
             }
 
-            var capability = await _capabilityRepository.FindBy(capabilityId);
-            if (capability == null)
+            if (!await _capabilityRepository.Exists(capabilityId))
             {
                 throw new EntityNotFoundException("Capability does not exist");
             }
@@ -106,7 +104,6 @@ public class InvitationApplicationService : IInvitationApplicationService
             return invitation;
         }
 
-        // Currently we only have memberships for capabilities.
         throw new NotSupportedException("Only capabilities are supported for invitations");
     }
 
@@ -147,22 +144,19 @@ public class InvitationApplicationService : IInvitationApplicationService
         var invitations = new List<Invitation>();
         foreach (var invitee in invitees)
         {
-            if (UserId.TryParse(invitee, out var inviteeId))
-            {
-                var invitation = await CreateInvitation(
-                    invitee: inviteeId,
-                    description: description,
-                    targetId: capability.Id.ToString(),
-                    targetType: InvitationTargetTypeOptions.Capability,
-                    createdBy: inviter
-                );
-                invitations.Add(invitation);
-            }
-            else
+            if (!UserId.TryParse(invitee, out var inviteeId))
             {
                 _logger.LogWarning($"Unable to parse invitee \"{invitee}\" as a valid user id", invitee);
+                continue;
             }
-            ;
+            var invitation = await CreateInvitation(
+                invitee: inviteeId,
+                description: description,
+                targetId: capability.Id.ToString(),
+                targetType: InvitationTargetTypeOptions.Capability,
+                createdBy: inviter
+            );
+            invitations.Add(invitation);
         }
         return invitations;
     }
