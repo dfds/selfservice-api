@@ -3,7 +3,7 @@
 CREATE TABLE "Invitation"
 (
     "Id"          UUID          NOT NULL,
-    "Invitee"     VARCHAR(32)   NOT NULL,
+    "Invitee"     VARCHAR(255)  NOT NULL,
     "Description" VARCHAR(255)  NOT NULL,
     "TargetId"    VARCHAR(255)  NOT NULL,
     "TargetType"  VARCHAR(255)  NOT NULL,
