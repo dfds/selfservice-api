@@ -8,7 +8,7 @@ public class ECRRepositoryBuilder
     private string _name;
     private string _description;
     private string _createdBy;
-    private DateTime _requestedAt;
+    private DateTime? _requestedAt;
 
     public ECRRepositoryBuilder()
     {
