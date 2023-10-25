@@ -160,7 +160,7 @@ public class ECRRepositoryService : IECRRepositoryService
                         name,
                         CreatedByCloudEngineeringTeamDescription,
                         _cloudEngineeringTeamUserId,
-                        DateTime.UtcNow
+                        null
                     )
                 );
             }
