@@ -3,7 +3,7 @@
 CREATE TABLE "Invitation"
 (
     "Id"          UUID          NOT NULL,
-    "Invitee"     VARCHAR(255)  NOT NULL,
+    "Invitee"     VARCHAR(255)  NOT NULL, -- email of the invitee which maps to `Member`-id, which is also just email
     "Description" VARCHAR(255)  NOT NULL,
     "TargetId"    VARCHAR(255)  NOT NULL,
     "TargetType"  VARCHAR(255)  NOT NULL,
