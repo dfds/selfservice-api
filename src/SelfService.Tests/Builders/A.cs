@@ -10,6 +10,7 @@ public static class A
 {
     public static UserId UserId => UserId.Parse("foo");
     public static CapabilityBuilder Capability => new();
+    public static CapabilityRequestBuilder CapabilityRequest => new();
     public static MembershipBuilder Membership => new();
     public static MemberBuilder Member => new();
     public static AwsAccountBuilder AwsAccount => new();
