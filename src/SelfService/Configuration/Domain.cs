@@ -81,7 +81,10 @@ public static class Domain
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
-        builder.Services.AddTransient<IDeactivatedMemberCleanerApplicationService, DeactivatedMemberCleanerApplicationService>();
+        builder.Services.AddTransient<
+            IDeactivatedMemberCleanerApplicationService,
+            DeactivatedMemberCleanerApplicationService
+        >();
 
         var topdeskEndpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
         var topdeskApiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
