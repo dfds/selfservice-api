@@ -1,4 +1,6 @@
-﻿using SelfService.Domain.Models;
+﻿using SelfService.Application;
+using SelfService.Domain.Models;
+using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.Application.KafkaTopicApplicationService;
 
@@ -8,6 +10,7 @@ public static class A
 {
     public static UserId UserId => UserId.Parse("foo");
     public static CapabilityBuilder Capability => new();
+    public static CapabilityRequestBuilder CapabilityRequest => new();
     public static MembershipBuilder Membership => new();
     public static MemberBuilder Member => new();
     public static AwsAccountBuilder AwsAccount => new();
@@ -32,4 +35,7 @@ public static class A
     public static TeamBuilder Team = new();
     public static TeamApplicationServiceBuilder TeamApplicationService = new();
     public static MembershipApplicationServiceBuilder MembershipApplicationService => new();
+
+    public static InvitationRepositoryBuilder InvitationRepository => new();
+    public static InvitationApplicationServiceBuilder InvitationApplicationService => new();
 }
