@@ -43,9 +43,7 @@ public class ECRRepositoriesController : ControllerBase
 
     private bool IsValidRequest(NewECRRepositoryRequest request)
     {
-        return !string.IsNullOrEmpty(request.RepositoryName)
-            && !string.IsNullOrEmpty(request.Name)
-            && !string.IsNullOrEmpty(request.Description);
+        return !string.IsNullOrEmpty(request.Name) && !string.IsNullOrEmpty(request.Description);
     }
 
     [HttpPost("repositories")]
@@ -70,9 +68,8 @@ public class ECRRepositoriesController : ControllerBase
             // Safe to suppress null
             var name = request.Name!;
             var description = request.Description!;
-            var repositoryName = request.RepositoryName!;
 
-            bool hasRepository = await _ecrRepositoryService.HasRepository(repositoryName);
+            bool hasRepository = await _ecrRepositoryService.HasRepository(name);
 
             if (hasRepository)
             {
@@ -80,12 +77,12 @@ public class ECRRepositoriesController : ControllerBase
                     new ProblemDetails()
                     {
                         Title = "Repository already exists",
-                        Detail = $"Repository with name {repositoryName} already exists",
+                        Detail = $"Repository with name {name} already exists",
                     }
                 );
             }
 
-            var newRepo = await _ecrRepositoryService.AddRepository(name, description, repositoryName, userId);
+            var newRepo = await _ecrRepositoryService.AddRepository(name, description, userId);
             return Ok(newRepo);
         }
         catch (Exception e)

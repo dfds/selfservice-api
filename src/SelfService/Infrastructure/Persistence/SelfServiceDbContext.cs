@@ -323,7 +323,6 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.Name);
             cfg.Property(x => x.Description);
-            cfg.Property(x => x.RepositoryName);
             cfg.Property(x => x.CreatedBy);
         });
 
