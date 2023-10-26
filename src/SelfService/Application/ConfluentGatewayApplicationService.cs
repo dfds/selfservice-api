@@ -9,14 +9,17 @@ public class ConfluentGatewayApplicationService
 {
     private readonly IConfluentCloudClientService _confluentCloudClientService;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
+    private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
 
     public ConfluentGatewayApplicationService(
         IConfluentCloudClientService confluentCloudClientService,
-        IKafkaTopicRepository kafkaTopicRepository
+        IKafkaTopicRepository kafkaTopicRepository,
+        IKafkaClusterAccessRepository kafkaClusterAccessRepository
     )
     {
         _confluentCloudClientService = confluentCloudClientService;
         _kafkaTopicRepository = kafkaTopicRepository;
+        _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
     }
 
     public void CreateTopic() { }
@@ -34,5 +37,13 @@ public class ConfluentGatewayApplicationService
 
         var acls = ConfluentCloudAclHelper.GetAcls(capabilityId, serviceAccount);
         await _confluentCloudClientService.CreateAclEntries(kafkaClusterId, acls);
+
+        // Has cluster access?
+        var clusterAccess = await _kafkaClusterAccessRepository.FindBy(capabilityId, kafkaClusterId);
+        var apiKey = await _confluentCloudClientService.CreateApiKey(
+            serviceAccount,
+            kafkaClusterId.ToString(),
+            "SelfService"
+        );
     }
 }

@@ -101,8 +101,6 @@ public class ConfluentCloudClientService : IConfluentCloudClientService
         throw new NotImplementedException();
     }
 
-    public void GetConfluentCloudInternalUsers() { }
-
     public void RegisterTopicSchema(KafkaClusterId clusterId, string topicName, string schema)
     {
         throw new NotImplementedException();
