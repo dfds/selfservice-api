@@ -25,27 +25,9 @@ public class InvitationController : ControllerBase
     [HttpGet("")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
-    public async Task<IActionResult> GetActiveInvitations([FromQuery] string? userId, [FromQuery] string? targetType)
+    public async Task<IActionResult> GetActiveInvitations([FromQuery] string? targetType)
     {
-        if (userId == null)
-        {
-            return BadRequest(
-                new ProblemDetails()
-                {
-                    Title = "No user id",
-                    Detail = $"A userId must be provided as a query parameter"
-                }
-            );
-        }
-
         if (!User.TryGetUserId(out var principalId))
-        {
-            return Unauthorized(
-                new ProblemDetails { Title = "Unauthorized", Detail = "You are not authorized to perform this action" }
-            );
-        }
-
-        if (principalId != userId)
         {
             return Unauthorized(
                 new ProblemDetails { Title = "Unauthorized", Detail = "You are not authorized to perform this action" }
@@ -55,7 +37,10 @@ public class InvitationController : ControllerBase
         if (targetType == null)
         {
             return Ok(
-                _apiResourceFactory.Convert(await _invitationApplicationService.GetActiveInvitations(userId), userId)
+                _apiResourceFactory.Convert(
+                    await _invitationApplicationService.GetActiveInvitations(principalId),
+                    principalId
+                )
             );
         }
 
@@ -72,8 +57,8 @@ public class InvitationController : ControllerBase
 
         return Ok(
             _apiResourceFactory.Convert(
-                await _invitationApplicationService.GetActiveInvitationsForType(userId, targetTypeOption),
-                userId,
+                await _invitationApplicationService.GetActiveInvitationsForType(principalId, targetTypeOption),
+                principalId,
                 targetType
             )
         );
