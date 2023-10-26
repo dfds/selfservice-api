@@ -60,4 +60,29 @@ public class TestMembershipApplicationService
         var memberships = await dbContext.Memberships.ToListAsync();
         Assert.Single(memberships);
     }
+
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task can_create_approvals()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+        UserId userId = "chungus@dfds.com";
+        CapabilityId capabilityId = "reflect2improve-GPU-cluster-mgmt-qxyz";
+        var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
+        var membershipApplicationService = A.MembershipApplicationService
+            .WithMembershipRepository(membershipRepo)
+            .Build();
+
+        await membershipApplicationService.JoinCapability(capabilityId, userId);
+        await dbContext.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<AlreadyHasActiveMembershipException>(
+            async () => await membershipApplicationService.JoinCapability(capabilityId, userId)
+        );
+        await dbContext.SaveChangesAsync();
+
+        var memberships = await dbContext.Memberships.ToListAsync();
+        Assert.Single(memberships);
+    }
 }
