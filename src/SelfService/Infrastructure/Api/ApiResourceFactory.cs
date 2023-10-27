@@ -919,6 +919,18 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "related",
                     allow: Allow.Get
+                ),
+                invitationsLinks: new MyProfileApiResource.InvitationsLinks(
+                    cabalityInvitations: new ResourceLink(
+                        href: _linkGenerator.GetUriByAction(
+                            httpContext: HttpContext,
+                            controller: GetNameOf<InvitationController>(),
+                            action: nameof(InvitationController.GetActiveInvitations),
+                            values: new { targetType = "Capability" }
+                        ) ?? "",
+                        rel: "related",
+                        allow: Allow.Get
+                    )
                 )
             )
         );
