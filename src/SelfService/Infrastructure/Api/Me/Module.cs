@@ -137,18 +137,31 @@ public class MyProfileApiResource
         public ResourceLink PersonalInformation { get; set; }
         public ResourceLink PortalVisits { get; set; }
         public ResourceLink TopVisitors { get; set; }
+        public InvitationsLinks InvitationsLinks { get; set; }
 
         public MyProfileLinks(
             ResourceLink self,
             ResourceLink personalInformation,
             ResourceLink portalVisits,
-            ResourceLink topVisitors
+            ResourceLink topVisitors,
+            InvitationsLinks invitationsLinks
         )
         {
             Self = self;
             PersonalInformation = personalInformation;
             PortalVisits = portalVisits;
             TopVisitors = topVisitors;
+            InvitationsLinks = invitationsLinks;
+        }
+    }
+
+    public class InvitationsLinks
+    {
+        public ResourceLink CapabilityInvitations { get; set; }
+
+        public InvitationsLinks(ResourceLink cabalityInvitations)
+        {
+            CapabilityInvitations = cabalityInvitations;
         }
     }
 

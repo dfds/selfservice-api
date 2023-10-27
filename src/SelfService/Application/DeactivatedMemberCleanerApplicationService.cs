@@ -13,19 +13,23 @@ public class DeactivatedMemberCleanerApplicationService : IDeactivatedMemberClea
 
     private readonly ILogger<DeactivatedMemberCleanerApplicationService> _logger;
 
+    private readonly IInvitationRepository _invitationRepository;
+
     private readonly StringBuilder _sb = new();
 
     public DeactivatedMemberCleanerApplicationService(
         ILogger<DeactivatedMemberCleanerApplicationService> logger,
         IMembershipRepository membershipRepository,
         IMemberRepository memberRepository,
-        IMembershipApplicationRepository membershipApplicationRepository
+        IMembershipApplicationRepository membershipApplicationRepository,
+        IInvitationRepository invitationRepository
     )
     {
         _membershipRepository = membershipRepository;
         _memberRepository = memberRepository;
         _membershipApplicationRepository = membershipApplicationRepository;
         _logger = logger;
+        _invitationRepository = invitationRepository;
     }
 
     private string ToIdStringList(List<Member> members)
@@ -39,7 +43,7 @@ public class DeactivatedMemberCleanerApplicationService : IDeactivatedMemberClea
 
         return _sb.ToString();
     }
-    
+
     [TransactionalBoundary]
     public async Task RemoveDeactivatedMemberships(IUserStatusChecker userStatusChecker)
     {
@@ -122,5 +126,16 @@ public class DeactivatedMemberCleanerApplicationService : IDeactivatedMemberClea
         }
 
         _logger.LogDebug("Successfully removed member entries of users with deactivated accounts");
+
+        foreach (var member in membersToBeDeleted)
+        {
+            var invitations = await _invitationRepository.GetAllWithPredicate(x => x.Invitee == member.Id);
+            foreach (var invitation in invitations)
+            {
+                await _invitationRepository.Remove(invitation.Id);
+            }
+        }
+
+        _logger.LogDebug("Successfully removed invitations for users with deactivated accounts");
     }
 }

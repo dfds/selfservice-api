@@ -28,6 +28,7 @@ public static class Domain
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
         builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
         builder.Services.AddTransient<ITeamApplicationService, TeamApplicationService>();
+        builder.Services.AddTransient<IInvitationApplicationService, InvitationApplicationService>();
 
         // domain services
         builder.Services.AddTransient<IMembershipApplicationDomainService, MembershipApplicationDomainService>();
@@ -51,6 +52,7 @@ public static class Domain
         builder.Services.AddTransient<ITeamRepository, TeamRepository>();
         builder.Services.AddTransient<ITeamCapabilityLinkingRepository, TeamCapabilityLinkingRepository>();
         builder.Services.AddTransient<TopVisitorsRepository>();
+        builder.Services.AddTransient<IInvitationRepository, InvitationRepository>();
 
         // domain queries
         builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();
@@ -81,7 +83,10 @@ public static class Domain
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
-        builder.Services.AddTransient<IDeactivatedMemberCleanerApplicationService, DeactivatedMemberCleanerApplicationService>();
+        builder.Services.AddTransient<
+            IDeactivatedMemberCleanerApplicationService,
+            DeactivatedMemberCleanerApplicationService
+        >();
 
         var topdeskEndpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
         var topdeskApiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];

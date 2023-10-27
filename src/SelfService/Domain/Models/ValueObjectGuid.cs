@@ -12,6 +12,8 @@ public abstract class ValueObjectGuid<T> : ValueObject
 {
     private Guid Id { get; }
 
+    protected virtual string Formatter => "D";
+
     /// <summary>
     /// Must be called from a constructor with signature (Guid newGuid)
     /// </summary>
@@ -27,7 +29,7 @@ public abstract class ValueObjectGuid<T> : ValueObject
 
     public override string ToString()
     {
-        return Id.ToString("N");
+        return Id.ToString(Formatter);
     }
 
     /// <summary>
