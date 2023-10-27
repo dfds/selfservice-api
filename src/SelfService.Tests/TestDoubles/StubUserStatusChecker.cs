@@ -6,9 +6,14 @@ namespace SelfService.Tests.TestDoubles;
 
 public class StubUserStatusChecker : IUserStatusChecker
 {
+    // make it able to be set up with a constructor
+    // with things you set from outside
+
+
+
     public Task<bool> TrySetAuthToken()
     {
-        return Task.FromResult(false);
+        return Task.FromResult(true);
     }
 
     private Task<bool> BusyWait()
@@ -16,15 +21,14 @@ public class StubUserStatusChecker : IUserStatusChecker
         return new Task<bool>(() => true);
     }
 
-    public async Task<UserStatusCheckerStatus> CheckUserStatus(string userId)
+    public Task<UserStatusCheckerStatus> CheckUserStatus(string userId)
     {
-        await BusyWait();
         if (userId == "userdeactivated@dfds.com")
-            return UserStatusCheckerStatus.Deactivated;
+            return Task.FromResult(UserStatusCheckerStatus.Deactivated);
 
         if (userId == "useractive@dfds.com")
-            return UserStatusCheckerStatus.Found;
+            return Task.FromResult(UserStatusCheckerStatus.Found);
 
-        return UserStatusCheckerStatus.NotFound; //undefined for this test
+        return Task.FromResult(UserStatusCheckerStatus.NotFound); //undefined for this test
     }
 }

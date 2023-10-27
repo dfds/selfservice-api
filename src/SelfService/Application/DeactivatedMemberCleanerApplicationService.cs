@@ -39,7 +39,7 @@ public class DeactivatedMemberCleanerApplicationService : IDeactivatedMemberClea
 
         return _sb.ToString();
     }
-    
+
     [TransactionalBoundary]
     public async Task RemoveDeactivatedMemberships(IUserStatusChecker userStatusChecker)
     {
