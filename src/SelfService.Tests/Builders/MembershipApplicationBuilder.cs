@@ -35,12 +35,6 @@ public class MembershipApplicationBuilder
         return this;
     }
 
-    public MembershipApplicationBuilder WithApplicant(string applicant)
-    {
-        _applicant = applicant;
-        return this;
-    }
-
     public MembershipApplicationBuilder WithApproval(Action<MembershipApprovalBuilder> modifier)
     {
         var builder = new MembershipApprovalBuilder();

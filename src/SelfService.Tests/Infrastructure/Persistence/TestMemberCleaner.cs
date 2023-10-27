@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using SelfService.Tests.Comparers;
 using SelfService.Tests.TestDoubles;
-using Microsoft.Extensions.Logging; //for our own homemade things
+using Microsoft.Extensions.Logging;
+using Moq; //for our own homemade things
 using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Domain;
 using SelfService.Domain.Models;
+using SelfService.Domain.Services;
 
 namespace SelfService.Tests.Infrastructure.Persistence;
 
@@ -57,7 +59,7 @@ public class TestMemberCleaner
         await dbContext.SaveChangesAsync();
 
         // create stub/mock
-        var userStatusChecker = new StubUserStatusChecker();
+        var userStatusChecker = new StubUserStatusChecker().WithDeactivatedUser(memberDeactivated.UserId);
         await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
 
         var remaining = await dbContext.Memberships.ToListAsync();
@@ -68,50 +70,82 @@ public class TestMemberCleaner
     }
 
     [Fact]
-    [Trait("Category", "InMemoryDatabase")]
+    [Trait("Category", "Integration")]
     public async Task deactivated_member_cleaner_respects_referential_integrity()
     {
-        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
-        SystemTime systemTime = SystemTime.Default;
+        await using var databaseFactory = new ExternalDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext();
 
-        // create memberships that will be looped over:
         var deactivatedMember = A.Member.WithUserId("userdeactivated@dfds.com").Build();
+        var approverMember = A.Member.WithUserId("useractive@dfds.com").Build();
 
         var memberRepo = new MemberRepository(dbContext);
         await memberRepo.Add(deactivatedMember);
-
-        await dbContext.Members.AddAsync(deactivatedMember, cancellationTokenSource.Token);
+        await memberRepo.Add(approverMember);
         await dbContext.SaveChangesAsync();
-
-        //create membership application for the test
-        var Id = Guid.NewGuid();
-
-        var membershipApplication1 = A.MembershipApplication
-            .WithApplicant("userdeactivated@dfds.com")
-            .WithId(Id)
-            .WithApproval(builder => builder.WithApprovedBy("useractive@dfds.com").WithMembershipApplicationId(Id))
-            .Build();
 
         var membershipApplicationRepo = A.MembershipApplicationRepository.WithDbContext(dbContext).Build();
-        await membershipApplicationRepo.Add(membershipApplication1);
+        var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
+        var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
+        var membershipApplicationService = A.MembershipApplicationService
+            .WithMembershipRepository(membershipRepo)
+            .WithMembershipApplicationRepository(membershipApplicationRepo)
+            .WithCapabilityRepository(capabilityRepo)
+            .Build();
 
+        var capability = A.Capability.Build();
+        await capabilityRepo.Add(capability);
         await dbContext.SaveChangesAsync();
+
+        await membershipRepo.Add(new Membership(MembershipId.New(), capability.Id, approverMember.Id, DateTime.UtcNow));
+        await dbContext.SaveChangesAsync();
+
+        await membershipApplicationService.SubmitMembershipApplication(capability.Id, deactivatedMember.Id);
+        await dbContext.SaveChangesAsync();
+
+        var application = await membershipApplicationRepo.FindPendingBy(capability.Id, deactivatedMember.Id);
+        Assert.NotNull(application);
+        var applicationId = application.Id;
+
+        var authService = new Mock<IAuthorizationService>();
+        authService.Setup(x => x.CanApprove(approverMember.Id, application)).ReturnsAsync(true);
+
+        // We need to also check if we can approve the application
+        var membershipApplicationServiceWithAuth = A.MembershipApplicationService
+            .WithMembershipApplicationRepository(membershipApplicationRepo)
+            .WithAuthorizationService(authService.Object)
+            .Build();
+
+        await membershipApplicationServiceWithAuth.ApproveMembershipApplication(applicationId, approverMember.Id);
+        await dbContext.SaveChangesAsync();
+
+        var applicationAfterApproval = await membershipApplicationRepo.FindPendingBy(
+            capability.Id,
+            deactivatedMember.Id
+        );
+        Assert.NotNull(applicationAfterApproval);
+        Assert.NotEmpty(applicationAfterApproval.Approvals);
+
         //now the repository is in the right state
 
         var membershipCleaner = A.DeactivatedMemberCleanerApplicationService
             .WithMemberRepository(memberRepo)
-            .WithMembershipRepository(new MembershipRepository(dbContext))
+            .WithMembershipRepository(membershipRepo)
             .WithMembershipApplicationRepository(membershipApplicationRepo)
             .Build();
 
-        var userStatusChecker = new StubUserStatusChecker();
+        var userStatusChecker = new StubUserStatusChecker()
+            .WithDeactivatedUser(deactivatedMember.Id)
+            .WithActiveUser(approverMember.Id);
         await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
-
         await dbContext.SaveChangesAsync();
 
-        var remainingApplications = await dbContext.MembershipApplications.ToListAsync();
-        Assert.Empty(remainingApplications);
+        var remainingApplications = await membershipApplicationRepo.FindBy(applicationId);
+        Assert.Null(remainingApplications);
+
+        // CLEAN UP
+        await memberRepo.Remove(approverMember.Id);
+        dbContext.Capabilities.Remove(capability);
+        await dbContext.SaveChangesAsync();
     }
 }

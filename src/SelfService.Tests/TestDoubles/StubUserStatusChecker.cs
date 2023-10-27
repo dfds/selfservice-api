@@ -6,27 +6,34 @@ namespace SelfService.Tests.TestDoubles;
 
 public class StubUserStatusChecker : IUserStatusChecker
 {
-    // make it able to be set up with a constructor
-    // with things you set from outside
+    private List<UserId> _deactivatedUsers = new List<UserId>();
+    private List<UserId> _activeUsers = new List<UserId>();
 
+    public StubUserStatusChecker() { }
 
+    public StubUserStatusChecker WithDeactivatedUser(UserId userId)
+    {
+        _deactivatedUsers.Add(userId);
+        return this;
+    }
+
+    public StubUserStatusChecker WithActiveUser(UserId userId)
+    {
+        _activeUsers.Add(userId);
+        return this;
+    }
 
     public Task<bool> TrySetAuthToken()
     {
         return Task.FromResult(true);
     }
 
-    private Task<bool> BusyWait()
+    public Task<UserStatusCheckerStatus> CheckUserStatus(UserId userId)
     {
-        return new Task<bool>(() => true);
-    }
-
-    public Task<UserStatusCheckerStatus> CheckUserStatus(string userId)
-    {
-        if (userId == "userdeactivated@dfds.com")
+        if (_deactivatedUsers.Contains(userId))
             return Task.FromResult(UserStatusCheckerStatus.Deactivated);
 
-        if (userId == "useractive@dfds.com")
+        if (_activeUsers.Contains(userId))
             return Task.FromResult(UserStatusCheckerStatus.Found);
 
         return Task.FromResult(UserStatusCheckerStatus.NotFound); //undefined for this test

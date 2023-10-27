@@ -29,7 +29,7 @@ public class MemberRepository : IMemberRepository
 
         if (member is null)
         {
-            throw EntityNotFoundException<MembershipApplication>.UsingId(userId);
+            throw EntityNotFoundException<Member>.UsingId(userId);
         }
 
         _dbContext.Members.Remove(member);
