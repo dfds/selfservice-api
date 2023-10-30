@@ -9,7 +9,4 @@ public class NewECRRepositoryRequest
 
     [Required]
     public string? Description { get; set; }
-
-    [Required]
-    public string? RepositoryName { get; set; }
 }

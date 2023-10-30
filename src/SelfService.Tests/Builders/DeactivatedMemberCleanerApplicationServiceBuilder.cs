@@ -15,6 +15,7 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
     private IMemberRepository _memberRepository;
     private IMembershipApplicationRepository _membershipApplicationRepository;
     private ILogger<DeactivatedMemberCleanerApplicationService> _logger; //make correct logger
+    private IInvitationRepository _invitationRepository;
 
     public DeactivatedMemberCleanerApplicationServiceBuilder()
     {
@@ -22,6 +23,7 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         _memberRepository = Dummy.Of<IMemberRepository>();
         _membershipApplicationRepository = Dummy.Of<IMembershipApplicationRepository>();
         _logger = Dummy.Of<ILogger<DeactivatedMemberCleanerApplicationService>>();
+        _invitationRepository = Dummy.Of<IInvitationRepository>();
     }
 
     public DeactivatedMemberCleanerApplicationServiceBuilder WithMembershipRepository(
@@ -46,13 +48,22 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         return this;
     }
 
+    public DeactivatedMemberCleanerApplicationServiceBuilder WithInvitationRepository(
+        IInvitationRepository invitationRepository
+    )
+    {
+        _invitationRepository = invitationRepository;
+        return this;
+    }
+
     public DeactivatedMemberCleanerApplicationService Build()
     {
         return new DeactivatedMemberCleanerApplicationService(
             logger: _logger,
             membershipRepository: _membershipRepository,
             memberRepository: _memberRepository,
-            membershipApplicationRepository: _membershipApplicationRepository
+            membershipApplicationRepository: _membershipApplicationRepository,
+            invitationRepository: _invitationRepository
         );
     }
 

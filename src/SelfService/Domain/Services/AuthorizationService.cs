@@ -196,4 +196,9 @@ public class AuthorizationService : IAuthorizationService
     {
         return portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
     }
+
+    public async Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
+    }
 }

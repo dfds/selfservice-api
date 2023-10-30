@@ -27,4 +27,5 @@ public interface IAuthorizationService
     bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser);
     bool CanSetCapabilityJsonMetadata(PortalUser portalUser);
     bool CanBypassMembershipApprovals(PortalUser portalUser);
+    Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId);
 }
