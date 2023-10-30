@@ -31,6 +31,18 @@ spec:
               containerPort: 8080
             - name: metrics
               containerPort: 8888
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
           env:
             - name: SS_CONNECTION_STRING
               valueFrom:
