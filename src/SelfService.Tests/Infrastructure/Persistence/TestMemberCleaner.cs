@@ -132,6 +132,7 @@ public class TestMemberCleaner
             .WithMemberRepository(memberRepo)
             .WithMembershipRepository(membershipRepo)
             .WithMembershipApplicationRepository(membershipApplicationRepo)
+            .WithInvitationRepository(A.InvitationRepository.WithDbContext(dbContext).Build())
             .Build();
 
         var userStatusChecker = new StubUserStatusChecker()
