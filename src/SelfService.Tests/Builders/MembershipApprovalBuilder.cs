@@ -21,6 +21,12 @@ public class MembershipApprovalBuilder
         return this;
     }
 
+    public MembershipApprovalBuilder WithMembershipApplicationId(MembershipApplicationId id)
+    {
+        _id = id;
+        return this;
+    }
+
     public MembershipApproval Build()
     {
         return new MembershipApproval(id: _id, approvedBy: _approvedBy, approvedAt: _approvedAt);

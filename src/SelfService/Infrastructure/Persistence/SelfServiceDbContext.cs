@@ -1,6 +1,5 @@
 ﻿using Dafda.Outbox;
 using Microsoft.EntityFrameworkCore;
-using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence.Converters;
 
@@ -194,7 +193,10 @@ public class SelfServiceDbContext : DbContext
             opt.Property(x => x.SubmittedAt);
             opt.Property(x => x.ExpiresOn);
 
-            opt.HasMany(x => x.Approvals);
+            opt.HasMany(x => x.Approvals)
+                .WithOne()
+                .HasForeignKey("MembershipApplicationId")
+                .OnDelete(DeleteBehavior.Cascade);
             opt.Navigation(x => x.Approvals).AutoInclude();
 
             opt.Ignore(x => x.IsFinalized);

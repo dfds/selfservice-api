@@ -105,7 +105,7 @@ public class UserStatusChecker : IUserStatusChecker
     /// <summary>
     ///  Returns the status of a member, by querying ms-graph/AzureAD
     /// </summary>
-    public async Task<UserStatusCheckerStatus> CheckUserStatus(string userId)
+    public async Task<UserStatusCheckerStatus> CheckUserStatus(UserId userId)
     {
         if (_authToken == null)
         {
