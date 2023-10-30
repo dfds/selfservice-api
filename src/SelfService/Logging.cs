@@ -18,7 +18,7 @@ public static class Serilog
                     .FromLogContext()
                     .Enrich.WithProperty("Application", "SelfService.Api")
                     .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
-                    .MinimumLevel.Verbose()
+                    .MinimumLevel.Information()
                     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                     .MinimumLevel.Override("Microsoft.IdentityModel", LogEventLevel.Warning)
                     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
