@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.BackgroundJobs;
 

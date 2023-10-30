@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SelfService.Tests.Comparers;
 using SelfService.Tests.TestDoubles;
-using Microsoft.Extensions.Logging;
-using Moq; //for our own homemade things
-using SelfService.Infrastructure.BackgroundJobs;
+using Moq;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Domain;
 using SelfService.Domain.Models;

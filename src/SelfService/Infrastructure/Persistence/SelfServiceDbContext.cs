@@ -1,6 +1,5 @@
 ﻿using Dafda.Outbox;
 using Microsoft.EntityFrameworkCore;
-using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence.Converters;
 
