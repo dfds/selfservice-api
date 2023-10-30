@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Persistence;

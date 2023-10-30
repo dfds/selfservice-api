@@ -5,6 +5,6 @@ namespace SelfService.Infrastructure.BackgroundJobs;
 
 public interface IUserStatusChecker
 {
-    Task<UserStatusCheckerStatus> CheckUserStatus(string userId);
+    Task<UserStatusCheckerStatus> CheckUserStatus(UserId userId);
     Task<bool> TrySetAuthToken();
 }

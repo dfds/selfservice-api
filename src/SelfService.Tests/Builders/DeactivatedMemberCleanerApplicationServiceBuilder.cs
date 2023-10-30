@@ -3,7 +3,7 @@ using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
-using Microsoft.Extensions.Logging; //for our own homemade things
+using Microsoft.Extensions.Logging;
 using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Application;
 
@@ -11,7 +11,6 @@ namespace SelfService.Tests.Builders;
 
 public class DeactivatedMemberCleanerApplicationServiceBuilder
 {
-    private SystemTime _systemTime;
     private IMembershipRepository _membershipRepository;
     private IMemberRepository _memberRepository;
     private IMembershipApplicationRepository _membershipApplicationRepository;
@@ -24,7 +23,6 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         _memberRepository = Dummy.Of<IMemberRepository>();
         _membershipApplicationRepository = Dummy.Of<IMembershipApplicationRepository>();
         _logger = Dummy.Of<ILogger<DeactivatedMemberCleanerApplicationService>>();
-        _systemTime = SystemTime.Default;
         _invitationRepository = Dummy.Of<IInvitationRepository>();
     }
 
@@ -39,12 +37,6 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
     public DeactivatedMemberCleanerApplicationServiceBuilder WithMemberRepository(IMemberRepository memberRepository)
     {
         _memberRepository = memberRepository;
-        return this;
-    }
-
-    public DeactivatedMemberCleanerApplicationServiceBuilder WithSystemTime(DateTime systemTime)
-    {
-        _systemTime = new SystemTime(() => systemTime);
         return this;
     }
 
@@ -64,9 +56,9 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         return this;
     }
 
-    public SelfService.Application.DeactivatedMemberCleanerApplicationService Build()
+    public DeactivatedMemberCleanerApplicationService Build()
     {
-        return new SelfService.Application.DeactivatedMemberCleanerApplicationService(
+        return new DeactivatedMemberCleanerApplicationService(
             logger: _logger,
             membershipRepository: _membershipRepository,
             memberRepository: _memberRepository,
@@ -75,7 +67,7 @@ public class DeactivatedMemberCleanerApplicationServiceBuilder
         );
     }
 
-    public static implicit operator SelfService.Application.DeactivatedMemberCleanerApplicationService(
+    public static implicit operator DeactivatedMemberCleanerApplicationService(
         DeactivatedMemberCleanerApplicationServiceBuilder builder
     ) => builder.Build();
 }

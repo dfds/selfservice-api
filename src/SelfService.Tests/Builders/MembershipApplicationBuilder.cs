@@ -29,9 +29,9 @@ public class MembershipApplicationBuilder
         return this;
     }
 
-    public MembershipApplicationBuilder WithApplicant(string applicant)
+    public MembershipApplicationBuilder WithId(MembershipApplicationId id)
     {
-        _applicant = applicant;
+        _id = id;
         return this;
     }
 
