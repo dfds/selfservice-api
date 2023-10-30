@@ -21,7 +21,7 @@ public static class DependencyInjection
                         {
                             loggerConfig
                                 .AddConsole()
-                                .AddFilter(DbLoggerCategory.Database.Command.Name, LogLevel.Information);
+                                .AddFilter(DbLoggerCategory.Database.Command.Name, LogLevel.Warning);
                         })
                     )
                     .EnableSensitiveDataLogging();
