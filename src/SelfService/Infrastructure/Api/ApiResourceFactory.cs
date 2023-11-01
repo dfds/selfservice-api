@@ -432,11 +432,11 @@ public class ApiResourceFactory
         if (await _authorizationService.CanViewAwsAccount(CurrentUser, capability.Id))
         {
             allowedInteractions += Get;
+        }
 
-            if (await _authorizationService.CanRequestAwsAccount(CurrentUser, capability.Id))
-            {
-                allowedInteractions += Post;
-            }
+        if (await _authorizationService.CanRequestAwsAccount(CurrentUser, capability.Id))
+        {
+            allowedInteractions += Post;
         }
 
         return new ResourceLink(
