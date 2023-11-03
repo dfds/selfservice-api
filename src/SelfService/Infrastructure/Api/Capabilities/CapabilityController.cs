@@ -775,7 +775,7 @@ public class CapabilityController : ControllerBase
         return Ok(metadata);
     }
 
-    [HttpPost("{id}/metadata")]
+    [HttpPut("{id}/metadata")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
@@ -802,7 +802,7 @@ public class CapabilityController : ControllerBase
             );
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.CanSetCapabilityJsonMetadata(portalUser))
+        if (!_authorizationService.CanGetSetCapabilityJsonMetadata(portalUser))
             return Unauthorized(
                 new ProblemDetails
                 {

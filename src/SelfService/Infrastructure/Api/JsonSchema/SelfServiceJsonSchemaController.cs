@@ -88,7 +88,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 }
             );
         }
-        
+
         if (!request.Schema.TryGetPropertyValue("$id", out _))
         {
             return BadRequest(
@@ -99,7 +99,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 }
             );
         }
-        
+
         try
         {
             _selfServiceJsonSchemaService.MustValidateJsonSchemaAgainstMetaSchema(request.Schema.ToJsonString());

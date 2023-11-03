@@ -26,8 +26,8 @@ public class CapabilityDetailsApiResource
         public ResourceLink AwsAccount { get; set; }
         public ResourceLink RequestCapabilityDeletion { get; set; }
         public ResourceLink CancelCapabilityDeletionRequest { get; set; }
-        public ResourceLink SetCapabilityMetadata { get; set; }
-        public ResourceLink GetCapabilityMetadata { get; set; }
+
+        public ResourceLink Metadata { get; set; }
         public ResourceLink GetLinkedTeams { get; set; }
         public ResourceLink JoinCapability { get; set; }
         public ResourceLink SendInvitations { get; set; }
@@ -41,8 +41,7 @@ public class CapabilityDetailsApiResource
             ResourceLink awsAccount,
             ResourceLink requestCapabilityDeletion,
             ResourceLink cancelCapabilityDeletionRequest,
-            ResourceLink setCapabilityMetadata,
-            ResourceLink getCapabilityMetadata,
+            ResourceLink metadata,
             ResourceLink getLinkedTeams,
             ResourceLink joinCapability,
             ResourceLink sendInvitations
@@ -56,8 +55,7 @@ public class CapabilityDetailsApiResource
             AwsAccount = awsAccount;
             RequestCapabilityDeletion = requestCapabilityDeletion;
             CancelCapabilityDeletionRequest = cancelCapabilityDeletionRequest;
-            SetCapabilityMetadata = setCapabilityMetadata;
-            GetCapabilityMetadata = getCapabilityMetadata;
+            Metadata = metadata;
             GetLinkedTeams = getLinkedTeams;
             JoinCapability = joinCapability;
             SendInvitations = sendInvitations;

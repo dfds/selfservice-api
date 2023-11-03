@@ -44,7 +44,9 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
             throw new InvalidJsonSchemaException(result);
 
         // Check if json can be parsed
-        JsonSchema.FromText(schema);
+        var parsedJsonSchema = JsonSchema.FromText(schema);
+        // Check if $schema is valid by validating a dummy json string, throws exception if unable to
+        parsedJsonSchema.Evaluate(JsonNode.Parse("{}"));
     }
 
     [TransactionalBoundary]
@@ -77,8 +79,10 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         if (!IsEmptyJsonData(requestJsonMetadata))
         {
             if (latestSchema == null)
-                return ValidateJsonMetadataResult.CreateError(
-                    "Json metadata from request is not empty, but no schema exists"
+                return ValidateJsonMetadataResult.CreateSuccess(
+                    requestJsonMetadata!,
+                    EmptyJsonSchemaVersion,
+                    ValidateJsonMetadataResultCode.SuccessNoSchema
                 );
             var notNullRequestJsonData = requestJsonMetadata!;
 
