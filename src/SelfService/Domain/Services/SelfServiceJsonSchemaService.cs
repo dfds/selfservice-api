@@ -44,9 +44,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
             throw new InvalidJsonSchemaException(result);
 
         // Check if json can be parsed
-        var parsedJsonSchema = JsonSchema.FromText(schema);
-        // Check if $schema is valid by validating a dummy json string, throws exception if unable to
-        parsedJsonSchema.Evaluate(JsonNode.Parse("{}"));
+        JsonSchema.FromText(schema);
     }
 
     [TransactionalBoundary]
