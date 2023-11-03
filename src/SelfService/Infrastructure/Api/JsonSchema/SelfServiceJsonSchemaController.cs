@@ -88,7 +88,18 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 }
             );
         }
-
+        
+        if (!request.Schema.TryGetPropertyValue("$id", out _))
+        {
+            return BadRequest(
+                new ProblemDetails()
+                {
+                    Title = "Invalid Schema",
+                    Detail = "Schema in request does not contain a $id property"
+                }
+            );
+        }
+        
         try
         {
             _selfServiceJsonSchemaService.MustValidateJsonSchemaAgainstMetaSchema(request.Schema.ToJsonString());
