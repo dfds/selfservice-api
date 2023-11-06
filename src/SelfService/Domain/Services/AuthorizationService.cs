@@ -151,7 +151,8 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId)
     {
-        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId)
+            && await _awsAccountRepository.Exists(capabilityId);
     }
 
     public async Task<bool> CanRequestAwsAccount(UserId userId, CapabilityId capabilityId)
