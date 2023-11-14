@@ -1,5 +1,7 @@
+using Json.Schema;
 using Moq;
 using SelfService.Domain.Models;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Tests.Domain.Services;
 
@@ -25,8 +27,8 @@ public class TestJsonSchemaService
             SelfServiceJsonSchemaObjectId.Capability,
             """{"foo": "bar"}"""
         );
-        Assert.False(resultWhenNotEmptyJsonMetadata.IsValid());
-        Assert.Equal(ValidateJsonMetadataResultCode.Error, resultWhenNotEmptyJsonMetadata.ResultCode);
+        Assert.True(resultWhenNotEmptyJsonMetadata.IsValid());
+        Assert.Equal(ValidateJsonMetadataResultCode.SuccessNoSchema, resultWhenNotEmptyJsonMetadata.ResultCode);
     }
 
     [Fact]
@@ -111,10 +113,10 @@ public class TestJsonSchemaService
         var resultWhenPartiallyCorrectJsonMetadata = await sut.ValidateJsonMetadata(
             SelfServiceJsonSchemaObjectId.Capability,
             """
-                {
-                  "firstName": "John"
-                }
-                """
+            {
+              "firstName": "John"
+            }
+            """
         );
         Assert.False(resultWhenPartiallyCorrectJsonMetadata.IsValid());
         Assert.Equal(ValidateJsonMetadataResultCode.Error, resultWhenPartiallyCorrectJsonMetadata.ResultCode);
@@ -122,11 +124,11 @@ public class TestJsonSchemaService
         var resultWhenCorrectJsonMetadata = await sut.ValidateJsonMetadata(
             SelfServiceJsonSchemaObjectId.Capability,
             """
-                {
-                  "firstName": "John",
-                  "hasLastName": true
-                }
-                """
+            {
+              "firstName": "John",
+              "hasLastName": true
+            }
+            """
         );
         Assert.True(resultWhenCorrectJsonMetadata.IsValid());
         Assert.Equal(ValidateJsonMetadataResultCode.SuccessValidJsonMetadata, resultWhenCorrectJsonMetadata.ResultCode);

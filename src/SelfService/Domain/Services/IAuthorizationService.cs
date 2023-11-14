@@ -25,7 +25,7 @@ public interface IAuthorizationService
     Task<bool> CanDeleteCapability(UserId userId, CapabilityId capabilityId);
     bool CanViewDeletedCapabilities(PortalUser portalUser);
     bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser);
-    bool CanSetCapabilityJsonMetadata(PortalUser portalUser);
+    bool CanGetSetCapabilityJsonMetadata(PortalUser portalUser);
     bool CanBypassMembershipApprovals(PortalUser portalUser);
     Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId);
 }

@@ -274,22 +274,16 @@ public class ApiResourceFactory
         );
     }
 
-    private ResourceLink CreateSetMetadataLinkFor(Capability capability)
+    private ResourceLink CreateMetadataLinkFor(Capability capability)
     {
-        return new ResourceLink(
-            href: _linkGenerator.GetUriByAction(
-                httpContext: HttpContext,
-                action: nameof(CapabilityController.SetCapabilityMetadata),
-                controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }
-            ) ?? "",
-            rel: "self",
-            allow: Allow.Post
-        );
-    }
+        var allowedInteractions = Allow.None;
 
-    private ResourceLink CreateGetMetadataLinkFor(Capability capability)
-    {
+        if (_authorizationService.CanGetSetCapabilityJsonMetadata(PortalUser))
+        {
+            allowedInteractions += Get;
+            allowedInteractions += Post;
+        }
+
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
@@ -298,7 +292,7 @@ public class ApiResourceFactory
                 values: new { id = capability.Id }
             ) ?? "",
             rel: "self",
-            allow: Allow.Get
+            allow: allowedInteractions
         );
     }
 
@@ -469,8 +463,7 @@ public class ApiResourceFactory
                 awsAccount: await CreateAwsAccountLinkFor(capability),
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
-                setCapabilityMetadata: CreateSetMetadataLinkFor(capability),
-                getCapabilityMetadata: CreateGetMetadataLinkFor(capability),
+                metadata: CreateMetadataLinkFor(capability),
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability)
