@@ -223,10 +223,9 @@ public class ApiResourceFactory
         var allowedInteractions = Allow.Get;
 
         if (await _authorizationService.CanApply(CurrentUser, capability.Id))
-            if (await _authorizationService.CanApply(CurrentUser, capability.Id))
-            {
-                allowedInteractions += Post;
-            }
+        {
+            allowedInteractions += Post;
+        }
 
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
@@ -282,7 +281,7 @@ public class ApiResourceFactory
         if (_authorizationService.CanGetSetCapabilityJsonMetadata(PortalUser))
         {
             allowedInteractions += Get;
-            allowedInteractions += Put;
+            allowedInteractions += Post;
         }
 
         return new ResourceLink(

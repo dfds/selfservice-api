@@ -775,7 +775,7 @@ public class CapabilityController : ControllerBase
         return Ok(metadata);
     }
 
-    [HttpPut("{id}/metadata")]
+    [HttpPost("{id}/metadata")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
