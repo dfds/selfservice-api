@@ -51,8 +51,6 @@ try
 
     app.UseHttpMetrics();
 
-    app.UseSerilogRequestLogging();
-
     app.Run();
 }
 catch (Exception ex)

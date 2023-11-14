@@ -77,8 +77,10 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         if (!IsEmptyJsonData(requestJsonMetadata))
         {
             if (latestSchema == null)
-                return ValidateJsonMetadataResult.CreateError(
-                    "Json metadata from request is not empty, but no schema exists"
+                return ValidateJsonMetadataResult.CreateSuccess(
+                    requestJsonMetadata!,
+                    EmptyJsonSchemaVersion,
+                    ValidateJsonMetadataResultCode.SuccessNoSchema
                 );
             var notNullRequestJsonData = requestJsonMetadata!;
 

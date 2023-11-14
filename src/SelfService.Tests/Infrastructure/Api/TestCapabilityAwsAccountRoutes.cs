@@ -54,7 +54,33 @@ public class TestCapabilityAwsAccountRoutes
     }
 
     [Fact]
-    public async Task get_capability_by_id_returns_expected_allow_on_aws_account_link_when_is_member()
+    public async Task get_capability_by_id_returns_expected_allow_on_aws_account_link_when_is_member_and_capability_exists()
+    {
+        var stubCapability = A.Capability.Build();
+        var stubAwsAccount = A.AwsAccount.Build();
+
+        await using var application = new ApiApplication();
+        application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository(stubAwsAccount));
+        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
+        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
+
+        using var client = application.CreateClient();
+        var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
+
+        var content = await response.Content.ReadAsStringAsync();
+        var document = JsonSerializer.Deserialize<JsonDocument>(content);
+
+        var allowValues = document
+            ?.SelectElement("/_links/awsAccount/allow")
+            ?.EnumerateArray()
+            .Select(x => x.GetString() ?? "")
+            .ToArray();
+
+        Assert.Equal(new[] { "GET" }, allowValues);
+    }
+
+    [Fact]
+    public async Task get_capability_by_id_returns_expected_allow_on_aws_account_link_when_is_member_and_capability_not_exists()
     {
         var stubCapability = A.Capability.Build();
 
@@ -75,7 +101,7 @@ public class TestCapabilityAwsAccountRoutes
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
-        Assert.Equal(new[] { "GET", "POST" }, allowValues);
+        Assert.Equal(new[] { "POST" }, allowValues);
     }
 
     [Fact]

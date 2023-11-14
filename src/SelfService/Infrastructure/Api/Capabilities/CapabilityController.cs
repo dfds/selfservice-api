@@ -802,7 +802,7 @@ public class CapabilityController : ControllerBase
             );
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.CanSetCapabilityJsonMetadata(portalUser))
+        if (!_authorizationService.CanGetSetCapabilityJsonMetadata(portalUser))
             return Unauthorized(
                 new ProblemDetails
                 {
