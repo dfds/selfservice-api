@@ -185,7 +185,10 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         foreach (var myCapability in myCapabilities)
         {
             if (mappedCosts.TryGetValue(myCapability.Id, out var myCosts))
+            {
+                myCosts.ToList().Sort((x, y) => x.TimeStamp.CompareTo(x.TimeStamp));
                 costs.Add(new CapabilityCosts(myCapability.Id, myCosts.ToArray()));
+            }
         }
 
         return new MyCapabilityCosts(costs);
