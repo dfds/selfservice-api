@@ -140,13 +140,13 @@ public class InvitationApplicationService : IInvitationApplicationService
         Capability capability
     )
     {
-        var description = $"\"{inviter}\" has invited you to join capability \"{capability.Description}\"";
+        var description = $"\"{inviter}\" has invited you to join capability \"{capability.Name}\"";
         var invitations = new List<Invitation>();
         foreach (var invitee in invitees)
         {
             if (!UserId.TryParse(invitee, out var inviteeId))
             {
-                _logger.LogWarning($"Unable to parse invitee \"{invitee}\" as a valid user id", invitee);
+                _logger.LogWarning("Unable to parse invitee \"{Invitee}\" as a valid user id", invitee);
                 continue;
             }
             var invitation = await CreateInvitation(
