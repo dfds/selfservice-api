@@ -44,10 +44,8 @@ public class MembershipApplicationService : IMembershipApplicationService
     private async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId)
     {
         // Note: requires [TransactionalBoundary], which should be wrapped elsewhere
-        var invitation = await _invitationRepository.FindByPredicate(
-            x => x.Invitee == userId && x.TargetId == capabilityId
-        );
-        if (invitation != null)
+        var existingInvitations = await _invitationRepository.GetActiveInvitations(userId, capabilityId);
+        foreach (var invitation in existingInvitations)
         {
             invitation.Cancel();
         }

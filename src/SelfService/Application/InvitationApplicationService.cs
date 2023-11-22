@@ -109,11 +109,10 @@ public class InvitationApplicationService : IInvitationApplicationService
             }
 
             // cancel all similar invitations
-            var similarInvitations = await _invitationRepository.GetAllWithPredicate(
-                x =>
-                    x.Invitee == invitation.Invitee
-                    && x.TargetId == invitation.TargetId
-                    && x.Status == InvitationStatusOptions.Active
+            var similarInvitations = await _invitationRepository.GetOtherActiveInvitationsForSameTarget(
+                invitation.Invitee,
+                invitation.TargetId,
+                invitation.Id
             );
             foreach (var i in similarInvitations)
             {
@@ -178,9 +177,7 @@ public class InvitationApplicationService : IInvitationApplicationService
                 );
                 continue;
             }
-            var existingInvitations = await _invitationRepository.GetAllWithPredicate(
-                x => x.Invitee == invitee && x.TargetId == capability.Id && x.Status == InvitationStatusOptions.Active
-            );
+            var existingInvitations = await _invitationRepository.GetActiveInvitations(inviteeId, capability.Id);
             if (existingInvitations.Any())
             {
                 _logger.LogWarning(
