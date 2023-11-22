@@ -9,30 +9,6 @@ namespace SelfService.Tests.Infrastructure.Api;
 
 public class TestPrometheusClientResultParsing
 {
-    private HttpClient getMockedHttpClient(string mockResponse)
-    {
-        var mockHttpHandler = new Mock<HttpMessageHandler>();
-        var response = new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK,
-            Content = new StringContent(mockResponse)
-        };
-
-        mockHttpHandler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(response);
-
-        var httpClient = new HttpClient(mockHttpHandler.Object);
-        httpClient.BaseAddress = new Uri("http://localhost:9090");
-
-        return httpClient;
-    }
-
     [Fact]
     public async Task parsing_failure_produces_empty_list()
     {
@@ -43,7 +19,7 @@ public class TestPrometheusClientResultParsing
         }";
 
         var loggerMock = new Mock<ILogger<PrometheusClient>>();
-        var httpClient = getMockedHttpClient(mockResponse);
+        var httpClient = HttpHelper.CreateMockHttpClient(mockResponse);
 
         IKafkaTopicConsumerService service = new PrometheusClient(loggerMock.Object, httpClient);
 
@@ -120,7 +96,7 @@ public class TestPrometheusClientResultParsing
         foreach (string mockResponse in mockResponses)
         {
             var loggerMock = new Mock<ILogger<PrometheusClient>>();
-            var httpClient = getMockedHttpClient(mockResponse);
+            var httpClient = HttpHelper.CreateMockHttpClient(mockResponse);
 
             IKafkaTopicConsumerService service = new PrometheusClient(loggerMock.Object, httpClient);
 
@@ -184,7 +160,7 @@ public class TestPrometheusClientResultParsing
         }";
 
         var loggerMock = new Mock<ILogger<PrometheusClient>>();
-        var httpClient = getMockedHttpClient(mockResponse);
+        var httpClient = HttpHelper.CreateMockHttpClient(mockResponse);
 
         IKafkaTopicConsumerService service = new PrometheusClient(loggerMock.Object, httpClient);
 
