@@ -709,7 +709,7 @@ public class ApiResourceFactory
         {
             var isMemberOfCapability = await _membershipQuery.HasActiveMembership(CurrentUser, capabilityId);
             var capabilityHasKafkaClusterAccess = await _authorizationService.HasAccess(capabilityId, cluster.Id);
-
+            //var capabilityMarkedForDeletion = await //CapavilityDeletionStatusQuery (add in constructor)
             var accessAllow = Allow.None;
             var requestAccessAllow = Allow.None;
             var createTopicAllow = Allow.None;
