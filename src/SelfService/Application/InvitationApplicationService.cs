@@ -91,15 +91,34 @@ public class InvitationApplicationService : IInvitationApplicationService
                 throw new EntityNotFoundException("Capability does not exist");
             }
 
-            invitation.Accept();
+            if (await _membershipRepository.IsAlreadyMember(capabilityId, invitation.Invitee))
+            {
+                invitation.Cancel();
+            }
+            else
+            {
+                invitation.Accept();
 
-            var membership = new Membership(
-                id: MembershipId.New(),
-                capabilityId: capabilityId,
-                userId: invitation.Invitee,
-                createdAt: DateTime.UtcNow
+                var membership = new Membership(
+                    id: MembershipId.New(),
+                    capabilityId: capabilityId,
+                    userId: invitation.Invitee,
+                    createdAt: DateTime.UtcNow
+                );
+                await _membershipRepository.Add(membership);
+            }
+
+            // cancel all similar invitations
+            var similarInvitations = await _invitationRepository.GetAllWithPredicate(
+                x =>
+                    x.Invitee == invitation.Invitee
+                    && x.TargetId == invitation.TargetId
+                    && x.Status == InvitationStatusOptions.Active
             );
-            await _membershipRepository.Add(membership);
+            foreach (var i in similarInvitations)
+            {
+                i.Cancel();
+            }
 
             return invitation;
         }
@@ -149,6 +168,29 @@ public class InvitationApplicationService : IInvitationApplicationService
                 _logger.LogWarning("Unable to parse invitee \"{Invitee}\" as a valid user id", invitee);
                 continue;
             }
+
+            if (await _membershipRepository.IsAlreadyMember(capability.Id, inviteeId))
+            {
+                _logger.LogWarning(
+                    "User \"{Invitee}\" is already member of \"{Capability}\"",
+                    inviteeId,
+                    capability.Id
+                );
+                continue;
+            }
+            var existingInvitations = await _invitationRepository.GetAllWithPredicate(
+                x => x.Invitee == invitee && x.TargetId == capability.Id && x.Status == InvitationStatusOptions.Active
+            );
+            if (existingInvitations.Any())
+            {
+                _logger.LogWarning(
+                    "User \"{Invitee}\" is already invited to \"{Capability}\"",
+                    inviteeId,
+                    capability.Id
+                );
+                continue;
+            }
+
             var invitation = await CreateInvitation(
                 invitee: inviteeId,
                 description: description,
