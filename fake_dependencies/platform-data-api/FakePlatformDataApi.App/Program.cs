@@ -115,7 +115,7 @@ string CreateTimeSeriesFinoutJson()
         highCostsSequence += easing((float)random.NextDouble()) * randMinMax(-highFluctuation, highFluctuation);
     }
 
-    return JsonSerializer.Serialize(timeSeries.ToArray());
+    return JsonSerializer.Serialize(timeSeries.OrderBy(x => Guid.NewGuid()).ToArray());
 }
 
 #endregion
