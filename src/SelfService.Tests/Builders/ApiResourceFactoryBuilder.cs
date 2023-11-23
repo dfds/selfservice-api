@@ -13,12 +13,14 @@ public class ApiResourceFactoryBuilder
 {
     private SelfService.Domain.Services.IAuthorizationService _authorizationService;
     private IMembershipQuery _membershipQuery;
-
+    private ICapabilityDeletionStatusQuery _capabilityDeletionStatusQuery;
+    
     public ApiResourceFactoryBuilder()
     {
         Mock.Of<IAuthorizationService>();
         _authorizationService = Dummy.Of<SelfService.Domain.Services.IAuthorizationService>();
         _membershipQuery = Dummy.Of<IMembershipQuery>();
+        _capabilityDeletionStatusQuery = Dummy.Of<ICapabilityDeletionStatusQuery>();
     }
 
     public ApiResourceFactoryBuilder WithAuthorizationService(IAuthorizationService authorizationService)
@@ -50,7 +52,8 @@ public class ApiResourceFactoryBuilder
             httpContextAccessor: httpContextAccessorMock.Object,
             linkGenerator: Mock.Of<LinkGenerator>(),
             authorizationService: _authorizationService,
-            membershipQuery: _membershipQuery
+            membershipQuery: _membershipQuery,
+            capabilityDeletionStatusQuery: _capabilityDeletionStatusQuery
         );
     }
 

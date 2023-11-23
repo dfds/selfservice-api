@@ -5,14 +5,13 @@ namespace SelfService.Infrastructure.Persistence.Queries;
 
 public class CapabilityDeletionStatusQuery : ICapabilityDeletionStatusQuery
 {
-    
     private readonly SelfServiceDbContext _dbContext;
 
     public CapabilityDeletionStatusQuery(SelfServiceDbContext dbContext)
     {
         _dbContext = dbContext;
     }
-    
+
     public async Task<bool> isPendingDeletion(CapabilityId capabilityId)
     {
         var capability = await _dbContext.Capabilities.FindAsync(capabilityId);
