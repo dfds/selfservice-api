@@ -160,7 +160,8 @@ public class InvitationApplicationService : IInvitationApplicationService
     {
         var description = $"\"{inviter}\" has invited you to join capability \"{capability.Name}\"";
         var invitations = new List<Invitation>();
-        foreach (var invitee in invitees)
+        var dedupedInvitees = invitees.Distinct().ToList();
+        foreach (var invitee in dedupedInvitees)
         {
             if (!UserId.TryParse(invitee, out var inviteeId))
             {
@@ -191,7 +192,7 @@ public class InvitationApplicationService : IInvitationApplicationService
             var invitation = await CreateInvitation(
                 invitee: inviteeId,
                 description: description,
-                targetId: capability.Id.ToString(),
+                targetId: capability.Id,
                 targetType: InvitationTargetTypeOptions.Capability,
                 createdBy: inviter
             );
