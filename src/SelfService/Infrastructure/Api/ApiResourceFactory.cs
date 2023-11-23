@@ -19,18 +19,21 @@ public class ApiResourceFactory
     private readonly LinkGenerator _linkGenerator;
     private readonly IAuthorizationService _authorizationService;
     private readonly IMembershipQuery _membershipQuery;
+    private readonly ICapabilityDeletionStatusQuery _capabilityDeletionStatusQuery;
 
     public ApiResourceFactory(
         IHttpContextAccessor httpContextAccessor,
         LinkGenerator linkGenerator,
         IAuthorizationService authorizationService,
-        IMembershipQuery membershipQuery
+        IMembershipQuery membershipQuery,
+        ICapabilityDeletionStatusQuery capabilityDeletionStatusQuery
     )
     {
         _httpContextAccessor = httpContextAccessor;
         _linkGenerator = linkGenerator;
         _authorizationService = authorizationService;
         _membershipQuery = membershipQuery;
+        _capabilityDeletionStatusQuery = capabilityDeletionStatusQuery;
     }
 
     private HttpContext HttpContext =>
@@ -709,12 +712,12 @@ public class ApiResourceFactory
         {
             var isMemberOfCapability = await _membershipQuery.HasActiveMembership(CurrentUser, capabilityId);
             var capabilityHasKafkaClusterAccess = await _authorizationService.HasAccess(capabilityId, cluster.Id);
-            //var capabilityMarkedForDeletion = await //CapavilityDeletionStatusQuery (add in constructor)
+            var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.isPendingDeletion(capabilityId); //(add in constructor)
             var accessAllow = Allow.None;
             var requestAccessAllow = Allow.None;
             var createTopicAllow = Allow.None;
 
-            if (isMemberOfCapability)
+            if (isMemberOfCapability && !capabilityMarkedForDeletion)
             {
                 if (capabilityHasKafkaClusterAccess)
                 {
