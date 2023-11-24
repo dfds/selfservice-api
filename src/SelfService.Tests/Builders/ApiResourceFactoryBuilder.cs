@@ -14,7 +14,7 @@ public class ApiResourceFactoryBuilder
     private SelfService.Domain.Services.IAuthorizationService _authorizationService;
     private IMembershipQuery _membershipQuery;
     private ICapabilityDeletionStatusQuery _capabilityDeletionStatusQuery;
-    
+
     public ApiResourceFactoryBuilder()
     {
         Mock.Of<IAuthorizationService>();
