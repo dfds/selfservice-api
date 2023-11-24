@@ -58,4 +58,30 @@ public class TestCapabilityMembershipsRoutes
 
         Assert.Equal(new[] { "GET" }, allowValues);
     }
+    [Fact]
+    public async Task resource_links_dont_contain_allow_if_capability_is_pendingdeletion()
+    {
+        var stubCapability = A.Capability.Build();
+
+        await using var application = new ApiApplication();
+        application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
+        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
+        application.ReplaceService<IMembershipQuery>(
+            new StubMembershipQuery(hasActiveMembership: true, hasMultipleMembers: true)
+        );
+
+        using var client = application.CreateClient();
+        var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
+
+        var content = await response.Content.ReadAsStringAsync();
+        var document = JsonSerializer.Deserialize<JsonDocument>(content);
+
+        var allowValues = document
+            ?.SelectElement("/_links/leaveCapability/allow")
+            ?.EnumerateArray()
+            .Select(x => x.GetString() ?? "")
+            .ToArray();
+
+        Assert.Equal(new[] { "GET", "POST" }, allowValues);
+    }
 }
