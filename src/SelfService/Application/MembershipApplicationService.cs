@@ -281,7 +281,7 @@ public class MembershipApplicationService : IMembershipApplicationService
     [TransactionalBoundary, Outboxed]
     public async Task JoinCapability(CapabilityId capabilityId, UserId userId)
     {
-        _logger.LogInformation("User {userId} was directly added as a member of capability {capabilityId}", userId);
+        _logger.LogInformation("User {userId} was directly added as a member of capability {capabilityId}", userId, capabilityId);
         await CreateAndAddMembership(capabilityId, userId);
     }
 }
