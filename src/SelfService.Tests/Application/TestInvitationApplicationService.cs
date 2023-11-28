@@ -39,6 +39,77 @@ public class TestInvitationApplicationService
     }
 
     [Fact]
+    public async Task silently_ignore_identical_simultaneous_invitations()
+    {
+        var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+
+        var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
+
+        var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
+        var invitationService = A.InvitationApplicationService
+            .WithDbContextAndDefaultRepositories(dbContext)
+            .WithInvitationRepository(invitationRepo)
+            .Build();
+
+        var testCapability = A.Capability.Build();
+        await capabilityRepo.Add(testCapability);
+        await dbContext.SaveChangesAsync();
+
+        List<string> dummyInvitees = new() { dummyInvitee1, dummyInvitee2, dummyInvitee1 };
+
+        await invitationService.CreateCapabilityInvitations(dummyInvitees, dummyInviterId, testCapability);
+        await dbContext.SaveChangesAsync();
+
+        var invitations = await invitationRepo.GetAllWithPredicate(
+            x => x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
+        );
+        Assert.Equal(2, invitations.Count);
+    }
+
+    [Fact]
+    public async Task ignore_adding_identical_invitation()
+    {
+        var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+
+        var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
+
+        var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
+        var invitationService = A.InvitationApplicationService
+            .WithDbContextAndDefaultRepositories(dbContext)
+            .WithInvitationRepository(invitationRepo)
+            .Build();
+
+        var testCapability = A.Capability.Build();
+        await capabilityRepo.Add(testCapability);
+        await dbContext.SaveChangesAsync();
+
+        List<string> dummyInvitees;
+        List<Invitation> invitations;
+
+        dummyInvitees = new() { dummyInvitee1, dummyInvitee2 };
+
+        await invitationService.CreateCapabilityInvitations(dummyInvitees, dummyInviterId, testCapability);
+        await dbContext.SaveChangesAsync();
+
+        invitations = await invitationRepo.GetAllWithPredicate(
+            x => x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
+        );
+        Assert.Equal(2, invitations.Count);
+
+        dummyInvitees = new() { dummyInvitee1, dummyInvitee2 };
+
+        await invitationService.CreateCapabilityInvitations(dummyInvitees, dummyInviterId, testCapability);
+        await dbContext.SaveChangesAsync();
+
+        invitations = await invitationRepo.GetAllWithPredicate(
+            x => x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
+        );
+        Assert.Equal(2, invitations.Count);
+    }
+
+    [Fact]
     public async Task get_active_invitations_for_user_and_type()
     {
         var databaseFactory = new InMemoryDatabaseFactory();
@@ -176,6 +247,54 @@ public class TestInvitationApplicationService
             x => x.Status == InvitationStatusOptions.Declined && x.Invitee == dummyInvitee1Id
         );
         Assert.Single(acceptedInvitations);
+
+        capabilityInvitations = await invitationService.GetActiveInvitationsForType(
+            dummyInvitee1Id,
+            InvitationTargetTypeOptions.Capability
+        );
+        Assert.Empty(capabilityInvitations);
+    }
+
+    [Fact]
+    public async Task clear_active_invitations_on_join()
+    {
+        var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+
+        var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
+
+        var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
+        var invitationService = A.InvitationApplicationService
+            .WithDbContextAndDefaultRepositories(dbContext)
+            .WithInvitationRepository(invitationRepo)
+            .Build();
+
+        var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
+        var membershipService = A.MembershipApplicationService
+            .WithMembershipRepository(membershipRepo)
+            .WithInvitationRepository(invitationRepo)
+            .Build();
+
+        var testCapability = A.Capability.Build();
+        await capabilityRepo.Add(testCapability);
+        await dbContext.SaveChangesAsync();
+
+        List<string> dummyInvitees = new() { dummyInvitee1 };
+
+        await invitationService.CreateCapabilityInvitations(dummyInvitees, dummyInviterId, testCapability);
+        await dbContext.SaveChangesAsync();
+
+        List<Invitation> capabilityInvitations;
+
+        capabilityInvitations = await invitationService.GetActiveInvitationsForType(
+            dummyInvitee1Id,
+            InvitationTargetTypeOptions.Capability
+        );
+        Assert.Single(capabilityInvitations);
+
+        //join capability
+        await membershipService.JoinCapability(testCapability.Id, dummyInvitee1);
+        await dbContext.SaveChangesAsync();
 
         capabilityInvitations = await invitationService.GetActiveInvitationsForType(
             dummyInvitee1Id,
