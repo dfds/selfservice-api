@@ -78,33 +78,11 @@ public class SelfServiceJsonSchemaController : ControllerBase
         if (request?.Schema == null)
             return BadRequest(new ProblemDetails { Title = "Invalid Schema", Detail = "Schema in request is null" });
 
-        if (!request.Schema.TryGetPropertyValue("$schema", out _))
-        {
-            return BadRequest(
-                new ProblemDetails()
-                {
-                    Title = "Invalid Schema",
-                    Detail = "Schema in request does not contain a $schema property"
-                }
-            );
-        }
-
-        if (!request.Schema.TryGetPropertyValue("$id", out _))
-        {
-            return BadRequest(
-                new ProblemDetails()
-                {
-                    Title = "Invalid Schema",
-                    Detail = "Schema in request does not contain a $id property"
-                }
-            );
-        }
-
         try
         {
-            _selfServiceJsonSchemaService.MustValidateJsonSchemaAgainstMetaSchema(request.Schema.ToJsonString());
+            _selfServiceJsonSchemaService.MustValidateJsonSchema(request.Schema.ToJsonString());
         }
-        catch (InvalidJsonSchemaException e) // sanity check
+        catch (InvalidJsonSchemaException e)
         {
             return BadRequest(
                 new ProblemDetails
@@ -113,6 +91,10 @@ public class SelfServiceJsonSchemaController : ControllerBase
                     Detail = $"Schema in request is not a valid json schema: {e.Message}"
                 }
             );
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new ProblemDetails { Title = "Invalid Schema", Detail = $"Details: {e.Message}." });
         }
 
         try

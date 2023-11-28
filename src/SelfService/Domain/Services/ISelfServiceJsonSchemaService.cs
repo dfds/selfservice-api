@@ -9,7 +9,7 @@ public interface ISelfServiceJsonSchemaService
 
     public Task<SelfServiceJsonSchema?> GetSchema(SelfServiceJsonSchemaObjectId objectId, int schemaVersion);
 
-    public void MustValidateJsonSchemaAgainstMetaSchema(string schema);
+    public void MustValidateJsonSchema(string schema);
 
     public Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema);
 

@@ -7,6 +7,7 @@ namespace SelfService.Domain.Services;
 
 public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 {
+    private const string OnlySupportedJsonSchemaVersion = "https://json-schema.org/draft/2020-12/schema";
     private const string EmptyJsonData = "{}";
     private const int EmptyJsonSchemaVersion = 0;
 
@@ -32,10 +33,27 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         return _selfServiceJsonSchemaRepository.GetSchema(objectId, schemaVersion);
     }
 
-    public void MustValidateJsonSchemaAgainstMetaSchema(string schema)
+    public void MustValidateJsonSchema(string schema)
     {
+        var actualObj = JsonNode.Parse(schema)?.AsObject()!;
         // Check if json is valid
-        JsonNode? actualObj = JsonNode.Parse(schema);
+        if (!actualObj.TryGetPropertyValue("$schema", out var definedSchema))
+        {
+            throw new InvalidJsonSchemaException("Schema in request does not contain a $schema property");
+        }
+
+        if (definedSchema?.ToString() != OnlySupportedJsonSchemaVersion)
+        {
+            throw new InvalidJsonSchemaException(
+                $"Schema in request is not supported, only {OnlySupportedJsonSchemaVersion} is supported"
+            );
+        }
+
+        if (!actualObj.TryGetPropertyValue("$id", out _))
+        {
+            throw new InvalidJsonSchemaException("Schema in request does not contain a $id property");
+        }
+
         var result = MetaSchemas.Content202012.Evaluate(
             actualObj,
             new EvaluationOptions { ValidateAgainstMetaSchema = true, OutputFormat = OutputFormat.Hierarchical }
@@ -50,7 +68,7 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
     [TransactionalBoundary]
     public async Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema)
     {
-        MustValidateJsonSchemaAgainstMetaSchema(schema);
+        MustValidateJsonSchema(schema);
 
         var latest = await _selfServiceJsonSchemaRepository.GetLatestSchema(objectId);
         var latestVersionNumber = latest?.SchemaVersion ?? EmptyJsonSchemaVersion;
