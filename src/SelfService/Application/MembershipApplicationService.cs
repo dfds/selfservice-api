@@ -16,6 +16,7 @@ public class MembershipApplicationService : IMembershipApplicationService
     private readonly SystemTime _systemTime;
     private readonly IMembershipQuery _membershipQuery;
     private readonly IMembershipApplicationDomainService _membershipApplicationDomainService;
+    private readonly IInvitationRepository _invitationRepository;
 
     public MembershipApplicationService(
         ILogger<MembershipApplicationService> logger,
@@ -25,7 +26,8 @@ public class MembershipApplicationService : IMembershipApplicationService
         IAuthorizationService authorizationService,
         SystemTime systemTime,
         IMembershipQuery membershipQuery,
-        IMembershipApplicationDomainService membershipApplicationDomainService
+        IMembershipApplicationDomainService membershipApplicationDomainService,
+        IInvitationRepository invitationRepository
     )
     {
         _logger = logger;
@@ -36,10 +38,18 @@ public class MembershipApplicationService : IMembershipApplicationService
         _systemTime = systemTime;
         _membershipQuery = membershipQuery;
         _membershipApplicationDomainService = membershipApplicationDomainService;
+        _invitationRepository = invitationRepository;
     }
 
     private async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId)
     {
+        // Note: requires [TransactionalBoundary], which should be wrapped elsewhere
+        var existingInvitations = await _invitationRepository.GetActiveInvitations(userId, capabilityId);
+        foreach (var invitation in existingInvitations)
+        {
+            invitation.Cancel();
+        }
+
         if (await _membershipRepository.IsAlreadyMember(capabilityId, userId))
         {
             throw new AlreadyHasActiveMembershipException(
@@ -69,7 +79,7 @@ public class MembershipApplicationService : IMembershipApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task<MembershipId> AcceptApplication(MembershipApplicationId applicationId)
+    public async Task AcceptApplication(MembershipApplicationId applicationId)
     {
         using var _ = _logger.BeginScope(
             "{Action} on {ImplementationType}",
@@ -97,14 +107,7 @@ public class MembershipApplicationService : IMembershipApplicationService
             throw EntityNotFoundException<Capability>.UsingId(membershipApplication.CapabilityId);
         }
 
-        var newMembership = Membership.CreateFor(
-            capabilityId: membershipApplication.CapabilityId,
-            userId: membershipApplication.Applicant,
-            createdAt: _systemTime.Now
-        );
-
         await CreateAndAddMembership(membershipApplication.CapabilityId, membershipApplication.Applicant);
-        return newMembership.Id;
     }
 
     [TransactionalBoundary, Outboxed]
@@ -281,7 +284,11 @@ public class MembershipApplicationService : IMembershipApplicationService
     [TransactionalBoundary, Outboxed]
     public async Task JoinCapability(CapabilityId capabilityId, UserId userId)
     {
-        _logger.LogInformation("User {userId} was directly added as a member of capability {capabilityId}", userId);
+        _logger.LogInformation(
+            "User {userId} was directly added as a member of capability {capabilityId}",
+            userId,
+            capabilityId
+        );
         await CreateAndAddMembership(capabilityId, userId);
     }
 }

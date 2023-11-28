@@ -45,4 +45,10 @@ public class Invitation : Entity<InvitationId>
         Status = InvitationStatusOptions.Accepted;
         ModifiedAt = DateTime.UtcNow;
     }
+
+    public void Cancel()
+    {
+        Status = InvitationStatusOptions.Cancelled;
+        ModifiedAt = DateTime.UtcNow;
+    }
 }

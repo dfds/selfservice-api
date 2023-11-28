@@ -11,7 +11,7 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
 {
     #region ResponseObjects
 
-    private class PlatformDataApiTimeSeries
+    public class PlatformDataApiTimeSeries
     {
         [JsonPropertyName("timestamp")]
         public DateTime TimeStamp { get; set; }
@@ -186,8 +186,8 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         {
             if (mappedCosts.TryGetValue(myCapability.Id, out var myCosts))
             {
-                myCosts.ToList().Sort((x, y) => x.TimeStamp.CompareTo(y.TimeStamp));
-                costs.Add(new CapabilityCosts(myCapability.Id, myCosts.ToArray()));
+                var myOrderedCosts = myCosts.OrderBy(x => x.TimeStamp).ToArray();
+                costs.Add(new CapabilityCosts(myCapability.Id, myOrderedCosts));
             }
         }
 
