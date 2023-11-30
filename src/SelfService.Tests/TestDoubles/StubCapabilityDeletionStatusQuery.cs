@@ -6,10 +6,8 @@ namespace SelfService.Tests.TestDoubles;
 public class StubCapabilityDeletionStatusQuery : ICapabilityDeletionStatusQuery
 {
     private readonly bool _isPendingDeletion;
-    
-    public StubCapabilityDeletionStatusQuery(
-        bool isPendingDeletion = false
-    )
+
+    public StubCapabilityDeletionStatusQuery(bool isPendingDeletion = false)
     {
         _isPendingDeletion = isPendingDeletion;
     }

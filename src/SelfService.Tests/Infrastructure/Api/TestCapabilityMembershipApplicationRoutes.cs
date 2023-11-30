@@ -65,7 +65,6 @@ public class TestCapabilityMembershipApplicationRoutes
             .WithMembershipQuery(new StubMembershipQuery())
             .Build();
 
-
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
 
@@ -85,7 +84,6 @@ public class TestCapabilityMembershipApplicationRoutes
     {
         var stubCapability = A.Capability.WithId("foo").Build();
 
-        
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))

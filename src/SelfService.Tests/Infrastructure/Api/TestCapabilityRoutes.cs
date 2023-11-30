@@ -30,7 +30,7 @@ public class TestCapabilityRoutes
             .WithCapabilityRepository(new StubCapabilityRepository(A.Capability))
             .WithMembershipQuery(new StubMembershipQuery())
             .Build();
-        
+
         using var client = application.CreateClient();
 
         var response = await client.GetAsync("/capabilities/some-capability");

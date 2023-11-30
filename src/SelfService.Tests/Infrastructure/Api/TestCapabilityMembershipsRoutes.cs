@@ -70,8 +70,6 @@ public class TestCapabilityMembershipsRoutes
             .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true, hasMultipleMembers: true))
             .Build();
 
-
-        
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
 

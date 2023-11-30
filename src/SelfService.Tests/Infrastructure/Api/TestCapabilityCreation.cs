@@ -35,10 +35,10 @@ public class TestCapabilityCreation
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery());
         application.ReplaceService<ICapabilityDeletionStatusQuery>(new CapabilityDeletionStatusQuery(dbContext));
         //await using var application = new ApiApplicationBuilder()
-         //   .WithAwsAccountRepository(new StubAwsAccountRepository())
-         //   .WithMembershipQuery(new StubMembershipQuery())
-         //   .Build();
-        
+        //   .WithAwsAccountRepository(new StubAwsAccountRepository())
+        //   .WithMembershipQuery(new StubMembershipQuery())
+        //   .Build();
+
         string invitedUser = "foobar@mailinator.com";
         UserId invitedUserId = UserId.Parse(invitedUser);
 
