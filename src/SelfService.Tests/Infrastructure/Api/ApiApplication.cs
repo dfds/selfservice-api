@@ -29,7 +29,7 @@ public class ApiApplication : WebApplicationFactory<Program>
     {
         _serviceCollectionModifiers.Add(cfg);
         return this;
-    }
+    } 
 
     public ApiApplication RemoveService<TServiceType>()
     {
