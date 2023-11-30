@@ -153,11 +153,4 @@ public class SelfServiceJsonSchemaController : ControllerBase
 
         return Ok();
     }
-
-    [HttpGet("ids")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetSchemaIds()
-    {
-        return Ok(SelfServiceJsonSchemaObjectId.ValidTypesString());
-    }
 }
