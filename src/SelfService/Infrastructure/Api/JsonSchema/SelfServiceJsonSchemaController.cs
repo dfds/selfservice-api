@@ -20,7 +20,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
     [HttpGet("{id:required}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<IActionResult> GetSchema(string id, [FromQuery] int schemaVersion)
     {
@@ -59,10 +59,9 @@ public class SelfServiceJsonSchemaController : ControllerBase
 
     [HttpPost("{id:required}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status501NotImplemented, "application/problem+json")]
     public async Task<IActionResult> AddSchema(string id, [FromBody] AddSelfServiceJsonSchemaRequest? request)
     {
         if (!SelfServiceJsonSchemaObjectId.TryParse(id, out var parsedObjectId))
@@ -121,6 +120,37 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"AddSchema: {e.Message}." }
             );
         }
-#pragma warning restore CS0162 // Unreachable code detected
+    }
+
+    [HttpPost("validate")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    public IActionResult IsSchemaValid([FromBody] ValidateSelfServiceJsonSchemaRequest request)
+    {
+        if (request.Schema == null)
+            return BadRequest(new ProblemDetails { Title = "Invalid Schema", Detail = "Schema in request is null" });
+
+        try
+        {
+            _selfServiceJsonSchemaService.MustValidateJsonSchema(request.Schema.ToJsonString());
+        }
+        catch (InvalidJsonSchemaException e)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid Schema",
+                    Detail = $"Schema in request is not a valid json schema: {e.Message}"
+                }
+            );
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e);
+        }
+
+        return Ok();
     }
 }
