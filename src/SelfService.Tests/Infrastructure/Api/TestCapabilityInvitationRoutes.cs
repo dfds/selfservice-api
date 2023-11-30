@@ -39,7 +39,7 @@ public class TestCapabilityInvitationRoutes
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: false))
             .Build();
-        
+
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
 

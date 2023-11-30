@@ -66,7 +66,7 @@ public class TestCapabilityAwsAccountRoutes
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .Build();
-        
+
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
 
@@ -139,13 +139,13 @@ public class TestCapabilityAwsAccountRoutes
     {
         var stubCapability = A.Capability.Build();
         var stubAwsAccount = A.AwsAccount.Build();
-        
+
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository(stubAwsAccount))
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .Build();
-        
+
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
 
