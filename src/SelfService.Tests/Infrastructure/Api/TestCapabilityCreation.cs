@@ -33,7 +33,7 @@ public class TestCapabilityCreation
         application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
         application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository());
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery());
-        application.ReplaceService<ICapabilityDeletionStatusQuery>(new CapabilityDeletionStatusQuery(dbContext));
+        application.ReplaceService<ICapabilityDeletionStatusQuery>(new StubCapabilityDeletionStatusQuery());
         //await using var application = new ApiApplicationBuilder()
         //   .WithAwsAccountRepository(new StubAwsAccountRepository())
         //   .WithMembershipQuery(new StubMembershipQuery())
