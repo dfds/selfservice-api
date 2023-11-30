@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Api;
@@ -30,8 +31,14 @@ public class TestCapabilityCreation
 
         await using var application = new ApiApplication();
         application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
+        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository());
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery());
-
+        application.ReplaceService<ICapabilityDeletionStatusQuery>(new CapabilityDeletionStatusQuery(dbContext));
+        //await using var application = new ApiApplicationBuilder()
+         //   .WithAwsAccountRepository(new StubAwsAccountRepository())
+         //   .WithMembershipQuery(new StubMembershipQuery())
+         //   .Build();
+        
         string invitedUser = "foobar@mailinator.com";
         UserId invitedUserId = UserId.Parse(invitedUser);
 

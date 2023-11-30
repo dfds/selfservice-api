@@ -19,7 +19,7 @@ public class TestCapabilityDeletionStatusQuery
         await dbContext.SaveChangesAsync(cancellationTokenSource.Token);
 
         var query = new CapabilityDeletionStatusQuery(dbContext);
-        var res = await query.isPendingDeletion(stubCapability.Id);
+        var res = await query.IsPendingDeletion(stubCapability.Id);
         Assert.True(res);
     }
 }

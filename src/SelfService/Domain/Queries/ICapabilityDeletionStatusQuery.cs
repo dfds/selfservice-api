@@ -4,5 +4,5 @@ namespace SelfService.Domain.Queries;
 
 public interface ICapabilityDeletionStatusQuery
 {
-    Task<Boolean> isPendingDeletion(CapabilityId Id);
+    Task<bool> IsPendingDeletion(CapabilityId id);
 }

@@ -12,7 +12,7 @@ public class CapabilityDeletionStatusQuery : ICapabilityDeletionStatusQuery
         _dbContext = dbContext;
     }
 
-    public async Task<bool> isPendingDeletion(CapabilityId capabilityId)
+    public async Task<bool> IsPendingDeletion(CapabilityId capabilityId)
     {
         var capability = await _dbContext.Capabilities.FindAsync(capabilityId);
         return capability?.Status == CapabilityStatusOptions.PendingDeletion;

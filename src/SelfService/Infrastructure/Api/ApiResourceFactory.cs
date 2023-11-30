@@ -425,14 +425,16 @@ public class ApiResourceFactory
     private async Task<ResourceLink> CreateAwsAccountLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
-        var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.isPendingDeletion(capability.Id);
+        var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capability.Id);
 
         if (await _authorizationService.CanViewAwsAccount(CurrentUser, capability.Id))
         {
             allowedInteractions += Get;
         }
 
-        if (await _authorizationService.CanRequestAwsAccount(CurrentUser, capability.Id) && !capabilityMarkedForDeletion)
+        if (
+            await _authorizationService.CanRequestAwsAccount(CurrentUser, capability.Id) && !capabilityMarkedForDeletion
+        )
         {
             allowedInteractions += Post;
         }
@@ -713,7 +715,7 @@ public class ApiResourceFactory
         {
             var isMemberOfCapability = await _membershipQuery.HasActiveMembership(CurrentUser, capabilityId);
             var capabilityHasKafkaClusterAccess = await _authorizationService.HasAccess(capabilityId, cluster.Id);
-            var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.isPendingDeletion(capabilityId);
+            var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capabilityId);
             var accessAllow = Allow.None;
             var requestAccessAllow = Allow.None;
             var createTopicAllow = Allow.None;
