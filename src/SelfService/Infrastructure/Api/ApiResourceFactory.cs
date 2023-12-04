@@ -203,6 +203,7 @@ public class ApiResourceFactory
             name: capability.Name,
             status: capability.Status.ToString(),
             description: capability.Description,
+            jsonMetadata: capability.JsonMetadata,
             links: new CapabilityListItemApiResource.CapabilityListItemLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
