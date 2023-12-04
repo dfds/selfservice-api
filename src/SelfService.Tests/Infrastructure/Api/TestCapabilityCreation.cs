@@ -19,13 +19,14 @@ public class TestCapabilityCreation
     {
         //setup
         var databaseFactory = new ExternalDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var dbContextCap = await databaseFactory.CreateDbContext();
+        var dbContextInv = await databaseFactory.CreateDbContext();
 
-        var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
-        var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
+        var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContextCap).Build();
+        var invitationRepo = A.InvitationRepository.WithDbContext(dbContextInv).Build();
 
         var invitationService = A.InvitationApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+            .WithDbContextAndDefaultRepositories(dbContextInv)
             .WithInvitationRepository(invitationRepo)
             .Build();
 
