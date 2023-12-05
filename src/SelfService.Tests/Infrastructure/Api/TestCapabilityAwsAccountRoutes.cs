@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Tests.TestDoubles;
@@ -159,5 +160,60 @@ public class TestCapabilityAwsAccountRoutes
             .ToArray();
 
         Assert.Equal(new[] { "GET" }, allowValues);
+    }
+
+    [Fact]
+    public async Task pending_deletion_capability_doesnt_have_POST_endpoint_on_aws_account()
+    {
+        var stubCapability = A.Capability.WithStatus(CapabilityStatusOptions.PendingDeletion).Build();
+        var stubAwsAccount = A.AwsAccount.Build();
+
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository(stubAwsAccount))
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
+            .Build();
+
+        using var client = application.CreateClient();
+        var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
+
+        var content = await response.Content.ReadAsStringAsync();
+        var document = JsonSerializer.Deserialize<JsonDocument>(content);
+
+        var allowValues = document
+            ?.SelectElement("/_links/awsAccount/allow")
+            ?.EnumerateArray()
+            .Select(x => x.GetString() ?? "")
+            .ToArray();
+
+        Assert.Equal(new[] { "GET" }, allowValues);
+    }
+    
+    [Fact]
+    public async Task pending_deletion_capability_doesnt_have_any_info_on_aws_account_when_not_member()
+    {
+        var stubCapability = A.Capability.WithStatus(CapabilityStatusOptions.PendingDeletion).Build();
+        var stubAwsAccount = A.AwsAccount.Build();
+
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository(stubAwsAccount))
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: false))
+            .Build();
+
+        using var client = application.CreateClient();
+        var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
+
+        var content = await response.Content.ReadAsStringAsync();
+        var document = JsonSerializer.Deserialize<JsonDocument>(content);
+
+        var allowValues = document
+            ?.SelectElement("/_links/awsAccount/allow")
+            ?.EnumerateArray()
+            .Select(x => x.GetString() ?? "")
+            .ToArray();
+
+        Debug.Assert(allowValues != null, nameof(allowValues) + " != null");
+        Assert.Empty(allowValues);
     }
 }
