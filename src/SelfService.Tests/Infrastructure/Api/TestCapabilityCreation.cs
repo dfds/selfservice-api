@@ -12,9 +12,6 @@ using SelfService.Tests.TestDoubles;
 namespace SelfService.Tests.Infrastructure.Api;
 
 
-
-
-
 // COMMENTING OUT BECAUSE THIS TEST IS FAILING AND WE DON'T KNOW WHY
 // public class TestCapabilityCreation
 // {
