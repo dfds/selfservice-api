@@ -60,7 +60,7 @@ public class TestCapabilityMembershipsRoutes
     }
 
     [Fact]
-    public async Task resource_links_dont_contain_allow_if_capability_is_pendingdeletion()
+    public async Task resource_links_dont_contain_post_if_capability_is_pending_deletion()
     {
         var stubCapability = A.Capability.Build();
 
@@ -77,11 +77,11 @@ public class TestCapabilityMembershipsRoutes
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var allowValues = document
-            ?.SelectElement("/_links/leaveCapability/allow")
+            ?.SelectElement("/_links/clusters/allow")
             ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
-        Assert.Equal(new[] { "GET", "POST" }, allowValues);
+        Assert.Equal(new[] { "GET" }, allowValues);
     }
 }

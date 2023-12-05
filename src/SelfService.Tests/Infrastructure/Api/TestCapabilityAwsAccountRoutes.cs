@@ -188,7 +188,7 @@ public class TestCapabilityAwsAccountRoutes
 
         Assert.Equal(new[] { "GET" }, allowValues);
     }
-    
+
     [Fact]
     public async Task pending_deletion_capability_doesnt_have_any_info_on_aws_account_when_not_member()
     {
