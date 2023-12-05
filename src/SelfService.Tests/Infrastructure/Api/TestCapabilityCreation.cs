@@ -13,7 +13,8 @@ namespace SelfService.Tests.Infrastructure.Api;
 
 
 
-/* # COMMENTING OUT BECAUSE THIS TEST IS FAILING AND WE DON'T KNOW WHY
+
+/* COMMENTING OUT BECAUSE THIS TEST IS FAILING AND WE DON'T KNOW WHY
 public class TestCapabilityCreation
 {
     [Fact]
