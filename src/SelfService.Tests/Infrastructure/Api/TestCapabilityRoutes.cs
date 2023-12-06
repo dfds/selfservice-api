@@ -1,7 +1,9 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Moq;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Api;
@@ -24,9 +26,10 @@ public class TestCapabilityRoutes
     [Fact]
     public async Task getting_capability_by_id_returns_ok()
     {
-        await using var application = new ApiApplication();
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(A.Capability));
-        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery());
+        await using var application = new ApiApplicationBuilder()
+            .WithCapabilityRepository(new StubCapabilityRepository(A.Capability))
+            .WithMembershipQuery(new StubMembershipQuery())
+            .Build();
 
         using var client = application.CreateClient();
 
@@ -40,10 +43,11 @@ public class TestCapabilityRoutes
     {
         var stubCapability = A.Capability.Build();
 
-        await using var application = new ApiApplication();
-        application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery());
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository())
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery())
+            .Build();
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -66,10 +70,11 @@ public class TestCapabilityRoutes
     {
         var stubCapability = A.Capability.WithId("foo").Build();
 
-        await using var application = new ApiApplication();
-        application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery());
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository())
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery())
+            .Build();
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -88,10 +93,11 @@ public class TestCapabilityRoutes
     {
         var stubCapability = A.Capability.WithId("foo").Build();
 
-        await using var application = new ApiApplication();
-        application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery());
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository())
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery())
+            .Build();
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
