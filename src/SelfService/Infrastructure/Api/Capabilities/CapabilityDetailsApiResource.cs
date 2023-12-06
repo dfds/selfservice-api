@@ -88,6 +88,7 @@ public class CapabilityListItemApiResource
     public string Name { get; set; }
     public string Status { get; set; }
     public string Description { get; set; }
+    public string JsonMetadata { get; set; }
 
     [JsonPropertyName("_links")]
     public CapabilityListItemLinks Links { get; set; }
@@ -107,6 +108,7 @@ public class CapabilityListItemApiResource
         string name,
         string status,
         string description,
+        string jsonMetadata,
         CapabilityListItemLinks links
     )
     {
@@ -114,6 +116,7 @@ public class CapabilityListItemApiResource
         Name = name;
         Status = status;
         Description = description;
+        JsonMetadata = jsonMetadata;
         Links = links;
     }
 }

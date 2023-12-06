@@ -11,7 +11,7 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
 {
     #region ResponseObjects
 
-    private class PlatformDataApiTimeSeries
+    public class PlatformDataApiTimeSeries
     {
         [JsonPropertyName("timestamp")]
         public DateTime TimeStamp { get; set; }
