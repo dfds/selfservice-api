@@ -9,6 +9,7 @@ using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Tests.TestDoubles;
 
+//COMMENTING OUT BECAUSE THIS TEST IS FAILING AND WE DON'T KNOW WHY
 //namespace SelfService.Tests.Infrastructure.Api;
 
 // public class TestCapabilityCreation
