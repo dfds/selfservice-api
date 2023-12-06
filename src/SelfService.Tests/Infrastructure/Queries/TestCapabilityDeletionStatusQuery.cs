@@ -7,7 +7,7 @@ public class TestCapabilityDeletionStatusQuery
 {
     [Fact]
     [Trait("Category", "InMemoryDatabase")]
-    public async Task returns_returns_true_if_capability_is_pending_deletion()
+    public async Task returns_true_if_capability_is_pending_deletion()
     {
         using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
