@@ -20,13 +20,15 @@ public class ApiResourceFactory
     private readonly IAuthorizationService _authorizationService;
     private readonly IMembershipQuery _membershipQuery;
     private readonly ICapabilityDeletionStatusQuery _capabilityDeletionStatusQuery;
+    private readonly IAwsAccountIdQuery _awsAccountIdQuery;
 
     public ApiResourceFactory(
         IHttpContextAccessor httpContextAccessor,
         LinkGenerator linkGenerator,
         IAuthorizationService authorizationService,
         IMembershipQuery membershipQuery,
-        ICapabilityDeletionStatusQuery capabilityDeletionStatusQuery
+        ICapabilityDeletionStatusQuery capabilityDeletionStatusQuery,
+        IAwsAccountIdQuery awsAccountIdQuery
     )
     {
         _httpContextAccessor = httpContextAccessor;
@@ -34,6 +36,7 @@ public class ApiResourceFactory
         _authorizationService = authorizationService;
         _membershipQuery = membershipQuery;
         _capabilityDeletionStatusQuery = capabilityDeletionStatusQuery;
+        _awsAccountIdQuery = awsAccountIdQuery;
     }
 
     private HttpContext HttpContext =>
@@ -176,15 +179,24 @@ public class ApiResourceFactory
         );
     }
 
-    public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
+    public async Task<CapabilityListApiResource> Convert(IEnumerable<Capability> capabilities)
     {
         var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
         capabilities = showDeleted
             ? capabilities
             : capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted);
 
+        var capabilitiesSelected = capabilities.Select(ConvertToListItem).ToList();
+
+        foreach (var capability in capabilitiesSelected)
+        {
+            var showAwsAccountId = await _authorizationService.CanSeeAwsAccountId(PortalUser, capability.Id);
+            var awsAccountId = showAwsAccountId ? _awsAccountIdQuery.FindBy(capability.Id) : null;
+            capability.AwsAccountId = awsAccountId == null ? "" : awsAccountId.ToString();
+        }
+
         return new CapabilityListApiResource(
-            items: capabilities.Select(ConvertToListItem).ToArray(),
+            items: capabilitiesSelected.ToArray(),
             links: new CapabilityListApiResource.CapabilityListLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -207,6 +219,7 @@ public class ApiResourceFactory
             status: capability.Status.ToString(),
             description: capability.Description,
             jsonMetadata: capability.JsonMetadata,
+            awsAccountId: "",
             links: new CapabilityListItemApiResource.CapabilityListItemLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -343,6 +356,7 @@ public class ApiResourceFactory
         {
             allowedInteractions += Post;
         }
+
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,

@@ -64,6 +64,7 @@ public class AuthorizationService : IAuthorizationService
         {
             return true;
         }
+
         return false;
     }
 
@@ -98,6 +99,7 @@ public class AuthorizationService : IAuthorizationService
         {
             return true;
         }
+
         return false;
     }
 
@@ -201,5 +203,12 @@ public class AuthorizationService : IAuthorizationService
     public async Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId)
     {
         return await _membershipQuery.HasActiveMembership(userId, capabilityId);
+    }
+
+    public async Task<bool> CanSeeAwsAccountId(PortalUser portalUser, CapabilityId capabilityId)
+    {
+        bool isMember = await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId);
+        bool isCloudEngineer = portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+        return isMember || isCloudEngineer;
     }
 }

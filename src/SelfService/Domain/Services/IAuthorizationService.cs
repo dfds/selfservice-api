@@ -28,4 +28,5 @@ public interface IAuthorizationService
     bool CanGetSetCapabilityJsonMetadata(PortalUser portalUser);
     bool CanBypassMembershipApprovals(PortalUser portalUser);
     Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId);
+    Task<bool> CanSeeAwsAccountId(PortalUser portalUser, CapabilityId capabilityId);
 }
