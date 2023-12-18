@@ -31,4 +31,5 @@ public interface ICapabilityApplicationService
     Task ActOnPendingCapabilityDeletions();
     Task SetJsonMetadata(CapabilityId capabilityId, string jsonMetadata);
     Task<string> GetJsonMetadata(CapabilityId capabilityId);
+    Task<bool> DoesOnlyModifyRequiredProperties(string jsonMetadata, CapabilityId capabilityId);
 }
