@@ -89,6 +89,7 @@ public class CapabilityListItemApiResource
     public string Status { get; set; }
     public string Description { get; set; }
     public string JsonMetadata { get; set; }
+    public string AwsAccountId { get; set; }
 
     [JsonPropertyName("_links")]
     public CapabilityListItemLinks Links { get; set; }
@@ -109,6 +110,7 @@ public class CapabilityListItemApiResource
         string status,
         string description,
         string jsonMetadata,
+        string awsAccountId,
         CapabilityListItemLinks links
     )
     {
@@ -117,6 +119,7 @@ public class CapabilityListItemApiResource
         Status = status;
         Description = description;
         JsonMetadata = jsonMetadata;
+        AwsAccountId = awsAccountId;
         Links = links;
     }
 }
