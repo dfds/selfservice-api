@@ -313,6 +313,30 @@ public class ApiResourceFactory
         );
     }
 
+    private async Task<ResourceLink> CreateSetRequiredMetadataLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+
+        if (
+            await _membershipQuery.HasActiveMembership(CurrentUser, capability.Id)
+            || _authorizationService.CanGetSetCapabilityJsonMetadata(PortalUser)
+        )
+        {
+            allowedInteractions += Post;
+        }
+
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.SetCapabilityRequiredMetadata),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: allowedInteractions
+        );
+    }
+
     private async Task<ResourceLink> CreateSendInvitationsLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
@@ -485,6 +509,7 @@ public class ApiResourceFactory
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
                 metadata: CreateMetadataLinkFor(capability),
+                setRequiredMetadata: await CreateSetRequiredMetadataLinkFor(capability),
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability)

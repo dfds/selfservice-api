@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json.Nodes;
 using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
@@ -265,5 +266,48 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     public async Task<string> GetJsonMetadata(CapabilityId id)
     {
         return await _capabilityRepository.GetJsonMetadata(id);
+    }
+
+    public async Task<bool> DoesOnlyModifyRequiredProperties(string jsonMetadata, CapabilityId capabilityId)
+    {
+        var capability = await _capabilityRepository.Get(capabilityId);
+
+        var previousMetadata = capability.JsonMetadata;
+        var jsonSchema = await _selfServiceJsonSchemaService.GetLatestSchema(SelfServiceJsonSchemaObjectId.Capability);
+        if (jsonSchema == null)
+        {
+            return false;
+        }
+
+        var jsonSchemaAsObject = JsonNode.Parse(jsonSchema.Schema)?.AsObject()!;
+        var previousMetadataAsObject = JsonNode.Parse(previousMetadata)?.AsObject()!;
+        var jsonMetadataAsObject = JsonNode.Parse(jsonMetadata)?.AsObject()!;
+
+        var requiredPropertiesKeys = new HashSet<string>();
+        if (jsonSchemaAsObject.TryGetPropertyValue("required", out var requiredPropertiesNode))
+        {
+            var requiredKeys = requiredPropertiesNode?.AsArray().Select(x => x!.ToString()).ToList();
+            requiredKeys?.ForEach(x => requiredPropertiesKeys.Add(x));
+        }
+
+        // Check if new metadata contain the properties from the previous metadata and if not check if its required
+        foreach (var c in previousMetadataAsObject)
+        {
+            if (jsonMetadataAsObject.ContainsKey(c.Key))
+                continue;
+            if (!requiredPropertiesKeys.Contains(c.Key))
+                return false;
+        }
+
+        // Check if new json metadata contain new properties that are not in the previous metadata and if not check if its required
+        foreach (var c in jsonMetadataAsObject)
+        {
+            if (previousMetadataAsObject.ContainsKey(c.Key))
+                continue;
+            if (!requiredPropertiesKeys.Contains(c.Key))
+                return false;
+        }
+
+        return true;
     }
 }

@@ -28,6 +28,7 @@ public class CapabilityDetailsApiResource
         public ResourceLink CancelCapabilityDeletionRequest { get; set; }
 
         public ResourceLink Metadata { get; set; }
+        public ResourceLink SetRequiredMetadata { get; set; }
         public ResourceLink GetLinkedTeams { get; set; }
         public ResourceLink JoinCapability { get; set; }
         public ResourceLink SendInvitations { get; set; }
@@ -42,6 +43,7 @@ public class CapabilityDetailsApiResource
             ResourceLink requestCapabilityDeletion,
             ResourceLink cancelCapabilityDeletionRequest,
             ResourceLink metadata,
+            ResourceLink setRequiredMetadata,
             ResourceLink getLinkedTeams,
             ResourceLink joinCapability,
             ResourceLink sendInvitations
@@ -56,6 +58,7 @@ public class CapabilityDetailsApiResource
             RequestCapabilityDeletion = requestCapabilityDeletion;
             CancelCapabilityDeletionRequest = cancelCapabilityDeletionRequest;
             Metadata = metadata;
+            SetRequiredMetadata = setRequiredMetadata;
             GetLinkedTeams = getLinkedTeams;
             JoinCapability = joinCapability;
             SendInvitations = sendInvitations;
