@@ -282,18 +282,20 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         var jsonSchemaAsObject = JsonNode.Parse(jsonSchema.Schema)?.AsObject()!;
         var previousMetadataAsObject = JsonNode.Parse(previousMetadata)?.AsObject()!;
         var jsonMetadataAsObject = JsonNode.Parse(jsonMetadata)?.AsObject()!;
-        var requiredProperties = jsonSchemaAsObject.TryGetPropertyValue("required", out var requiredPropertiesNode);
 
-        var requiredPropertiesKeys = requiredPropertiesNode?.AsArray().Select(x => x!.ToString()).ToList()!;
+        var requiredPropertiesKeys = new HashSet<string>();
+        if (jsonSchemaAsObject.TryGetPropertyValue("required", out var requiredPropertiesNode))
+        {
+            var requiredKeys = requiredPropertiesNode?.AsArray().Select(x => x!.ToString()).ToList();
+            requiredKeys?.ForEach(x => requiredPropertiesKeys.Add(x));
+        }
 
         // Check if new metadata contain the properties from the previous metadata and if not check if its required
         foreach (var c in previousMetadataAsObject)
         {
             if (jsonMetadataAsObject.ContainsKey(c.Key))
                 continue;
-            if (!requiredProperties)
-                return false;
-            if (!requiredPropertiesNode!.AsArray().Contains(c.Key))
+            if (!requiredPropertiesKeys.Contains(c.Key))
                 return false;
         }
 
@@ -302,8 +304,6 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         {
             if (previousMetadataAsObject.ContainsKey(c.Key))
                 continue;
-            if (!requiredProperties)
-                return false;
             if (!requiredPropertiesKeys.Contains(c.Key))
                 return false;
         }
