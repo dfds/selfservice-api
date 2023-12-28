@@ -5,6 +5,7 @@ public class MessageContractStatus : ValueObject
     public static readonly MessageContractStatus Requested = new("Requested");
     public static readonly MessageContractStatus InProgress = new("In Progress");
     public static readonly MessageContractStatus Provisioned = new("Provisioned");
+    public static readonly MessageContractStatus Failed = new("Failed");
 
     private readonly string _value;
 
@@ -50,7 +51,8 @@ public class MessageContractStatus : ValueObject
         return false;
     }
 
-    public static IReadOnlyCollection<MessageContractStatus> Values => new[] { Requested, InProgress, Provisioned };
+    public static IReadOnlyCollection<MessageContractStatus> Values =>
+        new[] { Requested, InProgress, Provisioned, Failed };
 
     public static implicit operator MessageContractStatus(string text) => Parse(text);
 

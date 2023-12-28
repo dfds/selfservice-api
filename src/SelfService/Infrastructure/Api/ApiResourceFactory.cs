@@ -211,7 +211,7 @@ public class ApiResourceFactory
         );
     }
 
-    public CapabilityListItemApiResource ConvertToListItem(Capability capability)
+    private CapabilityListItemApiResource ConvertToListItem(Capability capability)
     {
         return new CapabilityListItemApiResource(
             id: capability.Id,
@@ -598,6 +598,12 @@ public class ApiResourceFactory
 
     public MessageContractApiResource Convert(MessageContract messageContract)
     {
+        var letRetry = Allow.None;
+        if (messageContract.Status == MessageContractStatus.Failed)
+        {
+            letRetry += Post;
+        }
+
         return new MessageContractApiResource(
             id: messageContract.Id,
             messageType: messageContract.MessageType,
@@ -616,6 +622,16 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "self",
                     allow: Allow.Get
+                ),
+                retry: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaTopicController.RetryCreatingMessageContract),
+                        controller: GetNameOf<KafkaTopicController>(),
+                        values: new { id = messageContract.KafkaTopicId, contractId = messageContract.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: letRetry
                 )
             )
         );
