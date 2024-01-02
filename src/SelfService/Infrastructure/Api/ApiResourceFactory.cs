@@ -19,18 +19,24 @@ public class ApiResourceFactory
     private readonly LinkGenerator _linkGenerator;
     private readonly IAuthorizationService _authorizationService;
     private readonly IMembershipQuery _membershipQuery;
+    private readonly ICapabilityDeletionStatusQuery _capabilityDeletionStatusQuery;
+    private readonly IAwsAccountIdQuery _awsAccountIdQuery;
 
     public ApiResourceFactory(
         IHttpContextAccessor httpContextAccessor,
         LinkGenerator linkGenerator,
         IAuthorizationService authorizationService,
-        IMembershipQuery membershipQuery
+        IMembershipQuery membershipQuery,
+        ICapabilityDeletionStatusQuery capabilityDeletionStatusQuery,
+        IAwsAccountIdQuery awsAccountIdQuery
     )
     {
         _httpContextAccessor = httpContextAccessor;
         _linkGenerator = linkGenerator;
         _authorizationService = authorizationService;
         _membershipQuery = membershipQuery;
+        _capabilityDeletionStatusQuery = capabilityDeletionStatusQuery;
+        _awsAccountIdQuery = awsAccountIdQuery;
     }
 
     private HttpContext HttpContext =>
@@ -173,15 +179,24 @@ public class ApiResourceFactory
         );
     }
 
-    public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
+    public async Task<CapabilityListApiResource> Convert(IEnumerable<Capability> capabilities)
     {
         var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
         capabilities = showDeleted
             ? capabilities
             : capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted);
 
+        var capabilitiesSelected = capabilities.Select(ConvertToListItem).ToList();
+
+        foreach (var capability in capabilitiesSelected)
+        {
+            var showAwsAccountId = await _authorizationService.CanSeeAwsAccountId(PortalUser, capability.Id);
+            var awsAccountId = showAwsAccountId ? _awsAccountIdQuery.FindBy(capability.Id) : null;
+            capability.AwsAccountId = awsAccountId == null ? "" : awsAccountId.ToString();
+        }
+
         return new CapabilityListApiResource(
-            items: capabilities.Select(ConvertToListItem).ToArray(),
+            items: capabilitiesSelected.ToArray(),
             links: new CapabilityListApiResource.CapabilityListLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -196,7 +211,7 @@ public class ApiResourceFactory
         );
     }
 
-    public CapabilityListItemApiResource ConvertToListItem(Capability capability)
+    private CapabilityListItemApiResource ConvertToListItem(Capability capability)
     {
         return new CapabilityListItemApiResource(
             id: capability.Id,
@@ -204,6 +219,7 @@ public class ApiResourceFactory
             status: capability.Status.ToString(),
             description: capability.Description,
             jsonMetadata: capability.JsonMetadata,
+            awsAccountId: "",
             links: new CapabilityListItemApiResource.CapabilityListItemLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -297,6 +313,30 @@ public class ApiResourceFactory
         );
     }
 
+    private async Task<ResourceLink> CreateSetRequiredMetadataLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+
+        if (
+            await _membershipQuery.HasActiveMembership(CurrentUser, capability.Id)
+            || _authorizationService.CanGetSetCapabilityJsonMetadata(PortalUser)
+        )
+        {
+            allowedInteractions += Post;
+        }
+
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.SetCapabilityRequiredMetadata),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: allowedInteractions
+        );
+    }
+
     private async Task<ResourceLink> CreateSendInvitationsLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
@@ -340,6 +380,7 @@ public class ApiResourceFactory
         {
             allowedInteractions += Post;
         }
+
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
@@ -423,13 +464,16 @@ public class ApiResourceFactory
     private async Task<ResourceLink> CreateAwsAccountLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
+        var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capability.Id);
 
         if (await _authorizationService.CanViewAwsAccount(CurrentUser, capability.Id))
         {
             allowedInteractions += Get;
         }
 
-        if (await _authorizationService.CanRequestAwsAccount(CurrentUser, capability.Id))
+        if (
+            await _authorizationService.CanRequestAwsAccount(CurrentUser, capability.Id) && !capabilityMarkedForDeletion
+        )
         {
             allowedInteractions += Post;
         }
@@ -465,6 +509,7 @@ public class ApiResourceFactory
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
                 metadata: CreateMetadataLinkFor(capability),
+                setRequiredMetadata: await CreateSetRequiredMetadataLinkFor(capability),
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability)
@@ -571,6 +616,16 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "self",
                     allow: Allow.Get
+                ),
+                retry: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaTopicController.RetryCreatingMessageContract),
+                        controller: GetNameOf<KafkaTopicController>(),
+                        values: new { id = messageContract.KafkaTopicId, contractId = messageContract.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.None
                 )
             )
         );
@@ -587,8 +642,20 @@ public class ApiResourceFactory
             allowedInteractions += Post;
         }
 
+        var items = contracts.Select(Convert).ToList();
+
+        foreach (var messageContractApiResource in items)
+        {
+            messageContractApiResource.Links.Retry.Allow = await _authorizationService.CanRetryCreatingMessageContract(
+                PortalUser,
+                messageContractApiResource.Id
+            )
+                ? Allow.Post
+                : Allow.None;
+        }
+
         return new MessageContractListApiResource(
-            items: contracts.Select(Convert).ToArray(),
+            items: items.ToArray(),
             links: new MessageContractListApiResource.MessageContractListLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -710,12 +777,12 @@ public class ApiResourceFactory
         {
             var isMemberOfCapability = await _membershipQuery.HasActiveMembership(CurrentUser, capabilityId);
             var capabilityHasKafkaClusterAccess = await _authorizationService.HasAccess(capabilityId, cluster.Id);
-
+            var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capabilityId);
             var accessAllow = Allow.None;
             var requestAccessAllow = Allow.None;
             var createTopicAllow = Allow.None;
 
-            if (isMemberOfCapability)
+            if (isMemberOfCapability && !capabilityMarkedForDeletion)
             {
                 if (capabilityHasKafkaClusterAccess)
                 {

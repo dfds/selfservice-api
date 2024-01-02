@@ -12,10 +12,11 @@ public class TestCapabilityInvitationRoutes
     {
         var stubCapability = A.Capability.Build();
 
-        await using var application = new ApiApplication();
-        application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery());
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository())
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery())
+            .Build();
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -33,10 +34,11 @@ public class TestCapabilityInvitationRoutes
     {
         var stubCapability = A.Capability.Build();
 
-        await using var application = new ApiApplication();
-        application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository())
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: false))
+            .Build();
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -59,10 +61,11 @@ public class TestCapabilityInvitationRoutes
     {
         var stubCapability = A.Capability.Build();
 
-        await using var application = new ApiApplication();
-        application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository())
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
+            .Build();
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");

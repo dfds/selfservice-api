@@ -18,6 +18,11 @@ public class MessageContractRepository : IMessageContractRepository
         await _dbContext.MessageContracts.AddAsync(messageContract);
     }
 
+    public void Update(MessageContract messageContract)
+    {
+        _dbContext.MessageContracts.Update(messageContract);
+    }
+
     public async Task<MessageContract> Get(MessageContractId id)
     {
         var result = await _dbContext.MessageContracts.FindAsync(id);

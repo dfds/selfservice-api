@@ -133,4 +133,12 @@ public static class RequestParserRegistry
         StringToValueObject.SetModelStateParser(modelStateDictionary);
         return StringToValueObject;
     }
+
+    public static void AddErrorIfNull(string? value, string valueName, ModelStateDictionary modelStateDictionary)
+    {
+        if (value != null)
+            return;
+
+        modelStateDictionary.AddModelError(valueName, $"Value {valueName} can not be null");
+    }
 }

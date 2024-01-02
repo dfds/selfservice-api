@@ -12,12 +12,11 @@ public class TestCapabilityMembershipsRoutes
     {
         var stubCapability = A.Capability.Build();
 
-        await using var application = new ApiApplication();
-        application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(
-            new StubMembershipQuery(hasActiveMembership: true, hasMultipleMembers: true)
-        );
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository())
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true, hasMultipleMembers: true))
+            .Build();
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -39,10 +38,11 @@ public class TestCapabilityMembershipsRoutes
     {
         var stubCapability = A.Capability.Build();
 
-        await using var application = new ApiApplication();
-        application.ReplaceService<IAwsAccountRepository>(new StubAwsAccountRepository());
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository())
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
+            .Build();
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -52,6 +52,32 @@ public class TestCapabilityMembershipsRoutes
 
         var allowValues = document
             ?.SelectElement("/_links/leaveCapability/allow")
+            ?.EnumerateArray()
+            .Select(x => x.GetString() ?? "")
+            .ToArray();
+
+        Assert.Equal(new[] { "GET" }, allowValues);
+    }
+
+    [Fact]
+    public async Task resource_links_dont_contain_post_if_capability_is_pending_deletion()
+    {
+        var stubCapability = A.Capability.Build();
+
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository())
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true, hasMultipleMembers: true))
+            .Build();
+
+        using var client = application.CreateClient();
+        var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
+
+        var content = await response.Content.ReadAsStringAsync();
+        var document = JsonSerializer.Deserialize<JsonDocument>(content);
+
+        var allowValues = document
+            ?.SelectElement("/_links/clusters/allow")
             ?.EnumerateArray()
             .Select(x => x.GetString() ?? "")
             .ToArray();

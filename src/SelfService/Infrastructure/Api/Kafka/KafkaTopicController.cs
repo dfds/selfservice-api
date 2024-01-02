@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
-using Microsoft.AspNetCore.Http;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
@@ -381,43 +379,19 @@ public class KafkaTopicController : ControllerBase
             );
         }
 
-        if (!KafkaTopicId.TryParse(id, out var kafkaTopicId))
-        {
-            return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Kafka topic not found",
-                    Detail = $"Kafka topic with id \"{id}\" is not known by the system."
-                }
+        var (kafkaTopicId, messageType, contractExample, contractSchema) = RequestParserRegistry
+            .StringToValueParser(ModelState)
+            .Parse<KafkaTopicId, MessageType, MessageContractExample, MessageContractSchema>(
+                id,
+                payload.MessageType,
+                payload.Example,
+                payload.Schema
             );
-        }
-
-        if (!MessageType.TryParse(payload.MessageType, out var messageType))
-        {
-            ModelState.AddModelError(
-                nameof(payload.MessageType),
-                $"Value \"{payload.MessageType}\" is not a valid message type."
-            );
-        }
-
-        if (string.IsNullOrWhiteSpace(payload.Description))
-        {
-            ModelState.AddModelError(nameof(payload.Description), "Value for description cannot be empty.");
-        }
-
-        if (!MessageContractExample.TryParse(payload.Example, out var contractExample))
-        {
-            ModelState.AddModelError(nameof(payload.Example), $"Value \"{payload.Example}\" is not a valid example.");
-        }
-
-        if (!MessageContractSchema.TryParse(payload.Schema, out var contractSchema))
-        {
-            ModelState.AddModelError(nameof(payload.Schema), $"Value \"{payload.Schema}\" is not a valid schema.");
-        }
+        RequestParserRegistry.AddErrorIfNull(payload.Description, "description", ModelState);
 
         if (!ModelState.IsValid)
         {
-            return ValidationProblem();
+            return BadRequest(ModelState);
         }
 
         var topic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
@@ -466,6 +440,62 @@ public class KafkaTopicController : ControllerBase
                 {
                     Title = "Message type already exists",
                     Detail = $"Topic \"{topic.Name}\" already has a message with message type \"{messageType}\"."
+                }
+            );
+        }
+    }
+
+    [HttpPost("{id:required}/messagecontracts/{contractId:required}/retry")]
+    [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> RetryCreatingMessageContract([FromRoute] string id, [FromRoute] string contractId)
+    {
+        if (!User.TryGetUserId(userId: out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access denied!",
+                    Detail = $"User could not be granted access to adding message contracts.",
+                }
+            );
+        }
+
+        var (kafkaTopicId, messageContractId) = RequestParserRegistry
+            .StringToValueParser(ModelState)
+            .Parse<KafkaTopicId, MessageContractId>(id, contractId);
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        if (!await _authorizationService.CanRetryCreatingMessageContract(User.ToPortalUser(), messageContractId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access denied!",
+                    Detail = $"User does not have permission to retry creating message contract",
+                }
+            );
+        }
+
+        try
+        {
+            await _kafkaTopicApplicationService.RetryRequestNewMessageContract(kafkaTopicId, messageContractId, userId);
+
+            var messageContract = await _messageContractRepository.Get(messageContractId);
+            return Ok(_apiResourceFactory.Convert(messageContract));
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails
+                {
+                    Title = "Uncaught Exception",
+                    Detail = $"Failed to retry creating message contract: {e.InnerException}."
                 }
             );
         }

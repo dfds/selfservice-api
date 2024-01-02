@@ -113,4 +113,27 @@ public class TestCapabilityApplicationService
             () => service.SetJsonMetadata(capability.Id, InvalidJsonMetadata)
         );
     }
+
+    [Fact]
+    public async Task fails_if_non_required_are_set()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+        var (capability, _, service) = await SetupCapabilityMetadataTesting(
+            CreateSchema(1, SchemaWithRequiredField),
+            dbContext
+        );
+        Assert.False(await service.DoesOnlyModifyRequiredProperties(InvalidJsonMetadata, capability.Id));
+        Assert.True(await service.DoesOnlyModifyRequiredProperties(JsonMetadata, capability.Id));
+    }
+
+    [Fact]
+    public async Task fails_if_no_required_in_schema()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+        var (capability, _, service) = await SetupCapabilityMetadataTesting(CreateSchema(0, SchemaEmpty), dbContext);
+        Assert.False(await service.DoesOnlyModifyRequiredProperties(InvalidJsonMetadata, capability.Id));
+        Assert.False(await service.DoesOnlyModifyRequiredProperties(JsonMetadata, capability.Id));
+    }
 }
