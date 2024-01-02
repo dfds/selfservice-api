@@ -471,27 +471,13 @@ public class KafkaTopicController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var topic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
-        if (topic is null)
-        {
-            return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Kafka topic not found",
-                    Detail = $"Kafka topic with id \"{id}\" is not known by the system."
-                }
-            );
-        }
-
-        var hasAccess = await _membershipQuery.HasActiveMembership(userId, topic.CapabilityId);
-        if (topic.IsPrivate && !hasAccess)
+        if (!await _authorizationService.CanRetryCreatingMessageContract(User.ToPortalUser(), messageContractId))
         {
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "Access denied!",
-                    Detail =
-                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+                    Detail = $"User does not have permission to retry creating message contract",
                 }
             );
         }

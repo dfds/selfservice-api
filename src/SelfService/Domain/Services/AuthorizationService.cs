@@ -1,5 +1,6 @@
 ﻿using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Domain.Services;
 
@@ -9,18 +10,24 @@ public class AuthorizationService : IAuthorizationService
     private readonly IMembershipQuery _membershipQuery;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
     private readonly IAwsAccountRepository _awsAccountRepository;
+    private readonly IMessageContractRepository _messageContractRepository;
+    private readonly IKafkaTopicRepository _kafkaTopicRepository;
 
     public AuthorizationService(
         ILogger<AuthorizationService> logger,
         IMembershipQuery membershipQuery,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
-        IAwsAccountRepository awsAccountRepository
+        IAwsAccountRepository awsAccountRepository,
+        IMessageContractRepository messageContractRepository,
+        IKafkaTopicRepository kafkaTopicRepository
     )
     {
         _logger = logger;
         _membershipQuery = membershipQuery;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _awsAccountRepository = awsAccountRepository;
+        _messageContractRepository = messageContractRepository;
+        _kafkaTopicRepository = kafkaTopicRepository;
     }
 
     public async Task<bool> CanAdd(UserId userId, CapabilityId capabilityId, KafkaClusterId clusterId)
@@ -210,5 +217,18 @@ public class AuthorizationService : IAuthorizationService
         bool isMember = await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId);
         bool isCloudEngineer = portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
         return isMember || isCloudEngineer;
+    }
+
+    public async Task<bool> CanRetryCreatingMessageContract(PortalUser portalUser, MessageContractId messageContractId)
+    {
+        var messageContract = await _messageContractRepository.Get(messageContractId);
+        if (messageContract.Status != MessageContractStatus.Failed)
+        {
+            return false;
+        }
+        var kafkaTopic = await _kafkaTopicRepository.Get(messageContract.KafkaTopicId);
+        bool isMember = await _membershipQuery.HasActiveMembership(portalUser.Id, kafkaTopic.CapabilityId);
+        bool isCloudEngineer = portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+        return (kafkaTopic.IsPrivate && isMember) || isCloudEngineer || !kafkaTopic.IsPrivate;
     }
 }

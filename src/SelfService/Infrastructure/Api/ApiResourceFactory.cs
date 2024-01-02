@@ -598,12 +598,6 @@ public class ApiResourceFactory
 
     public MessageContractApiResource Convert(MessageContract messageContract)
     {
-        var letRetry = Allow.None;
-        if (messageContract.Status == MessageContractStatus.Failed)
-        {
-            letRetry += Post;
-        }
-
         return new MessageContractApiResource(
             id: messageContract.Id,
             messageType: messageContract.MessageType,
@@ -631,7 +625,7 @@ public class ApiResourceFactory
                         values: new { id = messageContract.KafkaTopicId, contractId = messageContract.Id }
                     ) ?? "",
                     rel: "self",
-                    allow: letRetry
+                    allow: Allow.None
                 )
             )
         );
@@ -648,8 +642,20 @@ public class ApiResourceFactory
             allowedInteractions += Post;
         }
 
+        var items = contracts.Select(Convert).ToList();
+
+        foreach (var messageContractApiResource in items)
+        {
+            messageContractApiResource.Links.Retry.Allow = await _authorizationService.CanRetryCreatingMessageContract(
+                PortalUser,
+                messageContractApiResource.Id
+            )
+                ? Allow.Post
+                : Allow.None;
+        }
+
         return new MessageContractListApiResource(
-            items: contracts.Select(Convert).ToArray(),
+            items: items.ToArray(),
             links: new MessageContractListApiResource.MessageContractListLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
