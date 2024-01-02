@@ -18,10 +18,12 @@ public class MessageContractApiResource
     public class MessageContractLinks
     {
         public ResourceLink Self { get; set; }
+        public ResourceLink Retry { get; set; }
 
-        public MessageContractLinks(ResourceLink self)
+        public MessageContractLinks(ResourceLink self, ResourceLink retry)
         {
             Self = self;
+            Retry = retry;
         }
     }
 

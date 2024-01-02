@@ -211,7 +211,7 @@ public class ApiResourceFactory
         );
     }
 
-    public CapabilityListItemApiResource ConvertToListItem(Capability capability)
+    private CapabilityListItemApiResource ConvertToListItem(Capability capability)
     {
         return new CapabilityListItemApiResource(
             id: capability.Id,
@@ -616,6 +616,16 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "self",
                     allow: Allow.Get
+                ),
+                retry: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(KafkaTopicController.RetryCreatingMessageContract),
+                        controller: GetNameOf<KafkaTopicController>(),
+                        values: new { id = messageContract.KafkaTopicId, contractId = messageContract.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.None
                 )
             )
         );
@@ -632,8 +642,20 @@ public class ApiResourceFactory
             allowedInteractions += Post;
         }
 
+        var items = contracts.Select(Convert).ToList();
+
+        foreach (var messageContractApiResource in items)
+        {
+            messageContractApiResource.Links.Retry.Allow = await _authorizationService.CanRetryCreatingMessageContract(
+                PortalUser,
+                messageContractApiResource.Id
+            )
+                ? Allow.Post
+                : Allow.None;
+        }
+
         return new MessageContractListApiResource(
-            items: contracts.Select(Convert).ToArray(),
+            items: items.ToArray(),
             links: new MessageContractListApiResource.MessageContractListLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(

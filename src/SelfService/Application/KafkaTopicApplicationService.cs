@@ -82,6 +82,51 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
+    public async Task RetryRequestNewMessageContract(
+        KafkaTopicId kafkaTopicId,
+        MessageContractId messageContractId,
+        string requestedBy
+    )
+    {
+        using var _ = _logger.BeginScope(
+            "{Action} on {ImplementationType} requested by {RequestedBy}",
+            nameof(RequestNewMessageContract),
+            GetType().FullName,
+            requestedBy
+        );
+
+        var storedContract = await _messageContractRepository.Get(messageContractId);
+
+        if (storedContract == null || storedContract.KafkaTopicId != kafkaTopicId)
+        {
+            throw new EntityNotFoundException<MessageContract>(
+                $"Message contract \"{messageContractId}\" does not exist on topic \"{kafkaTopicId}\"."
+            );
+        }
+
+        if (storedContract.Status != MessageContractStatus.Failed)
+        {
+            throw new ArgumentException(
+                "Unable to retry message contract creation: Message contract is not in failed state."
+            );
+        }
+
+        var storedTopic = await _kafkaTopicRepository.Get(kafkaTopicId);
+
+        MessageContract.Retry(storedContract, storedTopic);
+
+        storedContract.RegisterAsRequested(_systemTime.Now, requestedBy);
+        _messageContractRepository.Update(storedContract);
+
+        _logger.LogInformation(
+            "Retrying creation of message contract {MessageContractId} for message type {MessageType} and topic {KafkaTopicName}",
+            storedContract.Id,
+            storedContract.MessageType,
+            storedTopic.Name
+        );
+    }
+
+    [TransactionalBoundary, Outboxed]
     public async Task RegisterMessageContractAsProvisioned(MessageContractId messageContractId, string changedBy)
     {
         using var _ = _logger.BeginScope(
@@ -93,9 +138,30 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
 
         var messageContract = await _messageContractRepository.Get(messageContractId);
         messageContract.RegisterAsProvisioned(_systemTime.Now, changedBy);
+        messageContract.RaiseNewMessageContractHasBeenProvisioned();
 
         _logger.LogInformation(
             "Message contract {MessageContractId} for message type {MessageType} has been provisioned.",
+            messageContract.Id,
+            messageContract.MessageType
+        );
+    }
+
+    [TransactionalBoundary]
+    public async Task RegisterMessageContractAsFailed(MessageContractId messageContractId, string changedBy)
+    {
+        using var _ = _logger.BeginScope(
+            "{Action} on {ImplementationType} invoked by {ChangedBy}",
+            nameof(RegisterMessageContractAsFailed),
+            GetType().FullName,
+            changedBy
+        );
+
+        var messageContract = await _messageContractRepository.Get(messageContractId);
+        messageContract.RegisterAsFailed(_systemTime.Now, changedBy);
+
+        _logger.LogInformation(
+            "Message contract {MessageContractId} for message type {MessageType} has been marked as failed",
             messageContract.Id,
             messageContract.MessageType
         );
