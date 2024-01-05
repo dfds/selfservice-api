@@ -516,6 +516,16 @@ public class CapabilityController : ControllerBase
                 }
             );
 
+        var capability = await _capabilityRepository.FindBy(capabilityId);
+        if (capability == null)
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found."
+                }
+            );
+
         var clusters = await _kafkaClusterRepository.GetAll();
 
         return Ok(await _apiResourceFactory.Convert(capabilityId, clusters));
