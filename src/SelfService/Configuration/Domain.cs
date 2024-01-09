@@ -83,6 +83,7 @@ public static class Domain
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
         builder.Services.AddHostedService<ActOnPendingCapabilityDeletions>();
         builder.Services.AddHostedService<ECRRepositorySynchronizer>();
+        builder.Services.AddHostedService<UpdateOutOfSyncEcrRepos>();
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();

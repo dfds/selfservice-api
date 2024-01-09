@@ -16,7 +16,7 @@ public class ECRRepositoryService : IECRRepositoryService
         "Repository created automatically by the SelfService Team";
 
     private readonly bool _localDevSkipAwsECRRepositoryCreation = false;
-    public OutOfSyncECRInfo _outOfSyncEcrInfo;
+    private readonly OutOfSyncECRInfo _outOfSyncEcrInfo;
 
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
@@ -94,7 +94,7 @@ public class ECRRepositoryService : IECRRepositoryService
         return outOfSyncECRInfo;
     }
 
-    public async void UpdateOutOfSyncECRInfo()
+    public async Task UpdateOutOfSyncECRInfo()
     {
         var outOfSyncEcrInfo = await GetOutofSyncECRCount();
         _outOfSyncEcrInfo.SetValuesFromInstance(outOfSyncEcrInfo);
