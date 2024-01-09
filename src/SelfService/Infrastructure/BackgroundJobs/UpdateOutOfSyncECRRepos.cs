@@ -2,7 +2,6 @@ using SelfService.Domain.Services;
 
 namespace SelfService.Infrastructure.BackgroundJobs;
 
-
 public class UpdateOutOfSyncEcrRepos : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
@@ -48,5 +47,5 @@ public class UpdateOutOfSyncEcrRepos : BackgroundService
         {
             _logger.LogError(e, "Error checking out of sync ECR repositories");
         }
-}
+    }
 }
