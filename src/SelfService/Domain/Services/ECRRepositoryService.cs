@@ -16,12 +16,14 @@ public class ECRRepositoryService : IECRRepositoryService
         "Repository created automatically by the SelfService Team";
 
     private readonly bool _localDevSkipAwsECRRepositoryCreation = false;
-
+    public OutOfSyncECRInfo _outOfSyncEcrInfo;
+    
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
         IECRRepositoryRepository ecrRepositoryRepository,
         IAwsECRRepositoryApplicationService awsEcrRepositoryApplicationService,
-        SystemTime systemTime
+        SystemTime systemTime,
+        OutOfSyncECRInfo outOfSyncEcrInfo
     )
     {
         _logger = logger;
@@ -30,6 +32,7 @@ public class ECRRepositoryService : IECRRepositoryService
         _systemTime = systemTime;
         var envValue = Environment.GetEnvironmentVariable("LOCAL_DEV_SKIP_AWS_ECR_REPOSITORY_CREATION") ?? "false";
         _localDevSkipAwsECRRepositoryCreation = envValue == "true";
+        _outOfSyncEcrInfo = outOfSyncEcrInfo;
     }
 
     public Task<bool> HasRepository(string repositoryName)
@@ -80,12 +83,24 @@ public class ECRRepositoryService : IECRRepositoryService
         int repositoriesNotInAwsCount = repositoriesNotInAws.Count;
         int repositoriesNotInDbCount = repositoriesNotInDb.Count;
 
-        var outOfSyncECRInfo = new OutOfSyncECRInfo(repositoriesNotInAwsCount, repositoriesNotInDbCount,
-            repositoriesNotInAws, repositoriesNotInDb);
-        
+        var outOfSyncECRInfo = new OutOfSyncECRInfo(
+            repositoriesNotInAwsCount,
+            repositoriesNotInDbCount,
+            repositoriesNotInAws,
+            repositoriesNotInDb,
+            true // this value will only be used in updates to the in-memory OutOfSyncECRInfo Singleton
+        );
+
         return outOfSyncECRInfo;
     }
 
+    public async void UpdateOutOfSyncECRInfo()
+    {
+        var outOfSyncEcrInfo = await GetOutofSyncECRCount();
+        _outOfSyncEcrInfo.SetValuesFromInstance(outOfSyncEcrInfo);
+        
+    }
+    
     [TransactionalBoundary]
     public async Task<ECRRepository> AddRepository(string name, string description, UserId userId)
     {
@@ -123,7 +138,7 @@ public class ECRRepositoryService : IECRRepositoryService
 
         int repositoriesNotInAwsCount = outOfSyncEcrInfo.RepositoriesNotInAwsCount;
         int repositoriesNotInDbCount = outOfSyncEcrInfo.RepositoriesNotInDbCount;
-        
+
         if (!performUpdateOnMismatch)
         {
             if (repositoriesNotInAws.Count > 0 || repositoriesNotInDb.Count > 0)

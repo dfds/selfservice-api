@@ -90,6 +90,8 @@ public static class Domain
             DeactivatedMemberCleanerApplicationService
         >();
 
+        builder.Services.AddSingleton<OutOfSyncECRInfo>(OutOfSyncECRInfo.createNewEmpty());
+        
         var topdeskEndpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
         var topdeskApiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
         builder.Services.AddHttpClient<ITicketingSystem, TopDesk>(client =>
