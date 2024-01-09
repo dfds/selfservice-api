@@ -23,7 +23,7 @@ public class OutOfSyncECRInfo : ValueObject
         HasBeenSet = hasBeenSet;
     }
 
-    public static OutOfSyncECRInfo createNewEmpty ()
+    public static OutOfSyncECRInfo createNewEmpty()
     {
         return new OutOfSyncECRInfo(0, 0, new List<string>(), new List<string>(), false);
     }
@@ -37,7 +37,6 @@ public class OutOfSyncECRInfo : ValueObject
         HasBeenSet = o.HasBeenSet;
     }
 
-    
     protected override IEnumerable<object> GetEqualityComponents()
     {
         throw new NotImplementedException();

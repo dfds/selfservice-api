@@ -17,7 +17,7 @@ public class ECRRepositoryService : IECRRepositoryService
 
     private readonly bool _localDevSkipAwsECRRepositoryCreation = false;
     public OutOfSyncECRInfo _outOfSyncEcrInfo;
-    
+
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
         IECRRepositoryRepository ecrRepositoryRepository,
@@ -98,9 +98,8 @@ public class ECRRepositoryService : IECRRepositoryService
     {
         var outOfSyncEcrInfo = await GetOutofSyncECRCount();
         _outOfSyncEcrInfo.SetValuesFromInstance(outOfSyncEcrInfo);
-        
     }
-    
+
     [TransactionalBoundary]
     public async Task<ECRRepository> AddRepository(string name, string description, UserId userId)
     {
