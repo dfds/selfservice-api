@@ -17,7 +17,7 @@ public class KafkaTopicId : ValueObject
 
     public override string ToString()
     {
-        return _value.ToString("N");
+        return _value.ToString("D");
     }
 
     public static KafkaTopicId New()

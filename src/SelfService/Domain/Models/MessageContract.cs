@@ -64,7 +64,10 @@ public class MessageContract : AggregateRoot<MessageContractId>
         Status = newStatus;
         ModifiedAt = modifiedAt;
         ModifiedBy = modifiedBy;
+    }
 
+    public void RaiseNewMessageContractHasBeenProvisioned()
+    {
         if (Status == MessageContractStatus.Provisioned)
         {
             Raise(
@@ -78,11 +81,17 @@ public class MessageContract : AggregateRoot<MessageContractId>
         }
     }
 
+    public void RegisterAsRequested(DateTime modifiedAt, string modifiedBy) =>
+        ChangeStatus(MessageContractStatus.Requested, modifiedAt, modifiedBy);
+
     public void RegisterAsInProgress(DateTime modifiedAt, string modifiedBy) =>
         ChangeStatus(MessageContractStatus.InProgress, modifiedAt, modifiedBy);
 
     public void RegisterAsProvisioned(DateTime modifiedAt, string modifiedBy) =>
         ChangeStatus(MessageContractStatus.Provisioned, modifiedAt, modifiedBy);
+
+    public void RegisterAsFailed(DateTime modifiedAt, string modifiedBy) =>
+        ChangeStatus(MessageContractStatus.Failed, modifiedAt, modifiedBy);
 
     public DateTime CreatedAt { get; private set; }
     public string CreatedBy { get; private set; }
@@ -113,8 +122,8 @@ public class MessageContract : AggregateRoot<MessageContractId>
             status: MessageContractStatus.Requested,
             createdAt: createdAt,
             createdBy: createdBy,
-            modifiedAt: null,
-            modifiedBy: null
+            modifiedAt: createdAt,
+            modifiedBy: createdBy
         );
 
         instance.Raise(
@@ -132,5 +141,22 @@ public class MessageContract : AggregateRoot<MessageContractId>
         );
 
         return instance;
+    }
+
+    public static void Retry(MessageContract instance, KafkaTopic kafkaTopic)
+    {
+        instance.Raise(
+            new NewMessageContractHasBeenRequested
+            {
+                MessageContractId = instance.Id.ToString(),
+                KafkaTopicId = instance.KafkaTopicId.ToString(),
+                KafkaTopicName = kafkaTopic.Name.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
+                KafkaClusterId = kafkaTopic.KafkaClusterId.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
+                CapabilityId = kafkaTopic.CapabilityId.ToString(), // NOTE [jandr@2023-03-27]: this has been added for now but should be removed when topic id can be used
+                MessageType = instance.MessageType.ToString(),
+                Schema = instance.Schema.ToString(),
+                Description = instance.Description,
+            }
+        );
     }
 }
