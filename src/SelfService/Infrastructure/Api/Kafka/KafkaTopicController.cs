@@ -427,7 +427,8 @@ public class KafkaTopicController : ControllerBase
                 description: payload.Description!,
                 example: contractExample,
                 schema: contractSchema,
-                requestedBy: userId
+                requestedBy: userId,
+                schemaVersion: 1
             );
 
             var messageContract = await _messageContractRepository.Get(messageContractId);

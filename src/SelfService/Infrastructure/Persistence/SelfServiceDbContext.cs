@@ -300,6 +300,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.ModifiedAt);
             cfg.Property(x => x.ModifiedBy);
+            cfg.Property(x => x.SchemaVersion);
         });
 
         modelBuilder.Entity<PortalVisit>(cfg =>

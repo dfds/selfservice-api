@@ -10,7 +10,8 @@ public interface IKafkaTopicApplicationService
         string description,
         MessageContractExample example,
         MessageContractSchema schema,
-        string requestedBy
+        string requestedBy,
+        int schemaVersion
     );
 
     Task RetryRequestNewMessageContract(
