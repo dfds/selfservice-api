@@ -60,7 +60,7 @@ public class MessageContractSchema : ValueObject
             throw new FormatException($"Value \"{_value}\" is not valid, missing required key \"properties\".");
         var asObject = propertiesNode!.AsObject();
         EnsurePropertyOfType(asObject, "schemaVersion", "integer");
-        EnsureSchemaIsEnumWithOneVersion(asObject);
+        EnsureSchemaIsConst(asObject);
         EnsurePropertyOfType(asObject, "type", "string");
         EnsurePropertyOfType(asObject, "messageId", "string");
     }
@@ -79,17 +79,13 @@ public class MessageContractSchema : ValueObject
             );
     }
 
-    private void EnsureSchemaIsEnumWithOneVersion(JsonObject propertiesNode)
+    private void EnsureSchemaIsConst(JsonObject propertiesNode)
     {
         if (!propertiesNode.TryGetPropertyValue("schemaVersion", out var schemaVersionNode))
             throw new FormatException($"Value \"{_value}\" is not valid, missing required key \"schemaVersion\".");
-        if (schemaVersionNode?.AsObject().TryGetPropertyValue("enum", out var enumNode) != true)
+        if (schemaVersionNode?.AsObject().TryGetPropertyValue("const", out _) != true)
             throw new FormatException(
                 $"Value \"{_value}\" is not valid, missing required key \"enum\" for property \"schemaVersion\"."
-            );
-        if (enumNode?.AsArray().Count != 1)
-            throw new FormatException(
-                $"Value \"{_value}\" is not valid, property \"schemaVersion\" must be an enum with one value."
             );
     }
 
