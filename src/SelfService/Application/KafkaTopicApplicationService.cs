@@ -31,7 +31,8 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         string description,
         MessageContractExample example,
         MessageContractSchema schema,
-        string requestedBy
+        string requestedBy,
+        bool enforceSchemaEnvelope
     )
     {
         using var _ = _logger.BeginScope(
@@ -52,6 +53,11 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             throw new EntityAlreadyExistsException(
                 $"Message contract \"{messageType}\" already exists on topic \"{kafkaTopicId}\"."
             );
+        }
+
+        if (enforceSchemaEnvelope)
+        {
+            schema.CheckValidSchemaEnvelope();
         }
 
         var topic = await _kafkaTopicRepository.Get(kafkaTopicId);

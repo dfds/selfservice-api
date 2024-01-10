@@ -421,13 +421,15 @@ public class KafkaTopicController : ControllerBase
 
         try
         {
+            // TODO: currently we only support schemas for public topics, so we force the envelope to be present
             var messageContractId = await _kafkaTopicApplicationService.RequestNewMessageContract(
                 kafkaTopicId: kafkaTopicId,
                 messageType: messageType,
                 description: payload.Description!,
                 example: contractExample,
                 schema: contractSchema,
-                requestedBy: userId
+                requestedBy: userId,
+                enforceSchemaEnvelope: true
             );
 
             var messageContract = await _messageContractRepository.Get(messageContractId);
