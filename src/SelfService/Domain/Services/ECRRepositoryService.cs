@@ -1,5 +1,7 @@
+using Prometheus;
 using SelfService.Application;
 using SelfService.Domain.Models;
+using SelfService.Infrastructure.Api.Metrics;
 
 namespace SelfService.Domain.Services;
 
@@ -45,7 +47,7 @@ public class ECRRepositoryService : IECRRepositoryService
         return _ecrRepositoryRepository.GetAll();
     }
 
-    private async Task<OutOfSyncECRInfo> GetOutofSyncECRCount()
+    public async Task<OutOfSyncECRInfo> GetOutofSyncECRCount()
     {
         var awsRepositoriesSet = new HashSet<string>(await _awsEcrRepositoryApplicationService.GetECRRepositories());
 
@@ -98,6 +100,9 @@ public class ECRRepositoryService : IECRRepositoryService
     {
         var outOfSyncEcrInfo = await GetOutofSyncECRCount();
         _outOfSyncEcrInfo.SetValuesFromInstance(outOfSyncEcrInfo);
+        EcrMetrics.OutOfSyncEcrMetric.Set(
+            _outOfSyncEcrInfo.RepositoriesNotInAwsCount + _outOfSyncEcrInfo.RepositoriesNotInDbCount
+        );
     }
 
     [TransactionalBoundary]

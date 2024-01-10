@@ -15,7 +15,10 @@ public class MetricsController : ControllerBase
     private readonly IPlatformDataApiRequesterService _platformDataApiRequesterService;
     private readonly OutOfSyncECRInfo _outOfSyncEcrInfo;
 
-    public MetricsController(IPlatformDataApiRequesterService platformDataApiRequesterService, OutOfSyncECRInfo outOfSyncEcrInfo)
+    public MetricsController(
+        IPlatformDataApiRequesterService platformDataApiRequesterService,
+        OutOfSyncECRInfo outOfSyncEcrInfo
+    )
     {
         _platformDataApiRequesterService = platformDataApiRequesterService;
         _outOfSyncEcrInfo = outOfSyncEcrInfo;
@@ -65,7 +68,6 @@ public class MetricsController : ControllerBase
             }
         );
     }
-
 
     [HttpGet("out-of-sync-ecr-repos")]
     [ProducesResponseType(StatusCodes.Status200OK)]
