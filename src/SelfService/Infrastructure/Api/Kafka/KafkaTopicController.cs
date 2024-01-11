@@ -429,6 +429,7 @@ public class KafkaTopicController : ControllerBase
                 example: contractExample,
                 schema: contractSchema,
                 requestedBy: userId,
+                schemaVersion: 1,
                 enforceSchemaEnvelope: true
             );
 

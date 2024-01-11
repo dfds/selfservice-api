@@ -11,6 +11,7 @@ public interface IKafkaTopicApplicationService
         MessageContractExample example,
         MessageContractSchema schema,
         string requestedBy,
+        int schemaVersion,
         bool enforceSchemaEnvelope
     );
 

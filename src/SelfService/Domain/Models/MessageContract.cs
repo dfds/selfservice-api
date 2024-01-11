@@ -15,7 +15,8 @@ public class MessageContract : AggregateRoot<MessageContractId>
         DateTime createdAt,
         string createdBy,
         DateTime? modifiedAt,
-        string? modifiedBy
+        string? modifiedBy,
+        int schemaVersion
     )
         : base(id)
     {
@@ -29,6 +30,7 @@ public class MessageContract : AggregateRoot<MessageContractId>
         KafkaTopicId = kafkaTopicId;
         Description = description;
         Status = status;
+        SchemaVersion = schemaVersion;
     }
 
     public KafkaTopicId KafkaTopicId { get; private set; }
@@ -99,6 +101,8 @@ public class MessageContract : AggregateRoot<MessageContractId>
     public DateTime? ModifiedAt { get; private set; }
     public string? ModifiedBy { get; private set; }
 
+    public int SchemaVersion { get; set; }
+
     public static MessageContract RequestNew(
         KafkaTopicId kafkaTopicId,
         MessageType messageType,
@@ -109,7 +113,8 @@ public class MessageContract : AggregateRoot<MessageContractId>
         MessageContractExample example,
         MessageContractSchema schema,
         DateTime createdAt,
-        string createdBy
+        string createdBy,
+        int schemaVersion
     )
     {
         var instance = new MessageContract(
@@ -123,7 +128,8 @@ public class MessageContract : AggregateRoot<MessageContractId>
             createdAt: createdAt,
             createdBy: createdBy,
             modifiedAt: createdAt,
-            modifiedBy: createdBy
+            modifiedBy: createdBy,
+            schemaVersion: schemaVersion
         );
 
         instance.Raise(
@@ -137,6 +143,7 @@ public class MessageContract : AggregateRoot<MessageContractId>
                 MessageType = instance.MessageType.ToString(),
                 Schema = instance.Schema.ToString(),
                 Description = instance.Description,
+                SchemaVersion = instance.SchemaVersion
             }
         );
 

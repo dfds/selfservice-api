@@ -12,4 +12,5 @@ public class NewMessageContractHasBeenRequested : IDomainEvent
     public string? MessageType { get; set; }
     public string? Schema { get; set; }
     public string? Description { get; set; }
+    public int? SchemaVersion { get; set; }
 }
