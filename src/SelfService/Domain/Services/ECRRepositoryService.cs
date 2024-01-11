@@ -90,8 +90,9 @@ public class ECRRepositoryService : IECRRepositoryService
             repositoriesNotInDbCount,
             repositoriesNotInAws,
             repositoriesNotInDb,
-            true // this value will only be used in updates to the in-memory OutOfSyncECRInfo Singleton
-        );
+            true, // this value will only be used in updates to the in-memory OutOfSyncECRInfo Singleton
+            DateTime.Now.AddHours(12) //12h = 720min
+            );
 
         return outOfSyncECRInfo;
     }

@@ -102,15 +102,15 @@ public class MetricsController : ControllerBase
         catch (Exception e)
         {
             return CustomObjectResult.InternalServerError(
-                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetCapabilityCosts: {e.Message}." }
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetOutOfSyncECRRepos: {e.Message}." }
             );
         }
 
         return NotFound(
             new ProblemDetails()
             {
-                Title = "Capability Costs not found",
-                Detail = $"No Cost data found for any capability",
+                Title = "`out-of-sync-ecr-repos` endpoint not found",
+                Detail = $"`out-of-sync-ecr-repos` endpoint was not found",
             }
         );
     }

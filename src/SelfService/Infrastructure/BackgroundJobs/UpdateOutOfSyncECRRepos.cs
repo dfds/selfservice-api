@@ -1,3 +1,4 @@
+using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Metrics;
 
@@ -7,11 +8,13 @@ public class UpdateOutOfSyncEcrRepos : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<UpdateOutOfSyncEcrRepos> _logger;
+    private OutOfSyncECRInfo _outOfSyncEcrInfo;
 
-    public UpdateOutOfSyncEcrRepos(IServiceProvider serviceProvider, ILogger<UpdateOutOfSyncEcrRepos> logger)
+    public UpdateOutOfSyncEcrRepos(IServiceProvider serviceProvider, ILogger<UpdateOutOfSyncEcrRepos> logger, OutOfSyncECRInfo outOfSyncEcrInfo)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _outOfSyncEcrInfo = outOfSyncEcrInfo;
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -22,7 +25,11 @@ public class UpdateOutOfSyncEcrRepos : BackgroundService
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     await DoWork(stoppingToken);
-                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); //maybe each minute is a lot?
+                    var nextRunTimestamp = _outOfSyncEcrInfo.UpdateNeededAt;
+                    var delay =  nextRunTimestamp > DateTime.Now 
+                                ? nextRunTimestamp - DateTime.Now 
+                                : TimeSpan.Zero;
+                    await Task.Delay(delay, stoppingToken);
                 }
             },
             stoppingToken
