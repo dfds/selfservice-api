@@ -92,7 +92,7 @@ public class ECRRepositoryService : IECRRepositoryService
             repositoriesNotInDb,
             true, // this value will only be used in updates to the in-memory OutOfSyncECRInfo Singleton
             DateTime.Now.AddHours(12) //12h = 720min
-            );
+        );
 
         return outOfSyncECRInfo;
     }

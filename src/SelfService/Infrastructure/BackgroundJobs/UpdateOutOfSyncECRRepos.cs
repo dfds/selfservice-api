@@ -10,7 +10,11 @@ public class UpdateOutOfSyncEcrRepos : BackgroundService
     private readonly ILogger<UpdateOutOfSyncEcrRepos> _logger;
     private OutOfSyncECRInfo _outOfSyncEcrInfo;
 
-    public UpdateOutOfSyncEcrRepos(IServiceProvider serviceProvider, ILogger<UpdateOutOfSyncEcrRepos> logger, OutOfSyncECRInfo outOfSyncEcrInfo)
+    public UpdateOutOfSyncEcrRepos(
+        IServiceProvider serviceProvider,
+        ILogger<UpdateOutOfSyncEcrRepos> logger,
+        OutOfSyncECRInfo outOfSyncEcrInfo
+    )
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -26,9 +30,7 @@ public class UpdateOutOfSyncEcrRepos : BackgroundService
                 {
                     await DoWork(stoppingToken);
                     var nextRunTimestamp = _outOfSyncEcrInfo.UpdateNeededAt;
-                    var delay =  nextRunTimestamp > DateTime.Now 
-                                ? nextRunTimestamp - DateTime.Now 
-                                : TimeSpan.Zero;
+                    var delay = nextRunTimestamp > DateTime.Now ? nextRunTimestamp - DateTime.Now : TimeSpan.Zero;
                     await Task.Delay(delay, stoppingToken);
                 }
             },
