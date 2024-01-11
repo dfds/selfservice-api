@@ -31,7 +31,8 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         string description,
         MessageContractExample example,
         MessageContractSchema schema,
-        string requestedBy
+        string requestedBy,
+        int schemaVersion
     )
     {
         using var _ = _logger.BeginScope(
@@ -43,6 +44,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
 
         if (await _messageContractRepository.Exists(kafkaTopicId, messageType))
         {
+            // TODO: Allow multiple contracts for the same topic and message type, but not the same schema version
             _logger.LogError(
                 "Cannot request new message contract {MessageType} for topic {KafkaTopicId} because it already exists.",
                 messageType,
@@ -59,14 +61,15 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         var messageContract = MessageContract.RequestNew(
             kafkaTopicId: kafkaTopicId,
             messageType: messageType,
-            description: description,
             kafkaTopicName: topic.Name,
-            kafkaClusterId: topic.KafkaClusterId,
             capabilityId: topic.CapabilityId,
+            kafkaClusterId: topic.KafkaClusterId,
+            description: description,
             example: example,
             schema: schema,
             createdAt: _systemTime.Now,
-            createdBy: requestedBy
+            createdBy: requestedBy,
+            schemaVersion: schemaVersion
         );
 
         await _messageContractRepository.Add(messageContract);
