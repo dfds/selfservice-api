@@ -1,6 +1,5 @@
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
-using SelfService.Infrastructure.Api.Metrics;
 
 namespace SelfService.Infrastructure.BackgroundJobs;
 

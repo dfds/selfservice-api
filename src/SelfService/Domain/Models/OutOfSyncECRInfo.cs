@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices.JavaScript;
-
 namespace SelfService.Domain.Models;
 
 public class OutOfSyncECRInfo : ValueObject
