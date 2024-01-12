@@ -1,4 +1,6 @@
-﻿using SelfService.Domain;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
+using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
@@ -24,6 +26,214 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         _kafkaTopicRepository = kafkaTopicRepository;
     }
 
+    private async Task CheckIfCanRequestContract(
+        KafkaTopicId kafkaTopicId,
+        MessageType messageType,
+        int schemaVersion,
+        MessageContractSchema newSchema)
+    {
+        var contracts = (await _messageContractRepository.FindBy(kafkaTopicId, messageType)).ToArray();
+        if (contracts.Length == 0)
+        {
+            if (schemaVersion != 1)
+                throw new ArgumentException("Cannot request new message contract with schema version other than 1");
+            return;
+        }
+
+        var latestSchemaVersion = 0;
+        MessageContract? latestContract = null;
+        foreach (MessageContract contract in contracts)
+        {
+            if (contract.SchemaVersion > latestSchemaVersion)
+            {
+                latestSchemaVersion = contract.SchemaVersion;
+            }
+
+            if (contract.SchemaVersion != schemaVersion)
+                continue;
+
+            _logger.LogError(
+                "Cannot request new message contract {MessageType} for topic {KafkaTopicId} because it already exists for version {SchemaVersion}",
+                messageType,
+                kafkaTopicId,
+                schemaVersion
+            );
+            throw new EntityAlreadyExistsException(
+                $"Message contract \"{messageType}\" already exists on topic \"{kafkaTopicId}\" with version \"{schemaVersion}\"."
+            );
+        }
+
+        if (schemaVersion != latestSchemaVersion + 1)
+        {
+            throw new ArgumentException(
+                $"Cannot request new message contract with schema version {schemaVersion} as the latest version is {latestSchemaVersion}");
+        }
+
+        if (latestContract != null)
+        {
+            // Check evolution is valid (i.e. new schema is compatible with latest schema)
+            if (!IsBackwardCompatible(newSchema, latestContract.Schema.ToString()))
+                throw new ArgumentException(
+                    $"Cannot request new message contract with schema version {schemaVersion} as the schema is not compatible with the latest version {latestSchemaVersion}"
+        }
+    }
+
+    private bool IsBackwardCompatible(string previousSchema, string newSchema)
+    {
+        bool GetAdditionalProperties(JsonDocument doc)
+        {
+            var additionalProperties = true;
+            try
+            {
+                additionalProperties = doc.RootElement.GetProperty("additionalProperties").GetBoolean();
+            }
+            catch
+            {
+            }
+
+            return additionalProperties;
+        }
+
+        List<string> GetRequired(JsonDocument doc)
+        {
+            var required = new List<string>();
+            try
+            {
+                foreach (var property in doc.RootElement.GetProperty("required").EnumerateArray())
+                {
+                    required.Add(property.GetString()!);
+                }
+            }
+            catch
+            {
+            }
+
+            return required;
+        }
+
+        // See: https://yokota.blog/2021/03/29/understanding-json-schema-compatibility/
+        try
+        {
+            JsonDocument previousSchemaDocument = JsonDocument.Parse(previousSchema);
+            JsonDocument newSchemaDocument = JsonDocument.Parse(newSchema);
+
+            var previousSchemaRequired = GetRequired(previousSchemaDocument);
+            var newSchemaRequired = GetRequired(newSchemaDocument);
+
+            // default value for confluent cloud schemas
+            bool previousSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
+            bool newSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
+
+
+            if (previousSchemaIsOpenContentModel && !newSchemaIsOpenContentModel)
+                return false;
+
+            // Simplified port of https://github.dev/confluentinc/schema-registry
+            HashSet<string> propertyKeys = new HashSet<string>();
+            foreach (var property in previousSchemaDocument.RootElement.GetProperty("properties").EnumerateObject())
+            {
+                propertyKeys.Add(property.Name);
+            }
+
+            foreach (var property in newSchemaDocument.RootElement.GetProperty("properties").EnumerateObject())
+            {
+                propertyKeys.Add(property.Name);
+            }
+
+            JsonElement? GetPropertyOrNull(JsonDocument doc, string key)
+            {
+                try
+                {
+                    return doc.RootElement.GetProperty(key);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            foreach (var propertyKey in propertyKeys)
+            {
+                var previousProperty = GetPropertyOrNull(previousSchemaDocument, propertyKey);
+                var newProperty = GetPropertyOrNull(newSchemaDocument, propertyKey);
+
+                if (newProperty == null)
+                {
+                    if (newSchemaIsOpenContentModel)
+                        continue;
+
+                    // Not allowed to remove from closed content model 
+                    return false;
+                }
+
+                if (previousProperty == null)
+                {
+                    if (previousSchemaIsOpenContentModel)
+                    {
+                        // Not allowed to open content model 
+                        return false;
+                    }
+
+                    if (newSchemaRequired.Contains(propertyKey))
+                    {
+                        // Not allowed to add required properties to closed content model
+                        return false;
+                    }
+
+                    continue;
+                }
+
+                if (!IsBackwardCompatibleSchema(newProperty.Value, previousProperty.Value))
+                    return false;
+            }
+
+            // If no issues found, the schemas are backward compatible
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error checking compatibility: {ex.Message}");
+            return false;
+        }
+    }
+
+    private bool IsBackwardCompatibleSchema(JsonElement newSchema, JsonElement existingSchema)
+    {
+        if (newSchema.ValueKind != existingSchema.ValueKind)
+            return false;
+
+
+        switch (newSchema.ValueKind)
+        {
+            case JsonValueKind.Object:
+            {
+                foreach (var property in newSchema.EnumerateObject())
+                {
+                    if (!IsBackwardCompatibleSchema(property.Value, existingSchema.GetProperty(property.Name)))
+                    {
+                        return false;
+                    }
+                }
+
+                break;
+            }
+            case JsonValueKind.Array:
+            {
+                for (int i = 0; i < newSchema.GetArrayLength(); i++)
+                {
+                    if (!IsBackwardCompatibleSchema(newSchema[i], existingSchema[i]))
+                    {
+                        return false;
+                    }
+                }
+
+                break;
+            }
+        }
+
+        return true;
+    }
+
     [TransactionalBoundary, Outboxed]
     public async Task<MessageContractId> RequestNewMessageContract(
         KafkaTopicId kafkaTopicId,
@@ -43,19 +253,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             requestedBy
         );
 
-        if (await _messageContractRepository.Exists(kafkaTopicId, messageType))
-        {
-            // TODO: Allow multiple contracts for the same topic and message type, but not the same schema version
-            _logger.LogError(
-                "Cannot request new message contract {MessageType} for topic {KafkaTopicId} because it already exists.",
-                messageType,
-                kafkaTopicId
-            );
-
-            throw new EntityAlreadyExistsException(
-                $"Message contract \"{messageType}\" already exists on topic \"{kafkaTopicId}\"."
-            );
-        }
+        await CheckIfCanRequestContract(kafkaTopicId, messageType, schemaVersion, schema);
 
         if (enforceSchemaEnvelope)
         {

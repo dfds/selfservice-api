@@ -163,6 +163,7 @@ public class MessageContract : AggregateRoot<MessageContractId>
                 MessageType = instance.MessageType.ToString(),
                 Schema = instance.Schema.ToString(),
                 Description = instance.Description,
+                SchemaVersion = instance.SchemaVersion
             }
         );
     }
