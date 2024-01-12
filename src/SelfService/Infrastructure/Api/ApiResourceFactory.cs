@@ -606,6 +606,7 @@ public class ApiResourceFactory
             schema: messageContract.Schema,
             kafkaTopicId: messageContract.KafkaTopicId,
             status: messageContract.Status,
+            schemaVersion: messageContract.SchemaVersion,
             links: new MessageContractApiResource.MessageContractLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(

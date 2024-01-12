@@ -340,7 +340,8 @@ public class MessageContractComparer : IEqualityComparer<MessageContract?>
             && x.CreatedAt.Equals(y.CreatedAt)
             && x.CreatedBy == y.CreatedBy
             && Nullable.Equals(x.ModifiedAt, y.ModifiedAt)
-            && x.ModifiedBy == y.ModifiedBy;
+            && x.ModifiedBy == y.ModifiedBy
+            && x.SchemaVersion == y.SchemaVersion;
     }
 
     public int GetHashCode(MessageContract obj)
@@ -356,6 +357,7 @@ public class MessageContractComparer : IEqualityComparer<MessageContract?>
         hashCode.Add(obj.CreatedBy);
         hashCode.Add(obj.ModifiedAt);
         hashCode.Add(obj.ModifiedBy);
+        hashCode.Add(obj.SchemaVersion);
         return hashCode.ToHashCode();
     }
 }
