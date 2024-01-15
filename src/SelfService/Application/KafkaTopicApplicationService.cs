@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Nodes;
+using Json.More;
 using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
@@ -51,6 +51,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             if (contract.SchemaVersion > latestSchemaVersion)
             {
                 latestSchemaVersion = contract.SchemaVersion;
+                latestContract = contract;
             }
 
             if (contract.SchemaVersion != schemaVersion)
@@ -76,15 +77,14 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
 
         if (latestContract != null)
         {
+            JsonDocument previousSchemaDocument = JsonDocument.Parse(latestContract.Schema.ToString());
+            JsonDocument newSchemaDocument = JsonDocument.Parse(newSchema);
             // Check evolution is valid (i.e. new schema is compatible with latest schema)
-            if (!IsBackwardCompatible(newSchema, latestContract.Schema.ToString()))
-                throw new ArgumentException(
-                    $"Cannot request new message contract with schema version {schemaVersion} as the schema is not compatible with the latest version {latestSchemaVersion}"
-                );
+            CheckIsBackwardCompatible(previousSchemaDocument, newSchemaDocument);
         }
     }
 
-    private bool IsBackwardCompatible(string previousSchema, string newSchema)
+    private void CheckIsBackwardCompatible(JsonDocument previousSchemaDocument, JsonDocument newSchemaDocument)
     {
         bool GetAdditionalProperties(JsonDocument doc)
         {
@@ -114,124 +114,115 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         }
 
         // See: https://yokota.blog/2021/03/29/understanding-json-schema-compatibility/
+
+
+        var previousSchemaRequired = GetRequired(previousSchemaDocument);
+        var newSchemaRequired = GetRequired(newSchemaDocument);
+
+        // default value for confluent cloud schemas
+        bool previousSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
+        bool newSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
+
+        if (previousSchemaIsOpenContentModel && !newSchemaIsOpenContentModel)
+            throw new ArgumentException($"Cannot change schema from open content model to closed content model");
+
+        // Simplified port of https://github.dev/confluentinc/schema-registry
+        HashSet<string> propertyKeys = new HashSet<string>();
         try
         {
-            JsonDocument previousSchemaDocument = JsonDocument.Parse(previousSchema);
-            JsonDocument newSchemaDocument = JsonDocument.Parse(newSchema);
-
-            var previousSchemaRequired = GetRequired(previousSchemaDocument);
-            var newSchemaRequired = GetRequired(newSchemaDocument);
-
-            // default value for confluent cloud schemas
-            bool previousSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
-            bool newSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
-
-            if (previousSchemaIsOpenContentModel && !newSchemaIsOpenContentModel)
-                return false;
-
-            // Simplified port of https://github.dev/confluentinc/schema-registry
-            HashSet<string> propertyKeys = new HashSet<string>();
             foreach (var property in previousSchemaDocument.RootElement.GetProperty("properties").EnumerateObject())
             {
                 propertyKeys.Add(property.Name);
             }
-
+        }
+        catch
+        {
+            Console.WriteLine($"prev schema doesnt have properties: {previousSchemaDocument}");
+        }
+        try
+        {
             foreach (var property in newSchemaDocument.RootElement.GetProperty("properties").EnumerateObject())
             {
                 propertyKeys.Add(property.Name);
             }
-
-            JsonElement? GetPropertyOrNull(JsonDocument doc, string key)
-            {
-                try
-                {
-                    return doc.RootElement.GetProperty(key);
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-
-            foreach (var propertyKey in propertyKeys)
-            {
-                var previousProperty = GetPropertyOrNull(previousSchemaDocument, propertyKey);
-                var newProperty = GetPropertyOrNull(newSchemaDocument, propertyKey);
-
-                if (newProperty == null)
-                {
-                    if (newSchemaIsOpenContentModel)
-                        continue;
-
-                    // Not allowed to remove from closed content model
-                    return false;
-                }
-
-                if (previousProperty == null)
-                {
-                    if (previousSchemaIsOpenContentModel)
-                    {
-                        // Not allowed to open content model
-                        return false;
-                    }
-
-                    if (newSchemaRequired.Contains(propertyKey))
-                    {
-                        // Not allowed to add required properties to closed content model
-                        return false;
-                    }
-
-                    continue;
-                }
-
-                if (!IsBackwardCompatibleSchema(newProperty.Value, previousProperty.Value))
-                    return false;
-            }
-
-            // If no issues found, the schemas are backward compatible
-            return true;
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Error checking compatibility: {ex.Message}");
-            return false;
+            // new schema doesnt have properties
+            Console.WriteLine($"new schema doesnt have properties: {newSchemaDocument}");
+        }
+
+        JsonElement? GetPropertyOrNull(JsonDocument doc, string key)
+        {
+            try
+            {
+                return doc.RootElement.GetProperty("properties").GetProperty(key);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        foreach (var propertyKey in propertyKeys)
+        {
+            var previousProperty = GetPropertyOrNull(previousSchemaDocument, propertyKey);
+            var newProperty = GetPropertyOrNull(newSchemaDocument, propertyKey);
+
+            if (newProperty == null)
+            {
+                if (newSchemaIsOpenContentModel)
+                    continue;
+
+                throw new ArgumentException($"Not allowed to remove properties from closed content model");
+            }
+
+            if (previousProperty == null)
+            {
+                if (previousSchemaIsOpenContentModel)
+                {
+                    throw new ArgumentException($"Not allowed to add properties to open content model");
+                }
+
+                if (newSchemaRequired.Contains(propertyKey))
+                {
+                    // Not allowed to add required properties to closed content model
+                    throw new ArgumentException($"Not allowed to add new required properties");
+                }
+
+                continue;
+            }
+
+            CheckIsBackwardCompatibleSchema(previousProperty.Value, newProperty.Value);
         }
     }
 
-    private bool IsBackwardCompatibleSchema(JsonElement newSchema, JsonElement existingSchema)
+    private void CheckIsBackwardCompatibleSchema(JsonElement prevSchema, JsonElement newSchema)
     {
-        if (newSchema.ValueKind != existingSchema.ValueKind)
-            return false;
+        if (prevSchema.ValueKind != newSchema.ValueKind)
+        {
+            throw new ArgumentException(
+                $"Cannot change schema type from {prevSchema.ValueKind} to {newSchema.ValueKind} for property {prevSchema}"
+            );
+        }
 
         switch (newSchema.ValueKind)
         {
             case JsonValueKind.Object:
             {
-                foreach (var property in newSchema.EnumerateObject())
-                {
-                    if (!IsBackwardCompatibleSchema(property.Value, existingSchema.GetProperty(property.Name)))
-                    {
-                        return false;
-                    }
-                }
-
+                CheckIsBackwardCompatible(prevSchema.ToJsonDocument(), newSchema.ToJsonDocument());
                 break;
             }
             case JsonValueKind.Array:
             {
                 for (int i = 0; i < newSchema.GetArrayLength(); i++)
                 {
-                    if (!IsBackwardCompatibleSchema(newSchema[i], existingSchema[i]))
-                    {
-                        return false;
-                    }
+                    CheckIsBackwardCompatibleSchema(prevSchema[i], newSchema[i]);
                 }
 
                 break;
             }
         }
-
-        return true;
     }
 
     [TransactionalBoundary, Outboxed]

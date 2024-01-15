@@ -45,6 +45,24 @@ public class MessageContractBuilder
         return this;
     }
 
+    public MessageContractBuilder WithSchema(MessageContractSchema schema)
+    {
+        _schema = schema;
+        return this;
+    }
+
+    public MessageContractBuilder WithSchemaVersion(int schemaVersion)
+    {
+        _schemaVersion = schemaVersion;
+        return this;
+    }
+
+    public MessageContractBuilder WithType(MessageType type)
+    {
+        _messageType = type;
+        return this;
+    }
+
     public MessageContract Build()
     {
         return new MessageContract(

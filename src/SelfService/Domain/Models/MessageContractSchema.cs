@@ -8,7 +8,6 @@ namespace SelfService.Domain.Models;
 public class MessageContractSchema : ValueObject
 {
     private readonly string _value;
-    public int Version { get; private set; }
 
     private MessageContractSchema(string value)
     {
