@@ -26,12 +26,16 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         _kafkaTopicRepository = kafkaTopicRepository;
     }
 
-    private async Task CheckIfCanRequestContract(
+    public async Task CheckIfCanRequestContract(
         KafkaTopicId kafkaTopicId,
         MessageType messageType,
-        int schemaVersion,
-        MessageContractSchema newSchema)
+        MessageContractSchema newSchema
+    )
     {
+        var schemaVersion = newSchema.GetSchemaVersion();
+        if (schemaVersion == null)
+            throw new ArgumentException("Cannot request new message contract without schema version");
+
         var contracts = (await _messageContractRepository.FindBy(kafkaTopicId, messageType)).ToArray();
         if (contracts.Length == 0)
         {
@@ -66,7 +70,8 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         if (schemaVersion != latestSchemaVersion + 1)
         {
             throw new ArgumentException(
-                $"Cannot request new message contract with schema version {schemaVersion} as the latest version is {latestSchemaVersion}");
+                $"Cannot request new message contract with schema version {schemaVersion} as the latest version is {latestSchemaVersion}"
+            );
         }
 
         if (latestContract != null)
@@ -75,6 +80,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             if (!IsBackwardCompatible(newSchema, latestContract.Schema.ToString()))
                 throw new ArgumentException(
                     $"Cannot request new message contract with schema version {schemaVersion} as the schema is not compatible with the latest version {latestSchemaVersion}"
+                );
         }
     }
 
@@ -87,9 +93,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             {
                 additionalProperties = doc.RootElement.GetProperty("additionalProperties").GetBoolean();
             }
-            catch
-            {
-            }
+            catch { }
 
             return additionalProperties;
         }
@@ -104,9 +108,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
                     required.Add(property.GetString()!);
                 }
             }
-            catch
-            {
-            }
+            catch { }
 
             return required;
         }
@@ -123,7 +125,6 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             // default value for confluent cloud schemas
             bool previousSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
             bool newSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
-
 
             if (previousSchemaIsOpenContentModel && !newSchemaIsOpenContentModel)
                 return false;
@@ -162,7 +163,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
                     if (newSchemaIsOpenContentModel)
                         continue;
 
-                    // Not allowed to remove from closed content model 
+                    // Not allowed to remove from closed content model
                     return false;
                 }
 
@@ -170,7 +171,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
                 {
                     if (previousSchemaIsOpenContentModel)
                     {
-                        // Not allowed to open content model 
+                        // Not allowed to open content model
                         return false;
                     }
 
@@ -201,7 +202,6 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
     {
         if (newSchema.ValueKind != existingSchema.ValueKind)
             return false;
-
 
         switch (newSchema.ValueKind)
         {
@@ -242,7 +242,6 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         MessageContractExample example,
         MessageContractSchema schema,
         string requestedBy,
-        int schemaVersion,
         bool enforceSchemaEnvelope
     )
     {
@@ -253,7 +252,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             requestedBy
         );
 
-        await CheckIfCanRequestContract(kafkaTopicId, messageType, schemaVersion, schema);
+        await CheckIfCanRequestContract(kafkaTopicId, messageType, schema);
 
         if (enforceSchemaEnvelope)
         {
@@ -262,6 +261,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
 
         var topic = await _kafkaTopicRepository.Get(kafkaTopicId);
 
+        int schemaVersion = (int)schema.GetSchemaVersion()!;
         var messageContract = MessageContract.RequestNew(
             kafkaTopicId: kafkaTopicId,
             messageType: messageType,

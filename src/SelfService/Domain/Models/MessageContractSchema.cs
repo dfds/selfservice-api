@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Json.Schema;
 using SelfService.Domain.Exceptions;
@@ -7,6 +8,7 @@ namespace SelfService.Domain.Models;
 public class MessageContractSchema : ValueObject
 {
     private readonly string _value;
+    public int Version { get; private set; }
 
     private MessageContractSchema(string value)
     {
@@ -101,6 +103,23 @@ public class MessageContractSchema : ValueObject
 
         // Check if json can be parsed
         JsonSchema.FromText(_value);
+    }
+
+    public int? GetSchemaVersion()
+    {
+        JsonDocument asDocument = JsonDocument.Parse(_value);
+        try
+        {
+            return asDocument.RootElement
+                .GetProperty("properties")
+                .GetProperty("schemaVersion")
+                .GetProperty("const")
+                .GetInt32();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public static bool TryParse(string? text, out MessageContractSchema schema)

@@ -429,7 +429,6 @@ public class KafkaTopicController : ControllerBase
                 example: contractExample,
                 schema: contractSchema,
                 requestedBy: userId,
-                schemaVersion: 1,
                 enforceSchemaEnvelope: true
             );
 
@@ -499,6 +498,82 @@ public class KafkaTopicController : ControllerBase
                 {
                     Title = "Uncaught Exception",
                     Detail = $"Failed to retry creating message contract: {e.InnerException}."
+                }
+            );
+        }
+    }
+
+    [HttpPost("{id:required}/messagecontracts-validate")]
+    [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> ValidateMessageContract(
+        string id,
+        [FromBody] ValidateMessageContractRequest payload
+    )
+    {
+        if (!User.TryGetUserId(userId: out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access denied!",
+                    Detail = $"User could not be granted access to adding message contracts.",
+                }
+            );
+        }
+
+        var (kafkaTopicId, messageType, contractSchema) = RequestParserRegistry
+            .StringToValueParser(ModelState)
+            .Parse<KafkaTopicId, MessageType, MessageContractSchema>(id, payload.MessageType, payload.Schema);
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var topic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
+        if (topic is null)
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Kafka topic not found",
+                    Detail = $"Kafka topic with id \"{id}\" is not known by the system."
+                }
+            );
+        }
+
+        var hasAccess = await _membershipQuery.HasActiveMembership(userId, topic.CapabilityId);
+        if (topic.IsPrivate && !hasAccess)
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access denied!",
+                    Detail =
+                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+                }
+            );
+        }
+
+        try
+        {
+            // TODO: currently we only support schemas for public topics, so we force the envelope to be present
+            await _kafkaTopicApplicationService.CheckIfCanRequestContract(
+                kafkaTopicId: kafkaTopicId,
+                messageType: messageType,
+                newSchema: contractSchema
+            );
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid message contract",
+                    Detail = $"Failed to validate message contract: {e.InnerException}."
                 }
             );
         }
