@@ -46,7 +46,7 @@ public class MessageContractSchema : ValueObject
         if (requiredKeys == null)
             throw new FormatException($"Value \"{_value}\" is not valid, missing required key \"required\".");
 
-        string[] mandatoryEnvelopeKeys = { "schemaVersion", "type", "messageId" };
+        string[] mandatoryEnvelopeKeys = { "data", "schemaVersion", "type", "messageId" };
         foreach (var key in mandatoryEnvelopeKeys)
         {
             if (!requiredKeys.Contains(key))

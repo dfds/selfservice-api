@@ -58,7 +58,8 @@ public class TestMessageContractValidation
                    "required": [
                      "messageId",
                      "type",
-                     "data"
+                     "data",
+                     "schemaVersion"
                    ]
                  }
                  """;
@@ -230,5 +231,81 @@ public class TestMessageContractValidation
     async Task succeeds_when_going_from_closed_content_model_to_opened()
     {
         await SchemaOnePropertyThenAddingAnother(false, true);
+    }
+
+    [Fact]
+    void can_detect_correct_dfds_envelope()
+    {
+        var schemaString = GetSchema(
+            1,
+            BuildData(new[] { BuildProperty("someTest", "integer", "1") }, new[] { "someTest" }, false)
+        );
+        var testSchema = MessageContractSchema.Parse(schemaString);
+        testSchema.CheckValidSchemaEnvelope();
+    }
+
+    [Fact]
+    void fails_on_incorrect_dfds_envelope()
+    {
+        string CreateSchemaWithRequired(string[] required)
+        {
+            return $$"""
+                     {
+                       "type": "object",
+                       "properties": {
+                        "schemaVersion":{
+                            "type": "integer",
+                            "const": 1
+                        },
+                         "messageId": {
+                           "type": "string",
+                           "examples": [
+                             "<123>"
+                           ]
+                         },
+                         "type": {
+                           "type": "string",
+                           "examples": [
+                             "dfds-envelope"
+                           ]
+                         },
+                         "data": {
+                             "some_data": {
+                               "type": "string",
+                               "examples": [
+                                 "dfds-envelope"
+                               ]
+                             }
+                         }
+                       },
+                       "required": [
+                          {{string.Join(",", required.Select(p => $"\"{p}\""))}}
+                       ]
+                     }
+                     """;
+        }
+
+        void AssertThrows(string[] required)
+        {
+            Assert.Throws<FormatException>(
+                () => MessageContractSchema.Parse(CreateSchemaWithRequired(required)).CheckValidSchemaEnvelope()
+            );
+        }
+
+        AssertThrows(new[] { "schemaVersion", "type", "data" });
+        AssertThrows(new[] { "schemaVersion", "type", "messageId" });
+        AssertThrows(new[] { "schemaVersion", "data", "messageId" });
+        AssertThrows(new[] { "type", "data", "messageId" });
+        AssertThrows(new[] { "schemaVersion", "type" });
+        AssertThrows(new[] { "schemaVersion", "data" });
+        AssertThrows(new[] { "schemaVersion", "messageId" });
+        AssertThrows(new[] { "type", "data" });
+        AssertThrows(new[] { "type", "messageId" });
+        AssertThrows(new[] { "data", "messageId" });
+        AssertThrows(new[] { "schemaVersion" });
+        AssertThrows(new[] { "type" });
+        AssertThrows(new[] { "data" });
+        AssertThrows(new[] { "messageId" });
+        AssertThrows(new string[] { });
     }
 }
