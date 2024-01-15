@@ -83,6 +83,7 @@ public static class Domain
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
         builder.Services.AddHostedService<ActOnPendingCapabilityDeletions>();
         builder.Services.AddHostedService<ECRRepositorySynchronizer>();
+        builder.Services.AddHostedService<UpdateOutOfSyncEcrRepos>();
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
@@ -90,6 +91,8 @@ public static class Domain
             IDeactivatedMemberCleanerApplicationService,
             DeactivatedMemberCleanerApplicationService
         >();
+
+        builder.Services.AddSingleton<OutOfSyncECRInfo>(OutOfSyncECRInfo.createNewEmpty());
 
         var topdeskEndpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
         var topdeskApiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];

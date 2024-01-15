@@ -1,5 +1,7 @@
+using Prometheus;
 using SelfService.Application;
 using SelfService.Domain.Models;
+using SelfService.Infrastructure.Api.Metrics;
 
 namespace SelfService.Domain.Services;
 
@@ -16,12 +18,14 @@ public class ECRRepositoryService : IECRRepositoryService
         "Repository created automatically by the SelfService Team";
 
     private readonly bool _localDevSkipAwsECRRepositoryCreation = false;
+    private readonly OutOfSyncECRInfo _outOfSyncEcrInfo;
 
     public ECRRepositoryService(
         ILogger<ECRRepositoryService> logger,
         IECRRepositoryRepository ecrRepositoryRepository,
         IAwsECRRepositoryApplicationService awsEcrRepositoryApplicationService,
-        SystemTime systemTime
+        SystemTime systemTime,
+        OutOfSyncECRInfo outOfSyncEcrInfo
     )
     {
         _logger = logger;
@@ -30,6 +34,7 @@ public class ECRRepositoryService : IECRRepositoryService
         _systemTime = systemTime;
         var envValue = Environment.GetEnvironmentVariable("LOCAL_DEV_SKIP_AWS_ECR_REPOSITORY_CREATION") ?? "false";
         _localDevSkipAwsECRRepositoryCreation = envValue == "true";
+        _outOfSyncEcrInfo = outOfSyncEcrInfo;
     }
 
     public Task<bool> HasRepository(string repositoryName)
@@ -42,35 +47,7 @@ public class ECRRepositoryService : IECRRepositoryService
         return _ecrRepositoryRepository.GetAll();
     }
 
-    [TransactionalBoundary]
-    public async Task<ECRRepository> AddRepository(string name, string description, UserId userId)
-    {
-        try
-        {
-            if (_localDevSkipAwsECRRepositoryCreation)
-            {
-                _logger.LogInformation("Skipping AWS calls because LOCAL_DEV_SKIP_AWS_CALLS is true");
-            }
-            else
-            {
-                _logger.LogInformation("Adding new ECRRepository in aws: {ECRRepositoryName}", name);
-                await _awsEcrRepositoryApplicationService.CreateECRRepo(name);
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Error creating repo {ECRRepositoryName}", name);
-            throw new Exception($"Error creating repo {name}: {e.Message}");
-        }
-
-        var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, userId, DateTime.UtcNow);
-        _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", name);
-        await _ecrRepositoryRepository.Add(newRepository);
-        return newRepository;
-    }
-
-    [TransactionalBoundary]
-    public async Task SynchronizeAwsECRAndDatabase(bool performUpdateOnMismatch)
+    public async Task<OutOfSyncECRInfo> GetOutofSyncECRCount()
     {
         var awsRepositoriesSet = new HashSet<string>(await _awsEcrRepositoryApplicationService.GetECRRepositories());
 
@@ -105,6 +82,68 @@ public class ECRRepositoryService : IECRRepositoryService
                 }
             });
 
+        int repositoriesNotInAwsCount = repositoriesNotInAws.Count;
+        int repositoriesNotInDbCount = repositoriesNotInDb.Count;
+
+        var outOfSyncECRInfo = new OutOfSyncECRInfo(
+            repositoriesNotInAwsCount,
+            repositoriesNotInDbCount,
+            repositoriesNotInAws,
+            repositoriesNotInDb,
+            true, // this value will only be used in updates to the in-memory OutOfSyncECRInfo Singleton
+            DateTime.Now.AddHours(12) //12h = 720min
+        );
+
+        return outOfSyncECRInfo;
+    }
+
+    public async Task UpdateOutOfSyncECRInfo()
+    {
+        var outOfSyncEcrInfo = await GetOutofSyncECRCount();
+        _outOfSyncEcrInfo.SetValuesFromInstance(outOfSyncEcrInfo);
+        EcrMetrics.OutOfSyncEcrMetric.Set(
+            _outOfSyncEcrInfo.RepositoriesNotInAwsCount + _outOfSyncEcrInfo.RepositoriesNotInDbCount
+        );
+    }
+
+    [TransactionalBoundary]
+    public async Task<ECRRepository> AddRepository(string name, string description, UserId userId)
+    {
+        try
+        {
+            if (_localDevSkipAwsECRRepositoryCreation)
+            {
+                _logger.LogInformation("Skipping AWS calls because LOCAL_DEV_SKIP_AWS_CALLS is true");
+            }
+            else
+            {
+                _logger.LogInformation("Adding new ECRRepository in aws: {ECRRepositoryName}", name);
+                await _awsEcrRepositoryApplicationService.CreateECRRepo(name);
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error creating repo {ECRRepositoryName}", name);
+            throw new Exception($"Error creating repo {name}: {e.Message}");
+        }
+
+        var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, userId, DateTime.UtcNow);
+        _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", name);
+        await _ecrRepositoryRepository.Add(newRepository);
+        return newRepository;
+    }
+
+    [TransactionalBoundary]
+    public async Task SynchronizeAwsECRAndDatabase(bool performUpdateOnMismatch)
+    {
+        var outOfSyncEcrInfo = await GetOutofSyncECRCount();
+
+        var repositoriesNotInAws = outOfSyncEcrInfo.RepositoriesNotInAws;
+        var repositoriesNotInDb = outOfSyncEcrInfo.RepositoriesNotInDb;
+
+        int repositoriesNotInAwsCount = outOfSyncEcrInfo.RepositoriesNotInAwsCount;
+        int repositoriesNotInDbCount = outOfSyncEcrInfo.RepositoriesNotInDbCount;
+
         if (!performUpdateOnMismatch)
         {
             if (repositoriesNotInAws.Count > 0 || repositoriesNotInDb.Count > 0)
@@ -118,7 +157,7 @@ public class ECRRepositoryService : IECRRepositoryService
             {
                 _logger.LogError(
                     "Found {NumberOfDbRepositories} repositories in the database that do not exist in aws: {RepositoriesNotInAws}",
-                    repositoriesNotInAws.Count,
+                    repositoriesNotInAwsCount,
                     string.Join(',', repositoriesNotInAws)
                 );
             }
@@ -127,7 +166,7 @@ public class ECRRepositoryService : IECRRepositoryService
             {
                 _logger.LogWarning(
                     "Found {NumberOfAwsRepositories} repositories in aws that do not exist in the database: {RepositoriesNotInDb}",
-                    repositoriesNotInDb.Count,
+                    repositoriesNotInDbCount,
                     string.Join(',', repositoriesNotInDb)
                 );
             }
