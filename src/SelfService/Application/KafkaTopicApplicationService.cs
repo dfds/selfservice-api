@@ -36,52 +36,25 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         if (schemaVersion == null)
             throw new ArgumentException("Cannot request new message contract without schema version");
 
-        var contracts = (await _messageContractRepository.FindBy(kafkaTopicId, messageType)).ToArray();
-        if (contracts.Length == 0)
+        var latestContract = (await _messageContractRepository.GetLatestSchema(kafkaTopicId, messageType));
+        if (latestContract == null)
         {
             if (schemaVersion != 1)
                 throw new ArgumentException("Cannot request new message contract with schema version other than 1");
             return;
         }
 
-        var latestSchemaVersion = 0;
-        MessageContract? latestContract = null;
-        foreach (MessageContract contract in contracts)
-        {
-            if (contract.SchemaVersion > latestSchemaVersion)
-            {
-                latestSchemaVersion = contract.SchemaVersion;
-                latestContract = contract;
-            }
-
-            if (contract.SchemaVersion != schemaVersion)
-                continue;
-
-            _logger.LogError(
-                "Cannot request new message contract {MessageType} for topic {KafkaTopicId} because it already exists for version {SchemaVersion}",
-                messageType,
-                kafkaTopicId,
-                schemaVersion
-            );
-            throw new EntityAlreadyExistsException(
-                $"Message contract \"{messageType}\" already exists on topic \"{kafkaTopicId}\" with version \"{schemaVersion}\"."
-            );
-        }
-
-        if (schemaVersion != latestSchemaVersion + 1)
+        if (schemaVersion != latestContract.SchemaVersion + 1)
         {
             throw new ArgumentException(
                 $"Cannot request new message contract with schema version {schemaVersion} as the latest version is {latestSchemaVersion}"
             );
         }
 
-        if (latestContract != null)
-        {
-            JsonDocument previousSchemaDocument = JsonDocument.Parse(latestContract.Schema.ToString());
-            JsonDocument newSchemaDocument = JsonDocument.Parse(newSchema);
-            // Check evolution is valid (i.e. new schema is compatible with latest schema)
-            CheckIsBackwardCompatible(previousSchemaDocument, newSchemaDocument);
-        }
+        JsonDocument previousSchemaDocument = JsonDocument.Parse(latestContract.Schema.ToString());
+        JsonDocument newSchemaDocument = JsonDocument.Parse(newSchema);
+        // Check evolution is valid (i.e. new schema is compatible with latest schema)
+        CheckIsBackwardCompatible(previousSchemaDocument, newSchemaDocument);
     }
 
     private void CheckIsBackwardCompatible(JsonDocument previousSchemaDocument, JsonDocument newSchemaDocument)
@@ -139,6 +112,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         {
             Console.WriteLine($"prev schema doesnt have properties: {previousSchemaDocument}");
         }
+
         try
         {
             foreach (var property in newSchemaDocument.RootElement.GetProperty("properties").EnumerateObject())
