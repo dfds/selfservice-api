@@ -560,7 +560,7 @@ public class KafkaTopicController : ControllerBase
         try
         {
             // TODO: currently we only support schemas for public topics, so we force the envelope to be present
-            await _kafkaTopicApplicationService.CheckIfCanRequestContract(
+            await _kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
                 kafkaTopicId: kafkaTopicId,
                 messageType: messageType,
                 newSchema: contractSchema

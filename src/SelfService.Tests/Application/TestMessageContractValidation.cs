@@ -86,7 +86,7 @@ public class TestMessageContractValidation
             BuildData(new[] { BuildProperty("someTest", "integer", "1") }, new[] { "someTest" }, false)
         );
         var testSchema = MessageContractSchema.Parse(schemaString);
-        await kafkaTopicApplicationService.CheckIfCanRequestContract(
+        await kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
             testKafkaTopic.Id,
             MessageType.Parse("test"),
             testSchema
@@ -142,7 +142,7 @@ public class TestMessageContractValidation
             )
         );
         var testSchema = MessageContractSchema.Parse(secondValidEvolution);
-        await kafkaTopicApplicationService.CheckIfCanRequestContract(
+        await kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
             testKafkaTopic.Id,
             testMessageContract.MessageType,
             testSchema
@@ -188,7 +188,7 @@ public class TestMessageContractValidation
             BuildData(properties.ToArray(), new[] { "someTest" }, openContentModelSecondSchema)
         );
         var testSchema = MessageContractSchema.Parse(secondValidEvolution);
-        await kafkaTopicApplicationService.CheckIfCanRequestContract(
+        await kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
             testKafkaTopic.Id,
             testMessageContract.MessageType,
             testSchema

@@ -26,7 +26,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         _kafkaTopicRepository = kafkaTopicRepository;
     }
 
-    public async Task CheckIfCanRequestContract(
+    public async Task ValidateRequestForCreatingNewContract(
         KafkaTopicId kafkaTopicId,
         MessageType messageType,
         MessageContractSchema newSchema
@@ -216,7 +216,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             requestedBy
         );
 
-        await CheckIfCanRequestContract(kafkaTopicId, messageType, schema);
+        await ValidateRequestForCreatingNewContract(kafkaTopicId, messageType, schema);
 
         if (enforceSchemaEnvelope)
         {

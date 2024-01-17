@@ -30,5 +30,9 @@ public interface IKafkaTopicApplicationService
     Task DeleteKafkaTopic(KafkaTopicId kafkaTopicId, string requestedBy);
     Task DeleteAssociatedMessageContracts(KafkaTopicId kafkaTopicId, string requestedBy);
 
-    Task CheckIfCanRequestContract(KafkaTopicId kafkaTopicId, MessageType messageType, MessageContractSchema newSchema);
+    Task ValidateRequestForCreatingNewContract(
+        KafkaTopicId kafkaTopicId,
+        MessageType messageType,
+        MessageContractSchema newSchema
+    );
 }
