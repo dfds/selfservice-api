@@ -121,7 +121,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
 
         // default value for confluent cloud schemas
         bool previousSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
-        bool newSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
+        bool newSchemaIsOpenContentModel = GetAdditionalProperties(newSchemaDocument);
 
         if (previousSchemaIsOpenContentModel && !newSchemaIsOpenContentModel)
             throw new ArgumentException($"Cannot change schema from open content model to closed content model");
