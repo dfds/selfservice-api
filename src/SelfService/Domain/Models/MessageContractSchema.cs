@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Json.Schema;
 using SelfService.Domain.Exceptions;
@@ -45,7 +46,7 @@ public class MessageContractSchema : ValueObject
         if (requiredKeys == null)
             throw new FormatException($"Value \"{_value}\" is not valid, missing required key \"required\".");
 
-        string[] mandatoryEnvelopeKeys = { "schemaVersion", "type", "messageId" };
+        string[] mandatoryEnvelopeKeys = { "data", "schemaVersion", "type", "messageId" };
         foreach (var key in mandatoryEnvelopeKeys)
         {
             if (!requiredKeys.Contains(key))
@@ -101,6 +102,23 @@ public class MessageContractSchema : ValueObject
 
         // Check if json can be parsed
         JsonSchema.FromText(_value);
+    }
+
+    public int? GetSchemaVersion()
+    {
+        JsonDocument asDocument = JsonDocument.Parse(_value);
+        try
+        {
+            return asDocument.RootElement
+                .GetProperty("properties")
+                .GetProperty("schemaVersion")
+                .GetProperty("const")
+                .GetInt32();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public static bool TryParse(string? text, out MessageContractSchema schema)

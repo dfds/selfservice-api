@@ -11,7 +11,6 @@ public interface IKafkaTopicApplicationService
         MessageContractExample example,
         MessageContractSchema schema,
         string requestedBy,
-        int schemaVersion,
         bool enforceSchemaEnvelope
     );
 
@@ -30,4 +29,10 @@ public interface IKafkaTopicApplicationService
     Task ChangeKafkaTopicDescription(KafkaTopicId kafkaTopicId, string newDescription, string changedBy);
     Task DeleteKafkaTopic(KafkaTopicId kafkaTopicId, string requestedBy);
     Task DeleteAssociatedMessageContracts(KafkaTopicId kafkaTopicId, string requestedBy);
+
+    Task ValidateRequestForCreatingNewContract(
+        KafkaTopicId kafkaTopicId,
+        MessageType messageType,
+        MessageContractSchema newSchema
+    );
 }
