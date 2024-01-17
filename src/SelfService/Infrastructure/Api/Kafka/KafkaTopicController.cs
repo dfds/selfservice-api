@@ -518,7 +518,7 @@ public class KafkaTopicController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Access denied!",
-                    Detail = $"User could not be granted access to adding message contracts.",
+                    Detail = $"User could not be granted access to validate message contract.",
                 }
             );
         }

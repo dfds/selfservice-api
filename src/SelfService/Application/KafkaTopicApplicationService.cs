@@ -32,28 +32,27 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         MessageContractSchema newSchema
     )
     {
-        var schemaVersion = newSchema.GetSchemaVersion();
-        if (schemaVersion == null)
+        var requestedSchemaVersion = newSchema.GetSchemaVersion();
+        if (requestedSchemaVersion == null)
             throw new ArgumentException("Cannot request new message contract without schema version");
 
         var latestContract = (await _messageContractRepository.GetLatestSchema(kafkaTopicId, messageType));
         if (latestContract == null)
         {
-            if (schemaVersion != 1)
+            if (requestedSchemaVersion != 1)
                 throw new ArgumentException("Cannot request new message contract with schema version other than 1");
             return;
         }
 
-        if (schemaVersion != latestContract.SchemaVersion + 1)
+        if (requestedSchemaVersion != latestContract.SchemaVersion + 1)
         {
             throw new ArgumentException(
-                $"Cannot request new message contract with schema version {schemaVersion} as the latest version is {latestSchemaVersion}"
+                $"Cannot request new message contract with schema version {requestedSchemaVersion} as the latest version is {latestContract.SchemaVersion}"
             );
         }
 
         JsonDocument previousSchemaDocument = JsonDocument.Parse(latestContract.Schema.ToString());
         JsonDocument newSchemaDocument = JsonDocument.Parse(newSchema);
-        // Check evolution is valid (i.e. new schema is compatible with latest schema)
         CheckIsBackwardCompatible(previousSchemaDocument, newSchemaDocument);
     }
 
