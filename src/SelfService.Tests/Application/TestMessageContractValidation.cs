@@ -1,3 +1,4 @@
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 
@@ -204,7 +205,7 @@ public class TestMessageContractValidation
     [Fact]
     public async Task closed_content_model_fails_on_evolution_remove_property()
     {
-        await Assert.ThrowsAsync<ArgumentException>(
+        await Assert.ThrowsAsync<InvalidMessageContractRequestException>(
             async () => await SchemaWithTwoPropertiesThenDeleting(false, false)
         );
     }
@@ -218,13 +219,17 @@ public class TestMessageContractValidation
     [Fact]
     public async Task open_content_model_failed_on_evolution_adding_property()
     {
-        await Assert.ThrowsAsync<ArgumentException>(async () => await SchemaOnePropertyThenAddingAnother(true, true));
+        await Assert.ThrowsAsync<InvalidMessageContractRequestException>(
+            async () => await SchemaOnePropertyThenAddingAnother(true, true)
+        );
     }
 
     [Fact]
     async Task fails_when_going_from_open_content_model_to_closed()
     {
-        await Assert.ThrowsAsync<ArgumentException>(async () => await SchemaOnePropertyThenAddingAnother(true, false));
+        await Assert.ThrowsAsync<InvalidMessageContractRequestException>(
+            async () => await SchemaOnePropertyThenAddingAnother(true, false)
+        );
     }
 
     [Fact]
@@ -287,7 +292,7 @@ public class TestMessageContractValidation
 
         void AssertThrows(string[] required)
         {
-            Assert.Throws<FormatException>(
+            Assert.Throws<InvalidMessageContractEnvelopeException>(
                 () => MessageContractSchema.Parse(CreateSchemaWithRequired(required)).ValidateSchemaEnvelope()
             );
         }

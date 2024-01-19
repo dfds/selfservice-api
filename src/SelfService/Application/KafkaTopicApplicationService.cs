@@ -34,19 +34,23 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
     {
         var requestedSchemaVersion = newSchema.GetSchemaVersion();
         if (requestedSchemaVersion == null)
-            throw new ArgumentException("Cannot request new message contract without schema version");
+            throw new InvalidMessageContractRequestException(
+                "Cannot request new message contract without schema version"
+            );
 
         var latestContract = (await _messageContractRepository.GetLatestSchema(kafkaTopicId, messageType));
         if (latestContract == null)
         {
             if (requestedSchemaVersion != 1)
-                throw new ArgumentException("Cannot request new message contract with schema version other than 1");
+                throw new InvalidMessageContractRequestException(
+                    "Cannot request new message contract with schema version other than 1"
+                );
             return;
         }
 
         if (requestedSchemaVersion != latestContract.SchemaVersion + 1)
         {
-            throw new ArgumentException(
+            throw new InvalidMessageContractRequestException(
                 $"Cannot request new message contract with schema version {requestedSchemaVersion} as the latest version is {latestContract.SchemaVersion}"
             );
         }

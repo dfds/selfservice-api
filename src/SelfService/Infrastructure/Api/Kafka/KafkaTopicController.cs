@@ -570,7 +570,6 @@ public class KafkaTopicController : ControllerBase
 
         try
         {
-            // TODO: currently we only support schemas for public topics, so we force the envelope to be present
             await _kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
                 kafkaTopicId: kafkaTopicId,
                 messageType: messageType,
@@ -578,13 +577,13 @@ public class KafkaTopicController : ControllerBase
             );
             return Ok();
         }
-        catch (Exception e)
+        catch (InvalidMessageContractRequestException e)
         {
             return BadRequest(
                 new ProblemDetails
                 {
-                    Title = "Invalid message contract",
-                    Detail = $"Failed to validate message contract: {e.InnerException}."
+                    Title = "Invalid message contract request",
+                    Detail = $"Failed to add message contract: {e.Message}."
                 }
             );
         }
