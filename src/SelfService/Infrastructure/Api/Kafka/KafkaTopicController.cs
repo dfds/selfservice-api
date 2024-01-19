@@ -585,7 +585,7 @@ public class KafkaTopicController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid message contract request",
-                    Detail = $"Failed to add message contract: {e.Message}."
+                    Detail = $"Invalid message contract: {e.Message}."
                 }
             );
         }
