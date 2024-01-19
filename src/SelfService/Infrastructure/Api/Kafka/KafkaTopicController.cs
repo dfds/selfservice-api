@@ -460,6 +460,7 @@ public class KafkaTopicController : ControllerBase
 
     [HttpPost("{id:required}/messagecontracts/{contractId:required}/retry")]
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> RetryCreatingMessageContract([FromRoute] string id, [FromRoute] string contractId)
@@ -516,6 +517,7 @@ public class KafkaTopicController : ControllerBase
 
     [HttpPost("{id:required}/messagecontracts-validate")]
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> ValidateMessageContract(
