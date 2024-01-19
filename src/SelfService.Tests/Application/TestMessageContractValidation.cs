@@ -241,7 +241,7 @@ public class TestMessageContractValidation
             BuildData(new[] { BuildProperty("someTest", "integer", "1") }, new[] { "someTest" }, false)
         );
         var testSchema = MessageContractSchema.Parse(schemaString);
-        testSchema.CheckValidSchemaEnvelope();
+        testSchema.ValidateSchemaEnvelope();
     }
 
     [Fact]
@@ -288,7 +288,7 @@ public class TestMessageContractValidation
         void AssertThrows(string[] required)
         {
             Assert.Throws<FormatException>(
-                () => MessageContractSchema.Parse(CreateSchemaWithRequired(required)).CheckValidSchemaEnvelope()
+                () => MessageContractSchema.Parse(CreateSchemaWithRequired(required)).ValidateSchemaEnvelope()
             );
         }
 

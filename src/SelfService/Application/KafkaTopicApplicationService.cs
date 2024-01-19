@@ -96,7 +96,9 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         bool newSchemaIsOpenContentModel = GetAdditionalProperties(newSchemaDocument);
 
         if (previousSchemaIsOpenContentModel && !newSchemaIsOpenContentModel)
-            throw new ArgumentException($"Cannot change schema from open content model to closed content model");
+            throw new InvalidMessageContractRequestException(
+                $"Cannot change schema from open content model to closed content model"
+            );
 
         // Simplified port of https://github.dev/confluentinc/schema-registry
         HashSet<string> propertyKeys = new HashSet<string>();
@@ -147,20 +149,24 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
                 if (newSchemaIsOpenContentModel)
                     continue;
 
-                throw new ArgumentException($"Not allowed to remove properties from closed content model");
+                throw new InvalidMessageContractRequestException(
+                    $"Not allowed to remove properties from closed content model"
+                );
             }
 
             if (previousProperty == null)
             {
                 if (previousSchemaIsOpenContentModel)
                 {
-                    throw new ArgumentException($"Not allowed to add properties to open content model");
+                    throw new InvalidMessageContractRequestException(
+                        $"Not allowed to add properties to open content model"
+                    );
                 }
 
                 if (newSchemaRequired.Contains(propertyKey))
                 {
                     // Not allowed to add required properties to closed content model
-                    throw new ArgumentException($"Not allowed to add new required properties");
+                    throw new InvalidMessageContractRequestException($"Not allowed to add new required properties");
                 }
 
                 continue;
@@ -174,7 +180,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
     {
         if (prevSchema.ValueKind != newSchema.ValueKind)
         {
-            throw new ArgumentException(
+            throw new InvalidMessageContractRequestException(
                 $"Cannot change schema type from {prevSchema.ValueKind} to {newSchema.ValueKind} for property {prevSchema}"
             );
         }
@@ -220,7 +226,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
 
         if (enforceSchemaEnvelope)
         {
-            schema.CheckValidSchemaEnvelope();
+            schema.ValidateSchemaEnvelope();
         }
 
         var topic = await _kafkaTopicRepository.Get(kafkaTopicId);
