@@ -34,31 +34,39 @@ public class MessageContractSchema : ValueObject
         throw new FormatException($"Value \"{text}\" is not valid.");
     }
 
-    public void CheckValidSchemaEnvelope()
+    public void ValidateSchemaEnvelope()
     {
-        CheckIsValidJsonSchema();
+        ValidateJsonSchema();
 
         var jsonNode = JsonNode.Parse(_value)!.AsObject();
         if (!jsonNode.TryGetPropertyValue("required", out var requiredPropertiesNode))
-            throw new FormatException($"Value \"{_value}\" is not valid, missing required key \"required\".");
+            throw new InvalidMessageContractEnvelopeException(
+                $"Value \"{_value}\" is not valid, missing required key \"required\"."
+            );
 
         var requiredKeys = requiredPropertiesNode?.AsArray().Select(x => x!.ToString()).ToList();
         if (requiredKeys == null)
-            throw new FormatException($"Value \"{_value}\" is not valid, missing required key \"required\".");
+            throw new InvalidMessageContractEnvelopeException(
+                $"Value \"{_value}\" is not valid, missing required key \"required\"."
+            );
 
         string[] mandatoryEnvelopeKeys = { "data", "schemaVersion", "type", "messageId" };
         foreach (var key in mandatoryEnvelopeKeys)
         {
             if (!requiredKeys.Contains(key))
             {
-                throw new FormatException($"Value \"{_value}\" is not valid, missing required key \"{key}\".");
+                throw new InvalidMessageContractEnvelopeException(
+                    $"Value \"{_value}\" is not valid, missing required key \"{key}\"."
+                );
             }
         }
 
         jsonNode.TryGetPropertyValue("properties", out var propertiesNode);
         var properties = propertiesNode?.AsObject();
         if (properties == null)
-            throw new FormatException($"Value \"{_value}\" is not valid, missing required key \"properties\".");
+            throw new InvalidMessageContractEnvelopeException(
+                $"Value \"{_value}\" is not valid, missing required key \"properties\"."
+            );
         var asObject = propertiesNode!.AsObject();
         EnsurePropertyOfType(asObject, "schemaVersion", "integer");
         EnsureSchemaIsConst(asObject);
@@ -69,13 +77,15 @@ public class MessageContractSchema : ValueObject
     private void EnsurePropertyOfType(JsonObject propertiesNode, string propertyName, string type)
     {
         if (!propertiesNode.TryGetPropertyValue(propertyName, out var propertyNode))
-            throw new FormatException($"Value \"{_value}\" is not valid, missing required key \"{propertyName}\".");
+            throw new InvalidMessageContractEnvelopeException(
+                $"Value \"{_value}\" is not valid, missing required key \"{propertyName}\"."
+            );
         if (propertyNode?.AsObject().TryGetPropertyValue("type", out var typeNode) != true)
-            throw new FormatException(
+            throw new InvalidMessageContractEnvelopeException(
                 $"Value \"{_value}\" is not valid, missing required key \"type\" for property \"{propertyName}\"."
             );
         if (typeNode?.ToString() != type)
-            throw new FormatException(
+            throw new InvalidMessageContractEnvelopeException(
                 $"Value \"{_value}\" is not valid, property \"{propertyName}\" must be of type \"{type}\"."
             );
     }
@@ -83,14 +93,16 @@ public class MessageContractSchema : ValueObject
     private void EnsureSchemaIsConst(JsonObject propertiesNode)
     {
         if (!propertiesNode.TryGetPropertyValue("schemaVersion", out var schemaVersionNode))
-            throw new FormatException($"Value \"{_value}\" is not valid, missing required key \"schemaVersion\".");
+            throw new InvalidMessageContractEnvelopeException(
+                $"Value \"{_value}\" is not valid, missing required key \"schemaVersion\"."
+            );
         if (schemaVersionNode?.AsObject().TryGetPropertyValue("const", out _) != true)
-            throw new FormatException(
+            throw new InvalidMessageContractEnvelopeException(
                 $"Value \"{_value}\" is not valid, missing required key \"enum\" for property \"schemaVersion\"."
             );
     }
 
-    private void CheckIsValidJsonSchema()
+    private void ValidateJsonSchema()
     {
         var jsonNode = JsonNode.Parse(_value)!.AsObject();
         var result = MetaSchemas.Content202012.Evaluate(

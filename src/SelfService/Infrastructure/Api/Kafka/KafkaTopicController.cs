@@ -364,6 +364,7 @@ public class KafkaTopicController : ControllerBase
 
     [HttpPost("{id:required}/messagecontracts")]
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> AddMessageContract(string id, [FromBody] NewMessageContractRequest payload)
@@ -435,13 +436,23 @@ public class KafkaTopicController : ControllerBase
             var messageContract = await _messageContractRepository.Get(messageContractId);
             return Ok(_apiResourceFactory.Convert(messageContract));
         }
-        catch (EntityAlreadyExistsException)
+        catch (InvalidMessageContractEnvelopeException e)
         {
-            return Conflict(
+            return BadRequest(
                 new ProblemDetails
                 {
-                    Title = "Message type already exists",
-                    Detail = $"Topic \"{topic.Name}\" already has a message with message type \"{messageType}\"."
+                    Title = "Invalid message contract envelope",
+                    Detail = $"Failed to add message contract: {e.Message}."
+                }
+            );
+        }
+        catch (InvalidMessageContractRequestException e)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid message contract request",
+                    Detail = $"Failed to add message contract: {e.Message}."
                 }
             );
         }
@@ -449,6 +460,7 @@ public class KafkaTopicController : ControllerBase
 
     [HttpPost("{id:required}/messagecontracts/{contractId:required}/retry")]
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> RetryCreatingMessageContract([FromRoute] string id, [FromRoute] string contractId)
@@ -505,6 +517,7 @@ public class KafkaTopicController : ControllerBase
 
     [HttpPost("{id:required}/messagecontracts-validate")]
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> ValidateMessageContract(
@@ -559,7 +572,6 @@ public class KafkaTopicController : ControllerBase
 
         try
         {
-            // TODO: currently we only support schemas for public topics, so we force the envelope to be present
             await _kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
                 kafkaTopicId: kafkaTopicId,
                 messageType: messageType,
@@ -567,13 +579,13 @@ public class KafkaTopicController : ControllerBase
             );
             return Ok();
         }
-        catch (Exception e)
+        catch (InvalidMessageContractRequestException e)
         {
             return BadRequest(
                 new ProblemDetails
                 {
-                    Title = "Invalid message contract",
-                    Detail = $"Failed to validate message contract: {e.InnerException}."
+                    Title = "Invalid message contract request",
+                    Detail = $"Failed to add message contract: {e.Message}."
                 }
             );
         }
