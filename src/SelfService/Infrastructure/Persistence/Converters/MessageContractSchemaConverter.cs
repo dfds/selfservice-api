@@ -10,6 +10,7 @@ public class MessageContractSchemaConverter : ValueConverter<MessageContractSche
         : base(ToDatabaseType, FromDatabaseType) { }
 
     private static Expression<Func<MessageContractSchema, string>> ToDatabaseType => id => id.ToString();
+
     private static Expression<Func<string, MessageContractSchema>> FromDatabaseType =>
         value => MessageContractSchema.Parse(value);
 }

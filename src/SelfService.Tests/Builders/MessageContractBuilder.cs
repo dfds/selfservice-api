@@ -15,6 +15,7 @@ public class MessageContractBuilder
     private string _createdBy;
     private DateTime? _modifiedAt;
     private string? _modifiedBy;
+    private int _schemaVersion;
 
     public MessageContractBuilder()
     {
@@ -29,6 +30,7 @@ public class MessageContractBuilder
         _createdBy = nameof(MessageContractBuilder);
         _modifiedAt = null;
         _modifiedBy = null;
+        _schemaVersion = 1;
     }
 
     public MessageContractBuilder WithId(MessageContractId id)
@@ -40,6 +42,24 @@ public class MessageContractBuilder
     public MessageContractBuilder WithKafkaTopicId(KafkaTopicId kafkaTopicId)
     {
         _kafkaTopicId = kafkaTopicId;
+        return this;
+    }
+
+    public MessageContractBuilder WithSchema(MessageContractSchema schema)
+    {
+        _schema = schema;
+        return this;
+    }
+
+    public MessageContractBuilder WithSchemaVersion(int schemaVersion)
+    {
+        _schemaVersion = schemaVersion;
+        return this;
+    }
+
+    public MessageContractBuilder WithType(MessageType type)
+    {
+        _messageType = type;
         return this;
     }
 
@@ -56,7 +76,8 @@ public class MessageContractBuilder
             createdAt: _createdAt,
             createdBy: _createdBy,
             modifiedAt: _modifiedAt,
-            modifiedBy: _modifiedBy
+            modifiedBy: _modifiedBy,
+            schemaVersion: _schemaVersion
         );
     }
 

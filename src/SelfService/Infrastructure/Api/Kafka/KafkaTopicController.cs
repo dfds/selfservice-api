@@ -364,6 +364,7 @@ public class KafkaTopicController : ControllerBase
 
     [HttpPost("{id:required}/messagecontracts")]
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> AddMessageContract(string id, [FromBody] NewMessageContractRequest payload)
@@ -421,25 +422,37 @@ public class KafkaTopicController : ControllerBase
 
         try
         {
+            // TODO: currently we only support schemas for public topics, so we force the envelope to be present
             var messageContractId = await _kafkaTopicApplicationService.RequestNewMessageContract(
                 kafkaTopicId: kafkaTopicId,
                 messageType: messageType,
                 description: payload.Description!,
                 example: contractExample,
                 schema: contractSchema,
-                requestedBy: userId
+                requestedBy: userId,
+                enforceSchemaEnvelope: true
             );
 
             var messageContract = await _messageContractRepository.Get(messageContractId);
             return Ok(_apiResourceFactory.Convert(messageContract));
         }
-        catch (EntityAlreadyExistsException)
+        catch (InvalidMessageContractEnvelopeException e)
         {
-            return Conflict(
+            return BadRequest(
                 new ProblemDetails
                 {
-                    Title = "Message type already exists",
-                    Detail = $"Topic \"{topic.Name}\" already has a message with message type \"{messageType}\"."
+                    Title = "Invalid message contract envelope",
+                    Detail = $"Failed to add message contract: {e.Message}."
+                }
+            );
+        }
+        catch (InvalidMessageContractRequestException e)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid message contract request",
+                    Detail = $"Failed to add message contract: {e.Message}."
                 }
             );
         }
@@ -447,6 +460,7 @@ public class KafkaTopicController : ControllerBase
 
     [HttpPost("{id:required}/messagecontracts/{contractId:required}/retry")]
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> RetryCreatingMessageContract([FromRoute] string id, [FromRoute] string contractId)
@@ -496,6 +510,82 @@ public class KafkaTopicController : ControllerBase
                 {
                     Title = "Uncaught Exception",
                     Detail = $"Failed to retry creating message contract: {e.InnerException}."
+                }
+            );
+        }
+    }
+
+    [HttpPost("{id:required}/messagecontracts-validate")]
+    [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> ValidateMessageContract(
+        string id,
+        [FromBody] ValidateMessageContractRequest payload
+    )
+    {
+        if (!User.TryGetUserId(userId: out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access denied!",
+                    Detail = $"User could not be granted access to validate message contract.",
+                }
+            );
+        }
+
+        var (kafkaTopicId, messageType, contractSchema) = RequestParserRegistry
+            .StringToValueParser(ModelState)
+            .Parse<KafkaTopicId, MessageType, MessageContractSchema>(id, payload.MessageType, payload.Schema);
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var topic = await _kafkaTopicRepository.FindBy(kafkaTopicId);
+        if (topic is null)
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Kafka topic not found",
+                    Detail = $"Kafka topic with id \"{id}\" is not known by the system."
+                }
+            );
+        }
+
+        var hasAccess = await _membershipQuery.HasActiveMembership(userId, topic.CapabilityId);
+        if (topic.IsPrivate && !hasAccess)
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access denied!",
+                    Detail =
+                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+                }
+            );
+        }
+
+        try
+        {
+            await _kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
+                kafkaTopicId: kafkaTopicId,
+                messageType: messageType,
+                newSchema: contractSchema
+            );
+            return Ok();
+        }
+        catch (InvalidMessageContractRequestException e)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid message contract request",
+                    Detail = $"Invalid message contract: {e.Message}."
                 }
             );
         }

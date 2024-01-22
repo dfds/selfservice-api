@@ -10,7 +10,8 @@ public interface IKafkaTopicApplicationService
         string description,
         MessageContractExample example,
         MessageContractSchema schema,
-        string requestedBy
+        string requestedBy,
+        bool enforceSchemaEnvelope
     );
 
     Task RetryRequestNewMessageContract(
@@ -28,4 +29,10 @@ public interface IKafkaTopicApplicationService
     Task ChangeKafkaTopicDescription(KafkaTopicId kafkaTopicId, string newDescription, string changedBy);
     Task DeleteKafkaTopic(KafkaTopicId kafkaTopicId, string requestedBy);
     Task DeleteAssociatedMessageContracts(KafkaTopicId kafkaTopicId, string requestedBy);
+
+    Task ValidateRequestForCreatingNewContract(
+        KafkaTopicId kafkaTopicId,
+        MessageType messageType,
+        MessageContractSchema newSchema
+    );
 }

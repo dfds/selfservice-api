@@ -13,10 +13,15 @@ namespace SelfService.Infrastructure.Api.Metrics;
 public class MetricsController : ControllerBase
 {
     private readonly IPlatformDataApiRequesterService _platformDataApiRequesterService;
+    private readonly OutOfSyncECRInfo _outOfSyncEcrInfo;
 
-    public MetricsController(IPlatformDataApiRequesterService platformDataApiRequesterService)
+    public MetricsController(
+        IPlatformDataApiRequesterService platformDataApiRequesterService,
+        OutOfSyncECRInfo outOfSyncEcrInfo
+    )
     {
         _platformDataApiRequesterService = platformDataApiRequesterService;
+        _outOfSyncEcrInfo = outOfSyncEcrInfo;
     }
 
     [HttpGet("my-capabilities-costs")]
@@ -60,6 +65,52 @@ public class MetricsController : ControllerBase
             {
                 Title = "Capability Costs not found",
                 Detail = $"No Cost data found for any capability",
+            }
+        );
+    }
+
+    [HttpGet("out-of-sync-ecr-repos")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    public IActionResult GetOutOfSyncECRRepos()
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            if (_outOfSyncEcrInfo.HasBeenSet)
+            {
+                return Ok(_outOfSyncEcrInfo.RepositoriesNotInAwsCount + _outOfSyncEcrInfo.RepositoriesNotInDbCount);
+                //:} Ok(-1); //for debugging the grafana/prometheus
+            }
+        }
+        catch (PlatformDataApiUnavailableException e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails
+                {
+                    Title = "PlatformDataApi unreachable",
+                    Detail = $"PlatformDataApi error: {e.Message}."
+                }
+            );
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetOutOfSyncECRRepos: {e.Message}." }
+            );
+        }
+
+        return NotFound(
+            new ProblemDetails()
+            {
+                Title = "`out-of-sync-ecr-repos` endpoint not found",
+                Detail = $"`out-of-sync-ecr-repos` endpoint was not found",
             }
         );
     }

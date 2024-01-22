@@ -1,4 +1,6 @@
-﻿using SelfService.Domain;
+﻿using System.Text.Json;
+using Json.More;
+using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
@@ -24,6 +26,188 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         _kafkaTopicRepository = kafkaTopicRepository;
     }
 
+    public async Task ValidateRequestForCreatingNewContract(
+        KafkaTopicId kafkaTopicId,
+        MessageType messageType,
+        MessageContractSchema newSchema
+    )
+    {
+        var requestedSchemaVersion = newSchema.GetSchemaVersion();
+        if (requestedSchemaVersion == null)
+            throw new InvalidMessageContractRequestException(
+                "Cannot request new message contract without schema version"
+            );
+
+        var latestContract = (await _messageContractRepository.GetLatestSchema(kafkaTopicId, messageType));
+        if (latestContract == null)
+        {
+            if (requestedSchemaVersion != 1)
+                throw new InvalidMessageContractRequestException(
+                    "Cannot request new message contract with schema version other than 1"
+                );
+            return;
+        }
+
+        if (requestedSchemaVersion != latestContract.SchemaVersion + 1)
+        {
+            throw new InvalidMessageContractRequestException(
+                $"Cannot request new message contract with schema version {requestedSchemaVersion} as the latest version is {latestContract.SchemaVersion}"
+            );
+        }
+
+        JsonDocument previousSchemaDocument = JsonDocument.Parse(latestContract.Schema.ToString());
+        JsonDocument newSchemaDocument = JsonDocument.Parse(newSchema);
+        CheckIsBackwardCompatible(previousSchemaDocument, newSchemaDocument);
+    }
+
+    private void CheckIsBackwardCompatible(JsonDocument previousSchemaDocument, JsonDocument newSchemaDocument)
+    {
+        bool GetAdditionalProperties(JsonDocument doc)
+        {
+            var additionalProperties = true;
+            try
+            {
+                additionalProperties = doc.RootElement.GetProperty("additionalProperties").GetBoolean();
+            }
+            catch { }
+
+            return additionalProperties;
+        }
+
+        List<string> GetRequired(JsonDocument doc)
+        {
+            var required = new List<string>();
+            try
+            {
+                foreach (var property in doc.RootElement.GetProperty("required").EnumerateArray())
+                {
+                    required.Add(property.GetString()!);
+                }
+            }
+            catch { }
+
+            return required;
+        }
+
+        // See: https://yokota.blog/2021/03/29/understanding-json-schema-compatibility/
+
+
+        var previousSchemaRequired = GetRequired(previousSchemaDocument);
+        var newSchemaRequired = GetRequired(newSchemaDocument);
+
+        // default value for confluent cloud schemas
+        bool previousSchemaIsOpenContentModel = GetAdditionalProperties(previousSchemaDocument);
+        bool newSchemaIsOpenContentModel = GetAdditionalProperties(newSchemaDocument);
+
+        if (previousSchemaIsOpenContentModel && !newSchemaIsOpenContentModel)
+            throw new InvalidMessageContractRequestException(
+                $"Cannot change schema from open content model to closed content model"
+            );
+
+        // Simplified port of https://github.dev/confluentinc/schema-registry
+        HashSet<string> propertyKeys = new HashSet<string>();
+        try
+        {
+            foreach (var property in previousSchemaDocument.RootElement.GetProperty("properties").EnumerateObject())
+            {
+                propertyKeys.Add(property.Name);
+            }
+        }
+        catch
+        {
+            Console.WriteLine($"prev schema doesnt have properties: {previousSchemaDocument}");
+        }
+
+        try
+        {
+            foreach (var property in newSchemaDocument.RootElement.GetProperty("properties").EnumerateObject())
+            {
+                propertyKeys.Add(property.Name);
+            }
+        }
+        catch
+        {
+            // new schema doesnt have properties
+            Console.WriteLine($"new schema doesnt have properties: {newSchemaDocument}");
+        }
+
+        JsonElement? GetPropertyOrNull(JsonDocument doc, string key)
+        {
+            try
+            {
+                return doc.RootElement.GetProperty("properties").GetProperty(key);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        foreach (var propertyKey in propertyKeys)
+        {
+            var previousProperty = GetPropertyOrNull(previousSchemaDocument, propertyKey);
+            var newProperty = GetPropertyOrNull(newSchemaDocument, propertyKey);
+
+            if (newProperty == null)
+            {
+                if (newSchemaIsOpenContentModel)
+                    continue;
+
+                throw new InvalidMessageContractRequestException(
+                    $"Not allowed to remove properties from closed content model"
+                );
+            }
+
+            if (previousProperty == null)
+            {
+                if (previousSchemaIsOpenContentModel)
+                {
+                    throw new InvalidMessageContractRequestException(
+                        $"Not allowed to add properties to open content model"
+                    );
+                }
+
+                if (newSchemaRequired.Contains(propertyKey))
+                {
+                    // Not allowed to add required properties to closed content model
+                    throw new InvalidMessageContractRequestException($"Not allowed to add new required properties");
+                }
+
+                continue;
+            }
+
+            CheckIsBackwardCompatibleSchema(previousProperty.Value, newProperty.Value);
+        }
+    }
+
+    private void CheckIsBackwardCompatibleSchema(JsonElement prevSchema, JsonElement newSchema)
+    {
+        if (prevSchema.ValueKind != newSchema.ValueKind)
+        {
+            throw new InvalidMessageContractRequestException(
+                $"Cannot change schema type from {prevSchema.ValueKind} to {newSchema.ValueKind} for property {prevSchema}"
+            );
+        }
+
+        switch (newSchema.ValueKind)
+        {
+            case JsonValueKind.Object:
+            {
+                CheckIsBackwardCompatible(prevSchema.ToJsonDocument(), newSchema.ToJsonDocument());
+                break;
+            }
+            case JsonValueKind.Array:
+            {
+                for (int i = 0; i < newSchema.GetArrayLength(); i++)
+                {
+                    CheckIsBackwardCompatibleSchema(prevSchema[i], newSchema[i]);
+                }
+
+                break;
+            }
+        }
+    }
+
     [TransactionalBoundary, Outboxed]
     public async Task<MessageContractId> RequestNewMessageContract(
         KafkaTopicId kafkaTopicId,
@@ -31,7 +215,8 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         string description,
         MessageContractExample example,
         MessageContractSchema schema,
-        string requestedBy
+        string requestedBy,
+        bool enforceSchemaEnvelope
     )
     {
         using var _ = _logger.BeginScope(
@@ -41,32 +226,28 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             requestedBy
         );
 
-        if (await _messageContractRepository.Exists(kafkaTopicId, messageType))
-        {
-            _logger.LogError(
-                "Cannot request new message contract {MessageType} for topic {KafkaTopicId} because it already exists.",
-                messageType,
-                kafkaTopicId
-            );
+        await ValidateRequestForCreatingNewContract(kafkaTopicId, messageType, schema);
 
-            throw new EntityAlreadyExistsException(
-                $"Message contract \"{messageType}\" already exists on topic \"{kafkaTopicId}\"."
-            );
+        if (enforceSchemaEnvelope)
+        {
+            schema.ValidateSchemaEnvelope();
         }
 
         var topic = await _kafkaTopicRepository.Get(kafkaTopicId);
 
+        int schemaVersion = (int)schema.GetSchemaVersion()!;
         var messageContract = MessageContract.RequestNew(
             kafkaTopicId: kafkaTopicId,
             messageType: messageType,
-            description: description,
             kafkaTopicName: topic.Name,
-            kafkaClusterId: topic.KafkaClusterId,
             capabilityId: topic.CapabilityId,
+            kafkaClusterId: topic.KafkaClusterId,
+            description: description,
             example: example,
             schema: schema,
             createdAt: _systemTime.Now,
-            createdBy: requestedBy
+            createdBy: requestedBy,
+            schemaVersion: schemaVersion
         );
 
         await _messageContractRepository.Add(messageContract);

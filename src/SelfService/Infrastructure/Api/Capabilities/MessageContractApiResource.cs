@@ -12,6 +12,8 @@ public class MessageContractApiResource
     public string Example { get; set; }
     public string Status { get; set; }
 
+    public int SchemaVersion { get; set; }
+
     [JsonPropertyName("_links")]
     public MessageContractLinks Links { get; set; }
 
@@ -35,6 +37,7 @@ public class MessageContractApiResource
         string schema,
         string example,
         string status,
+        int schemaVersion,
         MessageContractLinks links
     )
     {
@@ -45,6 +48,7 @@ public class MessageContractApiResource
         Schema = schema;
         Example = example;
         Status = status;
+        SchemaVersion = schemaVersion;
         Links = links;
     }
 }
