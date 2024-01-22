@@ -835,17 +835,6 @@ public class CapabilityController : ControllerBase
             );
 
         var jsonString = request.JsonMetadata.ToJsonString();
-        if (!await _capabilityApplicationService.DoesOnlyModifyRequiredProperties(jsonString, capabilityId))
-        {
-            return BadRequest(
-                new ProblemDetails
-                {
-                    Title = "Invalid metadata",
-                    Detail = "Json metadata in request changed properties that are not required",
-                    Status = StatusCodes.Status400BadRequest
-                }
-            );
-        }
 
         try
         {
