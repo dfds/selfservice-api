@@ -291,11 +291,11 @@ public class ApiResourceFactory
         );
     }
 
-    private ResourceLink CreateMetadataLinkFor(Capability capability)
+    private async Task<ResourceLink> CreateMetadataLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
 
-        if (_authorizationService.CanGetSetCapabilityJsonMetadata(PortalUser))
+        if (await _authorizationService.CanGetSetCapabilityJsonMetadata(PortalUser, capability.Id))
         {
             allowedInteractions += Get;
             allowedInteractions += Post;
@@ -317,10 +317,7 @@ public class ApiResourceFactory
     {
         var allowedInteractions = Allow.None;
 
-        if (
-            await _membershipQuery.HasActiveMembership(CurrentUser, capability.Id)
-            || _authorizationService.CanGetSetCapabilityJsonMetadata(PortalUser)
-        )
+        if (await _authorizationService.CanGetSetCapabilityJsonMetadata(PortalUser, capability.Id))
         {
             allowedInteractions += Post;
         }
@@ -508,7 +505,7 @@ public class ApiResourceFactory
                 awsAccount: await CreateAwsAccountLinkFor(capability),
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
-                metadata: CreateMetadataLinkFor(capability),
+                metadata: await CreateMetadataLinkFor(capability),
                 setRequiredMetadata: await CreateSetRequiredMetadataLinkFor(capability),
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),

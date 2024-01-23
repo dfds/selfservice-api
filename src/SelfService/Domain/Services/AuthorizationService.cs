@@ -197,9 +197,10 @@ public class AuthorizationService : IAuthorizationService
         return portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
     }
 
-    public bool CanGetSetCapabilityJsonMetadata(PortalUser portalUser)
+    public async Task<bool> CanGetSetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
     {
-        return portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+        return await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId)
+            || portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
     }
 
     public bool CanBypassMembershipApprovals(PortalUser portalUser)

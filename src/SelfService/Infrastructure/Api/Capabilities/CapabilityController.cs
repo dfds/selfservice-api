@@ -815,7 +815,7 @@ public class CapabilityController : ControllerBase
             );
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.CanGetSetCapabilityJsonMetadata(portalUser))
+        if (!await _authorizationService.CanGetSetCapabilityJsonMetadata(portalUser, capabilityId))
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -888,7 +888,7 @@ public class CapabilityController : ControllerBase
             );
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.CanGetSetCapabilityJsonMetadata(portalUser))
+        if (!await _authorizationService.CanGetSetCapabilityJsonMetadata(portalUser, capabilityId))
             return Unauthorized(
                 new ProblemDetails
                 {
