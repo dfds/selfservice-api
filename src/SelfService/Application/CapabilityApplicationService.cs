@@ -16,6 +16,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
+    private readonly IConfigurationLevelService _configurationLevelService;
 
     private const int PendingDaysUntilDeletion = 7;
 
@@ -26,8 +27,8 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ITicketingSystem ticketingSystem,
         SystemTime systemTime,
-        ISelfServiceJsonSchemaService selfServiceJsonSchemaService
-    )
+        ISelfServiceJsonSchemaService selfServiceJsonSchemaService, 
+        IConfigurationLevelService configurationLevelService)
     {
         _logger = logger;
         _capabilityRepository = capabilityRepository;
@@ -36,6 +37,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
+        _configurationLevelService = configurationLevelService;
     }
 
     [TransactionalBoundary, Outboxed]
@@ -309,5 +311,10 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         }
 
         return true;
+    }
+
+    public Task<object?> GetConfigurationLevel(CapabilityId capabilityId)
+    {
+        throw new NotImplementedException();
     }
 }

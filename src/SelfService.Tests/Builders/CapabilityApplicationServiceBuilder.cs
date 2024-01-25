@@ -42,8 +42,8 @@ public class CapabilityApplicationServiceBuilder
             kafkaClusterAccessRepository: Mock.Of<IKafkaClusterAccessRepository>(),
             ticketingSystem: Mock.Of<ITicketingSystem>(),
             systemTime: SystemTime.Default,
-            selfServiceJsonSchemaService: _selfServiceJsonSchemaService
-        );
+            selfServiceJsonSchemaService: _selfServiceJsonSchemaService,
+            configurationLevelService: Mock.Of<IConfigurationLevelService>());
     }
 
     public static implicit operator CapabilityApplicationService(CapabilityApplicationServiceBuilder builder) =>
