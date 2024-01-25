@@ -1,2 +1,54 @@
 Id;ObjectId;SchemaVersion;Schema
-11485cba-76b3-4d6d-b4d4-9231a61f6644;capability;1;"{""$id"": ""https://dfds.com/platform/capability.schema.json"", ""type"": ""object"", ""title"": ""Capability meta-data"", ""$schema"": ""https://json-schema.org/draft/2020-12/schema"", ""required"": [""dfds.cost.centre""], ""properties"": {""dfds.owner"": {""type"": ""string"", ""pattern"": ""^[^@]+@(dfds\\.com|dfds\\.cloud)$""}, ""dfds.cost.centre"": {""enum"": [""ti-ferry"", ""ti-logistics"", ""ti-pax"", ""ti-ctia"", ""ti-arch"", ""ti-data"", ""ti-it"", ""ti-inno"", ""ti-platform"", ""ti-competence"", ""finance"", ""finance-rma"", ""ferry"", ""logistics""], ""type"": ""string""}, ""dfds.planned_sunset"": {""type"": ""string"", ""format"": ""date-time""}, ""dfds.data.classification"": {""enum"": [""public"", ""private"", ""confidential"", ""restricted""], ""type"": ""string""}, ""dfds.service.availability"": {""enum"": [""low"", ""medium"", ""high""], ""type"": ""string""}}, ""patternProperties"": {""^dfds\\.other\\."": {""type"": ""string""}}}"
+11485cba-76b3-4d6d-b4d4-9231a61f6644;capability;1;"{
+    ""$id"": ""https://dfds.com/platform/capability.schema.json"",
+    ""$schema"": ""https://json-schema.org/draft/2020-12/schema"",
+    ""title"": ""Capability meta-data"",
+    ""type"": ""object"",
+    ""required"": [""dfds.cost.centre""],
+    ""properties"": {
+      ""dfds.cost.centre"": {
+        ""type"": ""string"",
+        ""description"": ""Setting this value helps aggregate cloud costs per tribe in Finout"",
+        ""enum"": [
+          ""ti-ferry"",
+          ""ti-logistics"",
+          ""ti-pax"",
+          ""ti-ctia"",
+          ""ti-arch"",
+          ""ti-data"",
+          ""ti-it"",
+          ""ti-inno"",
+          ""ti-platform"",
+          ""ti-competence"",
+          ""ti-other"",
+          ""finance"",
+          ""ferry"",
+          ""logistics""
+        ]
+      },
+      ""dfds.service.availability"": {
+        ""type"": ""string"",
+        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Criticality' target='_blank'>Understand Criticality</a>, <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Availability' target='_blank'>Understand Availability</a>"",
+        ""enum"": [
+          ""low"",
+          ""medium"",
+          ""high""
+        ]
+      },
+      ""dfds.data.classification"": {
+        ""type"": ""string"",
+        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Criticality' target='_blank'>Understand Criticality</a>, <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-Data-Confidentiality' target='_blank'>Understand Confidentiality Classification</a>"",
+        ""enum"": [
+          ""public"",
+          ""private"",
+          ""confidential"",
+          ""restricted""
+        ]
+      }
+    },
+    ""patternProperties"": {
+      ""^dfds\\.other\\."": {
+        ""type"": ""string""
+      }
+    }
+  }"
