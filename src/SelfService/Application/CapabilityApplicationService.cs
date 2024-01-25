@@ -27,8 +27,9 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ITicketingSystem ticketingSystem,
         SystemTime systemTime,
-        ISelfServiceJsonSchemaService selfServiceJsonSchemaService, 
-        IConfigurationLevelService configurationLevelService)
+        ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
+        IConfigurationLevelService configurationLevelService
+    )
     {
         _logger = logger;
         _capabilityRepository = capabilityRepository;

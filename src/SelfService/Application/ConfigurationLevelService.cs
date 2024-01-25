@@ -1,6 +1,3 @@
 namespace SelfService.Application;
 
-public class ConfigurationLevelService: IConfigurationLevelService
-{
-    
-}
+public class ConfigurationLevelService : IConfigurationLevelService { }

@@ -1086,6 +1086,4 @@ public class CapabilityController : ControllerBase
         var configurationLevel = await _capabilityApplicationService.GetConfigurationLevel(capabilityId);
         return Ok(configurationLevel);
     }
-
-
 }

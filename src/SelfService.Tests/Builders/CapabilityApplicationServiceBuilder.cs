@@ -43,7 +43,8 @@ public class CapabilityApplicationServiceBuilder
             ticketingSystem: Mock.Of<ITicketingSystem>(),
             systemTime: SystemTime.Default,
             selfServiceJsonSchemaService: _selfServiceJsonSchemaService,
-            configurationLevelService: Mock.Of<IConfigurationLevelService>());
+            configurationLevelService: Mock.Of<IConfigurationLevelService>()
+        );
     }
 
     public static implicit operator CapabilityApplicationService(CapabilityApplicationServiceBuilder builder) =>
