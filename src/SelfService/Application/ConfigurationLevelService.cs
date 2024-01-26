@@ -44,12 +44,10 @@ public class ConfigurationLevelInfo : Entity<ConfigurationLevelInfo>
         var existingDetail = breakdown.FirstOrDefault(d => d.description == detail.description);
         if (existingDetail != null)
         {
-            // Replace the existing item
             breakdown[breakdown.IndexOf(existingDetail)] = detail;
         }
         else
         {
-            // Add a new item
             breakdown.Add(detail);
         }
     }
