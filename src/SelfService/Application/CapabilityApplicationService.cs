@@ -313,8 +313,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
         return true;
     }
-    
-    
+
     [TransactionalBoundary]
     public Task<ConfigurationLevelInfo> GetConfigurationLevel(CapabilityId capabilityId)
     {

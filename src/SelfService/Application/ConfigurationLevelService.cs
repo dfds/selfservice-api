@@ -1,5 +1,6 @@
 using SelfService.Domain.Models;
 using System.Linq;
+
 namespace SelfService.Application;
 
 public enum ConfigurationLevel
@@ -22,67 +23,72 @@ public class ConfigurationLevelDetail : Entity<ConfigurationLevelDetail>
         this.description = description;
         this.suggestion = suggestion;
         this.isFocusMetric = isFocusMetric;
-    } 
+    }
 }
 
 public class ConfigurationLevelInfo : Entity<ConfigurationLevelInfo>
 {
     public ConfigurationLevel overallLevel { get; set; }
+    public bool IsFocusMetric { get; set; }
+    public List<ConfigurationLevelDetail> breakdown { get; set; }
 
-    public bool IsFocusMetric{ get; set; }
-    public Dictionary<string, ConfigurationLevelDetail> breakdown{ get; set; }
-    
     public ConfigurationLevelInfo()
     {
         overallLevel = ConfigurationLevel.None;
         IsFocusMetric = false;
-        breakdown = new Dictionary<string, ConfigurationLevelDetail>();
+        breakdown = new List<ConfigurationLevelDetail>();
     }
 
     public void Add(ConfigurationLevelDetail detail)
     {
-        breakdown[detail.description] = detail;
-    }
-    
-    public IEnumerable<ConfigurationLevelDetail> GetBreakdown()
-    {
-        return breakdown.Values;
+        var existingDetail = breakdown.FirstOrDefault(d => d.description == detail.description);
+        if (existingDetail != null)
+        {
+            // Replace the existing item
+            breakdown[breakdown.IndexOf(existingDetail)] = detail;
+        }
+        else
+        {
+            // Add a new item
+            breakdown.Add(detail);
+        }
     }
 }
 
 public class ConfigurationLevelService : IConfigurationLevelService
 {
-
     public async Task<ConfigurationLevelInfo> ComputeConfigurationLevel(CapabilityId capabilityId)
     {
         var configLevelInfo = new ConfigurationLevelInfo();
-        configLevelInfo.Add(new ConfigurationLevelDetail(
-            await GetKafkaTopicConfigurationLevel(), 
-            "kafka-topics-schemas-configured", 
-            "", 
-            false)
+        configLevelInfo.Add(
+            new ConfigurationLevelDetail(
+                await GetKafkaTopicConfigurationLevel(),
+                "kafka-topics-schemas-configured",
+                "",
+                false
+            )
         );
-        configLevelInfo.Add(new ConfigurationLevelDetail(
-            await GetCostCenterTaggingConfigurationLevel(),
-            "cost-center-tagging",
-            "",
-            true)
+        configLevelInfo.Add(
+            new ConfigurationLevelDetail(
+                await GetCostCenterTaggingConfigurationLevel(),
+                "cost-center-tagging",
+                "",
+                true
+            )
         );
-        configLevelInfo.Add(new ConfigurationLevelDetail(
-            await GetSecurityTaggingConfigurationLevel(),
-            "security-tagging",
-            "",
-            false)
+        configLevelInfo.Add(
+            new ConfigurationLevelDetail(await GetSecurityTaggingConfigurationLevel(), "security-tagging", "", false)
         );
-        
-        int numComplete = configLevelInfo.breakdown.Values.Count(detail => detail.level == ConfigurationLevel.Complete);
-        int numPartial  = configLevelInfo.breakdown.Values.Count(detail => detail.level == ConfigurationLevel.Partial);
+
+        int numComplete = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Complete);
+        int numPartial = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Partial);
 
         if (numPartial > 0 || numComplete > 0)
         {
             configLevelInfo.overallLevel = ConfigurationLevel.Partial;
         }
-        if (numComplete == configLevelInfo.breakdown.Values.Count()){
+        if (numComplete == configLevelInfo.breakdown.Count())
+        {
             configLevelInfo.overallLevel = ConfigurationLevel.Complete;
         }
 
@@ -95,13 +101,14 @@ public class ConfigurationLevelService : IConfigurationLevelService
         await Task.CompletedTask;
         return ConfigurationLevel.Partial;
     }
+
     public async Task<ConfigurationLevel> GetCostCenterTaggingConfigurationLevel()
     {
         //TODO: implement
         await Task.CompletedTask;
         return ConfigurationLevel.Partial;
     }
-    
+
     public async Task<ConfigurationLevel> GetSecurityTaggingConfigurationLevel()
     {
         //TODO: implement
@@ -109,7 +116,3 @@ public class ConfigurationLevelService : IConfigurationLevelService
         return ConfigurationLevel.Partial;
     }
 }
-
-
-
-
