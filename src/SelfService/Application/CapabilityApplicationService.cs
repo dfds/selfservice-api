@@ -313,9 +313,12 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
         return true;
     }
-
-    public Task<object?> GetConfigurationLevel(CapabilityId capabilityId)
+    
+    
+    [TransactionalBoundary]
+    public Task<ConfigurationLevelInfo> GetConfigurationLevel(CapabilityId capabilityId)
     {
-        throw new NotImplementedException();
+        var configLevelInfo = _configurationLevelService.ComputeConfigurationLevel(capabilityId);
+        return configLevelInfo;
     }
 }

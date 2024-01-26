@@ -32,5 +32,5 @@ public interface ICapabilityApplicationService
     Task SetJsonMetadata(CapabilityId capabilityId, string jsonMetadata);
     Task<string> GetJsonMetadata(CapabilityId capabilityId);
     Task<bool> DoesOnlyModifyRequiredProperties(string jsonMetadata, CapabilityId capabilityId);
-    Task<object?> GetConfigurationLevel(CapabilityId capabilityId);
+    Task<ConfigurationLevelInfo> GetConfigurationLevel(CapabilityId capabilityId);
 }

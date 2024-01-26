@@ -43,7 +43,7 @@ public class CapabilityApplicationServiceBuilder
             ticketingSystem: Mock.Of<ITicketingSystem>(),
             systemTime: SystemTime.Default,
             selfServiceJsonSchemaService: _selfServiceJsonSchemaService,
-            configurationLevelService: Mock.Of<IConfigurationLevelService>()
+            configurationLevelService: Mock.Of<ConfigurationLevelService>()
         );
     }
 

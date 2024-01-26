@@ -1083,7 +1083,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails { Title = "Invalid CapabilityId provided", Status = StatusCodes.Status400BadRequest }
             );
         }
-        var configurationLevel = await _capabilityApplicationService.GetConfigurationLevel(capabilityId);
-        return Ok(configurationLevel);
+        var configurationLevelInfo = await _capabilityApplicationService.GetConfigurationLevel(capabilityId);
+        return Ok(configurationLevelInfo);
     }
 }
