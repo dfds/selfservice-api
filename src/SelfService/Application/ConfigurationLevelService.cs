@@ -13,13 +13,21 @@ public enum ConfigurationLevel
 public class ConfigurationLevelDetail : Entity<ConfigurationLevelDetail>
 {
     public ConfigurationLevel level { get; set; }
+    public string identifier { get; set; }
     public string description { get; set; }
     public string suggestion { get; set; }
     public bool isFocusMetric { get; set; }
 
-    public ConfigurationLevelDetail(ConfigurationLevel level, string description, string suggestion, bool isFocusMetric)
+    public ConfigurationLevelDetail(
+        ConfigurationLevel level,
+        string identifier,
+        string description,
+        string suggestion,
+        bool isFocusMetric
+    )
     {
         this.level = level;
+        this.identifier = identifier;
         this.description = description;
         this.suggestion = suggestion;
         this.isFocusMetric = isFocusMetric;
@@ -60,20 +68,28 @@ public class ConfigurationLevelService : IConfigurationLevelService
             new ConfigurationLevelDetail(
                 await GetKafkaTopicConfigurationLevel(),
                 "kafka-topics-schemas-configured",
-                "",
+                "Document Kafka topics.",
+                "Make sure all public Kafka topics for this capability have schemas connected to them.",
                 false
             )
         );
         configLevelInfo.AddMetric(
             new ConfigurationLevelDetail(
                 await GetCostCenterTaggingConfigurationLevel(),
-                "cost-center-tagging",
-                "",
+                "cost-centre-tagging",
+                "Cost Centre known.",
+                "Update the Cost Centre tag for this capability to match your team's Cost Centre.",
                 true
             )
         );
         configLevelInfo.AddMetric(
-            new ConfigurationLevelDetail(await GetSecurityTaggingConfigurationLevel(), "security-tagging", "", false)
+            new ConfigurationLevelDetail(
+                await GetSecurityTaggingConfigurationLevel(),
+                "security-tagging",
+                "Criticality level understood.",
+                "Make sure all optional security tags are set to a correct value for this capability.",
+                false
+            )
         );
 
         int numComplete = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Complete);
@@ -102,7 +118,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
     {
         //TODO: implement
         await Task.CompletedTask;
-        return ConfigurationLevel.Partial;
+        return ConfigurationLevel.Complete;
     }
 
     public async Task<ConfigurationLevel> GetSecurityTaggingConfigurationLevel()
