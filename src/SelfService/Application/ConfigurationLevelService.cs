@@ -29,17 +29,15 @@ public class ConfigurationLevelDetail : Entity<ConfigurationLevelDetail>
 public class ConfigurationLevelInfo : Entity<ConfigurationLevelInfo>
 {
     public ConfigurationLevel overallLevel { get; set; }
-    public bool IsFocusMetric { get; set; }
     public List<ConfigurationLevelDetail> breakdown { get; set; }
 
     public ConfigurationLevelInfo()
     {
         overallLevel = ConfigurationLevel.None;
-        IsFocusMetric = false;
         breakdown = new List<ConfigurationLevelDetail>();
     }
 
-    public void Add(ConfigurationLevelDetail detail)
+    public void AddMetric(ConfigurationLevelDetail detail)
     {
         var existingDetail = breakdown.FirstOrDefault(d => d.description == detail.description);
         if (existingDetail != null)
@@ -58,7 +56,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
     public async Task<ConfigurationLevelInfo> ComputeConfigurationLevel(CapabilityId capabilityId)
     {
         var configLevelInfo = new ConfigurationLevelInfo();
-        configLevelInfo.Add(
+        configLevelInfo.AddMetric(
             new ConfigurationLevelDetail(
                 await GetKafkaTopicConfigurationLevel(),
                 "kafka-topics-schemas-configured",
@@ -66,7 +64,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
                 false
             )
         );
-        configLevelInfo.Add(
+        configLevelInfo.AddMetric(
             new ConfigurationLevelDetail(
                 await GetCostCenterTaggingConfigurationLevel(),
                 "cost-center-tagging",
@@ -74,7 +72,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
                 true
             )
         );
-        configLevelInfo.Add(
+        configLevelInfo.AddMetric(
             new ConfigurationLevelDetail(await GetSecurityTaggingConfigurationLevel(), "security-tagging", "", false)
         );
 
