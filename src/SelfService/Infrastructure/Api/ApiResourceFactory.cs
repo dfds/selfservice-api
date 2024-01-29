@@ -487,6 +487,25 @@ public class ApiResourceFactory
         );
     }
 
+    private async Task<ResourceLink> CreateConfigurationLevelLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanViewAccess(PortalUser.Id, capability.Id))
+        {
+            allowedInteractions += Get;
+        }
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetConfigurationLevel),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: allowedInteractions
+        );
+    }
+
     public async Task<CapabilityDetailsApiResource> Convert(Capability capability)
     {
         return new CapabilityDetailsApiResource(
@@ -509,7 +528,8 @@ public class ApiResourceFactory
                 setRequiredMetadata: await CreateSetRequiredMetadataLinkFor(capability),
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),
-                sendInvitations: await CreateSendInvitationsLinkFor(capability)
+                sendInvitations: await CreateSendInvitationsLinkFor(capability),
+                configurationLevel: await CreateConfigurationLevelLinkFor(capability)
             )
         );
     }
