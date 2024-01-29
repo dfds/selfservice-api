@@ -529,7 +529,7 @@ public class ApiResourceFactory
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability),
-                getConfigurationLevel: await CreateConfigurationLevelLinkFor(capability)
+                configurationLevel: await CreateConfigurationLevelLinkFor(capability)
             )
         );
     }
