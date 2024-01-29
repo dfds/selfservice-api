@@ -313,7 +313,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
         return true;
     }
-    
+
     public Task<ConfigurationLevelInfo> GetConfigurationLevel(CapabilityId capabilityId)
     {
         var configLevelInfo = _configurationLevelService.ComputeConfigurationLevel(capabilityId);

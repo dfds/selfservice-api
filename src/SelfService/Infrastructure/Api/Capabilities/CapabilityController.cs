@@ -622,16 +622,7 @@ public class CapabilityController : ControllerBase
                     Detail = "User id is not valid and thus cannot leave any capabilities."
                 }
             );
-        
-        if (!await _authorizationService.CanViewAccess(userId, id)){
-            return Unauthorized(
-                new ProblemDetails
-                {
-                    Title = "Unknown user id",
-                    Detail = $"User {userId} is not a member of capability {id}"
-                }
-            );
-        }
+
         if (!CapabilityId.TryParse(id, out var capabilityId))
             return NotFound(
                 new ProblemDetails
@@ -1084,6 +1075,17 @@ public class CapabilityController : ControllerBase
         if (!User.TryGetUserId(out var userId))
         {
             return Unauthorized();
+        }
+
+        if (!await _authorizationService.CanViewAccess(userId, id))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User {userId} is not a member of capability {id}"
+                }
+            );
         }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))

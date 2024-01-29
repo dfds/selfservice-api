@@ -46,7 +46,8 @@ public class CapabilityDetailsApiResource
             ResourceLink setRequiredMetadata,
             ResourceLink getLinkedTeams,
             ResourceLink joinCapability,
-            ResourceLink sendInvitations
+            ResourceLink sendInvitations,
+            ResourceLink getConfigurationLevel
         )
         {
             Self = self;
