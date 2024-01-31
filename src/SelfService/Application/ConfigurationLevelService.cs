@@ -66,7 +66,11 @@ public class ConfigurationLevelService : IConfigurationLevelService
     private readonly IMessageContractRepository _messageContractRepository;
     private readonly ICapabilityRepository _capabilityRepository;
 
-    public ConfigurationLevelService(IKafkaTopicRepository kafkaTopicRepository, IMessageContractRepository messageContractRepository, ICapabilityRepository capabilityRepository)
+    public ConfigurationLevelService(
+        IKafkaTopicRepository kafkaTopicRepository,
+        IMessageContractRepository messageContractRepository,
+        ICapabilityRepository capabilityRepository
+    )
     {
         _kafkaTopicRepository = kafkaTopicRepository;
         _messageContractRepository = messageContractRepository;
@@ -119,7 +123,11 @@ public class ConfigurationLevelService : IConfigurationLevelService
         return configLevelInfo;
     }
 
-    public async Task<ConfigurationLevel> GetKafkaTopicConfigurationLevel(IKafkaTopicRepository kafkaTopicRepository, CapabilityId capabilityId, IMessageContractRepository messageContractRepository)
+    public async Task<ConfigurationLevel> GetKafkaTopicConfigurationLevel(
+        IKafkaTopicRepository kafkaTopicRepository,
+        CapabilityId capabilityId,
+        IMessageContractRepository messageContractRepository
+    )
     {
         var topics = await kafkaTopicRepository.FindBy(capabilityId);
         int numTopicsWithSchema = 0;
