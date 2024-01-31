@@ -1,5 +1,6 @@
 using SelfService.Domain.Models;
 using System.Text.Json.Nodes;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
 
@@ -61,10 +62,18 @@ public class ConfigurationLevelInfo : Entity<ConfigurationLevelInfo>
 
 public class ConfigurationLevelService : IConfigurationLevelService
 {
+    private readonly IKafkaTopicRepository _kafkaTopicRepository;
+    private readonly IMessageContractRepository _messageContractRepository;
     private readonly ICapabilityRepository _capabilityRepository;
 
-    public ConfigurationLevelService(ICapabilityRepository capabilityRepository)
+    public ConfigurationLevelService(
+        IKafkaTopicRepository kafkaTopicRepository,
+        IMessageContractRepository messageContractRepository,
+        ICapabilityRepository capabilityRepository
+    )
     {
+        _kafkaTopicRepository = kafkaTopicRepository;
+        _messageContractRepository = messageContractRepository;
         _capabilityRepository = capabilityRepository;
     }
 
@@ -73,7 +82,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
         var configLevelInfo = new ConfigurationLevelInfo();
         configLevelInfo.AddMetric(
             new ConfigurationLevelDetail(
-                await GetKafkaTopicConfigurationLevel(),
+                await GetKafkaTopicConfigurationLevel(capabilityId),
                 "kafka-topics-schemas-configured",
                 "Document Kafka topics.",
                 "Make sure all public Kafka topics for this capability have schemas connected to them.",
@@ -114,11 +123,29 @@ public class ConfigurationLevelService : IConfigurationLevelService
         return configLevelInfo;
     }
 
-    public async Task<ConfigurationLevel> GetKafkaTopicConfigurationLevel()
+    public async Task<ConfigurationLevel> GetKafkaTopicConfigurationLevel(CapabilityId capabilityId)
     {
-        //TODO: implement
-        await Task.CompletedTask;
-        return ConfigurationLevel.Partial;
+        var topics = await _kafkaTopicRepository.FindBy(capabilityId);
+        int numTopicsWithSchema = 0;
+        var kafkaTopics = topics as KafkaTopic[] ?? topics.ToArray();
+        foreach (KafkaTopic t in kafkaTopics)
+        {
+            var schemas = await _messageContractRepository.FindBy(t.Id);
+            if (schemas.Any())
+            {
+                numTopicsWithSchema += 1;
+            }
+        }
+        if (numTopicsWithSchema == kafkaTopics.Count())
+        {
+            return ConfigurationLevel.Complete;
+        }
+        if (numTopicsWithSchema > 0)
+        {
+            return ConfigurationLevel.Partial;
+        }
+
+        return ConfigurationLevel.None;
     }
 
     public async Task<ConfigurationLevel> GetCostCenterTaggingConfigurationLevel(CapabilityId capabilityId)
