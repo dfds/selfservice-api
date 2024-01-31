@@ -62,9 +62,11 @@ public class TestCapabilityApplicationService
 
         _mock.Setup(x => x.GetLatestSchema(SelfServiceJsonSchemaObjectId.Capability)).ReturnsAsync(() => schema);
         var sut = A.SelfServiceJsonSchemaService.WithJsonSchemaRepository(_mock.Object).Build();
+        var confService = A.ConfigurationLevelService.WithCapabilityRepository(repo).Build();
         var capabilityService = A.CapabilityApplicationService
             .WithCapabilityRepository(repo)
             .WithSelfServiceJsonSchemaService(sut)
+            .WithConfigurationLevelService(confService)
             .Build();
         return (newCapability, repo, capabilityService);
     }
