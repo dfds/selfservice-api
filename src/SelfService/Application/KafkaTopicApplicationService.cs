@@ -55,7 +55,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             );
         }
 
-        if (latestContract.Status != KafkaTopicStatus.Provisioned)
+        if (latestContract.Status != MessageContractStatus.Provisioned)
         {
             throw new InvalidMessageContractRequestException(
                 $"Cannot request new message contract as the previous message contract has state: {latestContract.Status}"
