@@ -82,7 +82,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
         var configLevelInfo = new ConfigurationLevelInfo();
         configLevelInfo.AddMetric(
             new ConfigurationLevelDetail(
-                await GetKafkaTopicConfigurationLevel(_kafkaTopicRepository, capabilityId, _messageContractRepository),
+                await GetKafkaTopicConfigurationLevel(capabilityId),
                 "kafka-topics-schemas-configured",
                 "Document Kafka topics.",
                 "Make sure all public Kafka topics for this capability have schemas connected to them.",
@@ -123,18 +123,14 @@ public class ConfigurationLevelService : IConfigurationLevelService
         return configLevelInfo;
     }
 
-    public async Task<ConfigurationLevel> GetKafkaTopicConfigurationLevel(
-        IKafkaTopicRepository kafkaTopicRepository,
-        CapabilityId capabilityId,
-        IMessageContractRepository messageContractRepository
-    )
+    public async Task<ConfigurationLevel> GetKafkaTopicConfigurationLevel(CapabilityId capabilityId)
     {
-        var topics = await kafkaTopicRepository.FindBy(capabilityId);
+        var topics = await _kafkaTopicRepository.FindBy(capabilityId);
         int numTopicsWithSchema = 0;
         var kafkaTopics = topics as KafkaTopic[] ?? topics.ToArray();
         foreach (KafkaTopic t in kafkaTopics)
         {
-            var schemas = await messageContractRepository.FindBy(t.Id);
+            var schemas = await _messageContractRepository.FindBy(t.Id);
             if (schemas.Any())
             {
                 numTopicsWithSchema += 1;
