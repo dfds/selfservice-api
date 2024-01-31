@@ -82,7 +82,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
         );
         configLevelInfo.AddMetric(
             new ConfigurationLevelDetail(
-                await GetCostCenterTaggingConfigurationLevel(_capabilityRepository, capabilityId),
+                await GetCostCenterTaggingConfigurationLevel(capabilityId),
                 "cost-centre-tagging",
                 "Cost Centre known.",
                 "Update the Cost Centre tag for this capability to match your team's Cost Centre.",
@@ -91,7 +91,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
         );
         configLevelInfo.AddMetric(
             new ConfigurationLevelDetail(
-                await GetSecurityTaggingConfigurationLevel(),
+                await GetSecurityTaggingConfigurationLevel(capabilityId),
                 "security-tagging",
                 "Criticality level understood.",
                 "Make sure all optional security tags are set to a correct value for this capability.",
@@ -121,30 +121,38 @@ public class ConfigurationLevelService : IConfigurationLevelService
         return ConfigurationLevel.Partial;
     }
 
-    public async Task<ConfigurationLevel> GetCostCenterTaggingConfigurationLevel(
-        ICapabilityRepository capabilityRepository,
-        CapabilityId capabilityId
-    )
+    public async Task<ConfigurationLevel> GetCostCenterTaggingConfigurationLevel(CapabilityId capabilityId)
     {
-        var jsonString = await capabilityRepository.GetJsonMetadata(capabilityId);
+        return await MetadataContainsTags(capabilityId, new List<string> { "dfds.cost.centre" });
+    }
+
+    public async Task<ConfigurationLevel> GetSecurityTaggingConfigurationLevel(CapabilityId capabilityId)
+    {
+        return await MetadataContainsTags(
+            capabilityId,
+            new List<string> { "dfds.data.classification", "dfds.service.availability" }
+        );
+    }
+
+    private async Task<ConfigurationLevel> MetadataContainsTags(CapabilityId capabilityId, List<string> tags)
+    {
+        var jsonString = await _capabilityRepository.GetJsonMetadata(capabilityId);
         if (jsonString == null)
         {
             return ConfigurationLevel.None;
         }
         var jsonObject = JsonNode.Parse(jsonString)?.AsObject()!;
 
-        var costCenter = jsonObject["dfds.cost.centre"];
-        if (costCenter == null || costCenter.ToString() == "")
+        var tagsExists = tags.Select(tag => jsonObject[tag] != null && jsonObject[tag]?.ToString() != "");
+
+        if (tagsExists.All(tag => tag == true))
+        {
+            return ConfigurationLevel.Complete;
+        }
+        if (tagsExists.All(tag => tag == false))
         {
             return ConfigurationLevel.None;
         }
-        return ConfigurationLevel.Complete;
-    }
-
-    public async Task<ConfigurationLevel> GetSecurityTaggingConfigurationLevel()
-    {
-        //TODO: implement
-        await Task.CompletedTask;
         return ConfigurationLevel.Partial;
     }
 }
