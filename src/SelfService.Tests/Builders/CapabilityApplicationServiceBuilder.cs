@@ -12,11 +12,13 @@ public class CapabilityApplicationServiceBuilder
 {
     private ICapabilityRepository _capabilityRepository;
     private ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
+    private IConfigurationLevelService _configurationLevelService;
 
     public CapabilityApplicationServiceBuilder()
     {
         _capabilityRepository = Dummy.Of<ICapabilityRepository>();
         _selfServiceJsonSchemaService = Dummy.Of<ISelfServiceJsonSchemaService>();
+        _configurationLevelService = Dummy.Of<IConfigurationLevelService>();
     }
 
     public CapabilityApplicationServiceBuilder WithCapabilityRepository(ICapabilityRepository capabilityRepository)
@@ -33,6 +35,14 @@ public class CapabilityApplicationServiceBuilder
         return this;
     }
 
+    public CapabilityApplicationServiceBuilder WithConfigurationLevelService(
+        IConfigurationLevelService configurationLevelService
+    )
+    {
+        _configurationLevelService = configurationLevelService;
+        return this;
+    }
+
     public CapabilityApplicationService Build()
     {
         return new CapabilityApplicationService(
@@ -43,7 +53,7 @@ public class CapabilityApplicationServiceBuilder
             ticketingSystem: Mock.Of<ITicketingSystem>(),
             systemTime: SystemTime.Default,
             selfServiceJsonSchemaService: _selfServiceJsonSchemaService,
-            configurationLevelService: Mock.Of<ConfigurationLevelService>()
+            configurationLevelService: _configurationLevelService
         );
     }
 
