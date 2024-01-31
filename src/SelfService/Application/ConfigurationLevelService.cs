@@ -1,5 +1,5 @@
 using SelfService.Domain.Models;
-using System.Linq;
+using System.Text.Json.Nodes;
 
 namespace SelfService.Application;
 
@@ -61,6 +61,13 @@ public class ConfigurationLevelInfo : Entity<ConfigurationLevelInfo>
 
 public class ConfigurationLevelService : IConfigurationLevelService
 {
+    private readonly ICapabilityRepository _capabilityRepository;
+
+    public ConfigurationLevelService(ICapabilityRepository capabilityRepository)
+    {
+        _capabilityRepository = capabilityRepository;
+    }
+
     public async Task<ConfigurationLevelInfo> ComputeConfigurationLevel(CapabilityId capabilityId)
     {
         var configLevelInfo = new ConfigurationLevelInfo();
@@ -75,7 +82,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
         );
         configLevelInfo.AddMetric(
             new ConfigurationLevelDetail(
-                await GetCostCenterTaggingConfigurationLevel(),
+                await GetCostCenterTaggingConfigurationLevel(_capabilityRepository, capabilityId),
                 "cost-centre-tagging",
                 "Cost Centre known.",
                 "Update the Cost Centre tag for this capability to match your team's Cost Centre.",
@@ -114,10 +121,23 @@ public class ConfigurationLevelService : IConfigurationLevelService
         return ConfigurationLevel.Partial;
     }
 
-    public async Task<ConfigurationLevel> GetCostCenterTaggingConfigurationLevel()
+    public async Task<ConfigurationLevel> GetCostCenterTaggingConfigurationLevel(
+        ICapabilityRepository capabilityRepository,
+        CapabilityId capabilityId
+    )
     {
-        //TODO: implement
-        await Task.CompletedTask;
+        var jsonString = await capabilityRepository.GetJsonMetadata(capabilityId);
+        if (jsonString == null)
+        {
+            return ConfigurationLevel.None;
+        }
+        var jsonObject = JsonNode.Parse(jsonString)?.AsObject()!;
+
+        var costCenter = jsonObject["dfds.cost.centre"];
+        if (costCenter == null || costCenter.ToString() == "")
+        {
+            return ConfigurationLevel.None;
+        }
         return ConfigurationLevel.Complete;
     }
 
