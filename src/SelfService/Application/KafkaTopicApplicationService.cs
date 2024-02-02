@@ -55,6 +55,13 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             );
         }
 
+        if (latestContract.Status != MessageContractStatus.Provisioned)
+        {
+            throw new InvalidMessageContractRequestException(
+                $"Cannot request new message contract as the previous message contract has state: {latestContract.Status}"
+            );
+        }
+
         JsonDocument previousSchemaDocument = JsonDocument.Parse(latestContract.Schema.ToString());
         JsonDocument newSchemaDocument = JsonDocument.Parse(newSchema);
         CheckIsBackwardCompatible(previousSchemaDocument, newSchemaDocument);

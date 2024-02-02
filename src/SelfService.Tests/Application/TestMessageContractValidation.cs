@@ -121,6 +121,7 @@ public class TestMessageContractValidation
             .WithSchema(firstValidSchema)
             .WithSchemaVersion(1)
             .WithType(MessageType.Parse("test"))
+            .WithStatus(MessageContractStatus.Provisioned)
             .Build();
 
         KafkaTopicRepository kafkaTopicRepository = new(dbContext);
@@ -170,6 +171,7 @@ public class TestMessageContractValidation
             .WithSchema(firstValidSchema)
             .WithSchemaVersion(1)
             .WithType(MessageType.Parse("test"))
+            .WithStatus(MessageContractStatus.Provisioned)
             .Build();
 
         KafkaTopicRepository kafkaTopicRepository = new(dbContext);
