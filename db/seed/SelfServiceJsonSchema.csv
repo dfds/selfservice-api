@@ -28,7 +28,7 @@ Id;ObjectId;SchemaVersion;Schema
       },
       ""dfds.service.availability"": {
         ""type"": ""string"",
-        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Criticality' target='_blank'>Understand Criticality</a>, <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Availability' target='_blank'>Understand Availability</a>"",
+        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Criticality' target='_blank' rel='noreferrer'>Understand Criticality</a>, <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Availability' target='_blank' rel='noreferrer'>Understand Availability</a>"",
         ""enum"": [
           ""low"",
           ""medium"",
@@ -37,7 +37,7 @@ Id;ObjectId;SchemaVersion;Schema
       },
       ""dfds.data.classification"": {
         ""type"": ""string"",
-        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Criticality' target='_blank'>Understand Criticality</a>, <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-Data-Confidentiality' target='_blank'>Understand Confidentiality Classification</a>"",
+        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Criticality' target='_blank' rel='noreferrer'>Understand Criticality</a>, <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-Data-Confidentiality' target='_blank' rel='noreferrer'>Understand Confidentiality Classification</a>"",
         ""enum"": [
           ""public"",
           ""private"",
