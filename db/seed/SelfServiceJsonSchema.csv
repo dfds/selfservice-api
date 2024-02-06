@@ -26,23 +26,32 @@ Id;ObjectId;SchemaVersion;Schema
           ""logistics""
         ]
       },
+      ""dfds.data.classification"": {
+        ""type"": ""string"",
+        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-Data-Confidentiality' target='_blank' rel='noreferrer'>Understand Confidentiality Classification</a>"",
+        ""enum"": [
+          ""public"",
+          ""private"",
+          ""confidential"",
+          ""restricted""
+        ]
+      },
       ""dfds.service.availability"": {
         ""type"": ""string"",
-        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Criticality' target='_blank' rel='noreferrer'>Understand Criticality</a>, <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Availability' target='_blank' rel='noreferrer'>Understand Availability</a>"",
+        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Availability' target='_blank' rel='noreferrer'>Understand Availability</a>"",
         ""enum"": [
           ""low"",
           ""medium"",
           ""high""
         ]
       },
-      ""dfds.data.classification"": {
+      ""dfds.service.criticality"": {
         ""type"": ""string"",
-        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Criticality' target='_blank' rel='noreferrer'>Understand Criticality</a>, <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-Data-Confidentiality' target='_blank' rel='noreferrer'>Understand Confidentiality Classification</a>"",
+        ""description"": ""Guidance: <a href='https://wiki.dfds.cloud/en/playbooks/Security/Understanding-System-Criticality' target='_blank' rel='noreferrer'>Understand Criticality</a>"",
         ""enum"": [
-          ""public"",
-          ""private"",
-          ""confidential"",
-          ""restricted""
+          ""low"",
+          ""medium"",
+          ""high""
         ]
       }
     },
