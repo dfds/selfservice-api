@@ -1,5 +1,6 @@
 using SelfService.Domain.Models;
 using System.Text.Json.Nodes;
+using System.Linq;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
@@ -16,21 +17,13 @@ public class ConfigurationLevelDetail : Entity<ConfigurationLevelDetail>
     public ConfigurationLevel level { get; set; }
     public string identifier { get; set; }
     public string description { get; set; }
-    public string suggestion { get; set; }
     public bool isFocusMetric { get; set; }
 
-    public ConfigurationLevelDetail(
-        ConfigurationLevel level,
-        string identifier,
-        string description,
-        string suggestion,
-        bool isFocusMetric
-    )
+    public ConfigurationLevelDetail(ConfigurationLevel level, string identifier, string description, bool isFocusMetric)
     {
         this.level = level;
         this.identifier = identifier;
         this.description = description;
-        this.suggestion = suggestion;
         this.isFocusMetric = isFocusMetric;
     }
 }
@@ -80,33 +73,9 @@ public class ConfigurationLevelService : IConfigurationLevelService
     public async Task<ConfigurationLevelInfo> ComputeConfigurationLevel(CapabilityId capabilityId)
     {
         var configLevelInfo = new ConfigurationLevelInfo();
-        configLevelInfo.AddMetric(
-            new ConfigurationLevelDetail(
-                await GetKafkaTopicConfigurationLevel(capabilityId),
-                "kafka-topics-schemas-configured",
-                "Document Kafka topics.",
-                "Make sure all public Kafka topics for this capability have schemas connected to them.",
-                false
-            )
-        );
-        configLevelInfo.AddMetric(
-            new ConfigurationLevelDetail(
-                await GetCostCenterTaggingConfigurationLevel(capabilityId),
-                "cost-centre-tagging",
-                "Cost Centre known.",
-                "Update the Cost Centre tag for this capability to match your team's Cost Centre.",
-                true
-            )
-        );
-        configLevelInfo.AddMetric(
-            new ConfigurationLevelDetail(
-                await GetSecurityTaggingConfigurationLevel(capabilityId),
-                "security-tagging",
-                "Criticality level understood.",
-                "Make sure all optional security tags are set to a correct value for this capability.",
-                false
-            )
-        );
+        configLevelInfo.AddMetric(await GetKafkaTopicConfigurationLevel(capabilityId));
+        configLevelInfo.AddMetric(await GetCostCenterTaggingConfigurationLevel(capabilityId));
+        configLevelInfo.AddMetric(await GetSecurityTaggingConfigurationLevel(capabilityId));
 
         int numComplete = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Complete);
         int numPartial = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Partial);
@@ -123,12 +92,14 @@ public class ConfigurationLevelService : IConfigurationLevelService
         return configLevelInfo;
     }
 
-    public async Task<ConfigurationLevel> GetKafkaTopicConfigurationLevel(CapabilityId capabilityId)
+    public async Task<ConfigurationLevelDetail> GetKafkaTopicConfigurationLevel(CapabilityId capabilityId)
     {
         var topics = await _kafkaTopicRepository.FindBy(capabilityId);
+        var publicTopics = topics.Where(t => t.Name.ToString().StartsWith("pub."));
+
         int numTopicsWithSchema = 0;
-        var kafkaTopics = topics as KafkaTopic[] ?? topics.ToArray();
-        foreach (KafkaTopic t in kafkaTopics)
+        var totalTopics = publicTopics.Count();
+        foreach (KafkaTopic t in publicTopics)
         {
             var schemas = await _messageContractRepository.FindBy(t.Id);
             if (schemas.Any())
@@ -136,50 +107,84 @@ public class ConfigurationLevelService : IConfigurationLevelService
                 numTopicsWithSchema += 1;
             }
         }
-        if (numTopicsWithSchema == kafkaTopics.Count())
+
+        var configurationLevel = ConfigurationLevel.None;
+        if (numTopicsWithSchema == totalTopics)
         {
-            return ConfigurationLevel.Complete;
+            configurationLevel = ConfigurationLevel.Complete;
         }
-        if (numTopicsWithSchema > 0)
+        else if (numTopicsWithSchema > 0)
         {
-            return ConfigurationLevel.Partial;
+            configurationLevel = ConfigurationLevel.Complete;
         }
 
-        return ConfigurationLevel.None;
-    }
-
-    public async Task<ConfigurationLevel> GetCostCenterTaggingConfigurationLevel(CapabilityId capabilityId)
-    {
-        return await MetadataContainsTags(capabilityId, new List<string> { "dfds.cost.centre" });
-    }
-
-    public async Task<ConfigurationLevel> GetSecurityTaggingConfigurationLevel(CapabilityId capabilityId)
-    {
-        return await MetadataContainsTags(
-            capabilityId,
-            new List<string> { "dfds.data.classification", "dfds.service.availability" }
+        return new ConfigurationLevelDetail(
+            configurationLevel,
+            "kafka-topics-schemas-configured",
+            $"{numTopicsWithSchema} of {totalTopics} public Kafka topics have schemas",
+            false
         );
     }
 
-    private async Task<ConfigurationLevel> MetadataContainsTags(CapabilityId capabilityId, List<string> tags)
+    public async Task<ConfigurationLevelDetail> GetCostCenterTaggingConfigurationLevel(CapabilityId capabilityId)
+    {
+        (ConfigurationLevel configurationLevel, List<string> _) = await MetadataContainsTags(
+            capabilityId,
+            new List<string> { "dfds.cost.centre" }
+        );
+        var description = configurationLevel switch
+        {
+            ConfigurationLevel.None => "Cost Centre unknown",
+            ConfigurationLevel.Complete => "Cost Centre known",
+            _ => "Cost Centre unknown"
+        };
+
+        return new ConfigurationLevelDetail(configurationLevel, "cost-centre-tagging", description, true);
+    }
+
+    public async Task<ConfigurationLevelDetail> GetSecurityTaggingConfigurationLevel(CapabilityId capabilityId)
+    {
+        var tagsList = new List<string>
+        {
+            "dfds.data.classification",
+            "dfds.service.availability",
+            "dfds.service.criticality"
+        };
+        (ConfigurationLevel configurationLevel, List<string> missingTags) = await MetadataContainsTags(
+            capabilityId,
+            tagsList
+        );
+
+        return new ConfigurationLevelDetail(
+            configurationLevel,
+            "security-tagging",
+            $"{tagsList.Count - missingTags.Count} of {tagsList.Count} Capability Classification tags set",
+            false
+        );
+    }
+
+    private async Task<(ConfigurationLevel, List<string>)> MetadataContainsTags(
+        CapabilityId capabilityId,
+        List<string> tags
+    )
     {
         var jsonString = await _capabilityRepository.GetJsonMetadata(capabilityId);
         if (jsonString == null)
         {
-            return ConfigurationLevel.None;
+            return (ConfigurationLevel.None, tags);
         }
         var jsonObject = JsonNode.Parse(jsonString)?.AsObject()!;
 
-        var tagsExists = tags.Select(tag => jsonObject[tag] != null && jsonObject[tag]?.ToString() != "");
+        var missingTags = tags.Where(tag => jsonObject[tag] == null || jsonObject[tag]?.ToString() == "").ToList();
 
-        if (tagsExists.All(tag => tag == true))
+        if (missingTags.Count == 0)
         {
-            return ConfigurationLevel.Complete;
+            return (ConfigurationLevel.Complete, new List<string>());
         }
-        if (tagsExists.All(tag => tag == false))
+        if (missingTags.Count == tags.Count)
         {
-            return ConfigurationLevel.None;
+            return (ConfigurationLevel.None, tags);
         }
-        return ConfigurationLevel.Partial;
+        return (ConfigurationLevel.Partial, missingTags);
     }
 }
