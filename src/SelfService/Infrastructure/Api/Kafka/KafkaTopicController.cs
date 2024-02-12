@@ -582,11 +582,7 @@ public class KafkaTopicController : ControllerBase
         catch (InvalidMessageContractRequestException e)
         {
             return BadRequest(
-                new ProblemDetails
-                {
-                    Title = "Invalid message contract request",
-                    Detail = $"Invalid message contract: {e.Message}."
-                }
+                new ProblemDetails { Title = "Invalid message contract request", Detail = $"{e.ValidationError}" }
             );
         }
     }

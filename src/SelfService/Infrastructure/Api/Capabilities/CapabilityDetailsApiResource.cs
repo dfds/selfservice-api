@@ -32,6 +32,7 @@ public class CapabilityDetailsApiResource
         public ResourceLink GetLinkedTeams { get; set; }
         public ResourceLink JoinCapability { get; set; }
         public ResourceLink SendInvitations { get; set; }
+        public ResourceLink ConfigurationLevel { get; set; }
 
         public CapabilityDetailsLinks(
             ResourceLink self,
@@ -46,7 +47,8 @@ public class CapabilityDetailsApiResource
             ResourceLink setRequiredMetadata,
             ResourceLink getLinkedTeams,
             ResourceLink joinCapability,
-            ResourceLink sendInvitations
+            ResourceLink sendInvitations,
+            ResourceLink configurationLevel
         )
         {
             Self = self;
@@ -62,6 +64,7 @@ public class CapabilityDetailsApiResource
             GetLinkedTeams = getLinkedTeams;
             JoinCapability = joinCapability;
             SendInvitations = sendInvitations;
+            ConfigurationLevel = configurationLevel;
         }
     }
 

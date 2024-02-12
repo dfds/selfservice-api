@@ -1065,4 +1065,36 @@ public class CapabilityController : ControllerBase
             )
         );
     }
+
+    [HttpGet("{id}/configurationlevel")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    public async Task<IActionResult> GetConfigurationLevel([FromRoute] string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        if (!await _authorizationService.CanViewAccess(userId, id))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User {userId} is not a member of capability {id}"
+                }
+            );
+        }
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+        {
+            return BadRequest(
+                new ProblemDetails { Title = "Invalid CapabilityId provided", Status = StatusCodes.Status400BadRequest }
+            );
+        }
+        var configurationLevelInfo = await _capabilityApplicationService.GetConfigurationLevel(capabilityId);
+        return Ok(configurationLevelInfo);
+    }
 }

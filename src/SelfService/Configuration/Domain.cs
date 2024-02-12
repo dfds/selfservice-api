@@ -22,6 +22,7 @@ public static class Domain
         // application services
         builder.Services.AddTransient<ICapabilityApplicationService, CapabilityApplicationService>();
         builder.Services.AddTransient<IAwsAccountApplicationService, AwsAccountApplicationService>();
+        builder.Services.AddTransient<IConfigurationLevelService, ConfigurationLevelService>();
         builder.Services.AddTransient<IMembershipApplicationService, MembershipApplicationService>();
         builder.Services.AddTransient<IKafkaTopicApplicationService, KafkaTopicApplicationService>();
         builder.Services.AddTransient<IMemberApplicationService, MemberApplicationService>();

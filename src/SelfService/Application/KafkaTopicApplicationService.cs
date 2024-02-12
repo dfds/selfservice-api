@@ -55,6 +55,13 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
             );
         }
 
+        if (latestContract.Status != MessageContractStatus.Provisioned)
+        {
+            throw new InvalidMessageContractRequestException(
+                $"Cannot request new message contract as the previous message contract has state: {latestContract.Status}"
+            );
+        }
+
         JsonDocument previousSchemaDocument = JsonDocument.Parse(latestContract.Schema.ToString());
         JsonDocument newSchemaDocument = JsonDocument.Parse(newSchema);
         CheckIsBackwardCompatible(previousSchemaDocument, newSchemaDocument);
@@ -115,7 +122,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         }
         catch
         {
-            Console.WriteLine($"prev schema doesnt have properties: {previousSchemaDocument}");
+            // suppress exception: ok if previous schema doesnt have properties
         }
 
         try
@@ -127,8 +134,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         }
         catch
         {
-            // new schema doesnt have properties
-            Console.WriteLine($"new schema doesnt have properties: {newSchemaDocument}");
+            // suppress exception: ok if new schema doesnt have properties
         }
 
         JsonElement? GetPropertyOrNull(JsonDocument doc, string key)

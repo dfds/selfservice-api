@@ -1,4 +1,5 @@
-﻿using SelfService.Application;
+﻿using System.Net.NetworkInformation;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Persistence;
@@ -38,4 +39,5 @@ public static class A
 
     public static InvitationRepositoryBuilder InvitationRepository => new();
     public static InvitationApplicationServiceBuilder InvitationApplicationService => new();
+    public static ConfigurationLevelServiceBuilder ConfigurationLevelService => new();
 }

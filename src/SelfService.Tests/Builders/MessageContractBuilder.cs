@@ -63,6 +63,12 @@ public class MessageContractBuilder
         return this;
     }
 
+    public MessageContractBuilder WithStatus(MessageContractStatus status)
+    {
+        _status = status;
+        return this;
+    }
+
     public MessageContract Build()
     {
         return new MessageContract(
