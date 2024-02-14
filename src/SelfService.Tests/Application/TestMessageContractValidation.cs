@@ -18,15 +18,12 @@ public class TestMessageContractValidation
                  """;
     }
 
-    private string BuildData(string[] properties, string[] required, bool additionalProperties)
+    private string BuildData(string[] properties, bool additionalProperties)
     {
         return $$"""
                  {
                    "type": "object",
                    "properties": {{{string.Join(",", properties)}}},
-                   "required": [
-                     {{string.Join(",", required.Select(p => $"\"{p}\""))}}
-                   ],
                    "additionalProperties": {{additionalProperties.ToString().ToLower()}}
                  }
                  """;
@@ -82,10 +79,7 @@ public class TestMessageContractValidation
             .WithMessageContractRepository(messageContractRepository)
             .Build();
 
-        var schemaString = GetSchema(
-            1,
-            BuildData(new[] { BuildProperty("someTest", "integer", "1") }, new[] { "someTest" }, false)
-        );
+        var schemaString = GetSchema(1, BuildData(new[] { BuildProperty("someTest", "integer", "1") }, false));
         var testSchema = MessageContractSchema.Parse(schemaString);
         await kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
             testKafkaTopic.Id,
@@ -110,7 +104,6 @@ public class TestMessageContractValidation
                     BuildProperty("someTest", "integer", "1"),
                     BuildProperty("someNewProperty", "string", "hello")
                 },
-                new[] { "someTest" },
                 openContentModelFirstSchema
             )
         );
@@ -137,11 +130,7 @@ public class TestMessageContractValidation
 
         var secondValidEvolution = GetSchema(
             2,
-            BuildData(
-                new[] { BuildProperty("someTest", "integer", "1") },
-                new[] { "someTest" },
-                openContentModelSecondSchema
-            )
+            BuildData(new[] { BuildProperty("someTest", "integer", "1") }, openContentModelSecondSchema)
         );
         var testSchema = MessageContractSchema.Parse(secondValidEvolution);
         await kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
@@ -160,10 +149,7 @@ public class TestMessageContractValidation
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         List<string> properties = new List<string>() { BuildProperty("someTest", "integer", "1") };
-        var firstValidSchema = GetSchema(
-            1,
-            BuildData(properties.ToArray(), new[] { "someTest" }, openContentModelFirstSchema)
-        );
+        var firstValidSchema = GetSchema(1, BuildData(properties.ToArray(), openContentModelFirstSchema));
 
         var testKafkaTopic = A.KafkaTopic.Build();
         var testMessageContract = A.MessageContract
@@ -186,10 +172,7 @@ public class TestMessageContractValidation
             .Build();
 
         properties.Add(BuildProperty("someNewProperty", "string", "hello"));
-        var secondValidEvolution = GetSchema(
-            2,
-            BuildData(properties.ToArray(), new[] { "someTest" }, openContentModelSecondSchema)
-        );
+        var secondValidEvolution = GetSchema(2, BuildData(properties.ToArray(), openContentModelSecondSchema));
         var testSchema = MessageContractSchema.Parse(secondValidEvolution);
         await kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
             testKafkaTopic.Id,
@@ -241,12 +224,51 @@ public class TestMessageContractValidation
     }
 
     [Fact]
+    async Task fails_when_changing_property_type()
+    {
+        var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+
+        List<string> properties = new List<string>() { BuildProperty("someTest", "integer", "1") };
+        var firstValidSchema = GetSchema(1, BuildData(properties.ToArray(), false));
+
+        var testKafkaTopic = A.KafkaTopic.Build();
+        var testMessageContract = A.MessageContract
+            .WithKafkaTopicId(testKafkaTopic.Id)
+            .WithSchema(firstValidSchema)
+            .WithSchemaVersion(1)
+            .WithType(MessageType.Parse("test"))
+            .WithStatus(MessageContractStatus.Provisioned)
+            .Build();
+
+        KafkaTopicRepository kafkaTopicRepository = new(dbContext);
+        MessageContractRepository messageContractRepository = new(dbContext);
+        await kafkaTopicRepository.Add(testKafkaTopic);
+        await messageContractRepository.Add(testMessageContract);
+        await dbContext.SaveChangesAsync();
+
+        var kafkaTopicApplicationService = A.KafkaTopicApplicationService
+            .WithKafkaTopicRepository(kafkaTopicRepository)
+            .WithMessageContractRepository(messageContractRepository)
+            .Build();
+
+        properties.Add(BuildProperty("someTest", "boolean", "false"));
+        var secondValidEvolution = GetSchema(2, BuildData(properties.ToArray(), false));
+        var testSchema = MessageContractSchema.Parse(secondValidEvolution);
+        await Assert.ThrowsAsync<InvalidMessageContractRequestException>(
+            async () =>
+                await kafkaTopicApplicationService.ValidateRequestForCreatingNewContract(
+                    testKafkaTopic.Id,
+                    testMessageContract.MessageType,
+                    testSchema
+                )
+        );
+    }
+
+    [Fact]
     void can_detect_correct_dfds_envelope()
     {
-        var schemaString = GetSchema(
-            1,
-            BuildData(new[] { BuildProperty("someTest", "integer", "1") }, new[] { "someTest" }, false)
-        );
+        var schemaString = GetSchema(1, BuildData(new[] { BuildProperty("someTest", "integer", "1") }, false));
         var testSchema = MessageContractSchema.Parse(schemaString);
         testSchema.ValidateSchemaEnvelope();
     }
