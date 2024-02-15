@@ -118,7 +118,7 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
                 "Cannot change schema type from " + previousType + " to null"
             );
         }
-        if (previousType != null && newType != null && previousType != newType)
+        if (previousType != newType)
         {
             throw new InvalidMessageContractRequestException(
                 "Cannot change schema type from " + previousType + " to " + newType
