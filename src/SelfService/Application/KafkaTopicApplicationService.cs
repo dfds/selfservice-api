@@ -69,6 +69,17 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
 
     private void CheckIsBackwardCompatible(JsonDocument previousSchemaDocument, JsonDocument newSchemaDocument)
     {
+        string? GetJsonType(JsonDocument doc)
+        {
+            try
+            {
+                return doc.RootElement.GetProperty("type").ToString();
+            }
+            catch { }
+
+            return null;
+        }
+
         bool GetAdditionalProperties(JsonDocument doc)
         {
             var additionalProperties = true;
@@ -98,6 +109,21 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
 
         // See: https://yokota.blog/2021/03/29/understanding-json-schema-compatibility/
 
+
+        var previousType = GetJsonType(previousSchemaDocument);
+        var newType = GetJsonType(newSchemaDocument);
+        if (previousType != null && newType == null)
+        {
+            throw new InvalidMessageContractRequestException(
+                "Cannot change schema type from " + previousType + " to null"
+            );
+        }
+        if (previousType != newType)
+        {
+            throw new InvalidMessageContractRequestException(
+                "Cannot change schema type from " + previousType + " to " + newType
+            );
+        }
 
         var previousSchemaRequired = GetRequired(previousSchemaDocument);
         var newSchemaRequired = GetRequired(newSchemaDocument);
@@ -199,6 +225,8 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
         {
             case JsonValueKind.Object:
             {
+                var a = prevSchema.ToJsonDocument();
+                var b = newSchema.ToJsonDocument();
                 CheckIsBackwardCompatible(prevSchema.ToJsonDocument(), newSchema.ToJsonDocument());
                 break;
             }
@@ -211,6 +239,9 @@ public class KafkaTopicApplicationService : IKafkaTopicApplicationService
 
                 break;
             }
+            default:
+                Console.WriteLine("Unhandled schema type: " + newSchema.ValueKind);
+                break;
         }
     }
 
