@@ -5,6 +5,7 @@ using SelfService.Domain;
 using SelfService.Domain.Events;
 using SelfService.Domain.Models;
 using SelfService.Domain.Policies;
+using UserAction = SelfService.Domain.Events.UserAction;
 
 namespace SelfService.Infrastructure.Messaging;
 
@@ -155,6 +156,14 @@ public static class ConsumerConfiguration
                 );
             // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs"
             #endregion
+            
+            builder.Services.AddProducerFor<MessagingService>(opts =>
+            {
+                opts.WithConfigurationSource(builder.Configuration);
+                opts.WithEnvironmentStyle("DEFAULT_KAFKA");
+                
+                opts.Register<UserAction>($"{SelfServicePrefix}.audit", UserAction.EventType, evt => evt.Username);
+            });
         });
     }
 }
