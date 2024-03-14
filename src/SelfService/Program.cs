@@ -51,7 +51,7 @@ try
     app.MapEndpoints();
 
     app.UseHttpMetrics();
-    
+
     app.UseUserActionMiddleware();
 
     app.Run();

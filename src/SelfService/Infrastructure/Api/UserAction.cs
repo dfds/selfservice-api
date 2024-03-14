@@ -15,7 +15,7 @@ public class UserActionMiddleware : IMiddleware
     {
         _messagingService = messagingService;
     }
-    
+
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         var path = context.Request.Path;
@@ -30,13 +30,20 @@ public class UserActionMiddleware : IMiddleware
         {
             context.Request.EnableBuffering();
             var body = context.Request.Body;
-            using (var reader = new StreamReader(body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true))
+            using (
+                var reader = new StreamReader(
+                    body,
+                    Encoding.UTF8,
+                    detectEncodingFromByteOrderMarks: false,
+                    leaveOpen: true
+                )
+            )
             {
                 rawRequestContent = await reader.ReadToEndAsync();
                 body.Seek(0, SeekOrigin.Begin);
             }
         }
-        
+
         if (userActionNoAuditAttribute != null) // Skip if UserActionNoAuditAttribute is set
         {
             await next(context);
@@ -48,7 +55,7 @@ public class UserActionMiddleware : IMiddleware
         {
             evtAction = $"{action.ControllerName}.{action.ActionName}";
         }
-        
+
         DateTimeOffset currentDateTimeOffset = DateTimeOffset.Now;
         long unixTimestamp = currentDateTimeOffset.ToUnixTimeSeconds();
         var evt = new SelfService.Domain.Events.UserAction()
@@ -61,7 +68,7 @@ public class UserActionMiddleware : IMiddleware
             RequestData = rawRequestContent,
             Timestamp = unixTimestamp
         };
-        
+
         await _messagingService.SendDomainEvent(evt);
         await next(context);
     }
@@ -69,8 +76,7 @@ public class UserActionMiddleware : IMiddleware
 
 public static class MiddlewareExtensions
 {
-    public static IApplicationBuilder UseUserActionMiddleware(
-        this IApplicationBuilder app)
+    public static IApplicationBuilder UseUserActionMiddleware(this IApplicationBuilder app)
     {
         return app.UseMiddleware<UserActionMiddleware>();
     }
@@ -78,10 +84,10 @@ public static class MiddlewareExtensions
 
 public class UserActionNoAuditAttribute : Attribute
 {
-    public UserActionNoAuditAttribute() {}
+    public UserActionNoAuditAttribute() { }
 }
 
 public class UserActionSkipRequestDataAttribute : Attribute
 {
-    public UserActionSkipRequestDataAttribute() {}
+    public UserActionSkipRequestDataAttribute() { }
 }

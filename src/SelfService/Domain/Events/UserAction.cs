@@ -11,7 +11,6 @@ public class UserAction : IDomainEvent
     public string? Username { get; set; }
     public string? Service { get; set; }
     public string? RequestData { get; set; }
-    
-    public const string EventType = "user-action";
 
+    public const string EventType = "user-action";
 }

@@ -8,4 +8,3 @@ public class UserAction : AggregateRoot<Guid>
         obj.Raise(evt);
     }
 }
-
