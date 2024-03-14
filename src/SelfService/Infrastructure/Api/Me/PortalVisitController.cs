@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
+using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Capabilities;
 
 namespace SelfService.Infrastructure.Api.Me;
@@ -16,6 +17,7 @@ public class PortalVisitController : ControllerBase
     }
 
     [HttpPost("")]
+    [UserActionNoAudit]
     public async Task<IActionResult> RegisterVisit()
     {
         if (!User.TryGetUserId(out var userId))

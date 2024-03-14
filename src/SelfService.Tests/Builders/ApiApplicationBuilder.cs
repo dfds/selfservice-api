@@ -1,6 +1,7 @@
 using SelfService.Configuration;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Messaging;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Tests.Infrastructure.Api;
@@ -56,6 +57,7 @@ public class ApiApplicationBuilder
         application.ReplaceService<ICapabilityRepository>(_capabilityRepository);
         application.ReplaceService<IMembershipQuery>(_membershipQuery);
         application.ReplaceService<ICapabilityDeletionStatusQuery>(_capabilityDeletionStatusQuery);
+        application.ReplaceService<IMessagingService>(new StubMessagingService());
         return application;
     }
 }
