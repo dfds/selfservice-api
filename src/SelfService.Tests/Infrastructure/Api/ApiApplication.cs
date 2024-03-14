@@ -9,6 +9,8 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SelfService.Infrastructure.Messaging;
+using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Api;
 
@@ -23,6 +25,7 @@ public class ApiApplication : WebApplicationFactory<Program>
     public ApiApplication(bool configureForProduction = true)
     {
         _environment = configureForProduction ? Environments.Production : Environments.Development;
+        this.ReplaceService<IMessagingService>(new StubMessagingService());
     }
 
     public ApiApplication ConfigureService(Action<IServiceCollection> cfg)

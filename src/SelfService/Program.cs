@@ -28,6 +28,7 @@ try
     builder.AddSecurity();
 
     builder.Services.AddTransient<Impersonation.ImpersonationMiddleware>();
+    builder.Services.AddTransient<UserActionMiddleware>();
 
     // **PLEASE NOTE** : keep this as the last configuration!
     builder.ConfigureAspects();
@@ -50,6 +51,8 @@ try
     app.MapEndpoints();
 
     app.UseHttpMetrics();
+
+    app.UseUserActionMiddleware();
 
     app.Run();
 }
