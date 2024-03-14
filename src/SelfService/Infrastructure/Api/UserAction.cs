@@ -9,9 +9,9 @@ namespace SelfService.Infrastructure.Api;
 
 public class UserActionMiddleware : IMiddleware
 {
-    private readonly MessagingService _messagingService;
+    private readonly IMessagingService _messagingService;
 
-    public UserActionMiddleware(MessagingService messagingService)
+    public UserActionMiddleware(IMessagingService messagingService)
     {
         _messagingService = messagingService;
     }

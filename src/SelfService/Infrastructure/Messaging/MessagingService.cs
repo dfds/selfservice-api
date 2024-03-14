@@ -4,7 +4,12 @@ using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Messaging;
 
-public class MessagingService
+public interface IMessagingService
+{
+    public Task SendDomainEvent(IDomainEvent evt);
+}
+
+public class MessagingService : IMessagingService
 {
     private readonly Producer _producer;
 
