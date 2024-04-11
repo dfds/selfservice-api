@@ -216,6 +216,8 @@ public class ApiResourceFactory
         return new CapabilityListItemApiResource(
             id: capability.Id,
             name: capability.Name,
+            createdAt: capability.CreatedAt,
+            createdBy: capability.CreatedBy,
             status: capability.Status.ToString(),
             description: capability.Description,
             jsonMetadata: capability.JsonMetadata,
@@ -511,6 +513,8 @@ public class ApiResourceFactory
         return new CapabilityDetailsApiResource(
             id: capability.Id,
             name: capability.Name,
+            createdAt: capability.CreatedAt,
+            createdBy: capability.CreatedBy,
             status: capability.Status.ToString(),
             description: capability.Description,
             jsonMetadata: capability.JsonMetadata,
