@@ -7,6 +7,8 @@ public class CapabilityDetailsApiResource
 {
     public string Id { get; set; }
     public string Name { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string CreatedBy { get; set; }
     public string Status { get; set; }
     public string Description { get; set; }
 
@@ -71,6 +73,8 @@ public class CapabilityDetailsApiResource
     public CapabilityDetailsApiResource(
         string id,
         string name,
+        DateTime createdAt,
+        string createdBy,
         string status,
         string description,
         string jsonMetadata,
@@ -80,6 +84,8 @@ public class CapabilityDetailsApiResource
     {
         Id = id;
         Name = name;
+        CreatedAt = createdAt;
+        CreatedBy = createdBy;
         Status = status;
         Description = description;
         Links = links;
@@ -92,6 +98,8 @@ public class CapabilityListItemApiResource
 {
     public string Id { get; set; }
     public string Name { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string CreatedBy { get; set; }
     public string Status { get; set; }
     public string Description { get; set; }
     public string JsonMetadata { get; set; }
@@ -113,6 +121,8 @@ public class CapabilityListItemApiResource
     public CapabilityListItemApiResource(
         string id,
         string name,
+        DateTime createdAt,
+        string createdBy,
         string status,
         string description,
         string jsonMetadata,
@@ -122,6 +132,8 @@ public class CapabilityListItemApiResource
     {
         Id = id;
         Name = name;
+        CreatedAt = createdAt;
+        CreatedBy = createdBy;
         Status = status;
         Description = description;
         JsonMetadata = jsonMetadata;
