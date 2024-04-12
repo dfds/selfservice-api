@@ -19,7 +19,17 @@ public class UserActionMiddleware : IMiddleware
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         var path = context.Request.Path;
-        var portalUser = context.User.ToPortalUser();
+        PortalUser portalUser;
+        try
+        {
+            portalUser = context.User.ToPortalUser(); // TODO: Clean up to support tokens from service accounts
+
+        }
+        catch (Exception)
+        {
+            await next(context);
+            return;
+        }
         var endpoint = context.Features.Get<IEndpointFeature>()?.Endpoint;
         var action = endpoint?.Metadata.GetMetadata<ControllerActionDescriptor>();
         var userActionNoAuditAttribute = endpoint?.Metadata.GetMetadata<UserActionNoAuditAttribute>();
