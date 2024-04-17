@@ -31,16 +31,12 @@ public class MetricsUpdater : BackgroundService
             stoppingToken
         );
     }
-    
+
     private async Task DoWork(CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
 
-        using var _ = _logger.BeginScope(
-            "{BackgroundJob} {CorrelationId}",
-            nameof(MetricsUpdater),
-            Guid.NewGuid()
-        );
+        using var _ = _logger.BeginScope("{BackgroundJob} {CorrelationId}", nameof(MetricsUpdater), Guid.NewGuid());
         var metricsService = scope.ServiceProvider.GetRequiredService<MetricsService>();
 
         try

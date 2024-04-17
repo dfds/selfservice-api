@@ -23,7 +23,6 @@ public class UserActionMiddleware : IMiddleware
         try
         {
             portalUser = context.User.ToPortalUser(); // TODO: Clean up to support tokens from service accounts
-
         }
         catch (Exception)
         {
