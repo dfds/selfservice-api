@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
 
@@ -22,7 +23,7 @@ public class ECRRepositoriesController : ControllerBase
     }
 
     [HttpGet("repositories")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<ECRRepository>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
