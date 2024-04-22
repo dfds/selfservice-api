@@ -36,6 +36,7 @@ public static class Domain
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
         builder.Services.AddTransient<IECRRepositoryService, ECRRepositoryService>();
         builder.Services.AddTransient<ISelfServiceJsonSchemaService, SelfServiceJsonSchemaService>();
+        builder.Services.AddTransient<MetricsService>();
 
         // domain repositories
         builder.Services.AddTransient<ICapabilityRepository, CapabilityRepository>();
@@ -85,6 +86,7 @@ public static class Domain
         builder.Services.AddHostedService<ActOnPendingCapabilityDeletions>();
         builder.Services.AddHostedService<ECRRepositorySynchronizer>();
         builder.Services.AddHostedService<UpdateOutOfSyncEcrRepos>();
+        builder.Services.AddHostedService<MetricsUpdater>();
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
