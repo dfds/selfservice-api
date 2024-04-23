@@ -76,7 +76,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("")]
-    [ProducesResponseType(typeof(CapabilityDetailsApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CapabilityDetailsApiResource), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
