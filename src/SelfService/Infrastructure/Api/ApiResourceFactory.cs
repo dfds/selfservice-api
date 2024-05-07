@@ -480,7 +480,32 @@ public class ApiResourceFactory
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
-                action: nameof(CapabilityController.RequestAwsAccount),
+                action: nameof(CapabilityController.RequestAwsAccount), // this seems horrendously wrong
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "related",
+            allow: allowedInteractions
+        );
+    }
+
+    private async Task<ResourceLink> CreateAzureResourcesLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+        var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capability.Id);
+
+        if (
+            await _authorizationService.CanRequestAzureResources(CurrentUser, capability.Id)
+            && !capabilityMarkedForDeletion
+        )
+        {
+            allowedInteractions += Post;
+        }
+
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.RequestCapabilityAzureResource),
                 controller: GetNameOf<CapabilityController>(),
                 values: new { id = capability.Id }
             ) ?? "",
@@ -526,6 +551,7 @@ public class ApiResourceFactory
                 membershipApplications: await CreateMembershipApplicationsLinkFor(capability),
                 leaveCapability: await CreateLeaveCapabilityLinkFor(capability),
                 awsAccount: await CreateAwsAccountLinkFor(capability),
+                azureResources: await CreateAzureResourcesLinkFor(capability),
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
                 metadata: await CreateMetadataLinkFor(capability),
@@ -576,6 +602,71 @@ public class ApiResourceFactory
             AwsAccountStatus.Completed => "Completed",
             _ => "Pending"
         };
+    }
+
+    public async Task<AzureResourceApiResource> Convert(AzureResource resource)
+    {
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanViewAzureResources(CurrentUser, resource.CapabilityId))
+        {
+            allowedInteractions += Get;
+        }
+
+        return new AzureResourceApiResource(
+            id: resource.Id,
+            links: new AzureResourceApiResource.AzureResourceLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(CapabilityController.GetCapabilityAzureResource),
+                        controller: GetNameOf<CapabilityController>(),
+                        values: new { cid = resource.CapabilityId, rid = resource.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowedInteractions
+                )
+            )
+        );
+    }
+
+    private static string Convert(AzureResourceStatus resourceStatus)
+    {
+        return resourceStatus switch
+        {
+            AzureResourceStatus.Requested => "Requested",
+            AzureResourceStatus.Pending => "Pending",
+            AzureResourceStatus.Completed => "Completed",
+            _ => "Pending"
+        };
+    }
+
+    public async Task<AzureResourcesApiResource> Convert(
+        IEnumerable<AzureResource> resources,
+        CapabilityId capabilityId
+    )
+    {
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanViewAzureResources(CurrentUser, capabilityId))
+        {
+            allowedInteractions += Get;
+        }
+
+        var items = resources.Select(Convert).ToArray();
+        return new AzureResourcesApiResource(
+            items: await Task.WhenAll(items),
+            links: new AzureResourcesApiResource.AzureResourceListLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(CapabilityController.GetCapabilityAzureResources),
+                        controller: GetNameOf<CapabilityController>(),
+                        values: new { id = capabilityId }
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowedInteractions
+                )
+            )
+        );
     }
 
     public KafkaClusterApiResource Convert(KafkaCluster cluster)

@@ -10,6 +10,7 @@ public class AuthorizationService : IAuthorizationService
     private readonly IMembershipQuery _membershipQuery;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
     private readonly IAwsAccountRepository _awsAccountRepository;
+    private readonly IAzureResourceRepository _azureResourceRepository;
     private readonly IMessageContractRepository _messageContractRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
 
@@ -18,6 +19,7 @@ public class AuthorizationService : IAuthorizationService
         IMembershipQuery membershipQuery,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         IAwsAccountRepository awsAccountRepository,
+        IAzureResourceRepository azureResourceRepository,
         IMessageContractRepository messageContractRepository,
         IKafkaTopicRepository kafkaTopicRepository
     )
@@ -26,6 +28,7 @@ public class AuthorizationService : IAuthorizationService
         _membershipQuery = membershipQuery;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _awsAccountRepository = awsAccountRepository;
+        _azureResourceRepository = azureResourceRepository;
         _messageContractRepository = messageContractRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
     }
@@ -168,6 +171,23 @@ public class AuthorizationService : IAuthorizationService
     {
         return await _membershipQuery.HasActiveMembership(userId, capabilityId)
             && !await _awsAccountRepository.Exists(capabilityId);
+    }
+
+    public async Task<bool> CanViewAzureResources(UserId userId, CapabilityId capabilityId)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId)
+            && await _azureResourceRepository.Any(capabilityId);
+    }
+
+    public async Task<bool> CanRequestAzureResource(UserId userId, CapabilityId capabilityId, string environment)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId)
+            && !await _azureResourceRepository.Exists(capabilityId, environment);
+    }
+
+    public async Task<bool> CanRequestAzureResources(UserId userId, CapabilityId capabilityId)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
     }
 
     public async Task<bool> CanLeave(UserId userId, CapabilityId capabilityId)

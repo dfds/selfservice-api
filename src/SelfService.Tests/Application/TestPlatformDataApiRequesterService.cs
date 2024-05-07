@@ -50,10 +50,12 @@ public class TestPlatformDataApiRequesterService
         var httpClient = HttpHelper.CreateMockHttpClient(mockResponse);
         var loggerMock = new Mock<ILogger<PlatformDataApiRequesterService>>();
         var awsMock = new Mock<IAwsAccountRepository>();
+        var azureMock = new Mock<IAzureResourceRepository>();
 
         var service = new PlatformDataApiRequesterService(
             loggerMock.Object,
             awsMock.Object,
+            azureMock.Object,
             myCapabilitiesQueryMock.Object,
             httpClient
         );

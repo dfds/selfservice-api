@@ -46,6 +46,8 @@ public class SelfServiceDbContext : DbContext
 
     public DbSet<AwsAccount> AwsAccounts => Set<AwsAccount>();
 
+    public DbSet<AzureResource> AzureResources => Set<AzureResource>();
+
     public DbSet<KafkaCluster> KafkaClusters => Set<KafkaCluster>();
 
     public DbSet<KafkaClusterAccess> KafkaClusterAccess => Set<KafkaClusterAccess>();
@@ -79,6 +81,8 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<AwsAccountId>().HaveConversion<AwsAccountIdConverter>();
 
         configurationBuilder.Properties<RealAwsAccountId>().HaveConversion<RealAwsAccountIdConverter>();
+
+        configurationBuilder.Properties<AzureResourceId>().HaveConversion<AzureResourceIdConverter>();
 
         configurationBuilder.Properties<AwsRoleArn>().HaveConversion<AwsRoleArnConverter>();
 
@@ -236,6 +240,16 @@ public class SelfServiceDbContext : DbContext
                     o.Property(x => x.LinkedAt).HasColumnName(nameof(KubernetesLink.LinkedAt));
                 }
             );
+            cfg.Property(x => x.RequestedAt);
+            cfg.Property(x => x.RequestedBy);
+        });
+
+        modelBuilder.Entity<AzureResource>(cfg =>
+        {
+            cfg.ToTable("AzureResource");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CapabilityId);
             cfg.Property(x => x.RequestedAt);
             cfg.Property(x => x.RequestedBy);
         });
