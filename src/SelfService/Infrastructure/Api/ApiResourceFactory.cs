@@ -489,13 +489,8 @@ public class ApiResourceFactory
         );
     }
 
-    private async Task<ResourceLink> CreateConfigurationLevelLinkFor(Capability capability)
+    private ResourceLink CreateConfigurationLevelLinkFor(Capability capability)
     {
-        var allowedInteractions = Allow.None;
-        if (await _authorizationService.CanViewAccess(PortalUser.Id, capability.Id))
-        {
-            allowedInteractions += Get;
-        }
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
@@ -504,7 +499,7 @@ public class ApiResourceFactory
                 values: new { id = capability.Id }
             ) ?? "",
             rel: "self",
-            allow: allowedInteractions
+            allow: Allow.Get
         );
     }
 
@@ -533,7 +528,7 @@ public class ApiResourceFactory
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability),
-                configurationLevel: await CreateConfigurationLevelLinkFor(capability)
+                configurationLevel: CreateConfigurationLevelLinkFor(capability)
             )
         );
     }

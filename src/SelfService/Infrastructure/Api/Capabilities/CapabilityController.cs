@@ -1077,17 +1077,6 @@ public class CapabilityController : ControllerBase
             return Unauthorized();
         }
 
-        if (!await _authorizationService.CanViewAccess(userId, id))
-        {
-            return Unauthorized(
-                new ProblemDetails
-                {
-                    Title = "Unknown user id",
-                    Detail = $"User {userId} is not a member of capability {id}"
-                }
-            );
-        }
-
         if (!CapabilityId.TryParse(id, out var capabilityId))
         {
             return BadRequest(
