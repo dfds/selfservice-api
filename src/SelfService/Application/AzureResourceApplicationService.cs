@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Localization;
 using SelfService.Domain;
+using SelfService.Domain.Events;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
@@ -48,5 +49,13 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
         await _azureResourceRepository.Add(resource);
 
         return resource.Id;
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async void PublishResourceManifestToGit(AzureResourceRequested azureResourceRequested)
+    {
+        var resource = await _azureResourceRepository.Get(azureResourceRequested.AzureResourceId!);
+        var capability = await _capabilityRepository.Get(resource.CapabilityId);
+        
     }
 }

@@ -80,6 +80,9 @@ public static class Domain
 
         // aad-aws-sync
         builder.Services.AddTransient<IAadAwsSyncCapabilityQuery, AadAwsSyncCapabilityQuery>();
+        
+        // azure
+        builder.Services.AddTransient<IAzureResourceManifestRepository, AzureResourceManifestRepository>();
 
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
