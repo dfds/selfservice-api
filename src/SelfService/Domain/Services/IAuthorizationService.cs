@@ -19,6 +19,10 @@ public interface IAuthorizationService
     Task<bool> CanApprove(UserId userId, MembershipApplication application);
     Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId);
     Task<bool> CanRequestAwsAccount(UserId userId, CapabilityId capabilityId);
+    Task<bool> CanViewAzureResources(UserId userId, CapabilityId capabilityId);
+    Task<bool> CanRequestAzureResource(UserId userId, CapabilityId capabilityId, string environment);
+    Task<bool> CanRequestAzureResources(UserId userId, CapabilityId capabilityId);
+
     Task<bool> CanLeave(UserId userId, CapabilityId capabilityId);
     Task<bool> CanApply(UserId userId, CapabilityId capabilityId);
     Task<bool> CanViewAllApplications(UserId userId, CapabilityId capabilityId);

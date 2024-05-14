@@ -80,18 +80,21 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
 
     private readonly ILogger<PlatformDataApiRequesterService> _logger;
     private readonly IAwsAccountRepository _awsAccountRepository;
+    private readonly IAzureResourceRepository _azureResourceRepository;
     private readonly IMyCapabilitiesQuery _myCapabilitiesQuery;
     private readonly HttpClient _httpClient;
 
     public PlatformDataApiRequesterService(
         ILogger<PlatformDataApiRequesterService> logger,
         IAwsAccountRepository awsAccountRepository,
+        IAzureResourceRepository azureResourceRepository,
         IMyCapabilitiesQuery myCapabilitiesQuery,
         HttpClient httpClient
     )
     {
         _logger = logger;
         _awsAccountRepository = awsAccountRepository;
+        _azureResourceRepository = azureResourceRepository;
         _myCapabilitiesQuery = myCapabilitiesQuery;
         _httpClient = httpClient;
     }

@@ -89,6 +89,25 @@ public class TestPostgresMappings
 
     [Fact]
     [Trait("Category", "Integration")]
+    public async Task azureresource()
+    {
+        await using var databaseFactory = new ExternalDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext();
+
+        var stub = A.AzureResource.Build();
+
+        // write
+        await dbContext.AzureResources.AddAsync(stub);
+        await dbContext.SaveChangesAsync();
+
+        // read
+        var storedVersion = await dbContext.AzureResources.FindAsync(stub.Id);
+
+        Assert.Equal(expected: stub, actual: storedVersion, comparer: new AzureResourceComparer());
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
     public async Task kafkacluster()
     {
         await using var databaseFactory = new ExternalDatabaseFactory();

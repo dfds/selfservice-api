@@ -46,6 +46,7 @@ public class MetricsUpdater : BackgroundService
         catch (Exception e)
         {
             _logger.LogError(e, "Error updating metrics");
+            _logger.LogCritical(e, "Metrics update failed. Will retry in 10 minutes.");
         }
         UpdateNeededAt = DateTime.Now.AddMinutes(10);
     }
