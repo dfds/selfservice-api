@@ -18,7 +18,9 @@ public class CapabilityController : ControllerBase
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IAuthorizationService _authorizationService;
     private readonly IAwsAccountApplicationService _awsAccountApplicationService;
+    private readonly IAzureResourceApplicationService _azureResourceApplicationService;
     private readonly IAwsAccountRepository _awsAccountRepository;
+    private readonly IAzureResourceRepository _azureResourceRepository;
     private readonly ICapabilityApplicationService _capabilityApplicationService;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
@@ -40,7 +42,9 @@ public class CapabilityController : ControllerBase
         IKafkaClusterRepository kafkaClusterRepository,
         ICapabilityApplicationService capabilityApplicationService,
         IAwsAccountRepository awsAccountRepository,
+        IAzureResourceRepository azureResourceRepository,
         IAwsAccountApplicationService awsAccountApplicationService,
+        IAzureResourceApplicationService azureResourceApplicationService,
         IMembershipApplicationService membershipApplicationService,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
@@ -57,7 +61,9 @@ public class CapabilityController : ControllerBase
         _kafkaClusterRepository = kafkaClusterRepository;
         _capabilityApplicationService = capabilityApplicationService;
         _awsAccountRepository = awsAccountRepository;
+        _azureResourceRepository = azureResourceRepository;
         _awsAccountApplicationService = awsAccountApplicationService;
+        _azureResourceApplicationService = azureResourceApplicationService;
         _membershipApplicationService = membershipApplicationService;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
@@ -76,7 +82,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("")]
-    [ProducesResponseType(typeof(CapabilityDetailsApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CapabilityDetailsApiResource), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
@@ -245,7 +251,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
-    public async Task<IActionResult> RequestAwsAccount(string id, [FromServices] SelfServiceDbContext dbContext)
+    public async Task<IActionResult> RequestAwsAccount(string id)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -271,6 +277,109 @@ public class CapabilityController : ControllerBase
         {
             return Conflict();
         }
+    }
+
+    [HttpGet("{id:required}/azureresources")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> GetCapabilityAzureResources(string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        if (!await _authorizationService.CanViewAzureResources(userId, capabilityId))
+            return Unauthorized();
+
+        var resources = await _azureResourceRepository.GetFor(capabilityId);
+
+        return Ok(await _apiResourceFactory.Convert(resources, capabilityId));
+    }
+
+    [HttpPost("{id:required}/azureresources")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
+    public async Task<IActionResult> RequestCapabilityAzureResource(
+        string id,
+        [FromBody] NewAzureResourceRequest request
+    )
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        // todo: check legality of environment
+
+        if (request?.environment == null)
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid metadata",
+                    Detail = "Request body is empty",
+                    Status = StatusCodes.Status400BadRequest
+                }
+            );
+
+        if (!await _azureResourceRepository.Exists(capabilityId, request.environment))
+            return NotFound();
+
+        if (!await _authorizationService.CanRequestAzureResource(userId, capabilityId, request.environment))
+            return Unauthorized();
+
+        try
+        {
+            var azureResourceId = await _azureResourceApplicationService.RequestAzureResource(
+                capabilityId,
+                request.environment,
+                userId
+            );
+
+            var resource = await _azureResourceRepository.Get(azureResourceId);
+
+            return Ok(await _apiResourceFactory.Convert(resource));
+        }
+        catch (AlreadyHasAzureResourceException)
+        {
+            return Conflict();
+        }
+    }
+
+    [HttpGet("{id:required}/azureresources/{rid:required}")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> GetCapabilityAzureResource(string id, string rid)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        if (!AzureResourceId.TryParse(rid, out var resourceId))
+            return NotFound();
+
+        if (!await _authorizationService.CanViewAzureResources(userId, capabilityId))
+            return Unauthorized();
+
+        var resource = await _azureResourceRepository.Get(resourceId);
+
+        return Ok(await _apiResourceFactory.Convert(resource));
     }
 
     [HttpGet("{id:required}/membershipapplications")]
@@ -1075,17 +1184,6 @@ public class CapabilityController : ControllerBase
         if (!User.TryGetUserId(out var userId))
         {
             return Unauthorized();
-        }
-
-        if (!await _authorizationService.CanViewAccess(userId, id))
-        {
-            return Unauthorized(
-                new ProblemDetails
-                {
-                    Title = "Unknown user id",
-                    Detail = $"User {userId} is not a member of capability {id}"
-                }
-            );
         }
 
         if (!CapabilityId.TryParse(id, out var capabilityId))

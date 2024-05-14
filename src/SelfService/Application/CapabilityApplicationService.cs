@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.Intrinsics.X86;
+using System.Text;
 using System.Text.Json.Nodes;
 using SelfService.Domain;
 using SelfService.Domain.Exceptions;
@@ -204,6 +205,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
     [TransactionalBoundary, Outboxed]
     public async Task ActOnPendingCapabilityDeletions()
+    /// FLUTTERSHY
     {
         using var _ = _logger.BeginScope(
             "{BackgroundJob} {CorrelationId}",

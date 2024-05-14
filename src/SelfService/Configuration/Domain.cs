@@ -22,6 +22,7 @@ public static class Domain
         // application services
         builder.Services.AddTransient<ICapabilityApplicationService, CapabilityApplicationService>();
         builder.Services.AddTransient<IAwsAccountApplicationService, AwsAccountApplicationService>();
+        builder.Services.AddTransient<IAzureResourceApplicationService, AzureResourceApplicationService>();
         builder.Services.AddTransient<IConfigurationLevelService, ConfigurationLevelService>();
         builder.Services.AddTransient<IMembershipApplicationService, MembershipApplicationService>();
         builder.Services.AddTransient<IKafkaTopicApplicationService, KafkaTopicApplicationService>();
@@ -41,6 +42,7 @@ public static class Domain
         // domain repositories
         builder.Services.AddTransient<ICapabilityRepository, CapabilityRepository>();
         builder.Services.AddTransient<IAwsAccountRepository, AwsAccountRepository>();
+        builder.Services.AddTransient<IAzureResourceRepository, AzureResourceRepository>();
         builder.Services.AddTransient<IMembershipRepository, MembershipRepository>();
         builder.Services.AddTransient<IMembershipApplicationRepository, MembershipApplicationRepository>();
         builder.Services.AddTransient<IKafkaClusterRepository, KafkaClusterRepository>();

@@ -1,4 +1,5 @@
 ﻿using System.Net.NetworkInformation;
+using JetBrains.Annotations;
 using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Invitations;
@@ -15,6 +16,7 @@ public static class A
     public static MembershipBuilder Membership => new();
     public static MemberBuilder Member => new();
     public static AwsAccountBuilder AwsAccount => new();
+    public static AzureResourceBuilder AzureResource => new();
     public static KafkaClusterBuilder KafkaCluster => new();
     public static KafkaTopicBuilder KafkaTopic => new();
     public static MembershipApplicationBuilder MembershipApplication => new();

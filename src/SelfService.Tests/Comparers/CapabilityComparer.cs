@@ -153,6 +153,42 @@ public class AwsAccountComparer : IEqualityComparer<AwsAccount?>
     }
 }
 
+public class AzureResourceComparer : IEqualityComparer<AzureResource?>
+{
+    public bool Equals(AzureResource? x, AzureResource? y)
+    {
+        if (ReferenceEquals(x, y))
+        {
+            return true;
+        }
+
+        if (ReferenceEquals(x, null))
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(y, null))
+        {
+            return false;
+        }
+
+        if (x.GetType() != y.GetType())
+        {
+            return false;
+        }
+
+        return x.CapabilityId.Equals(y.CapabilityId)
+            && x.Environment.Equals(y.Environment)
+            && x.RequestedAt.Equals(y.RequestedAt)
+            && x.RequestedBy == y.RequestedBy;
+    }
+
+    public int GetHashCode(AzureResource obj)
+    {
+        return HashCode.Combine(obj.CapabilityId, obj.Environment, obj.RequestedAt, obj.RequestedBy);
+    }
+}
+
 public class KafkaClusterComparer : IEqualityComparer<KafkaCluster?>
 {
     public bool Equals(KafkaCluster? x, KafkaCluster? y)
