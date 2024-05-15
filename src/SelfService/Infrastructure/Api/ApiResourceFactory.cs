@@ -491,7 +491,7 @@ public class ApiResourceFactory
 
     private async Task<ResourceLink> CreateAzureResourcesLinkFor(Capability capability)
     {
-        var allowedInteractions = Allow.None;
+        var allowedInteractions = Allow.Get;
         var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capability.Id);
 
         if (
@@ -514,13 +514,8 @@ public class ApiResourceFactory
         );
     }
 
-    private async Task<ResourceLink> CreateConfigurationLevelLinkFor(Capability capability)
+    private ResourceLink CreateConfigurationLevelLinkFor(Capability capability)
     {
-        var allowedInteractions = Allow.None;
-        if (await _authorizationService.CanViewAccess(PortalUser.Id, capability.Id))
-        {
-            allowedInteractions += Get;
-        }
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
@@ -529,7 +524,7 @@ public class ApiResourceFactory
                 values: new { id = capability.Id }
             ) ?? "",
             rel: "self",
-            allow: allowedInteractions
+            allow: Allow.Get
         );
     }
 
@@ -559,7 +554,7 @@ public class ApiResourceFactory
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability),
-                configurationLevel: await CreateConfigurationLevelLinkFor(capability)
+                configurationLevel: CreateConfigurationLevelLinkFor(capability)
             )
         );
     }
@@ -651,9 +646,14 @@ public class ApiResourceFactory
             allowedInteractions += Get;
         }
 
-        var items = resources.Select(Convert).ToArray();
+        var items = new AzureResourceApiResource[resources.Count()];
+        for (var i = 0; i < resources.Count(); i++)
+        {
+            items[i] = await Convert(resources.ElementAt(i));
+        }
+
         return new AzureResourcesApiResource(
-            items: await Task.WhenAll(items),
+            items: items,
             links: new AzureResourcesApiResource.AzureResourceListLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
