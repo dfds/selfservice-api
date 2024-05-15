@@ -52,10 +52,9 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async void PublishResourceManifestToGit(AzureResourceRequested azureResourceRequested)
+    public async Task PublishResourceManifestToGit(AzureResourceRequested azureResourceRequested)
     {
         var resource = await _azureResourceRepository.Get(azureResourceRequested.AzureResourceId!);
         var capability = await _capabilityRepository.Get(resource.CapabilityId);
-        
     }
 }

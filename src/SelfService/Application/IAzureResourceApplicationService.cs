@@ -6,5 +6,5 @@ namespace SelfService.Application;
 public interface IAzureResourceApplicationService
 {
     Task<AzureResourceId> RequestAzureResource(CapabilityId capabilityId, string environment, UserId requestedBy);
-    public void PublishResourceManifestToGit(AzureResourceRequested azureResourceRequested);
+    public Task PublishResourceManifestToGit(AzureResourceRequested azureResourceRequested);
 }

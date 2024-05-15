@@ -326,10 +326,9 @@ public class AzureResourceRequestedHandler : IMessageHandler<AzureResourceReques
         _azureResourceApplicationService = azureResourceApplicationService;
     }
     
-    public Task Handle(AzureResourceRequested message, MessageHandlerContext context)
+    public async Task Handle(AzureResourceRequested message, MessageHandlerContext context)
     {
-        _azureResourceApplicationService.PublishResourceManifestToGit(message);
-        return Task.CompletedTask;
+        await _azureResourceApplicationService.PublishResourceManifestToGit(message);
     }
 }
 

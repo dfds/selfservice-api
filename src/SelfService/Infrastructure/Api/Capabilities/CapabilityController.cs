@@ -335,8 +335,8 @@ public class CapabilityController : ControllerBase
                 }
             );
 
-        if (!await _azureResourceRepository.Exists(capabilityId, request.environment))
-            return NotFound();
+        if (await _azureResourceRepository.Exists(capabilityId, request.environment))
+            return Conflict();
 
         if (!await _authorizationService.CanRequestAzureResource(userId, capabilityId, request.environment))
             return Unauthorized();
