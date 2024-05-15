@@ -491,7 +491,7 @@ public class ApiResourceFactory
 
     private async Task<ResourceLink> CreateAzureResourcesLinkFor(Capability capability)
     {
-        var allowedInteractions = Allow.None;
+        var allowedInteractions = Allow.Get;
         var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capability.Id);
 
         if (
@@ -646,9 +646,14 @@ public class ApiResourceFactory
             allowedInteractions += Get;
         }
 
-        var items = resources.Select(Convert).ToArray();
+        var items = new AzureResourceApiResource[resources.Count()];
+        for (var i = 0; i < resources.Count(); i++)
+        {
+            items[i] = await Convert(resources.ElementAt(i));
+        }
+
         return new AzureResourcesApiResource(
-            items: await Task.WhenAll(items),
+            items: items,
             links: new AzureResourcesApiResource.AzureResourceListLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
