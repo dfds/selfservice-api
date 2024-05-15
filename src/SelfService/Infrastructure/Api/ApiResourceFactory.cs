@@ -500,6 +500,7 @@ public class ApiResourceFactory
         )
         {
             allowedInteractions += Post;
+            allowedInteractions += Get;
         }
 
         return new ResourceLink(
