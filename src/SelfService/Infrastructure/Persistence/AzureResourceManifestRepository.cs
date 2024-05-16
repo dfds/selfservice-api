@@ -1,18 +1,22 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using LibGit2Sharp;
 using SelfService.Application;
 using SelfService.Domain.Models;
+using Signature = LibGit2Sharp.Signature;
 
 namespace SelfService.Infrastructure.Persistence;
 
 public class AzureResourceManifestRepository : IAzureResourceManifestRepository
 {
-    private LibGit2Sharp.Repository _repository;
+    private Repository _repository;
+    private Signature _signature;
 
     public AzureResourceManifestRepository()
     {
         Init(); 
-        _repository = new LibGit2Sharp.Repository("/tmp/ssu-azure-rg-manifests");
+        _repository = new Repository("/tmp/ssu-azure-rg-manifests");
+        _signature = new Signature("selfservice-api", "ssu@dfds.cloud", DateTimeOffset.Now);
         GetAll();
     }
 
@@ -54,9 +58,18 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
         return set;
     }
 
-    public void Add(AzureResourceManifest manifest)
+    public Task Add(AzureResourceManifest manifest)
     {
-        Directory.CreateDirectory($"/tmp/ssu-azure-rg-manifests/${manifest.AzureResource?.Id}");
+        Directory.CreateDirectory($"/tmp/ssu-azure-rg-manifests/{manifest.AzureResource?.Id}");
+        var manifestString = manifest.GenerateManifestString();
+        if (!File.Exists($"/tmp/ssu-azure-rg-manifests/{manifest.AzureResource?.Id}/terragrunt.hcl"))
+        {
+            File.WriteAllText($"/tmp/ssu-azure-rg-manifests/{manifest.AzureResource?.Id}/terragrunt.hcl", manifestString);
+            Commands.Stage(_repository, manifest.AzureResource?.Id.ToString());
+            _repository.Commit($"Added new Azure Resource Group for {manifest.Capability?.Id} in environment {manifest.AzureResource?.Environment}", _signature, _signature, new CommitOptions());
+        }
+        
+        return Task.CompletedTask;
     }
 }
 
@@ -69,6 +82,43 @@ public class AzureResourceManifest
     public AzureResourceManifest()
     {
         Path = "";
+    }
+
+    public String GenerateManifestString()
+    {
+        return $$"""
+                 terraform {
+                   source = "git::https://github.com/dfds/azure-infrastructure-modules.git//capability-context?ref=main&depth=1"
+                 }
+                 
+                 include {
+                   path = "${find_in_parent_folders()}"
+                 }
+                 
+                 inputs = {
+                 
+                   name = "{{Capability?.Id}}"
+                 
+                   tribe = "tribename"
+                 
+                   team  = "teamname"
+                   
+                   email = "aws.{{Capability?.Id}}@dfds.com"
+                 
+                   context_id = "{{AzureResource?.Id}}"
+                 
+                   correlation_id = "f6189c11-c710-40ed-8c79-8f94eb7b04cf"
+                 
+                   capability_name = "{{Capability?.Name}}"
+                 
+                   capability_root_id = "{{Capability?.Id}}"
+                 
+                   context_name = "{{AzureResource?.Environment}}"
+                 
+                   capability_id = "{{Capability?.Id}}"
+                 
+                 }
+                 """;
     }
 }
 
@@ -111,3 +161,4 @@ class CommandExecutor
         };
     }
 }
+
