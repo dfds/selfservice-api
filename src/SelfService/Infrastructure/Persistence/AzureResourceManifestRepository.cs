@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using LibGit2Sharp;
-using SelfService.Application;
 using SelfService.Domain.Models;
 using Signature = LibGit2Sharp.Signature;
 
@@ -69,7 +68,7 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
     public Task Add(AzureResourceManifest manifest)
     {
         Directory.CreateDirectory($"{_config.TemporaryRepoPath}/{manifest.AzureResource?.Id}");
-        var manifestString = manifest.GenerateManifestString();
+        var manifestString = manifest.GenerateManifestString(ExtractManifestRef());
         if (!File.Exists($"{_config.TemporaryRepoPath}/{manifest.AzureResource?.Id}/terragrunt.hcl"))
         {
             File.WriteAllText($"{_config.TemporaryRepoPath}/{manifest.AzureResource?.Id}/terragrunt.hcl", manifestString);
@@ -78,6 +77,14 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
         }
         
         return Task.CompletedTask;
+    }
+
+    public String ExtractManifestRef()
+    {
+        var templateManifestContent =
+            File.ReadAllText($"{_config.TemporaryRepoPath}/00000000-0000-0000-0000-000000000000/terragrunt.hcl");
+        var match = Regex.Match(templateManifestContent, "source =.*ref=(?<ref>[^&^\"\\n\\r]*)");
+        return match.Groups["ref"].Value;
     }
 }
 
@@ -94,7 +101,6 @@ public class AzureResourceManifestRepositoryConfig
         RemoteRepoUri = configuration.GetValue<String>("SS_ARM_REMOTE_REPO_URI") ?? "";
         GitUsername = configuration.GetValue<String>("SS_ARM_GIT_USERNAME") ?? "selfservice-api";
         GitEmail = configuration.GetValue<String>("SS_ARM_GIT_EMAIL") ?? "ssu@dfds.cloud";
-        Console.WriteLine($"repo path: {TemporaryRepoPath}");
     }
 }
 
@@ -122,11 +128,17 @@ public class AzureResourceManifest
         Path = "";
     }
 
-    public String GenerateManifestString()
+    public String GenerateManifestString(string gitRef)
     {
+        var options = "depth=1";
+        if (gitRef != "")
+        {
+            options = $"ref={gitRef}&depth=1";
+        }
+        
         return $$"""
                  terraform {
-                   source = "git::https://github.com/dfds/azure-infrastructure-modules.git//capability-context?ref=main&depth=1"
+                   source = "git::https://github.com/dfds/azure-infrastructure-modules.git//capability-context?{{options}}"
                  }
                  
                  include {
