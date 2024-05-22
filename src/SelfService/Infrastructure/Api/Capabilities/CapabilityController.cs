@@ -21,7 +21,6 @@ public class CapabilityController : ControllerBase
     private readonly IAzureResourceApplicationService _azureResourceApplicationService;
     private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly IAzureResourceRepository _azureResourceRepository;
-    private readonly IAzureResourceManifestRepository _azureResourceManifestRepository;
     private readonly ICapabilityApplicationService _capabilityApplicationService;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
@@ -51,8 +50,7 @@ public class CapabilityController : ControllerBase
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
         ILogger<CapabilityController> logger,
         ITeamApplicationService teamApplicationService,
-        IInvitationApplicationService invitationApplicationService,
-        IAzureResourceManifestRepository azureResourceManifestRepository
+        IInvitationApplicationService invitationApplicationService
     )
     {
         _membersQuery = membersQuery;
@@ -72,7 +70,6 @@ public class CapabilityController : ControllerBase
         _logger = logger;
         _teamApplicationService = teamApplicationService;
         _invitationApplicationService = invitationApplicationService;
-        _azureResourceManifestRepository = azureResourceManifestRepository;
     }
 
     [HttpGet("")]
