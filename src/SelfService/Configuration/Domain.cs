@@ -82,7 +82,16 @@ public static class Domain
         builder.Services.AddTransient<IAadAwsSyncCapabilityQuery, AadAwsSyncCapabilityQuery>();
         
         // azure
-        builder.Services.AddTransient<IAzureResourceManifestRepository, AzureResourceManifestRepository>();
+        var azureResourceManifestEnabled = builder.Configuration["SS_ARM_ENABLED"];
+        if (azureResourceManifestEnabled != null && azureResourceManifestEnabled.ToLower() == "true")
+        {
+            builder.Services.AddTransient<AzureResourceManifestRepositoryConfig>();
+            builder.Services.AddTransient<IAzureResourceManifestRepository, AzureResourceManifestRepository>();
+        }
+        else
+        {
+            builder.Services.AddTransient<IAzureResourceManifestRepository, NoOpAzureResourceManifestRepository>();
+        }
 
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();

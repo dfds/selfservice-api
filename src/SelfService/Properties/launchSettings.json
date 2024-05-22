@@ -21,7 +21,12 @@
         "ECR_PULL_PERMISSION_AWS_ACCOUNT_ID": "12341234",
         "UPDATE_REPOSITORIES_ON_STATE_MISMATCH": "false",
         "LOCAL_DEV_SKIP_AWS_ECR_REPOSITORY_CREATION": "true",
-        "SS_ADD_JSON_SCHEMA_API_KEY": "dummykey"
+        "SS_ADD_JSON_SCHEMA_API_KEY": "dummykey",
+        "SS_ARM_ENABLED": "false",
+        "SS_ARM_TEMPORARY_REPO_PATH": "/tmp/ssu-azure-rg-manifests",
+        "SS_ARM_REMOTE_REPO_URI": "git@github.com:dfds/azure-rg-manifests.git",
+        "SS_ARM_GIT_USERNAME": "selfservice-api",
+        "SS_ARM_GIT_EMAIL": "ssu@dfds.cloud"
       }
     }
   }
