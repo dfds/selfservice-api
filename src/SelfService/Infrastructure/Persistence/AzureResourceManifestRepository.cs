@@ -14,7 +14,6 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
 
     public AzureResourceManifestRepository(AzureResourceManifestRepositoryConfig azureResourceManifestRepositoryConfig)
     {
-        Console.WriteLine("AzureResourceManifestRepository in use");
         _config = azureResourceManifestRepositoryConfig;
         Init(); 
         _repository = new Repository(_config.TemporaryRepoPath);
@@ -37,11 +36,12 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
         if (!Directory.Exists($"{_config.TemporaryRepoPath}/.git"))
         {
             var result = CommandExecutor.Run("git", $"clone {_config.RemoteRepoUri} .", _config.TemporaryRepoPath, 60000);
+            result = CommandExecutor.Run("git", $"checkout {_config.Branch}", _config.TemporaryRepoPath, 60000);
         }
         else
         {
             var result = CommandExecutor.Run("git", "fetch origin", _config.TemporaryRepoPath, 60000);
-            result = CommandExecutor.Run("git", "reset --hard origin/master", _config.TemporaryRepoPath, 60000);
+            result = CommandExecutor.Run("git", $"reset --hard origin/{_config.Branch}", _config.TemporaryRepoPath, 60000);
         }
     }
 
@@ -74,6 +74,7 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
             File.WriteAllText($"{_config.TemporaryRepoPath}/{manifest.AzureResource?.Id}/terragrunt.hcl", manifestString);
             Commands.Stage(_repository, manifest.AzureResource?.Id.ToString());
             _repository.Commit($"Added new Azure Resource Group for {manifest.Capability?.Id} in environment {manifest.AzureResource?.Environment}", _signature, _signature, new CommitOptions());
+            var result = CommandExecutor.Run("git", "push", _config.TemporaryRepoPath, 60000);
         }
         
         return Task.CompletedTask;
@@ -94,6 +95,7 @@ public class AzureResourceManifestRepositoryConfig
     public String RemoteRepoUri { get; set; }
     public String GitUsername { get; set; }
     public String GitEmail { get; set; }
+    public String Branch { get; set; }
 
     public AzureResourceManifestRepositoryConfig(IConfiguration configuration)
     {
@@ -101,6 +103,7 @@ public class AzureResourceManifestRepositoryConfig
         RemoteRepoUri = configuration.GetValue<String>("SS_ARM_REMOTE_REPO_URI") ?? "";
         GitUsername = configuration.GetValue<String>("SS_ARM_GIT_USERNAME") ?? "selfservice-api";
         GitEmail = configuration.GetValue<String>("SS_ARM_GIT_EMAIL") ?? "ssu@dfds.cloud";
+        Branch = configuration.GetValue<String>("SS_ARM_GIT_BRANCH") ?? "master";
     }
 }
 
