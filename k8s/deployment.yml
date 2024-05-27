@@ -80,7 +80,7 @@ spec:
             - name: "SS_ARM_GIT_BRANCH"
               value: "master"
             - name: "DEFAULT_KAFKA_ENABLE_AUTO_COMMIT"
-              value: "true"
+              value: "false"
           envFrom:
             - secretRef:
                 name: kafka-credentials
