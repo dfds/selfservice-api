@@ -98,7 +98,6 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
             );
             var result = CommandExecutor.Run("git", "push", _config.TemporaryRepoPath, 60000);
             result.ThrowIfError();
-
         }
 
         return Task.CompletedTask;
@@ -252,7 +251,9 @@ class CommandExecutor
 public class CommandErrorException : Exception
 {
     public String ErrorOutput { get; set; }
-    public CommandErrorException(string message) : base($"Error encountered while executing command: {message}")
+
+    public CommandErrorException(string message)
+        : base($"Error encountered while executing command: {message}")
     {
         ErrorOutput = message;
     }
