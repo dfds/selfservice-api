@@ -15,7 +15,7 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
     public AzureResourceManifestRepository(AzureResourceManifestRepositoryConfig azureResourceManifestRepositoryConfig)
     {
         _config = azureResourceManifestRepositoryConfig;
-        Init(); 
+        Init();
         _repository = new Repository(_config.TemporaryRepoPath);
         _signature = new Signature(_config.GitUsername, _config.GitEmail, DateTimeOffset.Now);
         GetAll();
@@ -27,7 +27,7 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
         {
             throw new Exception("Missing necessary configuration for AzureResourceManifestRepository, can't proceed");
         }
-        
+
         if (!Directory.Exists(_config.TemporaryRepoPath))
         {
             Directory.CreateDirectory(_config.TemporaryRepoPath);
@@ -35,13 +35,23 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
 
         if (!Directory.Exists($"{_config.TemporaryRepoPath}/.git"))
         {
-            var result = CommandExecutor.Run("git", $"clone {_config.RemoteRepoUri} .", _config.TemporaryRepoPath, 60000);
+            var result = CommandExecutor.Run(
+                "git",
+                $"clone {_config.RemoteRepoUri} .",
+                _config.TemporaryRepoPath,
+                60000
+            );
             result = CommandExecutor.Run("git", $"checkout {_config.Branch}", _config.TemporaryRepoPath, 60000);
         }
         else
         {
             var result = CommandExecutor.Run("git", "fetch origin", _config.TemporaryRepoPath, 60000);
-            result = CommandExecutor.Run("git", $"reset --hard origin/{_config.Branch}", _config.TemporaryRepoPath, 60000);
+            result = CommandExecutor.Run(
+                "git",
+                $"reset --hard origin/{_config.Branch}",
+                _config.TemporaryRepoPath,
+                60000
+            );
         }
     }
 
@@ -71,19 +81,28 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
         var manifestString = manifest.GenerateManifestString(ExtractManifestRef());
         if (!File.Exists($"{_config.TemporaryRepoPath}/{manifest.AzureResource?.Id}/terragrunt.hcl"))
         {
-            File.WriteAllText($"{_config.TemporaryRepoPath}/{manifest.AzureResource?.Id}/terragrunt.hcl", manifestString);
+            File.WriteAllText(
+                $"{_config.TemporaryRepoPath}/{manifest.AzureResource?.Id}/terragrunt.hcl",
+                manifestString
+            );
             Commands.Stage(_repository, manifest.AzureResource?.Id.ToString());
-            _repository.Commit($"Added new Azure Resource Group for {manifest.Capability?.Id} in environment {manifest.AzureResource?.Environment}", _signature, _signature, new CommitOptions());
+            _repository.Commit(
+                $"Added new Azure Resource Group for {manifest.Capability?.Id} in environment {manifest.AzureResource?.Environment}",
+                _signature,
+                _signature,
+                new CommitOptions()
+            );
             var result = CommandExecutor.Run("git", "push", _config.TemporaryRepoPath, 60000);
         }
-        
+
         return Task.CompletedTask;
     }
 
     public String ExtractManifestRef()
     {
-        var templateManifestContent =
-            File.ReadAllText($"{_config.TemporaryRepoPath}/00000000-0000-0000-0000-000000000000/terragrunt.hcl");
+        var templateManifestContent = File.ReadAllText(
+            $"{_config.TemporaryRepoPath}/00000000-0000-0000-0000-000000000000/terragrunt.hcl"
+        );
         var match = Regex.Match(templateManifestContent, "source =.*ref=(?<ref>[^&^\"\\n\\r]*)");
         return match.Groups["ref"].Value;
     }
@@ -138,7 +157,7 @@ public class AzureResourceManifest
         {
             options = $"ref={gitRef}&depth=1";
         }
-        
+
         return $$"""
                  terraform {
                    source = "git::https://github.com/dfds/azure-infrastructure-modules.git//capability-context?{{options}}"
@@ -180,6 +199,7 @@ class CommandExecutor
     public String? Output { get; set; }
     public String? Error { get; set; }
     public int ExitCode { get; set; }
+
     public static CommandExecutor Run(String process, String args, String workingDirectory, int timeout)
     {
         var proc = new Process()
@@ -203,7 +223,7 @@ class CommandExecutor
         {
             proc.WaitForExit(timeout);
         }
-        
+
         var output = proc.StandardOutput.ReadToEnd();
         var error = proc.StandardError.ReadToEnd();
         return new CommandExecutor
@@ -214,4 +234,3 @@ class CommandExecutor
         };
     }
 }
-

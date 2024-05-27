@@ -63,11 +63,9 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
         using (var scope = _serviceScopeFactory.CreateScope())
         {
             var azureResourceManifestRepository = scope.ServiceProvider.GetService<IAzureResourceManifestRepository>();
-            await azureResourceManifestRepository!.Add(new AzureResourceManifest
-            {
-                AzureResource = resource,
-                Capability = capability
-            });
+            await azureResourceManifestRepository!.Add(
+                new AzureResourceManifest { AzureResource = resource, Capability = capability }
+            );
         }
     }
 }

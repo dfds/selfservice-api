@@ -113,7 +113,9 @@ public static class ConsumerConfiguration
 
             options
                 .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
-                .RegisterMessageHandler<AzureResourceRequested, AzureResourceRequestedHandler>(AzureResourceRequested.EventType);
+                .RegisterMessageHandler<AzureResourceRequested, AzureResourceRequestedHandler>(
+                    AzureResourceRequested.EventType
+                );
 
             options
                 .ForTopic($"{SelfServicePrefix}.kafkatopic")
@@ -325,7 +327,7 @@ public class AzureResourceRequestedHandler : IMessageHandler<AzureResourceReques
     {
         _azureResourceApplicationService = azureResourceApplicationService;
     }
-    
+
     public async Task Handle(AzureResourceRequested message, MessageHandlerContext context)
     {
         await _azureResourceApplicationService.PublishResourceManifestToGit(message);

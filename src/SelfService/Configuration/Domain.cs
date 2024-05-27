@@ -80,7 +80,7 @@ public static class Domain
 
         // aad-aws-sync
         builder.Services.AddTransient<IAadAwsSyncCapabilityQuery, AadAwsSyncCapabilityQuery>();
-        
+
         // azure
         var azureResourceManifestEnabled = builder.Configuration["SS_ARM_ENABLED"];
         if (azureResourceManifestEnabled != null && azureResourceManifestEnabled.ToLower() == "true")
