@@ -32,7 +32,7 @@ app:
     - name: SS_PROMETHEUS_API_ENDPOINT
       value: http://monitoring-kube-prometheus-prometheus.monitoring:9090
     - name: "DEFAULT_KAFKA_ENABLE_AUTO_COMMIT"
-      value: "true"
+      value: "false"
     - name: "SS_ARM_ENABLED"
       value: "false"
     - name: "SS_ARM_TEMPORARY_REPO_PATH"
