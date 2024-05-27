@@ -41,17 +41,21 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
                 _config.TemporaryRepoPath,
                 60000
             );
+            result.ThrowIfError();
             result = CommandExecutor.Run("git", $"checkout {_config.Branch}", _config.TemporaryRepoPath, 60000);
+            result.ThrowIfError();
         }
         else
         {
             var result = CommandExecutor.Run("git", "fetch origin", _config.TemporaryRepoPath, 60000);
+            result.ThrowIfError();
             result = CommandExecutor.Run(
                 "git",
                 $"reset --hard origin/{_config.Branch}",
                 _config.TemporaryRepoPath,
                 60000
             );
+            result.ThrowIfError();
         }
     }
 
@@ -93,6 +97,8 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
                 new CommitOptions()
             );
             var result = CommandExecutor.Run("git", "push", _config.TemporaryRepoPath, 60000);
+            result.ThrowIfError();
+
         }
 
         return Task.CompletedTask;
@@ -232,5 +238,22 @@ class CommandExecutor
             Error = error,
             ExitCode = proc.ExitCode
         };
+    }
+
+    public void ThrowIfError()
+    {
+        if (ExitCode != 0)
+        {
+            throw new CommandErrorException(Error!);
+        }
+    }
+}
+
+public class CommandErrorException : Exception
+{
+    public String ErrorOutput { get; set; }
+    public CommandErrorException(string message) : base($"Error encountered while executing command: {message}")
+    {
+        ErrorOutput = message;
     }
 }
