@@ -9,6 +9,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "SS_LEGACY_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db",
         "SS_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db",
+        "DEFAULT_KAFKA_ENABLE_AUTO_COMMIT": "true",
         "DEFAULT_KAFKA_BOOTSTRAP_SERVERS": "localhost:9092",
         "DEFAULT_KAFKA_GROUP_ID": "selfservice.consumer",
         "SS_APISPECS_TOPIC": "cloudengineering.selfservice.apispecs",
@@ -20,7 +21,13 @@
         "ECR_PULL_PERMISSION_AWS_ACCOUNT_ID": "12341234",
         "UPDATE_REPOSITORIES_ON_STATE_MISMATCH": "false",
         "LOCAL_DEV_SKIP_AWS_ECR_REPOSITORY_CREATION": "true",
-        "SS_ADD_JSON_SCHEMA_API_KEY": "dummykey"
+        "SS_ADD_JSON_SCHEMA_API_KEY": "dummykey",
+        "SS_ARM_ENABLED": "false",
+        "SS_ARM_TEMPORARY_REPO_PATH": "/tmp/ssu-azure-rg-manifests",
+        "SS_ARM_REMOTE_REPO_URI": "git@github.com:dfds/azure-rg-manifests.git",
+        "SS_ARM_GIT_USERNAME": "selfservice-api",
+        "SS_ARM_GIT_EMAIL": "ssu@dfds.cloud",
+        "SS_ARM_GIT_BRANCH": "master"
       }
     }
   }

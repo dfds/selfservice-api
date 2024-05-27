@@ -17,6 +17,10 @@ spec:
         prometheus.io/scrape: "true"
     spec:
       serviceAccountName: selfservice-api
+      volumes:
+        - name: selfservice-git
+          secret:
+            secretName: selfservice-git
       initContainers:
         - name: dbmigration
           image: 579478677147.dkr.ecr.eu-central-1.amazonaws.com/selfservice-api/dbmigrations:${BUILD_NUMBER}
@@ -43,6 +47,10 @@ spec:
               port: 8080
             initialDelaySeconds: 15
             periodSeconds: 10
+          volumeMounts:
+            - mountPath: /app/.ssh/key
+              subPath: key
+              name: selfservice-git
           env:
             - name: SS_CONNECTION_STRING
               valueFrom:
@@ -59,6 +67,20 @@ spec:
               value: "${ECR_PULL_PERMISSION_AWS_ACCOUNT_ID}"
             - name: LOCAL_DEV_SKIP_AWS_ECR_REPOSITORY_CREATION
               value: "false"
+            - name: "SS_ARM_ENABLED"
+              value: "true"
+            - name: "SS_ARM_TEMPORARY_REPO_PATH"
+              value: "/tmp/ssu-azure-rg-manifests"
+            - name: "SS_ARM_REMOTE_REPO_URI"
+              value: "${SS_ARM_REMOTE_REPO_URI}"
+            - name: "SS_ARM_GIT_USERNAME"
+              value: "selfservice-api"
+            - name: "SS_ARM_GIT_EMAIL"
+              value: "ssu@dfds.cloud"
+            - name: "SS_ARM_GIT_BRANCH"
+              value: "master"
+            - name: "DEFAULT_KAFKA_ENABLE_AUTO_COMMIT"
+              value: "true"
           envFrom:
             - secretRef:
                 name: kafka-credentials

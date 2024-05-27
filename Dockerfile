@@ -10,7 +10,7 @@ WORKDIR /app
 
 # ADD Curl
 # RUN apk update && apk add curl && apk add ca-certificates librdkafka-dev && rm -rf /var/cache/apk/*
-RUN apt update && apt install -y curl librdkafka-dev
+RUN apt update && apt install -y curl librdkafka-dev git
 
 # AWS RDS Certificate
 RUN curl -o /tmp/rds-combined-ca-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
@@ -28,6 +28,9 @@ RUN adduser \
   --gecos '' app \
   && chown -R app /app
 USER app
+
+COPY --chown=app:app static/known_hosts /app/.ssh/known_hosts
+COPY --chown=app:app static/gitconfig /app/.ssh/config
 
 ENV DOTNET_RUNNING_IN_CONTAINER=true \
   ASPNETCORE_URLS=http://+:8080

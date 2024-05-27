@@ -34,6 +34,13 @@ public static class ConsumerConfiguration
                 );
 
             options
+                .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
+                .Register<AzureResourceRequested>(
+                    messageType: AzureResourceRequested.EventType,
+                    keySelector: x => x.AzureResourceId!
+                );
+
+            options
                 .ForTopic($"{SelfServicePrefix}.membership")
                 .Register<UserHasJoinedCapability>(
                     messageType: "user-has-joined-capability",
@@ -103,6 +110,12 @@ public static class ConsumerConfiguration
             options
                 .ForTopic($"{SelfServicePrefix}.awsaccount")
                 .RegisterMessageHandler<AwsAccountRequested, AwsAccountRequestedHandler>(AwsAccountRequested.EventType);
+
+            options
+                .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
+                .RegisterMessageHandler<AzureResourceRequested, AzureResourceRequestedHandler>(
+                    AzureResourceRequested.EventType
+                );
 
             options
                 .ForTopic($"{SelfServicePrefix}.kafkatopic")
@@ -303,6 +316,21 @@ public class AwsAccountRequestedHandler : IMessageHandler<AwsAccountRequested>
         }
 
         await _awsAccountApplicationService.CreateAwsAccountRequestTicket(id);
+    }
+}
+
+public class AzureResourceRequestedHandler : IMessageHandler<AzureResourceRequested>
+{
+    private readonly IAzureResourceApplicationService _azureResourceApplicationService;
+
+    public AzureResourceRequestedHandler(IAzureResourceApplicationService azureResourceApplicationService)
+    {
+        _azureResourceApplicationService = azureResourceApplicationService;
+    }
+
+    public async Task Handle(AzureResourceRequested message, MessageHandlerContext context)
+    {
+        await _azureResourceApplicationService.PublishResourceManifestToGit(message);
     }
 }
 
