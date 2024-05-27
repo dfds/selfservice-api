@@ -6,6 +6,8 @@ public class AzureResourceApiResource
 {
     public string Id { get; set; }
 
+    public string Environment {  get; set; }
+
     [JsonPropertyName("_links")]
     public AzureResourceLinks Links { get; set; }
 
@@ -19,9 +21,10 @@ public class AzureResourceApiResource
         }
     }
 
-    public AzureResourceApiResource(string id, AzureResourceLinks links)
+    public AzureResourceApiResource(string id, string environment, AzureResourceLinks links)
     {
         Id = id;
+        Environment = environment;
         Links = links;
     }
 }

@@ -292,7 +292,6 @@ public class CapabilityController : ControllerBase
             return NotFound();
         if (!await _capabilityRepository.Exists(capabilityId))
             return NotFound();
-
         if (!await _authorizationService.CanViewAzureResources(userId, capabilityId))
             return Unauthorized();
 
