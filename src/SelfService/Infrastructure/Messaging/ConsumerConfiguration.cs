@@ -40,7 +40,6 @@ public static class ConsumerConfiguration
                     keySelector: x => x.AzureResourceId!
                 );
 
-
             options
                 .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
                 .Register<AzureResourceRequested>(
