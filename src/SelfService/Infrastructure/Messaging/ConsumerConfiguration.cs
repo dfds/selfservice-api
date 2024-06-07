@@ -32,7 +32,7 @@ public static class ConsumerConfiguration
                     messageType: AwsAccountRequested.EventType,
                     keySelector: x => x.AccountId!
                 );
-            
+
             options
                 .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
                 .Register<AzureResourceRequested>(
@@ -117,10 +117,12 @@ public static class ConsumerConfiguration
             options
                 .ForTopic($"{SelfServicePrefix}.awsaccount")
                 .RegisterMessageHandler<AwsAccountRequested, AwsAccountRequestedHandler>(AwsAccountRequested.EventType);
-            
+
             options
                 .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
-                .RegisterMessageHandler<AzureResourceRequested, AzureResourceRequestedHandler>(AzureResourceRequested.EventType);
+                .RegisterMessageHandler<AzureResourceRequested, AzureResourceRequestedHandler>(
+                    AzureResourceRequested.EventType
+                );
 
             options
                 .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
