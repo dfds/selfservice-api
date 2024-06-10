@@ -55,7 +55,6 @@ public class TestPlatformDataApiRequesterService
         var service = new PlatformDataApiRequesterService(
             loggerMock.Object,
             awsMock.Object,
-            azureMock.Object,
             myCapabilitiesQueryMock.Object,
             httpClient
         );
