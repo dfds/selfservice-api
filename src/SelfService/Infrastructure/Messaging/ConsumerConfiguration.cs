@@ -41,6 +41,13 @@ public static class ConsumerConfiguration
                 );
 
             options
+                .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
+                .Register<AzureResourceRequested>(
+                    messageType: AzureResourceRequested.EventType,
+                    keySelector: x => x.AzureResourceId!
+                );
+
+            options
                 .ForTopic($"{SelfServicePrefix}.membership")
                 .Register<UserHasJoinedCapability>(
                     messageType: "user-has-joined-capability",
@@ -110,6 +117,12 @@ public static class ConsumerConfiguration
             options
                 .ForTopic($"{SelfServicePrefix}.awsaccount")
                 .RegisterMessageHandler<AwsAccountRequested, AwsAccountRequestedHandler>(AwsAccountRequested.EventType);
+
+            options
+                .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
+                .RegisterMessageHandler<AzureResourceRequested, AzureResourceRequestedHandler>(
+                    AzureResourceRequested.EventType
+                );
 
             options
                 .ForTopic($"{SelfServicePrefix}.azureresourcegroup")

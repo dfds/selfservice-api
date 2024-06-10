@@ -500,6 +500,7 @@ public class ApiResourceFactory
         )
         {
             allowedInteractions += Post;
+            allowedInteractions += Get;
         }
 
         return new ResourceLink(
@@ -609,6 +610,7 @@ public class ApiResourceFactory
 
         return new AzureResourceApiResource(
             id: resource.Id,
+            environment: resource.Environment,
             links: new AzureResourceApiResource.AzureResourceLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -651,7 +653,6 @@ public class ApiResourceFactory
         {
             items[i] = await Convert(resources.ElementAt(i));
         }
-
         return new AzureResourcesApiResource(
             items: items,
             links: new AzureResourcesApiResource.AzureResourceListLinks(
