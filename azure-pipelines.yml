@@ -17,7 +17,7 @@ stages:
               packageType: sdk
               version: 7.0.x
               installationPath: $(Agent.ToolsDirectory)/dotnet
-          
+
           - bash: |
               make clean-restore-build
             displayName: 'Build'
@@ -34,7 +34,7 @@ stages:
             displayName: "Push Docker Images"
             condition: succeeded()
           - bash: |
-              make manifests BUILD_NUMBER="$(Build.BuildNumber)" ECR_AWS_ACCOUNT_ID="$(ECR_AWS_ACCOUNT_ID)" ECR_PULL_PERMISSION_AWS_ACCOUNT_ID="$(ECR_PULL_PERMISSION_AWS_ACCOUNT_ID)"
+              make manifests BUILD_NUMBER="$(Build.BuildNumber)" ECR_AWS_ACCOUNT_ID="$(ECR_AWS_ACCOUNT_ID)" ECR_PULL_PERMISSION_AWS_ACCOUNT_ID="$(ECR_PULL_PERMISSION_AWS_ACCOUNT_ID)" SS_ARM_REMOTE_REPO_URI="$(SS_ARM_REMOTE_REPO_URI)"
             displayName: 'Create k8s manifests'
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: manifests"
@@ -44,7 +44,7 @@ stages:
 
   - stage: Deploy
     dependsOn: CD
-    condition: and(succeeded(), eq(variables.isPrimary, true)) 
+    condition: and(succeeded(), eq(variables.isPrimary, true))
     displayName: "Deployments"
     jobs:
       - job: Production
