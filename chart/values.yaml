@@ -31,6 +31,20 @@ app:
       value: cloudengineering.selfservice.apispecs
     - name: SS_PROMETHEUS_API_ENDPOINT
       value: http://monitoring-kube-prometheus-prometheus.monitoring:9090
+    - name: "DEFAULT_KAFKA_ENABLE_AUTO_COMMIT"
+      value: "false"
+    - name: "SS_ARM_ENABLED"
+      value: "false"
+    - name: "SS_ARM_TEMPORARY_REPO_PATH"
+      value: "/tmp/ssu-azure-rg-manifests"
+    - name: "SS_ARM_REMOTE_REPO_URI"
+      value: "${SS_ARM_REMOTE_REPO_URI}"
+    - name: "SS_ARM_GIT_USERNAME"
+      value: "selfservice-api"
+    - name: "SS_ARM_GIT_EMAIL"
+      value: "ssu@dfds.cloud"
+    - name: "SS_ARM_GIT_BRANCH"
+      value: "master"
 
 gendis:
   enabled: true

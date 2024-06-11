@@ -175,14 +175,12 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanViewAzureResources(UserId userId, CapabilityId capabilityId)
     {
-        return await _membershipQuery.HasActiveMembership(userId, capabilityId)
-            && await _azureResourceRepository.Any(capabilityId);
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
     }
 
     public async Task<bool> CanRequestAzureResource(UserId userId, CapabilityId capabilityId, string environment)
     {
-        return await _membershipQuery.HasActiveMembership(userId, capabilityId)
-            && !await _azureResourceRepository.Exists(capabilityId, environment);
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
     }
 
     public async Task<bool> CanRequestAzureResources(UserId userId, CapabilityId capabilityId)

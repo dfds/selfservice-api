@@ -34,6 +34,10 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.dbMigration.secretRef }}
+      volumes:
+        - name: selfservice-git
+          secret:
+            secretName: selfservice-git
       containers:
         - name: app
           {{- with .Values.securityContext }}
@@ -42,6 +46,10 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - mountPath: /app/.ssh/key
+              subPath: key
+              name: selfservice-git
           {{- with .Values.app.environment }}
           env:
             - name: ECR_PULL_PERMISSION_AWS_ACCOUNT_ID

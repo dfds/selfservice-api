@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Localization;
 using SelfService.Domain;
+using SelfService.Domain.Events;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
 
@@ -10,6 +12,7 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
 {
     private readonly ILogger<AzureResourceApplicationService> _logger;
     private readonly IAzureResourceRepository _azureResourceRepository;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly SystemTime _systemTime;
     private readonly IHostEnvironment _environment;
@@ -18,6 +21,7 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
         ILogger<AzureResourceApplicationService> logger,
         IAzureResourceRepository azureResourceRepository,
         ICapabilityRepository capabilityRepository,
+        IServiceScopeFactory serviceScopeFactory,
         SystemTime systemTime,
         IHostEnvironment environment
     )
@@ -25,6 +29,7 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
         _logger = logger;
         _azureResourceRepository = azureResourceRepository;
         _capabilityRepository = capabilityRepository;
+        _serviceScopeFactory = serviceScopeFactory;
         _systemTime = systemTime;
         _environment = environment;
     }
@@ -48,5 +53,19 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
         await _azureResourceRepository.Add(resource);
 
         return resource.Id;
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task PublishResourceManifestToGit(AzureResourceRequested azureResourceRequested)
+    {
+        var resource = await _azureResourceRepository.Get(azureResourceRequested.AzureResourceId!);
+        var capability = await _capabilityRepository.Get(resource.CapabilityId);
+        using (var scope = _serviceScopeFactory.CreateScope())
+        {
+            var azureResourceManifestRepository = scope.ServiceProvider.GetService<IAzureResourceManifestRepository>();
+            await azureResourceManifestRepository!.Add(
+                new AzureResourceManifest { AzureResource = resource, Capability = capability }
+            );
+        }
     }
 }
