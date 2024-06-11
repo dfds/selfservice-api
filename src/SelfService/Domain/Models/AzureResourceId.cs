@@ -16,7 +16,7 @@ public class AzureResourceId : ValueObject
 
     public override string ToString()
     {
-        return _value.ToString("N");
+        return _value.ToString("D");
     }
 
     public static AzureResourceId New() => new AzureResourceId(Guid.NewGuid());

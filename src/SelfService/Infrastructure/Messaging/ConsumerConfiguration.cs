@@ -125,12 +125,6 @@ public static class ConsumerConfiguration
                 );
 
             options
-                .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
-                .RegisterMessageHandler<AzureResourceRequested, AzureResourceRequestedHandler>(
-                    AzureResourceRequested.EventType
-                );
-
-            options
                 .ForTopic($"{SelfServicePrefix}.kafkatopic")
                 .Ignore("topic-requested")
                 .RegisterMessageHandler<KafkaTopicHasBeenDeleted, DeleteAssociatedMessageContracts>("topic-deleted");
