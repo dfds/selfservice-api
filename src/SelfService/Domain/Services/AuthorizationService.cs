@@ -13,6 +13,7 @@ public class AuthorizationService : IAuthorizationService
     private readonly IAzureResourceRepository _azureResourceRepository;
     private readonly IMessageContractRepository _messageContractRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public AuthorizationService(
         ILogger<AuthorizationService> logger,
@@ -21,7 +22,8 @@ public class AuthorizationService : IAuthorizationService
         IAwsAccountRepository awsAccountRepository,
         IAzureResourceRepository azureResourceRepository,
         IMessageContractRepository messageContractRepository,
-        IKafkaTopicRepository kafkaTopicRepository
+        IKafkaTopicRepository kafkaTopicRepository,
+        IHttpContextAccessor httpContextAccessor
     )
     {
         _logger = logger;
@@ -31,6 +33,7 @@ public class AuthorizationService : IAuthorizationService
         _azureResourceRepository = azureResourceRepository;
         _messageContractRepository = messageContractRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<bool> CanAdd(UserId userId, CapabilityId capabilityId, KafkaClusterId clusterId)
@@ -70,8 +73,15 @@ public class AuthorizationService : IAuthorizationService
 
     public bool CanViewDeletedCapabilities(PortalUser portalUser)
     {
+        Console.WriteLine();
         if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
         {
+            
+            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -84,6 +94,11 @@ public class AuthorizationService : IAuthorizationService
         {
             if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
             {
+                if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+                {
+                    return false;
+                }
+                
                 return true;
             }
 
@@ -212,18 +227,51 @@ public class AuthorizationService : IAuthorizationService
 
     public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
     {
-        return portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+        if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
+        {
+            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+            {
+                return false;
+            }
+                
+            return true;
+        }
+        
+        return false;
     }
 
     public async Task<bool> CanGetSetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
     {
+
+        var cloudEngineer = false;
+        if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
+        {
+            cloudEngineer = true;
+            
+            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+            {
+                cloudEngineer = false;
+            }
+            
+        }
+        
         return await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId)
-            || portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+            || cloudEngineer;
     }
 
     public bool CanBypassMembershipApprovals(PortalUser portalUser)
     {
-        return portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+        if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
+        {
+            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+            {
+                return false;
+            }
+                
+            return true;
+        }
+        
+        return false;
     }
 
     public async Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId)
@@ -234,7 +282,18 @@ public class AuthorizationService : IAuthorizationService
     public async Task<bool> CanSeeAwsAccountId(PortalUser portalUser, CapabilityId capabilityId)
     {
         bool isMember = await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId);
-        bool isCloudEngineer = portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+        bool isCloudEngineer = false;
+        
+        if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
+        {
+            isCloudEngineer = true;
+            
+            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+            {
+                isCloudEngineer = false;
+            }
+            
+        }
         return isMember || isCloudEngineer;
     }
 
@@ -247,7 +306,17 @@ public class AuthorizationService : IAuthorizationService
         }
         var kafkaTopic = await _kafkaTopicRepository.Get(messageContract.KafkaTopicId);
         bool isMember = await _membershipQuery.HasActiveMembership(portalUser.Id, kafkaTopic.CapabilityId);
-        bool isCloudEngineer = portalUser.Roles.Any(role => role == UserRole.CloudEngineer);
+        bool isCloudEngineer = false;
+        
+        if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
+        {
+            isCloudEngineer = true;
+            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+            {
+                isCloudEngineer = false;
+            }
+        }
+        
         return (kafkaTopic.IsPrivate && isMember) || isCloudEngineer || !kafkaTopic.IsPrivate;
     }
 }
