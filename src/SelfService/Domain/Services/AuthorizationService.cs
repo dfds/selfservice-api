@@ -76,8 +76,10 @@ public class AuthorizationService : IAuthorizationService
         Console.WriteLine();
         if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
         {
-            
-            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+            if (
+                _httpContextAccessor.HttpContext != null
+                && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions")
+            )
             {
                 return false;
             }
@@ -94,11 +96,14 @@ public class AuthorizationService : IAuthorizationService
         {
             if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
             {
-                if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+                if (
+                    _httpContextAccessor.HttpContext != null
+                    && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions")
+                )
                 {
                     return false;
                 }
-                
+
                 return true;
             }
 
@@ -229,48 +234,54 @@ public class AuthorizationService : IAuthorizationService
     {
         if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
         {
-            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+            if (
+                _httpContextAccessor.HttpContext != null
+                && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions")
+            )
             {
                 return false;
             }
-                
+
             return true;
         }
-        
+
         return false;
     }
 
     public async Task<bool> CanGetSetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
     {
-
         var cloudEngineer = false;
         if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
         {
             cloudEngineer = true;
-            
-            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+
+            if (
+                _httpContextAccessor.HttpContext != null
+                && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions")
+            )
             {
                 cloudEngineer = false;
             }
-            
         }
-        
-        return await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId)
-            || cloudEngineer;
+
+        return await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId) || cloudEngineer;
     }
 
     public bool CanBypassMembershipApprovals(PortalUser portalUser)
     {
         if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
         {
-            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+            if (
+                _httpContextAccessor.HttpContext != null
+                && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions")
+            )
             {
                 return false;
             }
-                
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -283,16 +294,18 @@ public class AuthorizationService : IAuthorizationService
     {
         bool isMember = await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId);
         bool isCloudEngineer = false;
-        
+
         if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
         {
             isCloudEngineer = true;
-            
-            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+
+            if (
+                _httpContextAccessor.HttpContext != null
+                && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions")
+            )
             {
                 isCloudEngineer = false;
             }
-            
         }
         return isMember || isCloudEngineer;
     }
@@ -307,16 +320,19 @@ public class AuthorizationService : IAuthorizationService
         var kafkaTopic = await _kafkaTopicRepository.Get(messageContract.KafkaTopicId);
         bool isMember = await _membershipQuery.HasActiveMembership(portalUser.Id, kafkaTopic.CapabilityId);
         bool isCloudEngineer = false;
-        
+
         if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
         {
             isCloudEngineer = true;
-            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions"))
+            if (
+                _httpContextAccessor.HttpContext != null
+                && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions")
+            )
             {
                 isCloudEngineer = false;
             }
         }
-        
+
         return (kafkaTopic.IsPrivate && isMember) || isCloudEngineer || !kafkaTopic.IsPrivate;
     }
 }

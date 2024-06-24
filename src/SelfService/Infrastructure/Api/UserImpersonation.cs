@@ -5,10 +5,7 @@ namespace SelfService.Infrastructure.Api;
 
 public class UserImpersonation : IMiddleware
 {
-    public UserImpersonation()
-    {
-        
-    }
+    public UserImpersonation() { }
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
@@ -21,11 +18,6 @@ public class UserImpersonation : IMiddleware
                 context.Items["userPermissions"] = "1";
             }
         }
-
-        
-
-        
-
 
         await next(context);
     }
