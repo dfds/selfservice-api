@@ -7,6 +7,11 @@ public class UserImpersonation : IMiddleware
 {
     public UserImpersonation() { }
 
+    private enum UserPermissions
+    {
+        CloudEngineer,
+    }
+
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         context.Request.Headers.TryGetValue("x-selfservice-permissions", out StringValues permissions);
@@ -15,7 +20,7 @@ public class UserImpersonation : IMiddleware
         {
             if (context.User.ToPortalUser().Roles.Count(x => x.ToString().Equals("CloudEngineer")) == 1)
             {
-                context.Items["userPermissions"] = "1";
+                context.Items["userPermissions"] = UserPermissions.CloudEngineer;
             }
         }
 
