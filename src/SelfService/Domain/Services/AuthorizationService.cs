@@ -88,7 +88,7 @@ public class AuthorizationService : IAuthorizationService
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -226,7 +226,6 @@ public class AuthorizationService : IAuthorizationService
     public async Task<bool> CanGetSetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
     {
         var cloudEngineer = IsCloudEngineerEnabled(portalUser);
-        
 
         return await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId) || cloudEngineer;
     }
@@ -246,7 +245,6 @@ public class AuthorizationService : IAuthorizationService
         bool isMember = await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId);
         bool isCloudEngineer = IsCloudEngineerEnabled(portalUser);
 
-        
         return isMember || isCloudEngineer;
     }
 
