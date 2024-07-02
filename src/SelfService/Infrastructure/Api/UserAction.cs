@@ -89,6 +89,11 @@ public static class MiddlewareExtensions
     {
         return app.UseMiddleware<UserActionMiddleware>();
     }
+
+    public static IApplicationBuilder UseUserImpersonationMiddleware(this IApplicationBuilder app)
+    {
+        return app.UseMiddleware<UserImpersonation>();
+    }
 }
 
 public class UserActionNoAuditAttribute : Attribute

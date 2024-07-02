@@ -27,8 +27,10 @@ try
     builder.AddApi();
     builder.AddSecurity();
 
+    builder.Services.AddHttpContextAccessor();
     builder.Services.AddTransient<Impersonation.ImpersonationMiddleware>();
     builder.Services.AddTransient<UserActionMiddleware>();
+    builder.Services.AddTransient<UserImpersonation>();
 
     // **PLEASE NOTE** : keep this as the last configuration!
     builder.ConfigureAspects();
@@ -53,6 +55,8 @@ try
     app.UseHttpMetrics();
 
     app.UseUserActionMiddleware();
+
+    app.UseUserImpersonationMiddleware();
 
     app.Run();
 }
