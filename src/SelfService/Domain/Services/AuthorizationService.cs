@@ -235,6 +235,11 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser);
     }
 
+    public bool CanDeleteMembershipApplications(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
     public async Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId)
     {
         return await _membershipQuery.HasActiveMembership(userId, capabilityId);
