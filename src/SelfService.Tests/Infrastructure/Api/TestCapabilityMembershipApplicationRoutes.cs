@@ -76,7 +76,7 @@ public class TestCapabilityMembershipApplicationRoutes
             ?.Select(x => x.GetString() ?? "")
             .ToArray();
 
-        Assert.Equal(new[] { "GET", "POST"}, allowValues);
+        Assert.Equal(new[] { "GET", "POST" }, allowValues);
     }
 
     [Fact]
@@ -310,7 +310,7 @@ public class TestCapabilityMembershipApplicationRoutes
         var applicationJson = document!.SelectElements("/items").SingleOrDefault();
         var allowedVerbs = applicationJson.SelectElements("/approvals/_links/self/allow").Select(x => x.GetString());
 
-        Assert.Equal(new[] { "GET", "POST", "DELETE"}, allowedVerbs);
+        Assert.Equal(new[] { "GET", "POST", "DELETE" }, allowedVerbs);
     }
 
     //get membershipapplications for a capability returns correct allow (with variations on approvals)
