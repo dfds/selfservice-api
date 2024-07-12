@@ -128,6 +128,52 @@ public class MembershipApplicationController : ControllerBase
         return Ok(parent.Approvals);
     }
 
+    [HttpDelete("{id}/approvals")]
+    [ProducesResponseType(typeof(MembershipApplicationApiResource), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
+    public async Task<IActionResult> DeleteCapabilityMembershipApplications(string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and cannot be used to approve a membership application.",
+                }
+            );
+        }
+
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!_authorizationService.CanDeleteMembershipApplications(portalUser))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "User unauthorized",
+                    Detail = $"user \"{userId}\" isn't authorized to delete membership applications."
+                }
+            );
+        }
+
+        if (!MembershipApplicationId.TryParse(id, out var membershipApplicationId))
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Membership application not found.",
+                    Detail = $"A membership application with id \"{id}\" could not be found."
+                }
+            );
+        }
+
+        await _membershipApplicationService.RemoveMembershipApplication(membershipApplicationId);
+        return NoContent();
+    }
+
     [HttpPost("{id}/approvals")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]

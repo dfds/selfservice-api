@@ -60,7 +60,7 @@ public class when_getting_membership_application_approvals_as_member : IAsyncLif
 
         var value = document?.SelectElements("/_links/self/allow").Select(x => x.ToString()).ToArray();
 
-        Assert.Equal(new[] { "GET", "POST" }, value);
+        Assert.Equal(new[] { "GET", "POST", "DELETE" }, value);
     }
 
     public Task DisposeAsync()

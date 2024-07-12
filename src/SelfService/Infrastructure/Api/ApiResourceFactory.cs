@@ -824,6 +824,7 @@ public class ApiResourceFactory
             if (!application.HasApproved(currentUser))
             {
                 allowedApprovalInteractions += Post;
+                allowedApprovalInteractions += Delete;
             }
         }
 
