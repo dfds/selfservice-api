@@ -51,7 +51,7 @@ public class when_getting_membership_application_for_approver_that_has_NOT_appro
 
         var value = document?.SelectElements("/approvals/_links/self/allow").Select(x => x.ToString()).ToArray();
 
-        Assert.Equal(new[] { "GET", "POST" }, value);
+        Assert.Equal(new[] { "GET", "POST", "DELETE" }, value);
     }
 
     public Task DisposeAsync()

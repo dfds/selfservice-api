@@ -76,7 +76,7 @@ public class TestCapabilityMembershipApplicationRoutes
             ?.Select(x => x.GetString() ?? "")
             .ToArray();
 
-        Assert.Equal(new[] { "GET", "POST", "DELETE" }, allowValues);
+        Assert.Equal(new[] { "GET", "POST"}, allowValues);
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public class TestCapabilityMembershipApplicationRoutes
 
         var allowValues = document?.SelectElements("/_links/self/allow")?.Select(x => x.GetString() ?? "").ToArray();
 
-        Assert.Equal(new[] { "GET", "POST", "DELETE"}, allowValues);
+        Assert.Equal(new[] { "GET", "POST" }, allowValues);
     }
 
     [Fact]
