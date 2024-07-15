@@ -47,6 +47,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<AwsAccount> AwsAccounts => Set<AwsAccount>();
 
     public DbSet<AzureResource> AzureResources => Set<AzureResource>();
+    public DbSet<CapabilityXaxa> CapabilityXaxa => Set<CapabilityXaxa>();
 
     public DbSet<KafkaCluster> KafkaClusters => Set<KafkaCluster>();
 
@@ -83,6 +84,8 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<RealAwsAccountId>().HaveConversion<RealAwsAccountIdConverter>();
 
         configurationBuilder.Properties<AzureResourceId>().HaveConversion<AzureResourceIdConverter>();
+
+        configurationBuilder.Properties<CapabilityXaxaId>().HaveConversion<CapabilityXaxaIdConverter>();
 
         configurationBuilder.Properties<AwsRoleArn>().HaveConversion<AwsRoleArnConverter>();
 
@@ -247,6 +250,16 @@ public class SelfServiceDbContext : DbContext
         modelBuilder.Entity<AzureResource>(cfg =>
         {
             cfg.ToTable("AzureResource");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CapabilityId);
+            cfg.Property(x => x.RequestedAt);
+            cfg.Property(x => x.RequestedBy);
+        });
+        
+        modelBuilder.Entity<CapabilityXaxa>(cfg =>
+        {
+            cfg.ToTable("CapabilityXaxa");
             cfg.HasKey(x => x.Id);
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.CapabilityId);

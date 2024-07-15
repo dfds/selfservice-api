@@ -32,6 +32,7 @@ public class CapabilityController : ControllerBase
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
     private readonly IInvitationApplicationService _invitationApplicationService;
+    private readonly ICapabilityXaxaRepository _capabilityXaxaRepository;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -50,7 +51,8 @@ public class CapabilityController : ControllerBase
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
         ILogger<CapabilityController> logger,
         ITeamApplicationService teamApplicationService,
-        IInvitationApplicationService invitationApplicationService
+        IInvitationApplicationService invitationApplicationService,
+        ICapabilityXaxaRepository capabilityXaxaRepository
     )
     {
         _membersQuery = membersQuery;
@@ -70,6 +72,7 @@ public class CapabilityController : ControllerBase
         _logger = logger;
         _teamApplicationService = teamApplicationService;
         _invitationApplicationService = invitationApplicationService;
+        _capabilityXaxaRepository = capabilityXaxaRepository;
     }
 
     [HttpGet("")]
@@ -1059,6 +1062,14 @@ public class CapabilityController : ControllerBase
 
         var teams = await _teamApplicationService.GetLinkedTeams(capabilityId);
         return Ok(teams);
+    }
+
+    [HttpGet("xaxa")]
+    public async Task<IActionResult> Xaxa()
+    {
+       await  _capabilityXaxaRepository.Add(CapabilityXaxa.RequestNew(CapabilityId.Parse(Guid.NewGuid().ToString()), "sheeesh",
+            DateTime.Now, "xaxaaaaa"));
+        return Ok();
     }
 
     [HttpPost("{id}/join")]

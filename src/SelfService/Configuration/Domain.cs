@@ -57,6 +57,7 @@ public static class Domain
         builder.Services.AddTransient<ITeamCapabilityLinkingRepository, TeamCapabilityLinkingRepository>();
         builder.Services.AddTransient<TopVisitorsRepository>();
         builder.Services.AddTransient<IInvitationRepository, InvitationRepository>();
+        builder.Services.AddTransient<ICapabilityXaxaRepository, CapabilityXaxaRepository>();
 
         // domain queries
         builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();
