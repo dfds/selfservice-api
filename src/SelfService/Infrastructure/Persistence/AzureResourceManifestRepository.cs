@@ -191,21 +191,22 @@ public class AzureResourceManifest
                  }
                  
                  inputs = {
-                   name               = "dfds_ssu_{{AzureResource?.Environment}}_{{Capability?.Id}}"
-                   tribe              = "{{tribe}}"
-                   team               = "{{team}}"
-                   email              = "aws.{{Capability?.Id}}@dfds.com"
-                   context_id         = "{{AzureResource?.Id}}"
-                   correlation_id     = "{{correlationId}}"
-                   capability_name    = "{{Capability?.Name}}"
-                   capability_root_id = "{{Capability?.Id}}"
-                   context_name       = "{{AzureResource?.Environment}}"
-                   capability_id      = "{{Capability?.Id}}"
-                   owner              = "{{owner}}"
-                   environment        = "{{AzureResource?.Environment}}"
-                   costcentre         = "{{costCentre}}"
-                   availability       = "{{availability}}"
-                   planned_sunset     = "{{plannedSunset}}"
+                   name                        = "dfds_ssu_{{AzureResource?.Environment}}_{{Capability?.Id}}"
+                   tribe                       = "{{tribe}}"
+                   team                        = "{{team}}"
+                   email                       = "aws.{{Capability?.Id}}@dfds.com"
+                   context_id                  = "{{AzureResource?.Id}}"
+                   correlation_id              = "{{correlationId}}"
+                   capability_name             = "{{Capability?.Name}}"
+                   capability_root_id          = "{{Capability?.Id}}"
+                   context_name                = "{{AzureResource?.Environment}}"
+                   capability_id               = "{{Capability?.Id}}"
+                   owner                       = "{{owner}}"
+                   environment                 = "{{AzureResource?.Environment}}"
+                   costcentre                  = "{{costCentre}}"
+                   availability                = "{{availability}}"
+                   planned_sunset              = "{{plannedSunset}}"
+                   enable_capability_access    = true
                  }
                  """;
     }
