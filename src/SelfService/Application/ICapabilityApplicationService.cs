@@ -33,4 +33,9 @@ public interface ICapabilityApplicationService
     Task<string> GetJsonMetadata(CapabilityId capabilityId);
     Task<bool> DoesOnlyModifyRequiredProperties(string jsonMetadata, CapabilityId capabilityId);
     Task<ConfigurationLevelInfo> GetConfigurationLevel(CapabilityId capabilityId);
+
+    Task<bool> CheckClaim(CapabilityId capabilityId, string claimType);
+    Task<List<CapabilityClaim>> GetAllClaims(CapabilityId capabilityId);
+    Task<CapabilityClaimId> AddClaim(CapabilityId capabilityId, string claimType, UserId userId);
+    List<CapabilityClaimOption> ListPossibleClaims();
 }

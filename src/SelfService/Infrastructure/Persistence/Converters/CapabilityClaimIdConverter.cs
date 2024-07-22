@@ -11,5 +11,4 @@ public class CapabilityClaimIdConverter : ValueConverter<CapabilityClaimId, Guid
 
     private static Expression<Func<CapabilityClaimId, Guid>> ToDatabaseType => id => id;
     private static Expression<Func<Guid, CapabilityClaimId>> FromDatabaseType => value => value;
-    
 }

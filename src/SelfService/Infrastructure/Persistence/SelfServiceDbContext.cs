@@ -66,7 +66,6 @@ public class SelfServiceDbContext : DbContext
     public DbSet<TeamCapabilityLink> TeamCapabilityLinks => Set<TeamCapabilityLink>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<CapabilityClaim> CapabilityClaims => Set<CapabilityClaim>();
-    
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -119,9 +118,8 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<MessageContractStatus>().HaveConversion<MessageContractStatusConverter>();
 
         configurationBuilder.Properties<ECRRepositoryId>().HaveConversion<ECRRepositoryIdConverter>();
-        
+
         configurationBuilder.Properties<TeamId>().HaveConversion<ValueObjectGuidConverter<TeamId>>();
-        
 
         configurationBuilder
             .Properties<TeamCapabilityLinkId>()
@@ -393,7 +391,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedAt);
             cfg.Property(x => x.ModifiedAt);
         });
-        
+
         modelBuilder.Entity<CapabilityClaim>(cfg =>
         {
             cfg.ToTable("CapabilityClaim");

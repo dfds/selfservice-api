@@ -18,7 +18,7 @@ public class CapabilityClaimId : ValueObject
     {
         return _value.ToString("D");
     }
-    
+
     public static CapabilityClaimId New() => new CapabilityClaimId(Guid.NewGuid());
 
     public static CapabilityClaimId Parse(string? text)

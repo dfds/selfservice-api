@@ -32,9 +32,9 @@ public class CapabilityController : ControllerBase
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
     private readonly IInvitationApplicationService _invitationApplicationService;
-    private readonly ICapabilityCalimRepository _capabilityCalimRepository;
+    private readonly ICapabilityClaimRepository _capabilityClaimRepository;
 
-     public CapabilityController(
+    public CapabilityController(
         ICapabilityMembersQuery membersQuery,
         ICapabilityRepository capabilityRepository,
         IKafkaTopicRepository kafkaTopicRepository,
@@ -52,7 +52,7 @@ public class CapabilityController : ControllerBase
         ILogger<CapabilityController> logger,
         ITeamApplicationService teamApplicationService,
         IInvitationApplicationService invitationApplicationService,
-        ICapabilityCalimRepository capabilityCalimRepository
+        ICapabilityClaimRepository capabilityClaimRepository
     )
     {
         _membersQuery = membersQuery;
@@ -72,7 +72,7 @@ public class CapabilityController : ControllerBase
         _logger = logger;
         _teamApplicationService = teamApplicationService;
         _invitationApplicationService = invitationApplicationService;
-        _capabilityCalimRepository = capabilityCalimRepository;
+        _capabilityClaimRepository = capabilityClaimRepository;
     }
 
     [HttpGet("")]
@@ -357,62 +357,54 @@ public class CapabilityController : ControllerBase
             return Conflict();
         }
     }
-    
-    [HttpPost("{id:required}/claims")]
+
+    [HttpGet("{id:required}/claims")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
-    public async Task<IActionResult> AddCapabilityClaim(
-        string id,
-        [FromBody] NewCapabilityClaimRequest request
-    )
+    public async Task<IActionResult> GetCapabilityClaims(string id, [FromBody] NewCapabilityClaimRequest request)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         if (!CapabilityId.TryParse(id, out var capabilityId))
             return NotFound();
-        
-        Console.WriteLine("hiiiiiiiii");
-        
+
         if (!await _capabilityRepository.Exists(capabilityId))
             return NotFound();
-        
-        Console.WriteLine("positive impression");
 
-        // todo: check legality of environment
+        var capabilityClaims = await _capabilityApplicationService.GetAllClaims(capabilityId);
+        var possibleClaims = _capabilityApplicationService.ListPossibleClaims();
 
-        if (request?.claim == null)
-            return BadRequest(
-                new ProblemDetails
-                {
-                    Title = "Invalid metadata",
-                    Detail = "Request body is empty",
-                    Status = StatusCodes.Status400BadRequest
-                }
-            );
+        return Ok(_apiResourceFactory.Convert(capabilityClaims, possibleClaims, capabilityId));
+    }
 
-        // if (await _azureResourceRepository.Exists(capabilityId, request.environment))
-        //     return Conflict();
-        //
-        // if (!await _authorizationService.CanRequestAzureResource(userId, capabilityId, request.environment))
-        //     return Unauthorized();
+    [HttpPost("{id:required}/claims/{claim:required}")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> ClaimCapability(string id, string claim)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
 
-        try
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        if (!await _authorizationService.CanClaim(userId, capabilityId))
+            return Unauthorized();
+
+        if (await _capabilityApplicationService.CheckClaim(capabilityId, claim))
         {
-            var claimID = new CapabilityClaimId(Guid.NewGuid());
-            await _capabilityCalimRepository.Add(
-                new CapabilityClaim(claimID, request.claim,id, DateTime.Now, userId )
-            );
-
-
-            return Ok();
+            return BadRequest();
         }
-        catch (AlreadyHasAzureResourceException)
-        {
-            return Conflict();
-        }
+
+        await _capabilityApplicationService.AddClaim(capabilityId, claim, userId);
+
+        return Ok();
     }
 
     [HttpGet("{id:required}/azureresources/{rid:required}")]
