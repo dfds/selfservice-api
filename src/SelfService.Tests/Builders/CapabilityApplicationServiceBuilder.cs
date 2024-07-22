@@ -49,6 +49,7 @@ public class CapabilityApplicationServiceBuilder
             logger: NullLogger<CapabilityApplicationService>.Instance,
             capabilityRepository: _capabilityRepository,
             kafkaTopicRepository: Mock.Of<IKafkaTopicRepository>(),
+            capabilityClaimRepository: Mock.Of<ICapabilityClaimRepository>(),
             kafkaClusterAccessRepository: Mock.Of<IKafkaClusterAccessRepository>(),
             ticketingSystem: Mock.Of<ITicketingSystem>(),
             systemTime: SystemTime.Default,
