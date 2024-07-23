@@ -607,6 +607,20 @@ public class ApiResourceFactory
         );
     }
 
+    private ResourceLink CreateClaimsLinkFor(Capability capability)
+    {
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCapabilityClaims),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: Allow.Get
+        );
+    }
+
     public async Task<CapabilityDetailsApiResource> Convert(Capability capability)
     {
         return new CapabilityDetailsApiResource(
@@ -633,7 +647,8 @@ public class ApiResourceFactory
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability),
-                configurationLevel: CreateConfigurationLevelLinkFor(capability)
+                configurationLevel: CreateConfigurationLevelLinkFor(capability),
+                claims: CreateClaimsLinkFor(capability)
             )
         );
     }
