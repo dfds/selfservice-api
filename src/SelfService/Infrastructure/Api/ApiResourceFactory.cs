@@ -622,7 +622,7 @@ public class ApiResourceFactory
         var portalUser = HttpContext.User.ToPortalUser();
 
         var allowClaim = Allow.None;
-        if (await _authorizationService.CanClaim(portalUser.Id, capabilityId))
+        if (await _authorizationService.CanClaim(portalUser.Id, capability.Id))
         {
             allowClaim += Get;
         }
