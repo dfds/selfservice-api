@@ -205,13 +205,19 @@ public class ApiResourceFactory
         return claimResources;
     }
 
-    public CapabilityClaimListApiResource Convert(
+    public async Task<CapabilityClaimListApiResource> Convert(
         List<CapabilityClaim> claims,
         List<CapabilityClaimOption> possibleClaims,
         CapabilityId capabilityId
     )
     {
         var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowClaim = Allow.None;
+        if (await _authorizationService.CanClaim(portalUser.Id, capabilityId))
+        {
+            allowClaim += Get;
+        }
 
         var result = new CapabilityClaimListApiResource(
             claims: generateCapabilityClaimResources(claims, possibleClaims, capabilityId),
@@ -224,7 +230,7 @@ public class ApiResourceFactory
                         values: new { id = capabilityId }
                     ) ?? "",
                     rel: "self",
-                    allow: Allow.Get
+                    allow: allowClaim
                 )
             )
         );

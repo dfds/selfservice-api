@@ -379,7 +379,7 @@ public class CapabilityController : ControllerBase
         var capabilityClaims = await _capabilityApplicationService.GetAllClaims(capabilityId);
         var possibleClaims = _capabilityApplicationService.ListPossibleClaims();
         
-        return Ok(_apiResourceFactory.Convert(capabilityClaims, possibleClaims, capabilityId));
+        return Ok(await _apiResourceFactory.Convert(capabilityClaims, possibleClaims, capabilityId));
     }
 
     [HttpPost("{id:required}/claims/{claim:required}")]
