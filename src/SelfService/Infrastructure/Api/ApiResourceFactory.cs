@@ -617,8 +617,17 @@ public class ApiResourceFactory
         );
     }
 
-    private ResourceLink CreateClaimsLinkFor(Capability capability)
+    private async Task<ResourceLink> CreateClaimsLinkFor(Capability capability)
     {
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowClaim = Allow.None;
+        if (await _authorizationService.CanClaim(portalUser.Id, capabilityId))
+        {
+            allowClaim += Get;
+        }
+
+
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
@@ -627,7 +636,7 @@ public class ApiResourceFactory
                 values: new { id = capability.Id }
             ) ?? "",
             rel: "self",
-            allow: Allow.Get
+            allow: allowClaim
         );
     }
 
@@ -658,7 +667,7 @@ public class ApiResourceFactory
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability),
                 configurationLevel: CreateConfigurationLevelLinkFor(capability),
-                claims: CreateClaimsLinkFor(capability)
+                claims: await CreateClaimsLinkFor(capability)
             )
         );
     }
