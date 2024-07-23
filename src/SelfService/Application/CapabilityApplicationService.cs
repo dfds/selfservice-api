@@ -361,7 +361,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     {
         return new List<CapabilityClaimOption>
         {
-            new CapabilityClaimOption(claimType: "snyk", claimDescription: "Code is integrating with Snyk"),
+            new CapabilityClaimOption(claimType: "snyk", claimDescription: "Code is monitored by Snyk"),
         };
     }
 }
