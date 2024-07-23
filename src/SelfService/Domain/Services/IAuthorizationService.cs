@@ -35,4 +35,5 @@ public interface IAuthorizationService
     Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId);
     Task<bool> CanSeeAwsAccountId(PortalUser portalUser, CapabilityId capabilityId);
     Task<bool> CanRetryCreatingMessageContract(PortalUser portalUser, MessageContractId messageContractId);
+    Task<bool> CanClaim(UserId userId, CapabilityId capabilityId);
 }

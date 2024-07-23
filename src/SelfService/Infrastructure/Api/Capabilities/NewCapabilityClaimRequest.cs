@@ -4,7 +4,6 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class NewCapabilityClaimRequest
 {
-        [Required]
-        public string? claim { get; set; } = null;
-    
+    [Required]
+    public string? claim { get; set; } = null;
 }

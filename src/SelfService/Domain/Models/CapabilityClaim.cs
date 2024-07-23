@@ -16,10 +16,9 @@ public class CapabilityClaim : AggregateRoot<CapabilityClaimId>
         RequestedBy = requestedBy;
         Claim = claim;
     }
+
     public CapabilityId CapabilityId { get; private set; }
     public string Claim { get; private set; }
     public DateTime RequestedAt { get; private set; }
     public string RequestedBy { get; private set; }
-    
-   
 }
