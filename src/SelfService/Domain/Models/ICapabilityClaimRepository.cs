@@ -6,7 +6,7 @@ public interface ICapabilityClaimRepository
 {
     Task Add(CapabilityClaim claim);
 
-    Task<bool> CheckClaim(CapabilityId capabilityId, string claimType); // TODO: enum
+    Task<bool> ClaimExists(CapabilityId capabilityId, string claimType);
 
     Task<List<CapabilityClaim>> GetAll(CapabilityId capabilityId);
 }

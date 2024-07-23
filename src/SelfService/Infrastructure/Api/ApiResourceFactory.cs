@@ -163,6 +163,7 @@ public class ApiResourceFactory
         // If not existing, generate a CapabilityClaimApiResource with the available information and a claim-link
         foreach (var option in possibleClaims)
         {
+            var exists = false;
             foreach (var claim in claims)
             {
                 if (option.ClaimType == claim.Claim)
@@ -174,9 +175,12 @@ public class ApiResourceFactory
                         links: new CapabilityClaimApiResource.CapabilityClaimLinks(claim: null)
                     );
                     claimResources.Add(existingClaim);
+                    exists = true;
                     continue;
                 }
-
+            }
+            if (!exists)
+            {
                 var newClaim = new CapabilityClaimApiResource(
                     claim: option.ClaimType,
                     claimDescription: option.ClaimDescription,
@@ -187,7 +191,7 @@ public class ApiResourceFactory
                                 httpContext: HttpContext,
                                 action: nameof(CapabilityController.ClaimCapability),
                                 controller: GetNameOf<CapabilityController>(),
-                                values: new { id = capabilityId, claim = option }
+                                values: new { id = capabilityId, claim = option.ClaimType }
                             ) ?? "",
                             rel: "self",
                             allow: Allow.Post

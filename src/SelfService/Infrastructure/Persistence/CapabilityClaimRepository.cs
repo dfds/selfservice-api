@@ -18,7 +18,7 @@ public class CapabilityClaimRepository : ICapabilityClaimRepository
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<bool> CheckClaim(CapabilityId capabilityId, string claimType)
+    public async Task<bool> ClaimExists(CapabilityId capabilityId, string claimType)
     {
         return await _dbContext.CapabilityClaims.AnyAsync(c => c.CapabilityId == capabilityId && c.Claim == claimType);
     }

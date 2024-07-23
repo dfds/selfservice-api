@@ -325,12 +325,12 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         return configLevelInfo;
     }
 
-    public async Task<bool> CheckClaim(CapabilityId capabilityId, string claimType)
+    public async Task<bool> CanClaim(CapabilityId capabilityId, string claimType)
     {
-        if (
-            ListPossibleClaims().Any(co => co.ClaimType == claimType)
-            && await _capabilityClaimRepository.CheckClaim(capabilityId, claimType)
-        )
+        var isAllowedClaim = ListPossibleClaims().Any(co => co.ClaimType == claimType);
+        var notAlreadyClaimed = !await _capabilityClaimRepository.ClaimExists(capabilityId, claimType);
+
+        if (isAllowedClaim && notAlreadyClaimed)
         {
             return true;
         }

@@ -362,7 +362,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetCapabilityClaims(string id, [FromBody] NewCapabilityClaimRequest request)
+    public async Task<IActionResult> GetCapabilityClaims(string id)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -373,9 +373,12 @@ public class CapabilityController : ControllerBase
         if (!await _capabilityRepository.Exists(capabilityId))
             return NotFound();
 
+        if (!await _authorizationService.CanClaim(userId, capabilityId))
+            return Unauthorized();
+
         var capabilityClaims = await _capabilityApplicationService.GetAllClaims(capabilityId);
         var possibleClaims = _capabilityApplicationService.ListPossibleClaims();
-
+        
         return Ok(_apiResourceFactory.Convert(capabilityClaims, possibleClaims, capabilityId));
     }
 
@@ -397,7 +400,7 @@ public class CapabilityController : ControllerBase
         if (!await _authorizationService.CanClaim(userId, capabilityId))
             return Unauthorized();
 
-        if (await _capabilityApplicationService.CheckClaim(capabilityId, claim))
+        if (!await _capabilityApplicationService.CanClaim(capabilityId, claim))
         {
             return BadRequest();
         }
