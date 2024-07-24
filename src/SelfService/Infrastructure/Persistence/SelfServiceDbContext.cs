@@ -65,6 +65,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<TeamCapabilityLink> TeamCapabilityLinks => Set<TeamCapabilityLink>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<CapabilityClaim> CapabilityClaims => Set<CapabilityClaim>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -133,6 +134,7 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder
             .Properties<InvitationTargetTypeOptions>()
             .HaveConversion<ValueObjectEnumConverter<InvitationTargetTypeOptions>>();
+        configurationBuilder.Properties<CapabilityClaimId>().HaveConversion<CapabilityClaimIdConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -388,6 +390,17 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.CreatedAt);
             cfg.Property(x => x.ModifiedAt);
+        });
+
+        modelBuilder.Entity<CapabilityClaim>(cfg =>
+        {
+            cfg.ToTable("CapabilityClaim");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CapabilityId);
+            cfg.Property(x => x.RequestedAt);
+            cfg.Property(x => x.RequestedBy);
+            cfg.Property(x => x.Claim);
         });
     }
 }

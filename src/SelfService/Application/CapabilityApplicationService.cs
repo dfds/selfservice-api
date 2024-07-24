@@ -14,6 +14,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
+    private readonly ICapabilityClaimRepository _capabilityClaimRepository;
     private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
@@ -26,6 +27,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         ICapabilityRepository capabilityRepository,
         IKafkaTopicRepository kafkaTopicRepository,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
+        ICapabilityClaimRepository capabilityClaimRepository,
         ITicketingSystem ticketingSystem,
         SystemTime systemTime,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
@@ -35,6 +37,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _logger = logger;
         _capabilityRepository = capabilityRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
+        _capabilityClaimRepository = capabilityClaimRepository;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
@@ -320,5 +323,45 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     {
         var configLevelInfo = _configurationLevelService.ComputeConfigurationLevel(capabilityId);
         return configLevelInfo;
+    }
+
+    public async Task<bool> CanClaim(CapabilityId capabilityId, string claimType)
+    {
+        var isAllowedClaim = ListPossibleClaims().Any(co => co.ClaimType == claimType);
+        var notAlreadyClaimed = !await _capabilityClaimRepository.ClaimExists(capabilityId, claimType);
+
+        if (isAllowedClaim && notAlreadyClaimed)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public async Task<List<CapabilityClaim>> GetAllClaims(CapabilityId capabilityId)
+    {
+        return await _capabilityClaimRepository.GetAll(capabilityId);
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task<CapabilityClaimId> AddClaim(CapabilityId capabilityId, string claimType, UserId userId)
+    {
+        var claimID = new CapabilityClaimId(Guid.NewGuid());
+        var claim = new CapabilityClaim(claimID, claimType, capabilityId, DateTime.Now, userId);
+        await _capabilityClaimRepository.Add(claim);
+        return claim.Id;
+    }
+
+    /*
+     * [2024-07-22] andfris: Temporary solution
+     * The following claims should be stored in a database rather than in code.
+     * This is a temporary solution to get the feature up and running quickly.
+     * If the feature is to be kept, the claims should be moved to a database.
+     */
+    public List<CapabilityClaimOption> ListPossibleClaims()
+    {
+        return new List<CapabilityClaimOption>
+        {
+            new CapabilityClaimOption(claimType: "snyk", claimDescription: "Code is monitored by Snyk"),
+        };
     }
 }
