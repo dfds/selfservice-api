@@ -1,4 +1,4 @@
-FROM dfdsdk/pgup:latest
+FROM dfdsdk/pgup:v0.0.1
 
 RUN apk update && apk add curl && apk add ca-certificates && rm -rf /var/cache/apk/*
 
