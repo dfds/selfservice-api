@@ -627,7 +627,6 @@ public class ApiResourceFactory
             allowClaim += Get;
         }
 
-
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
