@@ -1,6 +1,6 @@
-﻿using Aspectly;
-using Dafda.Outbox;
+﻿using Dafda.Outbox;
 using SelfService.Domain.Models;
+using SelfService.Domain.Aspectly;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Messaging;
