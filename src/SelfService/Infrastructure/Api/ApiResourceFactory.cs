@@ -150,6 +150,94 @@ public class ApiResourceFactory
         return result;
     }
 
+    private List<CapabilityClaimApiResource> generateCapabilityClaimResources(
+        List<CapabilityClaim> claims,
+        List<CapabilityClaimOption> possibleClaims,
+        CapabilityId capabilityId
+    )
+    {
+        var claimResources = new List<CapabilityClaimApiResource>();
+
+        // for each possible claim, check if it exists in the list of claims
+        // If existing, generate a CapabilityClaimApiResource with the information and no claim-link
+        // If not existing, generate a CapabilityClaimApiResource with the available information and a claim-link
+        foreach (var option in possibleClaims)
+        {
+            var exists = false;
+            foreach (var claim in claims)
+            {
+                if (option.ClaimType == claim.Claim)
+                {
+                    var existingClaim = new CapabilityClaimApiResource(
+                        claim: claim.Claim,
+                        claimDescription: option.ClaimDescription,
+                        claimedAt: claim.RequestedAt,
+                        links: new CapabilityClaimApiResource.CapabilityClaimLinks(claim: null)
+                    );
+                    claimResources.Add(existingClaim);
+                    exists = true;
+                    continue;
+                }
+            }
+            if (!exists)
+            {
+                var newClaim = new CapabilityClaimApiResource(
+                    claim: option.ClaimType,
+                    claimDescription: option.ClaimDescription,
+                    claimedAt: null,
+                    links: new CapabilityClaimApiResource.CapabilityClaimLinks(
+                        claim: new ResourceLink(
+                            href: _linkGenerator.GetUriByAction(
+                                httpContext: HttpContext,
+                                action: nameof(CapabilityController.ClaimCapability),
+                                controller: GetNameOf<CapabilityController>(),
+                                values: new { id = capabilityId, claim = option.ClaimType }
+                            ) ?? "",
+                            rel: "self",
+                            allow: Allow.Post
+                        )
+                    )
+                );
+                claimResources.Add(newClaim);
+            }
+        }
+
+        return claimResources;
+    }
+
+    public async Task<CapabilityClaimListApiResource> Convert(
+        List<CapabilityClaim> claims,
+        List<CapabilityClaimOption> possibleClaims,
+        CapabilityId capabilityId
+    )
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowClaim = Allow.None;
+        if (await _authorizationService.CanClaim(portalUser.Id, capabilityId))
+        {
+            allowClaim += Get;
+        }
+
+        var result = new CapabilityClaimListApiResource(
+            claims: generateCapabilityClaimResources(claims, possibleClaims, capabilityId),
+            links: new CapabilityClaimListApiResource.CapabilityClaimListLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(CapabilityController.GetCapabilityClaims),
+                        controller: GetNameOf<CapabilityController>(),
+                        values: new { id = capabilityId }
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowClaim
+                )
+            )
+        );
+
+        return result;
+    }
+
     public CapabilityMembersApiResource Convert(string id, IEnumerable<Member> members)
     {
         return new CapabilityMembersApiResource(
@@ -529,6 +617,28 @@ public class ApiResourceFactory
         );
     }
 
+    private async Task<ResourceLink> CreateClaimsLinkFor(Capability capability)
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowClaim = Allow.None;
+        if (await _authorizationService.CanClaim(portalUser.Id, capability.Id))
+        {
+            allowClaim += Get;
+        }
+
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCapabilityClaims),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "self",
+            allow: allowClaim
+        );
+    }
+
     public async Task<CapabilityDetailsApiResource> Convert(Capability capability)
     {
         return new CapabilityDetailsApiResource(
@@ -555,7 +665,8 @@ public class ApiResourceFactory
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability),
-                configurationLevel: CreateConfigurationLevelLinkFor(capability)
+                configurationLevel: CreateConfigurationLevelLinkFor(capability),
+                claims: await CreateClaimsLinkFor(capability)
             )
         );
     }

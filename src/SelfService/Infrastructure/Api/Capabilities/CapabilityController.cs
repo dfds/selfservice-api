@@ -32,6 +32,7 @@ public class CapabilityController : ControllerBase
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
     private readonly IInvitationApplicationService _invitationApplicationService;
+    private readonly ICapabilityClaimRepository _capabilityClaimRepository;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -50,7 +51,8 @@ public class CapabilityController : ControllerBase
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
         ILogger<CapabilityController> logger,
         ITeamApplicationService teamApplicationService,
-        IInvitationApplicationService invitationApplicationService
+        IInvitationApplicationService invitationApplicationService,
+        ICapabilityClaimRepository capabilityClaimRepository
     )
     {
         _membersQuery = membersQuery;
@@ -70,6 +72,7 @@ public class CapabilityController : ControllerBase
         _logger = logger;
         _teamApplicationService = teamApplicationService;
         _invitationApplicationService = invitationApplicationService;
+        _capabilityClaimRepository = capabilityClaimRepository;
     }
 
     [HttpGet("")]
@@ -353,6 +356,58 @@ public class CapabilityController : ControllerBase
         {
             return Conflict();
         }
+    }
+
+    [HttpGet("{id:required}/claims")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> GetCapabilityClaims(string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        if (!await _authorizationService.CanClaim(userId, capabilityId))
+            return Unauthorized();
+
+        var capabilityClaims = await _capabilityApplicationService.GetAllClaims(capabilityId);
+        var possibleClaims = _capabilityApplicationService.ListPossibleClaims();
+
+        return Ok(await _apiResourceFactory.Convert(capabilityClaims, possibleClaims, capabilityId));
+    }
+
+    [HttpPost("{id:required}/claims/{claim:required}")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> ClaimCapability(string id, string claim)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        if (!await _authorizationService.CanClaim(userId, capabilityId))
+            return Unauthorized();
+
+        if (!await _capabilityApplicationService.CanClaim(capabilityId, claim))
+        {
+            return BadRequest();
+        }
+
+        await _capabilityApplicationService.AddClaim(capabilityId, claim, userId);
+
+        return Ok();
     }
 
     [HttpGet("{id:required}/azureresources/{rid:required}")]

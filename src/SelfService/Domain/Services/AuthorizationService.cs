@@ -266,4 +266,9 @@ public class AuthorizationService : IAuthorizationService
 
         return (kafkaTopic.IsPrivate && isMember) || isCloudEngineer || !kafkaTopic.IsPrivate;
     }
+
+    public async Task<bool> CanClaim(UserId userId, CapabilityId capabilityId)
+    {
+        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
+    }
 }

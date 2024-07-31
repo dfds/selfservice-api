@@ -1,5 +1,4 @@
-﻿using Aspectly;
-using SelfService.Configuration;
+﻿using SelfService.Domain.Aspectly;
 
 namespace SelfService.Infrastructure.Persistence;
 
