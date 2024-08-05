@@ -10,6 +10,7 @@ using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.Api.Teams;
 using SelfService.Infrastructure.Api.Invitations;
 using static SelfService.Infrastructure.Api.Method;
+using Amazon.EC2;
 
 namespace SelfService.Infrastructure.Api;
 
@@ -692,6 +693,32 @@ public class ApiResourceFactory
                         action: nameof(CapabilityController.GetCapabilityAwsAccount),
                         controller: GetNameOf<CapabilityController>(),
                         values: new { id = account.CapabilityId }
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowedInteractions
+                )
+            )
+        );
+    }
+
+    public async Task<AwsAccountInformationApiResource> Convert(AwsAccountInformation information)
+    {
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanViewAwsAccount(CurrentUser, information.CapabilityId))
+        {
+            allowedInteractions += Get;
+        }
+        return new AwsAccountInformationApiResource(
+            id: information.Id,
+            capabilityId: information.CapabilityId,
+            vpcs: information.vpcs,
+            links: new AwsAccountInformationApiResource.AwsAccountInformationLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(CapabilityController.GetCapabilityAwsAccountInformation),
+                        controller: GetNameOf<CapabilityController>(),
+                        values: new { id = information.CapabilityId }
                     ) ?? "",
                     rel: "self",
                     allow: allowedInteractions

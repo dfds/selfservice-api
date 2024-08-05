@@ -49,7 +49,7 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
         if (accountId == null)
             throw new Exception("ECR_PULL_PERMISSION_AWS_ACCOUNT_ID environment variable is not set");
 
-        var newRepository = await client.CreateRepositoryAsync(
+        await client.CreateRepositoryAsync(
             new CreateRepositoryRequest
             {
                 ImageScanningConfiguration = new ImageScanningConfiguration() { ScanOnPush = true },

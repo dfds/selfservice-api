@@ -29,6 +29,7 @@ public static class Domain
         builder.Services.AddTransient<IMemberApplicationService, MemberApplicationService>();
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
         builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
+        builder.Services.AddTransient<IAwsEC2QueriesApplicationService, AwsEC2QueriesApplicationService>();
         builder.Services.AddTransient<ITeamApplicationService, TeamApplicationService>();
         builder.Services.AddTransient<IInvitationApplicationService, InvitationApplicationService>();
 
