@@ -10,6 +10,8 @@ namespace SelfService.Application;
 
 public class AwsEC2QueriesApplicationService : IAwsEC2QueriesApplicationService
 {
+    private IAwsRoleManger awsRoleManager => new AwsRoleManager();
+
     public async Task<List<VPCInformation>> GetVPCsAsync(string accountId)
     {
         var allVpcs = new List<VPCInformation>();
@@ -25,7 +27,7 @@ public class AwsEC2QueriesApplicationService : IAwsEC2QueriesApplicationService
             RegionEndpoint.USWest1,
         };
 
-        var temporaryCredentials = await AssumeRoleAsync(RoleArn, RegionEndpoint.EUCentral1);
+        var temporaryCredentials = await awsRoleManager.AssumeRoleAsync(RoleArn, RegionEndpoint.EUCentral1);
 
         foreach (var region in regions)
         {
@@ -55,10 +57,10 @@ public class AwsEC2QueriesApplicationService : IAwsEC2QueriesApplicationService
 
         try
         {
-            var something = await ec2Client.DescribeVpcsAsync();
-            if (something.HttpStatusCode == System.Net.HttpStatusCode.OK)
+            var vpcresponse = await ec2Client.DescribeVpcsAsync();
+            if (vpcresponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
             {
-                foreach (var vpc in something.Vpcs)
+                foreach (var vpc in vpcresponse.Vpcs)
                 {
                     var describeTagsRequest = new DescribeTagsRequest
                     {
@@ -86,26 +88,5 @@ public class AwsEC2QueriesApplicationService : IAwsEC2QueriesApplicationService
             throw new Exception($"Error in region {ec2Client.Config.RegionEndpoint.SystemName}: {ex.Message}");
         }
         return result;
-    }
-
-    static async Task<AWSCredentials> AssumeRoleAsync(string roleArn, RegionEndpoint region)
-    {
-        using (var stsClient = new AmazonSecurityTokenServiceClient(RegionEndpoint.EUCentral1))
-        {
-            var assumeRoleRequest = new AssumeRoleRequest
-            {
-                RoleArn = roleArn,
-                RoleSessionName = "SelfserviceEC2Queries",
-            };
-
-            var assumeRoleResponse = await stsClient.AssumeRoleAsync(assumeRoleRequest);
-            var credentials = assumeRoleResponse.Credentials;
-
-            return new SessionAWSCredentials(
-                credentials.AccessKeyId,
-                credentials.SecretAccessKey,
-                credentials.SessionToken
-            );
-        }
     }
 }
