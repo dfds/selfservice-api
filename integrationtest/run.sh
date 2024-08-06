@@ -12,7 +12,7 @@ rm -Rf ${BIN_DIR}
 mkdir ${BIN_DIR}
 
 echo -e "\e[35mClosing any previous containers...\e[0m"
-docker-compose -p ${INTEGRATION_TEST_NAME} down -v
+docker compose -p ${INTEGRATION_TEST_NAME} down -v
 
 echo -e "\e[35mCopying test dlls...\e[0m"
 dotnet publish \
@@ -25,12 +25,12 @@ dotnet publish \
     ../src/${TEST_PROJECT_NAME}/${TEST_PROJECT_NAME}.csproj
 
 echo -e "\e[35mSpinning up containers...\e[0m"
-docker-compose -p ${INTEGRATION_TEST_NAME} up --build -d
+docker compose -p ${INTEGRATION_TEST_NAME} up --build -d
 
 echo -e "\e[35mGetting port of database container...\e[0m"
-PORT=$(docker-compose -p ${INTEGRATION_TEST_NAME} port database 5432 | awk -F : '{print $2}')
+PORT=$(docker compose -p ${INTEGRATION_TEST_NAME} port database 5432 | awk -F : '{print $2}')
 
-MIGRATION_CONTAINER_NAME=$(docker-compose -p ${INTEGRATION_TEST_NAME} ps --all | grep -i 'db-migration' | awk '{print $1}')
+MIGRATION_CONTAINER_NAME=$(docker compose -p ${INTEGRATION_TEST_NAME} ps --all | grep -i 'db-migration' | awk '{print $1}')
 
 echo "container name: ${MIGRATION_CONTAINER_NAME}"
 
@@ -44,7 +44,7 @@ then
 
    echo ""
    echo -e "\e[33mClosing containers...\e[0m"
-   docker-compose -p ${INTEGRATION_TEST_NAME} down -v
+   docker compose -p ${INTEGRATION_TEST_NAME} down -v
 
    exit -1
 fi
@@ -62,7 +62,7 @@ dotnet test \
 LAST_EXIT_CODE=$?
 
 echo -e "\e[35mClosing containers...\e[0m"
-docker-compose -p ${INTEGRATION_TEST_NAME} down -v
+docker compose -p ${INTEGRATION_TEST_NAME} down -v
 
 echo -e "\e[35mCopying test result...\e[0m"
 cp ${PWD}/TestResults/testresults.trx $OUTPUT_DIR_TESTRESULTS/integration_testresults.trx
