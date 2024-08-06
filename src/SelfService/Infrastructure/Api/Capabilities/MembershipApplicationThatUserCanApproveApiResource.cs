@@ -14,7 +14,8 @@ public class MembershipApplicationThatUserCanApproveApiResource : MembershipAppl
         string expiresOn,
         MembershipApprovalListApiResource approvals,
         MembershipApplicationLinks links
-    ) : base(id, applicant, submittedAt, expiresOn, approvals, links)
+    )
+        : base(id, applicant, submittedAt, expiresOn, approvals, links)
     {
         CapabilityId = capabilityId;
     }

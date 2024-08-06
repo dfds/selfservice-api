@@ -146,7 +146,7 @@ public class MembershipApplicationController : ControllerBase
                 }
             );
         }
-        
+
         if (!MembershipApplicationId.TryParse(id, out var membershipApplicationId))
         {
             return NotFound(
@@ -159,7 +159,7 @@ public class MembershipApplicationController : ControllerBase
         }
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (! await _authorizationService.CanDeleteMembershipApplication(portalUser, userId, membershipApplicationId))
+        if (!await _authorizationService.CanDeleteMembershipApplication(portalUser, userId, membershipApplicationId))
         {
             return Unauthorized(
                 new ProblemDetails

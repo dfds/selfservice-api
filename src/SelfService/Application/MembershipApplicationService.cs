@@ -299,8 +299,15 @@ public class MembershipApplicationService : IMembershipApplicationService
     {
         var capabilities = await _myCapabilitiesQuery.FindBy(userId);
         var memberships = await _membershipApplicationRepository.GetAll();
-        var membershipsThatUserCanApprove =
-            memberships.ToList().Where(x => capabilities.Any(cap => cap.Id == x.CapabilityId && x.Status == MembershipApplicationStatusOptions.PendingApprovals));
+        var membershipsThatUserCanApprove = memberships
+            .ToList()
+            .Where(
+                x =>
+                    capabilities.Any(
+                        cap =>
+                            cap.Id == x.CapabilityId && x.Status == MembershipApplicationStatusOptions.PendingApprovals
+                    )
+            );
 
         return membershipsThatUserCanApprove.ToList();
     }

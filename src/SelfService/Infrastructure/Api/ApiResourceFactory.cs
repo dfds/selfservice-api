@@ -959,8 +959,11 @@ public class ApiResourceFactory
             )
         );
     }
-    
-    public MembershipApplicationThatUserCanApproveApiResource ConvertToMembershipApplicationThatUserCanApproveApiResource(MembershipApplication application, UserId currentUser)
+
+    public MembershipApplicationThatUserCanApproveApiResource ConvertToMembershipApplicationThatUserCanApproveApiResource(
+        MembershipApplication application,
+        UserId currentUser
+    )
     {
         var isCurrentUserTheApplicant = application.Applicant == currentUser;
 
@@ -1135,10 +1138,17 @@ public class ApiResourceFactory
         return resource;
     }
 
-    public Task<MembershipApplicationThatUserCanApproveListApiResource> Convert(IEnumerable<MembershipApplication> applications, UserId currentUser)
+    public Task<MembershipApplicationThatUserCanApproveListApiResource> Convert(
+        IEnumerable<MembershipApplication> applications,
+        UserId currentUser
+    )
     {
         var resource = new MembershipApplicationThatUserCanApproveListApiResource(
-            items: applications.Select(application => ConvertToMembershipApplicationThatUserCanApproveApiResource(application, currentUser)).ToArray(),
+            items: applications
+                .Select(
+                    application => ConvertToMembershipApplicationThatUserCanApproveApiResource(application, currentUser)
+                )
+                .ToArray(),
             links: new MembershipApplicationThatUserCanApproveListApiResource.MembershipApplicationListLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -1151,7 +1161,7 @@ public class ApiResourceFactory
                 )
             )
         );
-        
+
         return Task.FromResult(resource);
     }
 
