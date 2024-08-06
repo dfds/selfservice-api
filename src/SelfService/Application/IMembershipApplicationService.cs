@@ -13,4 +13,5 @@ public interface IMembershipApplicationService
     Task RemoveMembershipApplication(MembershipApplicationId applicationId);
     Task LeaveCapability(CapabilityId capabilityId, UserId userId);
     Task JoinCapability(CapabilityId capabilityId, UserId userId);
+    Task<IEnumerable<MembershipApplication>> GetMembershipsApplicationsThatUserCanApprove(UserId userId);
 }
