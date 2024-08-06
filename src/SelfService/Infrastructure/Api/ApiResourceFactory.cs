@@ -578,6 +578,27 @@ public class ApiResourceFactory
         );
     }
 
+    private async Task<ResourceLink> CreateAwsAccountInformationLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+
+        if (await _authorizationService.CanViewAwsAccount(CurrentUser, capability.Id))
+        {
+            allowedInteractions += Get;
+        }
+
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCapabilityAwsAccountInformation),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "related",
+            allow: allowedInteractions
+        );
+    }
+
     private async Task<ResourceLink> CreateAzureResourcesLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.Get;
@@ -658,6 +679,7 @@ public class ApiResourceFactory
                 membershipApplications: await CreateMembershipApplicationsLinkFor(capability),
                 leaveCapability: await CreateLeaveCapabilityLinkFor(capability),
                 awsAccount: await CreateAwsAccountLinkFor(capability),
+                awsAccountInformation: await CreateAwsAccountInformationLinkFor(capability),
                 azureResources: await CreateAzureResourcesLinkFor(capability),
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
