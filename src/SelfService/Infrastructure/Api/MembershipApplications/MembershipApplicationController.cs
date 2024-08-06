@@ -230,7 +230,7 @@ public class MembershipApplicationController : ControllerBase
         }
     }
 
-    [HttpGet("me")]
+    [HttpGet("eligible-for-approval")]
     [ProducesResponseType(typeof(MembershipApplicationListApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
