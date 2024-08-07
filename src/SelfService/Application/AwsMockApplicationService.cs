@@ -6,18 +6,21 @@ public class AwsMockApplicationService : IAwsEC2QueriesApplicationService, IAwsE
 {
     private List<string> ecrRepositories =
         new(new string[] { "predetermined repository 1", "predetermined repository 2", "predetermined repository 3" });
-    private List<VPCInformation> vpcs =
-        new(
-            new VPCInformation[]
+    private List<VPCInformation> vpcs = new();
+
+    /*
+    new(
+        new VPCInformation[]
+        {
+            new VPCInformation
             {
-                new VPCInformation
-                {
-                    VpcId = "vpc-123456",
-                    CidrBlock = "10.225.0.64/26",
-                    Region = "eu-central-1"
-                }
+                VpcId = "vpc-123456",
+                CidrBlock = "10.225.0.64/26",
+                Region = "eu-central-1"
             }
-        );
+        }
+    );
+    */
 
     public async Task CreateECRRepo(string name)
     {
