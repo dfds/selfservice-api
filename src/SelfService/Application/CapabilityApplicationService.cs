@@ -208,7 +208,6 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
     [TransactionalBoundary, Outboxed]
     public async Task ActOnPendingCapabilityDeletions()
-    /// FLUTTERSHY
     {
         using var _ = _logger.BeginScope(
             "{BackgroundJob} {CorrelationId}",
