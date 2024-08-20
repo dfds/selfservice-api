@@ -57,6 +57,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
         }
     }
 
+    /*
     [HttpPost("{id:required}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
@@ -121,6 +122,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
             );
         }
     }
+    */
 
     [HttpPost("validate")]
     [ProducesResponseType(StatusCodes.Status200OK)]

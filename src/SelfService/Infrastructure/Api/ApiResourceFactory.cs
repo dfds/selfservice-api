@@ -89,10 +89,12 @@ public class ApiResourceFactory
             messageContractsAccessLevel += Get;
         }
 
+        /*
         if (await _authorizationService.CanAddMessageContract(portalUser, topic))
         {
             messageContractsAccessLevel += Post;
         }
+        */
 
         var result = new KafkaTopicApiResource(
             id: topic.Id,
