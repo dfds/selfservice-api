@@ -11,7 +11,7 @@ public interface ISelfServiceJsonSchemaService
 
     public void MustValidateJsonSchema(string schema);
 
-    public Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema);
+    //public Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema);
 
     public Task<ValidateJsonMetadataResult> ValidateJsonMetadata(
         SelfServiceJsonSchemaObjectId objectId,
