@@ -364,7 +364,6 @@ public class CapabilityController : ControllerBase
                     Status = StatusCodes.Status400BadRequest
                 }
             );
-        
 
         if (await _azureResourceRepository.Exists(capabilityId, request.environment))
             return Conflict();

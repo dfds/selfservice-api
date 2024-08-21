@@ -49,15 +49,22 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
 
         var capability = await _capabilityRepository.Get(capabilityId);
         var jsonObject = JsonNode.Parse(capability!.JsonMetadata)?.AsObject()!;
-        var mandatoryTags = new List<String> { "dfds.planned_sunset", "dfds.owner", "dfds.cost.centre", "dfds.service.availability" };
+        var mandatoryTags = new List<String>
+        {
+            "dfds.planned_sunset",
+            "dfds.owner",
+            "dfds.cost.centre",
+            "dfds.service.availability"
+        };
         foreach (var tag in mandatoryTags)
         {
             if (!jsonObject.ContainsKey(tag))
             {
-                throw new MissingMandatoryJsonMetadataException($"Capability {capabilityId} does not have required tag '{tag}' for Azure Resource creation");
+                throw new MissingMandatoryJsonMetadataException(
+                    $"Capability {capabilityId} does not have required tag '{tag}' for Azure Resource creation"
+                );
             }
         }
-
 
         var resource = AzureResource.RequestNew(capabilityId, environment, _systemTime.Now, requestedBy);
 
