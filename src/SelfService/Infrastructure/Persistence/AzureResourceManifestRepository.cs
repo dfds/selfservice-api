@@ -164,7 +164,6 @@ public class AzureResourceManifest
             options = $"ref={gitRef}&depth=1";
         }
 
-        
         // get cost centre tag
         if (Capability?.JsonMetadata == null)
         {
@@ -179,7 +178,6 @@ public class AzureResourceManifest
         var owner = jsonObject["owner"]?.ToString() ?? "";
         var availability = jsonObject["dfds.service.availability"]?.ToString() ?? "";
         var plannedSunset = jsonObject["dfds.planned_sunset"]?.ToString() ?? "";
-
 
         return $$"""
                  terraform {
