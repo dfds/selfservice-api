@@ -360,10 +360,11 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid metadata",
-                    Detail = "Request body is empty",
+                    Detail = "Metadata missing environment empty",
                     Status = StatusCodes.Status400BadRequest
                 }
             );
+        
 
         if (await _azureResourceRepository.Exists(capabilityId, request.environment))
             return Conflict();
@@ -386,6 +387,10 @@ public class CapabilityController : ControllerBase
         catch (AlreadyHasAzureResourceException)
         {
             return Conflict();
+        }
+        catch (MissingMandatoryJsonMetadataException ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 

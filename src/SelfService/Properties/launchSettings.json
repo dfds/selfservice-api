@@ -27,7 +27,8 @@
         "SS_ARM_REMOTE_REPO_URI": "git@github.com:dfds/azure-rg-manifests.git",
         "SS_ARM_GIT_USERNAME": "selfservice-api",
         "SS_ARM_GIT_EMAIL": "ssu@dfds.cloud",
-        "SS_ARM_GIT_BRANCH": "master"
+        "SS_ARM_GIT_BRANCH": "master",
+        "SS_AWS_TYPE": "mock"
       }
     }
   }

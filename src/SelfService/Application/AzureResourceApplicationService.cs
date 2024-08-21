@@ -1,9 +1,8 @@
-using Microsoft.Extensions.Localization;
+using System.Text.Json.Nodes;
 using SelfService.Domain;
 using SelfService.Domain.Events;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
-using SelfService.Domain.Services;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
@@ -47,6 +46,18 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
                 $"Capability {capabilityId} already has Azure Resource for environment '{environment}'"
             );
         }
+
+        var capability = await _capabilityRepository.Get(capabilityId);
+        var jsonObject = JsonNode.Parse(capability!.JsonMetadata)?.AsObject()!;
+        var mandatoryTags = new List<String> { "dfds.planned_sunset", "dfds.owner", "dfds.cost.centre", "dfds.service.availability" };
+        foreach (var tag in mandatoryTags)
+        {
+            if (!jsonObject.ContainsKey(tag))
+            {
+                throw new MissingMandatoryJsonMetadataException($"Capability {capabilityId} does not have required tag '{tag}' for Azure Resource creation");
+            }
+        }
+
 
         var resource = AzureResource.RequestNew(capabilityId, environment, _systemTime.Now, requestedBy);
 
