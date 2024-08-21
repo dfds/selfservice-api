@@ -26,7 +26,6 @@ public class CapabilityDetailsApiResource
         public ResourceLink MembershipApplications { get; set; }
         public ResourceLink LeaveCapability { get; set; }
         public ResourceLink AwsAccount { get; set; }
-        public ResourceLink AwsAccountInformation { get; set; }
         public ResourceLink AzureResources { get; set; }
         public ResourceLink RequestCapabilityDeletion { get; set; }
         public ResourceLink CancelCapabilityDeletionRequest { get; set; }
@@ -46,7 +45,6 @@ public class CapabilityDetailsApiResource
             ResourceLink membershipApplications,
             ResourceLink leaveCapability,
             ResourceLink awsAccount,
-            ResourceLink awsAccountInformation,
             ResourceLink azureResources,
             ResourceLink requestCapabilityDeletion,
             ResourceLink cancelCapabilityDeletionRequest,
@@ -65,7 +63,6 @@ public class CapabilityDetailsApiResource
             MembershipApplications = membershipApplications;
             LeaveCapability = leaveCapability;
             AwsAccount = awsAccount;
-            AwsAccountInformation = awsAccountInformation;
             AzureResources = azureResources;
             RequestCapabilityDeletion = requestCapabilityDeletion;
             CancelCapabilityDeletionRequest = cancelCapabilityDeletionRequest;

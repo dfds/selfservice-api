@@ -1,6 +1,6 @@
-﻿using SelfService.Application;
-using SelfService.Domain.Models;
+﻿using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Domain.Services;
 
@@ -13,7 +13,6 @@ public class AuthorizationService : IAuthorizationService
     private readonly IAzureResourceRepository _azureResourceRepository;
     private readonly IMessageContractRepository _messageContractRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
-    private readonly IMembershipApplicationRepository _membershipApplicationRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public AuthorizationService(
@@ -24,7 +23,6 @@ public class AuthorizationService : IAuthorizationService
         IAzureResourceRepository azureResourceRepository,
         IMessageContractRepository messageContractRepository,
         IKafkaTopicRepository kafkaTopicRepository,
-        IMembershipApplicationRepository membershipApplicationRepository,
         IHttpContextAccessor httpContextAccessor
     )
     {
@@ -35,7 +33,6 @@ public class AuthorizationService : IAuthorizationService
         _azureResourceRepository = azureResourceRepository;
         _messageContractRepository = messageContractRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
-        _membershipApplicationRepository = membershipApplicationRepository;
         _httpContextAccessor = httpContextAccessor;
     }
 
@@ -178,16 +175,6 @@ public class AuthorizationService : IAuthorizationService
             && await _awsAccountRepository.Exists(capabilityId);
     }
 
-    public async Task<bool> CanViewAwsAccount(UserId userId, AwsAccountId accountId)
-    {
-        var account = await _awsAccountRepository.Get(accountId);
-        if (account == null)
-        {
-            return false;
-        }
-        return await _membershipQuery.HasActiveMembership(userId, account.CapabilityId);
-    }
-
     public async Task<bool> CanRequestAwsAccount(UserId userId, CapabilityId capabilityId)
     {
         return await _membershipQuery.HasActiveMembership(userId, capabilityId)
@@ -248,16 +235,9 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser);
     }
 
-    public async Task<bool> CanDeleteMembershipApplication(
-        PortalUser portalUser,
-        UserId userId,
-        MembershipApplicationId membershipApplicationId
-    )
+    public bool CanDeleteMembershipApplications(PortalUser portalUser)
     {
-        var membershipApp = await _membershipApplicationRepository.Get(membershipApplicationId);
-        var hasMembership = await _membershipQuery.HasActiveMembership(userId, membershipApp.CapabilityId);
-
-        return hasMembership || IsCloudEngineerEnabled(portalUser);
+        return IsCloudEngineerEnabled(portalUser);
     }
 
     public async Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId)

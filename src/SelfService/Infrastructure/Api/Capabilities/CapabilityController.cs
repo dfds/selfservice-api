@@ -33,7 +33,6 @@ public class CapabilityController : ControllerBase
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
     private readonly IInvitationApplicationService _invitationApplicationService;
     private readonly ICapabilityClaimRepository _capabilityClaimRepository;
-    private readonly IAwsEC2QueriesApplicationService _awsEC2QueriesApplicationService;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -53,8 +52,7 @@ public class CapabilityController : ControllerBase
         ILogger<CapabilityController> logger,
         ITeamApplicationService teamApplicationService,
         IInvitationApplicationService invitationApplicationService,
-        ICapabilityClaimRepository capabilityClaimRepository,
-        IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService
+        ICapabilityClaimRepository capabilityClaimRepository
     )
     {
         _membersQuery = membersQuery;
@@ -75,7 +73,6 @@ public class CapabilityController : ControllerBase
         _teamApplicationService = teamApplicationService;
         _invitationApplicationService = invitationApplicationService;
         _capabilityClaimRepository = capabilityClaimRepository;
-        _awsEC2QueriesApplicationService = awsEC2QueriesApplicationService;
     }
 
     [HttpGet("")]
@@ -285,34 +282,6 @@ public class CapabilityController : ControllerBase
         }
     }
 
-    [HttpGet("{id:required}/awsaccount/information")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetCapabilityAwsAccountInformation(string id)
-    {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
-        if (!CapabilityId.TryParse(id, out var capabilityId))
-            return NotFound();
-
-        if (!await _capabilityRepository.Exists(capabilityId))
-            return NotFound();
-
-        if (!await _authorizationService.CanViewAwsAccount(userId, capabilityId))
-            return Unauthorized();
-
-        var account = await _awsAccountRepository.FindBy(capabilityId);
-        if (account is null)
-            return NotFound();
-
-        var vpcs = _awsEC2QueriesApplicationService.GetVPCsAsync(account.Id.ToString());
-
-        var accountInformation = new AwsAccountInformation(account.Id, capabilityId, await vpcs);
-        return Ok(await _apiResourceFactory.Convert(accountInformation));
-    }
-
     [HttpGet("{id:required}/azureresources")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
@@ -360,7 +329,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid metadata",
-                    Detail = "Metadata missing environment empty",
+                    Detail = "Request body is empty",
                     Status = StatusCodes.Status400BadRequest
                 }
             );
@@ -386,10 +355,6 @@ public class CapabilityController : ControllerBase
         catch (AlreadyHasAzureResourceException)
         {
             return Conflict();
-        }
-        catch (MissingMandatoryJsonMetadataException ex)
-        {
-            return BadRequest(ex.Message);
         }
     }
 

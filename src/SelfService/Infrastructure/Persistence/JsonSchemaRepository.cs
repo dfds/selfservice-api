@@ -27,11 +27,9 @@ public class SelfServiceJsonSchemaRepository : ISelfServiceJsonSchemaRepository
         return GetSchema(objectId, latestVersion)!;
     }
 
-    /*
     public Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchema selfServiceJsonSchema)
     {
         _dbContext.SelfServiceJsonSchemas.AddAsync(selfServiceJsonSchema);
         return Task.FromResult(selfServiceJsonSchema);
     }
-    */
 }

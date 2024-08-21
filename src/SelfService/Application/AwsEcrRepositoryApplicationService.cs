@@ -1,16 +1,11 @@
 using Amazon;
 using Amazon.ECR;
 using Amazon.ECR.Model;
-using Amazon.SecurityToken;
-using Amazon.SecurityToken.Model;
-using Amazon.Runtime;
 
 namespace SelfService.Application;
 
 public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationService
 {
-    private IAwsRoleManger awsRoleManager => new AwsRoleManager();
-
     private string GetPermissionJson(string awsAccountId)
     {
         return $$"""
@@ -36,9 +31,9 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
                  """;
     }
 
-    private AmazonECRClient NewAwsECRClient(AWSCredentials credentials)
+    private AmazonECRClient NewAwsECRClient()
     {
-        return new AmazonECRClient(credentials, new AmazonECRConfig { RegionEndpoint = RegionEndpoint.EUCentral1, });
+        return new AmazonECRClient(new AmazonECRConfig { RegionEndpoint = RegionEndpoint.EUCentral1, });
     }
 
     /// <summary>
@@ -49,15 +44,12 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
     /// </summary>
     public async Task CreateECRRepo(string name)
     {
-        var roleArn = "arn:aws:iam::579478677147:role/CreateECRRepos";
-        var credentials = await awsRoleManager.AssumeRoleAsync(roleArn, RegionEndpoint.EUCentral1);
-        var client = NewAwsECRClient(credentials);
-
+        var client = NewAwsECRClient();
         var accountId = Environment.GetEnvironmentVariable("ECR_PULL_PERMISSION_AWS_ACCOUNT_ID");
         if (accountId == null)
             throw new Exception("ECR_PULL_PERMISSION_AWS_ACCOUNT_ID environment variable is not set");
 
-        await client.CreateRepositoryAsync(
+        var newRepository = await client.CreateRepositoryAsync(
             new CreateRepositoryRequest
             {
                 ImageScanningConfiguration = new ImageScanningConfiguration() { ScanOnPush = true },
@@ -85,19 +77,13 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
     /// </summary>
     public async Task DeleteECRRepo(string name)
     {
-        var roleArn = "arn:aws:iam::579478677147:role/CreateECRRepos";
-        var credentials = await awsRoleManager.AssumeRoleAsync(roleArn, RegionEndpoint.EUCentral1);
-        var client = NewAwsECRClient(credentials);
-
+        AmazonECRClient client = new(new AmazonECRConfig { RegionEndpoint = RegionEndpoint.EUCentral1, });
         await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = name, });
     }
 
     public async Task<List<string>> GetECRRepositories()
     {
-        var roleArn = "arn:aws:iam::579478677147:role/CreateECRRepos";
-        var credentials = await awsRoleManager.AssumeRoleAsync(roleArn, RegionEndpoint.EUCentral1);
-        var client = NewAwsECRClient(credentials);
-
+        var client = NewAwsECRClient();
         HashSet<string> repos = new();
         string? nextToken = null;
         do

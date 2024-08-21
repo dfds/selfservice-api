@@ -17,7 +17,6 @@ public class MembershipApplicationService : IMembershipApplicationService
     private readonly IMembershipQuery _membershipQuery;
     private readonly IMembershipApplicationDomainService _membershipApplicationDomainService;
     private readonly IInvitationRepository _invitationRepository;
-    private readonly IMyCapabilitiesQuery _myCapabilitiesQuery;
 
     public MembershipApplicationService(
         ILogger<MembershipApplicationService> logger,
@@ -28,8 +27,7 @@ public class MembershipApplicationService : IMembershipApplicationService
         SystemTime systemTime,
         IMembershipQuery membershipQuery,
         IMembershipApplicationDomainService membershipApplicationDomainService,
-        IInvitationRepository invitationRepository,
-        IMyCapabilitiesQuery myCapabilitiesQuery
+        IInvitationRepository invitationRepository
     )
     {
         _logger = logger;
@@ -41,7 +39,6 @@ public class MembershipApplicationService : IMembershipApplicationService
         _membershipQuery = membershipQuery;
         _membershipApplicationDomainService = membershipApplicationDomainService;
         _invitationRepository = invitationRepository;
-        _myCapabilitiesQuery = myCapabilitiesQuery;
     }
 
     private async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId)
@@ -293,22 +290,5 @@ public class MembershipApplicationService : IMembershipApplicationService
             capabilityId
         );
         await CreateAndAddMembership(capabilityId, userId);
-    }
-
-    public async Task<IEnumerable<MembershipApplication>> GetMembershipsApplicationsThatUserCanApprove(UserId userId)
-    {
-        var capabilities = await _myCapabilitiesQuery.FindBy(userId);
-        var memberships = await _membershipApplicationRepository.GetAll();
-        var membershipsThatUserCanApprove = memberships
-            .ToList()
-            .Where(
-                x =>
-                    capabilities.Any(
-                        cap =>
-                            cap.Id == x.CapabilityId && x.Status == MembershipApplicationStatusOptions.PendingApprovals
-                    )
-            );
-
-        return membershipsThatUserCanApprove.ToList();
     }
 }

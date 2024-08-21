@@ -16,7 +16,6 @@ public class MembershipApplicationServiceBuilder
     private ICapabilityRepository _capabilityRepository;
     private IAuthorizationService _authorizationService;
     private IInvitationRepository _invitationRepository;
-    private IMyCapabilitiesQuery _myCapabilitiesQuery;
 
     public MembershipApplicationServiceBuilder()
     {
@@ -25,7 +24,6 @@ public class MembershipApplicationServiceBuilder
         _capabilityRepository = Dummy.Of<ICapabilityRepository>();
         _authorizationService = Dummy.Of<IAuthorizationService>();
         _invitationRepository = Dummy.Of<IInvitationRepository>();
-        _myCapabilitiesQuery = Dummy.Of<IMyCapabilitiesQuery>();
     }
 
     public MembershipApplicationServiceBuilder WithMembershipRepository(IMembershipRepository membershipRepository)
@@ -71,8 +69,7 @@ public class MembershipApplicationServiceBuilder
             systemTime: SystemTime.Default,
             membershipQuery: Mock.Of<IMembershipQuery>(),
             membershipApplicationDomainService: Mock.Of<IMembershipApplicationDomainService>(),
-            invitationRepository: _invitationRepository,
-            myCapabilitiesQuery: _myCapabilitiesQuery
+            invitationRepository: _invitationRepository
         );
     }
 

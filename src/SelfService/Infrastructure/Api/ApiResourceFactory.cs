@@ -10,7 +10,6 @@ using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.Api.Teams;
 using SelfService.Infrastructure.Api.Invitations;
 using static SelfService.Infrastructure.Api.Method;
-using Amazon.EC2;
 
 namespace SelfService.Infrastructure.Api;
 
@@ -89,12 +88,10 @@ public class ApiResourceFactory
             messageContractsAccessLevel += Get;
         }
 
-        /*
         if (await _authorizationService.CanAddMessageContract(portalUser, topic))
         {
             messageContractsAccessLevel += Post;
         }
-        */
 
         var result = new KafkaTopicApiResource(
             id: topic.Id,
@@ -580,27 +577,6 @@ public class ApiResourceFactory
         );
     }
 
-    private async Task<ResourceLink> CreateAwsAccountInformationLinkFor(Capability capability)
-    {
-        var allowedInteractions = Allow.None;
-
-        if (await _authorizationService.CanViewAwsAccount(CurrentUser, capability.Id))
-        {
-            allowedInteractions += Get;
-        }
-
-        return new ResourceLink(
-            href: _linkGenerator.GetUriByAction(
-                httpContext: HttpContext,
-                action: nameof(CapabilityController.GetCapabilityAwsAccountInformation),
-                controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }
-            ) ?? "",
-            rel: "related",
-            allow: allowedInteractions
-        );
-    }
-
     private async Task<ResourceLink> CreateAzureResourcesLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.Get;
@@ -681,7 +657,6 @@ public class ApiResourceFactory
                 membershipApplications: await CreateMembershipApplicationsLinkFor(capability),
                 leaveCapability: await CreateLeaveCapabilityLinkFor(capability),
                 awsAccount: await CreateAwsAccountLinkFor(capability),
-                awsAccountInformation: await CreateAwsAccountInformationLinkFor(capability),
                 azureResources: await CreateAzureResourcesLinkFor(capability),
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
@@ -717,32 +692,6 @@ public class ApiResourceFactory
                         action: nameof(CapabilityController.GetCapabilityAwsAccount),
                         controller: GetNameOf<CapabilityController>(),
                         values: new { id = account.CapabilityId }
-                    ) ?? "",
-                    rel: "self",
-                    allow: allowedInteractions
-                )
-            )
-        );
-    }
-
-    public async Task<AwsAccountInformationApiResource> Convert(AwsAccountInformation information)
-    {
-        var allowedInteractions = Allow.None;
-        if (await _authorizationService.CanViewAwsAccount(CurrentUser, information.CapabilityId))
-        {
-            allowedInteractions += Get;
-        }
-        return new AwsAccountInformationApiResource(
-            id: information.Id,
-            capabilityId: information.CapabilityId,
-            vpcs: information.vpcs,
-            links: new AwsAccountInformationApiResource.AwsAccountInformationLinks(
-                self: new ResourceLink(
-                    href: _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        action: nameof(CapabilityController.GetCapabilityAwsAccountInformation),
-                        controller: GetNameOf<CapabilityController>(),
-                        values: new { id = information.CapabilityId }
                     ) ?? "",
                     rel: "self",
                     allow: allowedInteractions
@@ -1011,49 +960,6 @@ public class ApiResourceFactory
         );
     }
 
-    public MembershipApplicationThatUserCanApproveApiResource ConvertToMembershipApplicationThatUserCanApproveApiResource(
-        MembershipApplication application,
-        UserId currentUser
-    )
-    {
-        var isCurrentUserTheApplicant = application.Applicant == currentUser;
-
-        // hide list of approvals if current user is the applicant
-        var approvals = isCurrentUserTheApplicant ? Enumerable.Empty<MembershipApproval>() : application.Approvals;
-
-        var allowedApprovalInteractions = Allow.None;
-        if (!isCurrentUserTheApplicant)
-        {
-            allowedApprovalInteractions += Get;
-            if (!application.HasApproved(currentUser))
-            {
-                allowedApprovalInteractions += Post;
-                allowedApprovalInteractions += Delete;
-            }
-        }
-
-        return new MembershipApplicationThatUserCanApproveApiResource(
-            id: application.Id.ToString(),
-            capabilityId: application.CapabilityId.ToString(),
-            applicant: application.Applicant,
-            submittedAt: application.SubmittedAt.ToUniversalTime().ToString("O"),
-            expiresOn: application.ExpiresOn.ToUniversalTime().ToString("O"),
-            approvals: Convert(approvals, application.Id, allowedApprovalInteractions),
-            links: new MembershipApplicationApiResource.MembershipApplicationLinks(
-                self: new ResourceLink(
-                    href: _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        action: nameof(MembershipApplicationController.GetById),
-                        controller: GetNameOf<MembershipApplicationController>(),
-                        values: new { id = application.Id.ToString() }
-                    ) ?? "",
-                    rel: "self",
-                    allow: Allow.Get
-                )
-            )
-        );
-    }
-
     private MembershipApprovalListApiResource Convert(
         IEnumerable<MembershipApproval> approvals,
         MembershipApplicationId parentApplicationId,
@@ -1187,33 +1093,6 @@ public class ApiResourceFactory
             )
         );
         return resource;
-    }
-
-    public Task<MembershipApplicationThatUserCanApproveListApiResource> Convert(
-        IEnumerable<MembershipApplication> applications,
-        UserId currentUser
-    )
-    {
-        var resource = new MembershipApplicationThatUserCanApproveListApiResource(
-            items: applications
-                .Select(
-                    application => ConvertToMembershipApplicationThatUserCanApproveApiResource(application, currentUser)
-                )
-                .ToArray(),
-            links: new MembershipApplicationThatUserCanApproveListApiResource.MembershipApplicationListLinks(
-                self: new ResourceLink(
-                    href: _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        controller: GetNameOf<MembershipApplicationController>(),
-                        action: nameof(MembershipApplicationController.MembershipsThatUserCanApprove)
-                    ) ?? "",
-                    rel: "self",
-                    allow: Allow.Get
-                )
-            )
-        );
-
-        return Task.FromResult(resource);
     }
 
     public async Task<MembershipApplicationListApiResource> Convert(

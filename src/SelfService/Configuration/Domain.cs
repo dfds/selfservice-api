@@ -19,8 +19,6 @@ public static class Domain
     {
         builder.Services.AddSingleton(_ => SystemTime.Default);
 
-        var aws_type = Environment.GetEnvironmentVariable("SS_AWS_TYPE");
-
         // application services
         builder.Services.AddTransient<ICapabilityApplicationService, CapabilityApplicationService>();
         builder.Services.AddTransient<IAwsAccountApplicationService, AwsAccountApplicationService>();
@@ -30,20 +28,9 @@ public static class Domain
         builder.Services.AddTransient<IKafkaTopicApplicationService, KafkaTopicApplicationService>();
         builder.Services.AddTransient<IMemberApplicationService, MemberApplicationService>();
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
+        builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
         builder.Services.AddTransient<ITeamApplicationService, TeamApplicationService>();
         builder.Services.AddTransient<IInvitationApplicationService, InvitationApplicationService>();
-
-        if (aws_type == "mock")
-        {
-            builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsMockApplicationService>();
-            builder.Services.AddTransient<IAwsEC2QueriesApplicationService, AwsMockApplicationService>();
-        }
-        else
-        {
-            builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
-            builder.Services.AddTransient<IAwsEC2QueriesApplicationService, AwsEC2QueriesApplicationService>();
-            builder.Services.AddTransient<IAwsRoleManger, AwsRoleManager>();
-        }
 
         // domain services
         builder.Services.AddTransient<IMembershipApplicationDomainService, MembershipApplicationDomainService>();

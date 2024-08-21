@@ -31,11 +31,7 @@ public interface IAuthorizationService
     bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser);
     Task<bool> CanGetSetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId);
     bool CanBypassMembershipApprovals(PortalUser portalUser);
-    Task<bool> CanDeleteMembershipApplication(
-        PortalUser portalUser,
-        UserId userId,
-        MembershipApplicationId membershipApplicationId
-    );
+    bool CanDeleteMembershipApplications(PortalUser portalUser);
     Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId);
     Task<bool> CanSeeAwsAccountId(PortalUser portalUser, CapabilityId capabilityId);
     Task<bool> CanRetryCreatingMessageContract(PortalUser portalUser, MessageContractId messageContractId);

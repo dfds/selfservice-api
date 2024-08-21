@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AWSSDK.EC2" Version="3.7.401.2" />
       <PackageReference Include="AWSSDK.ECR" Version="3.7.200.34" />
       <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.201.39" />
       <PackageReference Include="Dafda" Version="0.11.4" />
