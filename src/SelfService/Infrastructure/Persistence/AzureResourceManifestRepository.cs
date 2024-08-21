@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using LibGit2Sharp;
 using SelfService.Domain.Models;
@@ -163,6 +164,21 @@ public class AzureResourceManifest
             options = $"ref={gitRef}&depth=1";
         }
 
+        // get cost centre tag
+        if (Capability?.JsonMetadata == null)
+        {
+            throw new Exception("Unable to proceed without JSON metadata for generating manifest");
+        }
+
+        var correlationId = Guid.NewGuid().ToString();
+        var jsonObject = JsonNode.Parse(Capability!.JsonMetadata)?.AsObject()!;
+        var team = jsonObject["dfds.team"]?.ToString() ?? "";
+        var costCentre = jsonObject["dfds.cost.centre"]?.ToString() ?? "";
+        var tribe = costCentre;
+        var owner = jsonObject["owner"]?.ToString() ?? "";
+        var availability = jsonObject["dfds.service.availability"]?.ToString() ?? "";
+        var plannedSunset = jsonObject["dfds.planned_sunset"]?.ToString() ?? "";
+
         return $$"""
                  terraform {
                    source = "git::https://github.com/dfds/azure-infrastructure-modules.git//capability-context?{{options}}"
@@ -173,27 +189,22 @@ public class AzureResourceManifest
                  }
                  
                  inputs = {
-                 
-                   name = "{{Capability?.Id}}"
-                 
-                   tribe = "tribename"
-                 
-                   team  = "teamname"
-                   
-                   email = "aws.{{Capability?.Id}}@dfds.com"
-                 
-                   context_id = "{{AzureResource?.Id}}"
-                 
-                   correlation_id = "f6189c11-c710-40ed-8c79-8f94eb7b04cf"
-                 
-                   capability_name = "{{Capability?.Name}}"
-                 
-                   capability_root_id = "{{Capability?.Id}}"
-                 
-                   context_name = "{{AzureResource?.Environment}}"
-                 
-                   capability_id = "{{Capability?.Id}}"
-                 
+                   name                        = "dfds_ssu_{{AzureResource?.Environment}}_{{Capability?.Id}}"
+                   tribe                       = "{{tribe}}"
+                   team                        = "{{team}}"
+                   email                       = "aws.{{Capability?.Id}}@dfds.com"
+                   context_id                  = "{{AzureResource?.Id}}"
+                   correlation_id              = "{{correlationId}}"
+                   capability_name             = "{{Capability?.Name}}"
+                   capability_root_id          = "{{Capability?.Id}}"
+                   context_name                = "{{AzureResource?.Environment}}"
+                   capability_id               = "{{Capability?.Id}}"
+                   owner                       = "{{owner}}"
+                   environment                 = "{{AzureResource?.Environment}}"
+                   costcentre                  = "{{costCentre}}"
+                   availability                = "{{availability}}"
+                   planned_sunset              = "{{plannedSunset}}"
+                   enable_capability_access    = true
                  }
                  """;
     }

@@ -147,18 +147,6 @@ public class MembershipApplicationController : ControllerBase
             );
         }
 
-        var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.CanDeleteMembershipApplications(portalUser))
-        {
-            return Unauthorized(
-                new ProblemDetails
-                {
-                    Title = "User unauthorized",
-                    Detail = $"user \"{userId}\" isn't authorized to delete membership applications."
-                }
-            );
-        }
-
         if (!MembershipApplicationId.TryParse(id, out var membershipApplicationId))
         {
             return NotFound(
@@ -166,6 +154,18 @@ public class MembershipApplicationController : ControllerBase
                 {
                     Title = "Membership application not found.",
                     Detail = $"A membership application with id \"{id}\" could not be found."
+                }
+            );
+        }
+
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!await _authorizationService.CanDeleteMembershipApplication(portalUser, userId, membershipApplicationId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "User unauthorized",
+                    Detail = $"user \"{userId}\" isn't authorized to delete membership applications."
                 }
             );
         }
@@ -228,5 +228,26 @@ public class MembershipApplicationController : ControllerBase
                 }
             );
         }
+    }
+
+    [HttpGet("eligible-for-approval")]
+    [ProducesResponseType(typeof(MembershipApplicationListApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> MembershipsThatUserCanApprove()
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and cannot be used to approve a membership application.",
+                }
+            );
+        }
+        var result = await _membershipApplicationService.GetMembershipsApplicationsThatUserCanApprove(userId);
+
+        return Ok(await _apiResourceFactory.Convert(result, userId));
     }
 }
