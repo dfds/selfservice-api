@@ -26,6 +26,7 @@ public class CapabilityDetailsApiResource
         public ResourceLink MembershipApplications { get; set; }
         public ResourceLink LeaveCapability { get; set; }
         public ResourceLink AwsAccount { get; set; }
+        public ResourceLink AwsAccountInformation { get; set; }
         public ResourceLink AzureResources { get; set; }
         public ResourceLink RequestCapabilityDeletion { get; set; }
         public ResourceLink CancelCapabilityDeletionRequest { get; set; }
@@ -36,6 +37,7 @@ public class CapabilityDetailsApiResource
         public ResourceLink JoinCapability { get; set; }
         public ResourceLink SendInvitations { get; set; }
         public ResourceLink ConfigurationLevel { get; set; }
+        public ResourceLink Claims { get; set; }
 
         public CapabilityDetailsLinks(
             ResourceLink self,
@@ -44,6 +46,7 @@ public class CapabilityDetailsApiResource
             ResourceLink membershipApplications,
             ResourceLink leaveCapability,
             ResourceLink awsAccount,
+            ResourceLink awsAccountInformation,
             ResourceLink azureResources,
             ResourceLink requestCapabilityDeletion,
             ResourceLink cancelCapabilityDeletionRequest,
@@ -52,7 +55,8 @@ public class CapabilityDetailsApiResource
             ResourceLink getLinkedTeams,
             ResourceLink joinCapability,
             ResourceLink sendInvitations,
-            ResourceLink configurationLevel
+            ResourceLink configurationLevel,
+            ResourceLink claims
         )
         {
             Self = self;
@@ -61,6 +65,7 @@ public class CapabilityDetailsApiResource
             MembershipApplications = membershipApplications;
             LeaveCapability = leaveCapability;
             AwsAccount = awsAccount;
+            AwsAccountInformation = awsAccountInformation;
             AzureResources = azureResources;
             RequestCapabilityDeletion = requestCapabilityDeletion;
             CancelCapabilityDeletionRequest = cancelCapabilityDeletionRequest;
@@ -70,6 +75,7 @@ public class CapabilityDetailsApiResource
             JoinCapability = joinCapability;
             SendInvitations = sendInvitations;
             ConfigurationLevel = configurationLevel;
+            Claims = claims;
         }
     }
 

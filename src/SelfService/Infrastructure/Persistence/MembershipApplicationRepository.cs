@@ -35,6 +35,12 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
         return result;
     }
 
+    public async Task<IEnumerable<MembershipApplication>> GetAll()
+    {
+        var result = await _dbContext.MembershipApplications.ToListAsync();
+        return result;
+    }
+
     public async Task<MembershipApplication?> FindBy(MembershipApplicationId id)
     {
         return await _dbContext.MembershipApplications.Include(x => x.Approvals).FirstOrDefaultAsync(x => x.Id == id);
