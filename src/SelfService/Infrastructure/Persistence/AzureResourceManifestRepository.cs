@@ -175,7 +175,7 @@ public class AzureResourceManifest
         var team = jsonObject["dfds.team"]?.ToString() ?? "";
         var costCentre = jsonObject["dfds.cost.centre"]?.ToString() ?? "";
         var tribe = costCentre;
-        var owner = jsonObject["owner"]?.ToString() ?? "";
+        var owner = jsonObject["dfds.owner"]?.ToString() ?? "";
         var availability = jsonObject["dfds.service.availability"]?.ToString() ?? "";
         var plannedSunset = jsonObject["dfds.planned_sunset"]?.ToString() ?? "";
 
