@@ -9,7 +9,7 @@ The following steps describe how to start an instance of the api on your local m
 
 1. start dependencies using
 ```
-docker-compose up --build
+docker compose up --build
 ```
 This will start a postgresql server (by default on port 5432) as well as a fake confluent gateway (currently by default on port 5051) and kafka broker (as well as some other stuff)
 This may take a minute. If it fails it's usually because the ports are already in use (often by other docker containers you have running).
