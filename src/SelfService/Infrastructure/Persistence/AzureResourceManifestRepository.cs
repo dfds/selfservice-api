@@ -205,6 +205,8 @@ public class AzureResourceManifest
                    availability                = "{{availability}}"
                    planned_sunset              = "{{plannedSunset}}"
                    enable_capability_access    = true
+
+                   subscription_id = "${get_env("CORE_SUBSCRIPTION_ID", "")}"
                  }
                  """;
     }
