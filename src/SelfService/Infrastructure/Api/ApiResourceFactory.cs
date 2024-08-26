@@ -603,8 +603,16 @@ public class ApiResourceFactory
 
     private async Task<ResourceLink> CreateAzureResourcesLinkFor(Capability capability)
     {
-        var allowedInteractions = Allow.Get;
+        var allowedInteractions = Allow.None;
         var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capability.Id);
+
+        if (
+            await _authorizationService.CanViewAzureResources(CurrentUser, capability.Id)
+            && !capabilityMarkedForDeletion
+        )
+        {
+            allowedInteractions += Get;
+        }
 
         if (
             await _authorizationService.CanRequestAzureResources(CurrentUser, capability.Id)
@@ -612,7 +620,6 @@ public class ApiResourceFactory
         )
         {
             allowedInteractions += Post;
-            allowedInteractions += Get;
         }
 
         return new ResourceLink(
