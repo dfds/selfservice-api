@@ -27,28 +27,35 @@ public class AwsEC2QueriesApplicationService : IAwsEC2QueriesApplicationService
             RegionEndpoint.USWest1,
         };
 
-        var temporaryCredentials = await awsRoleManager.AssumeRoleAsync(RoleArn, RegionEndpoint.EUCentral1);
-
-        foreach (var region in regions)
+        try
         {
-            var ec2Client = new AmazonEC2Client(temporaryCredentials, region);
-            var vpcs = await DescribeVpcsAsync(ec2Client);
+            var temporaryCredentials = await awsRoleManager.AssumeRoleAsync(RoleArn, RegionEndpoint.EUCentral1);
 
-            if (vpcs != null)
+            foreach (var region in regions)
             {
-                foreach (var vpc in vpcs)
+                var ec2Client = new AmazonEC2Client(temporaryCredentials, region);
+                var vpcs = await DescribeVpcsAsync(ec2Client);
+
+                if (vpcs != null)
                 {
-                    var VpcInformation = new VPCInformation
+                    foreach (var vpc in vpcs)
                     {
-                        VpcId = vpc.VpcId,
-                        CidrBlock = vpc.CidrBlock,
-                        Region = region.SystemName
-                    };
-                    allVpcs.Add(VpcInformation);
+                        var VpcInformation = new VPCInformation
+                        {
+                            VpcId = vpc.VpcId,
+                            CidrBlock = vpc.CidrBlock,
+                            Region = region.SystemName
+                        };
+                        allVpcs.Add(VpcInformation);
+                    }
                 }
             }
+            return allVpcs;
         }
-        return allVpcs;
+        catch (Exception ex)
+        {
+            throw new Exception($"Error: {ex.Message}");
+        }
     }
 
     static async Task<List<Vpc>> DescribeVpcsAsync(IAmazonEC2 ec2Client)
