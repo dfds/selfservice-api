@@ -307,9 +307,14 @@ public class CapabilityController : ControllerBase
         if (account is null)
             return NotFound();
 
+        if (account.Registration is null || account.Registration?.AccountId is null)
+        {
+            return NotFound();
+        }
+
         try
         {
-            var vpcs = _awsEC2QueriesApplicationService.GetVPCsAsync(account.Id.ToString());
+            var vpcs = _awsEC2QueriesApplicationService.GetVPCsAsync(account.Registration.AccountId.ToString());
             var accountInformation = new AwsAccountInformation(account.Id, capabilityId, await vpcs);
             return Ok(await _apiResourceFactory.Convert(accountInformation));
         }
