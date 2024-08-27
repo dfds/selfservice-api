@@ -16,7 +16,7 @@ public class AwsEC2QueriesApplicationService : IAwsEC2QueriesApplicationService
     {
         var allVpcs = new List<VPCInformation>();
 
-        string RoleArn = $"arn:aws:iam::{accountId}:role/ReadVPCPeerings";
+        string RoleArn = $"arn:aws:iam::{accountId}:role/vpc-reader";
 
         var regions = new List<RegionEndpoint>
         {
