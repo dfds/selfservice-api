@@ -307,10 +307,23 @@ public class CapabilityController : ControllerBase
         if (account is null)
             return NotFound();
 
-        var vpcs = _awsEC2QueriesApplicationService.GetVPCsAsync(account.Id.ToString());
-
-        var accountInformation = new AwsAccountInformation(account.Id, capabilityId, await vpcs);
-        return Ok(await _apiResourceFactory.Convert(accountInformation));
+        try
+        {
+            var vpcs = _awsEC2QueriesApplicationService.GetVPCsAsync(account.Id.ToString());
+            var accountInformation = new AwsAccountInformation(account.Id, capabilityId, await vpcs);
+            return Ok(await _apiResourceFactory.Convert(accountInformation));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Error",
+                    Detail = ex.Message,
+                    Status = StatusCodes.Status500InternalServerError
+                }
+            );
+        }
     }
 
     [HttpGet("{id:required}/azureresources")]
