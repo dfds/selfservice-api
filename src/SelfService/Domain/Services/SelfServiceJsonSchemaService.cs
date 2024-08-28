@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using SelfService.Domain.Models;
 using Json.Schema;
 using SelfService.Domain.Exceptions;
+using Confluent.Kafka;
 
 namespace SelfService.Domain.Services;
 
@@ -35,7 +36,17 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
 
     public void MustValidateJsonSchema(string schema)
     {
-        var actualObj = JsonNode.Parse(schema)?.AsObject()!;
+        JsonObject? actualObj;
+        try
+        {
+            actualObj = JsonNode.Parse(schema)?.AsObject()!;
+        }
+        catch (Exception e)
+        {
+            throw new InvalidJsonSchemaException("Schema in request is not a valid json object", e);
+        }
+        ;
+
         // Check if json is valid
         if (!actualObj.TryGetPropertyValue("$schema", out var definedSchema))
         {

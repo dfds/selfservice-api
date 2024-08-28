@@ -131,11 +131,12 @@ public class SelfServiceJsonSchemaController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
     public IActionResult IsSchemaValid([FromBody] ValidateSelfServiceJsonSchemaRequest request)
     {
-        if (request.Schema == null)
-            return BadRequest(new ProblemDetails { Title = "Invalid Schema", Detail = "Schema in request is null" });
-
         try
         {
+            if (request.Schema == null)
+                return BadRequest(
+                    new ProblemDetails { Title = "Invalid Schema", Detail = "Schema in request is null" }
+                );
             _selfServiceJsonSchemaService.MustValidateJsonSchema(request.Schema.ToJsonString());
         }
         catch (InvalidJsonSchemaException e)
@@ -150,7 +151,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
         }
         catch (Exception e)
         {
-            return BadRequest(e);
+            return BadRequest(new ProblemDetails { Title = "Invalid Schema", Detail = $"Details: {e.Message}." });
         }
 
         return Ok();
