@@ -76,7 +76,6 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         JsonSchema.FromText(schema);
     }
 
-    /*
     [TransactionalBoundary]
     public async Task<SelfServiceJsonSchema> AddSchema(SelfServiceJsonSchemaObjectId objectId, string schema)
     {
@@ -90,7 +89,6 @@ public class SelfServiceJsonSchemaService : ISelfServiceJsonSchemaService
         _logger.LogInformation("Adding new SelfServiceJsonSchema to the database: {SelfServiceJsonSchema}", newSchema);
         return await _selfServiceJsonSchemaRepository.AddSchema(newSchema);
     }
-    */
 
     private static bool IsEmptyJsonData(string? json)
     {
