@@ -22,6 +22,9 @@ public class InvalidJsonSchemaException : Exception
     public InvalidJsonSchemaException(string customMessage)
         : base(customMessage) { }
 
+    public InvalidJsonSchemaException(string customMessage, Exception e)
+        : base($"{customMessage}; {e.Message}") { }
+
     public InvalidJsonSchemaException(EvaluationResults result)
         : base($"Invalid Json Schema, errors: {(result.HasErrors ? ErrorDictionaryToString(result.Errors) : "")}") { }
 }
