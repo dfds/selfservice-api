@@ -5,6 +5,7 @@ using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SelfService.Tests.Application;
 
@@ -13,6 +14,10 @@ public class TestAwsAccountApplicationService
     [Fact]
     public async Task can_generate_correct_message()
     {
+        var serviceCollection = new ServiceCollection();
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        var serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
+
         var spy = new TicketingSystemSpy();
         var capability = new CapabilityBuilder().Build();
         var awsAccount = new AwsAccountBuilder().Build();
@@ -20,6 +25,7 @@ public class TestAwsAccountApplicationService
             NullLogger<AwsAccountApplicationService>.Instance,
             awsAccountRepository: new AwsAccountRepositoryStub(awsAccount),
             capabilityRepository: new CapabilityRepositoryStub(capability),
+            serviceScopeFactory: serviceScopeFactory,
             ticketingSystem: spy,
             systemTime: new SystemTime(provider: () => DateTime.Today),
             environment: new HostingEnvironment { EnvironmentName = Environments.Production }
@@ -29,6 +35,8 @@ public class TestAwsAccountApplicationService
 
         Assert.Equal(
             "*New capability context created*\n"
+                + "\n\n>>>NOTE: The following may not be relevant anymore. Please check if the manifest file was created before taking action <<<\n"
+                + "\nWe are aiming to remove this flow, but this message is kept as an interim correctness assurance\n\n"
                 + "\nRun the following command from github.com/dfds/aws-account-manifests:\n"
                 + "\n```\n"
                 + $"CORRELATION_ID=\"\" \\\n"
@@ -48,6 +56,10 @@ public class TestAwsAccountApplicationService
     [Fact]
     public async Task send_along_headers_for_local_development()
     {
+        var serviceCollection = new ServiceCollection();
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        var serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
+
         var spy = new TicketingSystemSpy();
         var capability = new CapabilityBuilder().Build();
         var awsAccount = new AwsAccountBuilder().Build();
@@ -55,6 +67,7 @@ public class TestAwsAccountApplicationService
             NullLogger<AwsAccountApplicationService>.Instance,
             awsAccountRepository: new AwsAccountRepositoryStub(awsAccount),
             capabilityRepository: new CapabilityRepositoryStub(capability),
+            serviceScopeFactory: serviceScopeFactory,
             ticketingSystem: spy,
             systemTime: new SystemTime(provider: () => DateTime.Today),
             environment: new HostingEnvironment { EnvironmentName = Environments.Development }
@@ -81,6 +94,10 @@ public class TestAwsAccountApplicationService
     [Fact]
     public async Task no_headers_are_included_in_production()
     {
+        var serviceCollection = new ServiceCollection();
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        var serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
+
         var spy = new TicketingSystemSpy();
         var capability = new CapabilityBuilder().Build();
         var awsAccount = new AwsAccountBuilder().Build();
@@ -88,6 +105,7 @@ public class TestAwsAccountApplicationService
             NullLogger<AwsAccountApplicationService>.Instance,
             awsAccountRepository: new AwsAccountRepositoryStub(awsAccount),
             capabilityRepository: new CapabilityRepositoryStub(capability),
+            serviceScopeFactory: serviceScopeFactory,
             ticketingSystem: spy,
             systemTime: new SystemTime(provider: () => DateTime.Today),
             environment: new HostingEnvironment { EnvironmentName = Environments.Production }

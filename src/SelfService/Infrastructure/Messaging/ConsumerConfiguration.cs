@@ -323,6 +323,7 @@ public class AwsAccountRequestedHandler : IMessageHandler<AwsAccountRequested>
         }
 
         await _awsAccountApplicationService.CreateAwsAccountRequestTicket(id);
+        await _awsAccountApplicationService.PublishResourceManifestToGit(message);
     }
 }
 
