@@ -28,6 +28,11 @@
         "SS_ARM_GIT_USERNAME": "selfservice-api",
         "SS_ARM_GIT_EMAIL": "ssu@dfds.cloud",
         "SS_ARM_GIT_BRANCH": "master",
+        "SS_AWS_ACCOUNT_TEMPORARY_REPO_PATH": "/tmp/ssu-aws-account-manifests",
+        "SS_AWS_ACCOUNT_REMOTE_REPO_URI": "git@github.com:dfds/aws-account-manifests.git",
+        "SS_AWS_ACCOUNT_GIT_USERNAME": "selfservice-api",
+        "SS_AWS_ACCOUNT_GIT_EMAIL": "ssu@dfds.cloud",
+        "SS_AWS_ACCOUNT_GIT_BRANCH": "master",
         "SS_AWS_TYPE": "mock"
       }
     }

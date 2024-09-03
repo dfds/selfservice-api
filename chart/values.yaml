@@ -45,6 +45,16 @@ app:
       value: "ssu@dfds.cloud"
     - name: "SS_ARM_GIT_BRANCH"
       value: "master"
+    - name: "SS_AWS_ACCOUNT_TEMPORARY_REPO_PATH"
+      value: "/tmp/ssu-aws-account-manifests"
+    - name: "SS_AWS_ACCOUNT_REMOTE_REPO_URI"
+      value: "${SS_AWS_ACCOUNT_REMOTE_REPO_URI}"
+    - name: "SS_AWS_ACCOUNT_GIT_USERNAME"
+      value: "selfservice-api"
+    - name: "SS_AWS_ACCOUNT_GIT_EMAIL"
+      value: "ssu@dfds.cloud"
+    - name: "SS_AWS_ACCOUNT_GIT_BRANCH"
+      value: "master"
 
 gendis:
   enabled: true
