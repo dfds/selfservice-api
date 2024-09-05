@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.WebUtilities;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 
@@ -11,10 +12,17 @@ public class UserStatusChecker : IUserStatusChecker
 {
     private readonly ILogger<RemoveDeactivatedMemberships> _logger;
     private string? _authToken;
+    private readonly IConfiguration _configuration;
+    private HttpClient _httpClient;
+    private static string _baseUrl = "https://graph.microsoft.com/v1.0";
+    private string? _domainSuffix;
 
-    public UserStatusChecker(ILogger<RemoveDeactivatedMemberships> logger)
+    public UserStatusChecker(ILogger<RemoveDeactivatedMemberships> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _configuration = configuration;
+        _httpClient = new HttpClient();
+        _domainSuffix = _configuration["SS_MSGRAPH_SUFFIX"];
     }
 
     private async Task SetAuthToken()
@@ -24,32 +32,31 @@ public class UserStatusChecker : IUserStatusChecker
             to be able to view users
         */
         // Get the values from environment variables
-        string? tenant_id = Environment.GetEnvironmentVariable("SS_MSGRAPH_TENANT_ID");
-        string? client_id = Environment.GetEnvironmentVariable("SS_MSGRAPH_CLIENT_ID");
-        string? client_secret = Environment.GetEnvironmentVariable("SS_MSGRAPH_CLIENT_SECRET");
-        if (client_secret == null)
+        string? tenantId = _configuration["SS_MSGRAPH_TENANT_ID"];
+        string? clientId = _configuration["SS_MSGRAPH_CLIENT_ID"];
+        string? clientSecret = _configuration["SS_MSGRAPH_CLIENT_SECRET"];
+        if (clientSecret == null)
         {
-            _logger.LogError("[UserStatusChecker] `client_secret` not found in environment");
+            _logger.LogError("[UserStatusChecker] `clientSecret` not found in environment");
             return;
         }
 
-        if (client_id == null)
+        if (clientId == null)
         {
-            _logger.LogError("[UserStatusChecker] `client_id` not found in environment");
+            _logger.LogError("[UserStatusChecker] `clientId` not found in environment");
             return;
         }
 
-        if (tenant_id == null)
+        if (tenantId == null)
         {
-            _logger.LogError("[UserStatusChecker] `tenant_id` not found in environment");
+            _logger.LogError("[UserStatusChecker] `tenantId` not found in environment");
             return;
         }
 
         //setup request
-        string url = $"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token ";
-        HttpClient client = new HttpClient();
+        string url = $"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token ";
         string formData =
-            $"client_id={client_id}&grant_type=client_credentials&scope=https://graph.microsoft.com/.default&client_secret={client_secret}";
+            $"client_id={clientId}&grant_type=client_credentials&scope=https://graph.microsoft.com/.default&client_secret={clientSecret}";
 
         HttpContent content = new StringContent(
             formData,
@@ -60,7 +67,7 @@ public class UserStatusChecker : IUserStatusChecker
         // Make request and handle response
         try
         {
-            HttpResponseMessage response = await client.PostAsync(url, content);
+            HttpResponseMessage response = await _httpClient.PostAsync(url, content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -102,6 +109,16 @@ public class UserStatusChecker : IUserStatusChecker
         return _authToken != null;
     }
 
+    public bool IsUserExternal(string val)
+    {
+        if (_domainSuffix == null)
+        {
+            Console.WriteLine("No domainSuffix defined");
+            return false;
+        }
+        return !val.ToLower().EndsWith(_domainSuffix);
+    }
+
     /// <summary>
     ///  Returns the status of a member, by querying ms-graph/AzureAD
     /// </summary>
@@ -118,23 +135,26 @@ public class UserStatusChecker : IUserStatusChecker
                 return UserStatusCheckerStatus.NoAuthToken;
             }
         }
-
-        string url =
-            $"https://graph.microsoft.com/v1.0/users/{userId}?%24select=displayName,accountEnabled,id,identities,mail";
-
-        HttpClient client = new HttpClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authToken);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authToken);
 
         try
         {
-            HttpResponseMessage response = await client.GetAsync(url);
+            HttpResponseMessage response;
+            User? user;
+
+            if (IsUserExternal(userId.ToString()))
+            {
+                (user, response) = await GetUserViaEmail(userId.ToString());
+            }
+            else
+            {
+                (user, response) = await GetUserViaUpn(userId.ToString());
+            }
 
             switch (response.StatusCode)
             {
                 case HttpStatusCode.OK:
                 {
-                    string result = await response.Content.ReadAsStringAsync();
-                    User? user = JsonSerializer.Deserialize<User>(result);
                     if (user != null)
                     {
                         if (!user.AccountEnabled)
@@ -144,7 +164,7 @@ public class UserStatusChecker : IUserStatusChecker
                     }
                     else
                     {
-                        _logger.LogError($"failed to deserialize response for user with id {userId}");
+                        return UserStatusCheckerStatus.NotFound;
                     }
 
                     break;
@@ -162,9 +182,61 @@ public class UserStatusChecker : IUserStatusChecker
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            _logger.LogError(e.Message);
         }
 
         return UserStatusCheckerStatus.Unknown;
+    }
+
+    public async Task<(User?, HttpResponseMessage)> GetUserViaUpn(string upn)
+    {
+        string url = $"{_baseUrl}/users/{upn}";
+        var queryParams = new Dictionary<string, string?>
+        {
+            {"$select", "displayName,accountEnabled,id,identities,mail,userPrincipalName"}
+        };
+        url = QueryHelpers.AddQueryString(url, queryParams);
+        
+        HttpResponseMessage response = await _httpClient.GetAsync(url);
+
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            string result = await response.Content.ReadAsStringAsync();
+            User? user = JsonSerializer.Deserialize<User>(result);
+            if (user == null)
+            {
+                throw new JsonException("Failed to parse user response");
+            }
+            return (user, response);
+        }
+
+        return (null, response);
+    }
+    
+    public async Task<(User?, HttpResponseMessage)> GetUserViaEmail(string email)
+    {
+        string url = $"{_baseUrl}/users";
+        var queryParams = new Dictionary<string, string?>
+        {
+            {"$select", "displayName,accountEnabled,id,identities,mail,userPrincipalName"},
+            {"$filter", $"mail eq '{email.ToLower()}'"}
+        };
+        url = QueryHelpers.AddQueryString(url, queryParams);
+        
+        HttpResponseMessage response = await _httpClient.GetAsync(url);
+
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            string result = await response.Content.ReadAsStringAsync();
+            UsersResponse? usersResponse = JsonSerializer.Deserialize<UsersResponse>(result);
+
+            if (usersResponse != null && usersResponse.Value!.Count > 0)
+            {
+                Console.WriteLine(usersResponse.Value[0].UserPrincipalName);
+                return (usersResponse.Value[0], response);
+            }
+        }
+
+        return (null, response);
     }
 }

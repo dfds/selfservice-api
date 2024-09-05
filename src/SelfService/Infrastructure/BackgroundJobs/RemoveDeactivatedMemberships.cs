@@ -6,11 +6,13 @@ public class RemoveDeactivatedMemberships : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<RemoveDeactivatedMemberships> _logger;
+    private readonly IConfiguration _configuration;
 
-    public RemoveDeactivatedMemberships(IServiceProvider serviceProvider, ILogger<RemoveDeactivatedMemberships> logger)
+    public RemoveDeactivatedMemberships(IServiceProvider serviceProvider, ILogger<RemoveDeactivatedMemberships> logger, IConfiguration configuration)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _configuration = configuration;
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,7 +39,7 @@ public class RemoveDeactivatedMemberships : BackgroundService
             nameof(RemoveDeactivatedMemberships),
             Guid.NewGuid()
         );
-        UserStatusChecker userStatusChecker = new UserStatusChecker(_logger);
+        UserStatusChecker userStatusChecker = new UserStatusChecker(_logger, _configuration);
         var membershipCleaner = scope.ServiceProvider.GetRequiredService<IDeactivatedMemberCleanerApplicationService>();
 
         try
