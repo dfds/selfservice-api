@@ -113,7 +113,6 @@ public class UserStatusChecker : IUserStatusChecker
     {
         if (_domainSuffix == null)
         {
-            Console.WriteLine("No domainSuffix defined");
             return false;
         }
         return !val.ToLower().EndsWith(_domainSuffix);
@@ -232,7 +231,6 @@ public class UserStatusChecker : IUserStatusChecker
 
             if (usersResponse != null && usersResponse.Value!.Count > 0)
             {
-                Console.WriteLine(usersResponse.Value[0].UserPrincipalName);
                 return (usersResponse.Value[0], response);
             }
         }
