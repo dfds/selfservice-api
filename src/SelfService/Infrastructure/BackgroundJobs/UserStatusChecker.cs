@@ -192,10 +192,10 @@ public class UserStatusChecker : IUserStatusChecker
         string url = $"{_baseUrl}/users/{upn}";
         var queryParams = new Dictionary<string, string?>
         {
-            {"$select", "displayName,accountEnabled,id,identities,mail,userPrincipalName"}
+            { "$select", "displayName,accountEnabled,id,identities,mail,userPrincipalName" }
         };
         url = QueryHelpers.AddQueryString(url, queryParams);
-        
+
         HttpResponseMessage response = await _httpClient.GetAsync(url);
 
         if (response.StatusCode == HttpStatusCode.OK)
@@ -211,17 +211,17 @@ public class UserStatusChecker : IUserStatusChecker
 
         return (null, response);
     }
-    
+
     public async Task<(User?, HttpResponseMessage)> GetUserViaEmail(string email)
     {
         string url = $"{_baseUrl}/users";
         var queryParams = new Dictionary<string, string?>
         {
-            {"$select", "displayName,accountEnabled,id,identities,mail,userPrincipalName"},
-            {"$filter", $"mail eq '{email.ToLower()}'"}
+            { "$select", "displayName,accountEnabled,id,identities,mail,userPrincipalName" },
+            { "$filter", $"mail eq '{email.ToLower()}'" }
         };
         url = QueryHelpers.AddQueryString(url, queryParams);
-        
+
         HttpResponseMessage response = await _httpClient.GetAsync(url);
 
         if (response.StatusCode == HttpStatusCode.OK)

@@ -18,7 +18,7 @@ public class User
 
     [JsonPropertyName("mail")]
     public string? Mail { get; set; }
-    
+
     [JsonPropertyName("userPrincipalName")]
     public string? UserPrincipalName { get; set; }
 
@@ -30,7 +30,7 @@ public class UsersResponse
 {
     [JsonPropertyName("@odata.context")]
     public string? OdataContext { get; set; }
-    
+
     [JsonPropertyName("value")]
     public List<User>? Value { get; set; }
 }

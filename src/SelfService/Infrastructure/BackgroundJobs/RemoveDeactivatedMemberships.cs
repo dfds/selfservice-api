@@ -8,7 +8,11 @@ public class RemoveDeactivatedMemberships : BackgroundService
     private readonly ILogger<RemoveDeactivatedMemberships> _logger;
     private readonly IConfiguration _configuration;
 
-    public RemoveDeactivatedMemberships(IServiceProvider serviceProvider, ILogger<RemoveDeactivatedMemberships> logger, IConfiguration configuration)
+    public RemoveDeactivatedMemberships(
+        IServiceProvider serviceProvider,
+        ILogger<RemoveDeactivatedMemberships> logger,
+        IConfiguration configuration
+    )
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
