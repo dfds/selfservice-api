@@ -1,13 +1,13 @@
 namespace SelfService.Domain.Models;
 
-public class CapabilityClaimOption
+public class SelfAssessmentOption
 {
-    public CapabilityClaimOption(string claimType, string claimDescription)
+    public SelfAssessmentOption(string selfAssessmentType, string description)
     {
-        ClaimType = claimType;
-        ClaimDescription = claimDescription;
+        SelfAssessmentType = selfAssessmentType;
+        Description = description;
     }
 
-    public string ClaimType { get; private set; }
-    public string ClaimDescription { get; private set; }
+    public string SelfAssessmentType { get; private set; }
+    public string Description { get; private set; }
 }

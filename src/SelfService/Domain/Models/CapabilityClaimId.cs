@@ -1,10 +1,10 @@
 namespace SelfService.Domain.Models;
 
-public class CapabilityClaimId : ValueObject
+public class SelfAssessmentId : ValueObject
 {
     private readonly Guid _value;
 
-    public CapabilityClaimId(Guid value)
+    public SelfAssessmentId(Guid value)
     {
         _value = value;
     }
@@ -19,23 +19,23 @@ public class CapabilityClaimId : ValueObject
         return _value.ToString("D");
     }
 
-    public static CapabilityClaimId New() => new CapabilityClaimId(Guid.NewGuid());
+    public static SelfAssessmentId New() => new SelfAssessmentId(Guid.NewGuid());
 
-    public static CapabilityClaimId Parse(string? text)
+    public static SelfAssessmentId Parse(string? text)
     {
         if (TryParse(text, out var id))
         {
             return id;
         }
 
-        throw new FormatException($"Value \"{text}\" is not a valid Capability Claim id.");
+        throw new FormatException($"Value \"{text}\" is not a valid Capability Self Assessment id.");
     }
 
-    public static bool TryParse(string? text, out CapabilityClaimId id)
+    public static bool TryParse(string? text, out SelfAssessmentId id)
     {
         if (Guid.TryParse(text, out var accountId))
         {
-            id = new CapabilityClaimId(accountId);
+            id = new SelfAssessmentId(accountId);
             return true;
         }
 
@@ -43,11 +43,11 @@ public class CapabilityClaimId : ValueObject
         return false;
     }
 
-    public static implicit operator CapabilityClaimId(string text) => Parse(text);
+    public static implicit operator SelfAssessmentId(string text) => Parse(text);
 
-    public static implicit operator string(CapabilityClaimId id) => id.ToString();
+    public static implicit operator string(SelfAssessmentId id) => id.ToString();
 
-    public static implicit operator CapabilityClaimId(Guid idValue) => new CapabilityClaimId(idValue);
+    public static implicit operator SelfAssessmentId(Guid idValue) => new SelfAssessmentId(idValue);
 
-    public static implicit operator Guid(CapabilityClaimId id) => id._value;
+    public static implicit operator Guid(SelfAssessmentId id) => id._value;
 }

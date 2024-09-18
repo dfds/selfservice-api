@@ -74,19 +74,19 @@ public class ConfigurationLevelService : IConfigurationLevelService
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IMessageContractRepository _messageContractRepository;
     private readonly ICapabilityRepository _capabilityRepository;
-    private readonly ICapabilityClaimRepository _capabilityClaimRepository;
+    private readonly ISelfAssessmentRepository _selfAssessmentRepository;
 
     public ConfigurationLevelService(
         IKafkaTopicRepository kafkaTopicRepository,
         IMessageContractRepository messageContractRepository,
         ICapabilityRepository capabilityRepository,
-        ICapabilityClaimRepository capabilityClaimRepository
+        ISelfAssessmentRepository selfAssessmentRepository
     )
     {
         _kafkaTopicRepository = kafkaTopicRepository;
         _messageContractRepository = messageContractRepository;
         _capabilityRepository = capabilityRepository;
-        _capabilityClaimRepository = capabilityClaimRepository;
+        _selfAssessmentRepository = selfAssessmentRepository;
     }
 
     public async Task<ConfigurationLevelInfo> ComputeConfigurationLevel(CapabilityId capabilityId)
@@ -189,16 +189,16 @@ public class ConfigurationLevelService : IConfigurationLevelService
     {
         var metrics = new List<ConfigurationLevelDetail> { };
 
-        var possibleAssessments = _capabilityClaimRepository.ListPossibleClaims();
-        var actualAssessments = await _capabilityClaimRepository.GetAll(capabilityId);
+        var possibleAssessments = _selfAssessmentRepository.ListPossibleSelfAssessments();
+        var actualAssessments = await _selfAssessmentRepository.GetSelfAssessmentsForCapability(capabilityId);
 
-        foreach (CapabilityClaimOption co in possibleAssessments)
+        foreach (SelfAssessmentOption sao in possibleAssessments)
         {
-            var isClaimed = actualAssessments.Any(c => c.Claim == co.ClaimType);
-            var configurationLevel = isClaimed ? ConfigurationLevel.Complete : ConfigurationLevel.None;
+            var isAssessed = actualAssessments.Any(c => c.SelfAssesmentType == sao.SelfAssessmentType);
+            var configurationLevel = isAssessed ? ConfigurationLevel.Complete : ConfigurationLevel.None;
 
             metrics.Add(
-                new ConfigurationLevelDetail(configurationLevel, co.ClaimType, co.ClaimDescription, false, true)
+                new ConfigurationLevelDetail(configurationLevel, sao.SelfAssessmentType, sao.Description, false, true)
             );
         }
 
