@@ -169,10 +169,10 @@ public class ApiResourceFactory
             var exists = false;
             foreach (var selfAssessment in selfAssessments)
             {
-                if (option.SelfAssessmentType == selfAssessment.SelfAssesmentType)
+                if (option.SelfAssessmentType == selfAssessment.SelfAssessmentType)
                 {
                     var existingSelfAssessment = new SelfAssessmentsApiResource(
-                        selfAssessmentType: selfAssessment.SelfAssesmentType,
+                        selfAssessmentType: selfAssessment.SelfAssessmentType,
                         description: option.Description,
                         assessedAt: selfAssessment.RequestedAt,
                         links: new SelfAssessmentsApiResource.SelfAssessmentLinks(selfAssessment: null)
@@ -1340,7 +1340,7 @@ public class ApiResourceFactory
                     allow: Allow.Get
                 ),
                 invitationsLinks: new MyProfileApiResource.InvitationsLinks(
-                    cabalityInvitations: new ResourceLink(
+                    capalityInvitations: new ResourceLink(
                         href: _linkGenerator.GetUriByAction(
                             httpContext: HttpContext,
                             controller: GetNameOf<InvitationController>(),

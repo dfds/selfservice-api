@@ -14,11 +14,11 @@ public class SelfAssessment : AggregateRoot<SelfAssessmentId>
         CapabilityId = capabilityId;
         RequestedAt = requestedAt;
         RequestedBy = requestedBy;
-        SelfAssesmentType = selfAssessmentType;
+        SelfAssessmentType = selfAssessmentType;
     }
 
     public CapabilityId CapabilityId { get; private set; }
-    public string SelfAssesmentType { get; private set; }
+    public string SelfAssessmentType { get; private set; }
     public DateTime RequestedAt { get; private set; }
     public string RequestedBy { get; private set; }
 }

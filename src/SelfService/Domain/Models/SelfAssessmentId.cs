@@ -19,7 +19,7 @@ public class SelfAssessmentId : ValueObject
         return _value.ToString("D");
     }
 
-    public static SelfAssessmentId New() => new SelfAssessmentId(Guid.NewGuid());
+    public static SelfAssessmentId New() => new(Guid.NewGuid());
 
     public static SelfAssessmentId Parse(string? text)
     {
@@ -47,7 +47,7 @@ public class SelfAssessmentId : ValueObject
 
     public static implicit operator string(SelfAssessmentId id) => id.ToString();
 
-    public static implicit operator SelfAssessmentId(Guid idValue) => new SelfAssessmentId(idValue);
+    public static implicit operator SelfAssessmentId(Guid idValue) => new(idValue);
 
     public static implicit operator Guid(SelfAssessmentId id) => id._value;
 }

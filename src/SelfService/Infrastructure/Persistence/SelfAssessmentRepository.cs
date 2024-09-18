@@ -21,7 +21,7 @@ public class selfAssessmentRepository : ISelfAssessmentRepository
     public async Task<bool> SelfAssessmentExists(CapabilityId capabilityId, string selfAssessmentType)
     {
         return await _dbContext.SelfAssessments.AnyAsync(
-            c => c.CapabilityId == capabilityId && c.SelfAssesmentType == selfAssessmentType
+            c => c.CapabilityId == capabilityId && c.SelfAssessmentType == selfAssessmentType
         );
     }
 
@@ -36,7 +36,7 @@ public class selfAssessmentRepository : ISelfAssessmentRepository
     )
     {
         return await _dbContext.SelfAssessments.FirstOrDefaultAsync(
-            c => c.CapabilityId == capabilityId && c.SelfAssesmentType == selfAssessmentType
+            c => c.CapabilityId == capabilityId && c.SelfAssessmentType == selfAssessmentType
         );
     }
 

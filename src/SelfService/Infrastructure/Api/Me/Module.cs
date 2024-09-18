@@ -158,9 +158,9 @@ public class MyProfileApiResource
     {
         public ResourceLink CapabilityInvitations { get; set; }
 
-        public InvitationsLinks(ResourceLink cabalityInvitations)
+        public InvitationsLinks(ResourceLink capalityInvitations)
         {
-            CapabilityInvitations = cabalityInvitations;
+            CapabilityInvitations = capalityInvitations;
         }
     }
 

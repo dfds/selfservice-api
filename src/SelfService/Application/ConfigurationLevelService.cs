@@ -194,7 +194,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
 
         foreach (SelfAssessmentOption sao in possibleAssessments)
         {
-            var isAssessed = actualAssessments.Any(c => c.SelfAssesmentType == sao.SelfAssessmentType);
+            var isAssessed = actualAssessments.Any(c => c.SelfAssessmentType == sao.SelfAssessmentType);
             var configurationLevel = isAssessed ? ConfigurationLevel.Complete : ConfigurationLevel.None;
 
             metrics.Add(

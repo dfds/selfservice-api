@@ -400,7 +400,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CapabilityId);
             cfg.Property(x => x.RequestedAt);
             cfg.Property(x => x.RequestedBy);
-            cfg.Property(x => x.SelfAssesmentType);
+            cfg.Property(x => x.SelfAssessmentType);
         });
     }
 }
