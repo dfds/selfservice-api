@@ -39,5 +39,4 @@ public interface ICapabilityApplicationService
     Task<List<CapabilityClaim>> GetAllClaims(CapabilityId capabilityId);
     Task<CapabilityClaimId> AddClaim(CapabilityId capabilityId, string claimType, UserId userId);
     Task<CapabilityClaimId> RemoveClaim(CapabilityId capabilityId, string claimType);
-    List<CapabilityClaimOption> ListPossibleClaims();
 }

@@ -40,4 +40,18 @@ public class CapabilityClaimRepository : ICapabilityClaimRepository
         _dbContext.CapabilityClaims.Remove(claim);
         await _dbContext.SaveChangesAsync();
     }
+
+    /*
+     * [2024-07-22] andfris: Temporary solution
+     * The following claims should be stored in a database rather than in code.
+     * This is a temporary solution to get the feature up and running quickly.
+     * If the feature is to be kept, the claims should be moved to a database.
+     */
+    public List<CapabilityClaimOption> ListPossibleClaims()
+    {
+        return new List<CapabilityClaimOption>
+        {
+            new CapabilityClaimOption(claimType: "snyk", claimDescription: "Code is monitored by Snyk"),
+        };
+    }
 }

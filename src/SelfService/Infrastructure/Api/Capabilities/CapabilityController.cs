@@ -429,8 +429,8 @@ public class CapabilityController : ControllerBase
         if (!await _authorizationService.CanClaim(userId, capabilityId))
             return Unauthorized();
 
-        var capabilityClaims = await _capabilityApplicationService.GetAllClaims(capabilityId);
-        var possibleClaims = _capabilityApplicationService.ListPossibleClaims();
+        var capabilityClaims = await _capabilityClaimRepository.GetAll(capabilityId);
+        var possibleClaims = _capabilityClaimRepository.ListPossibleClaims();
 
         return Ok(await _apiResourceFactory.Convert(capabilityClaims, possibleClaims, capabilityId));
     }

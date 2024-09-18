@@ -326,7 +326,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
     public async Task<bool> CanClaim(CapabilityId capabilityId, string claimType)
     {
-        var isAllowedClaim = ListPossibleClaims().Any(co => co.ClaimType == claimType);
+        var isAllowedClaim = _capabilityClaimRepository.ListPossibleClaims().Any(co => co.ClaimType == claimType);
         var notAlreadyClaimed = !await _capabilityClaimRepository.ClaimExists(capabilityId, claimType);
 
         if (isAllowedClaim && notAlreadyClaimed)
@@ -338,7 +338,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
     public async Task<bool> CanRemoveClaim(CapabilityId capabilityId, string claimType)
     {
-        var isAllowedClaim = ListPossibleClaims().Any(co => co.ClaimType == claimType);
+        var isAllowedClaim = _capabilityClaimRepository.ListPossibleClaims().Any(co => co.ClaimType == claimType);
         var alreadyClaimed = await _capabilityClaimRepository.ClaimExists(capabilityId, claimType);
 
         if (isAllowedClaim && alreadyClaimed)
@@ -370,21 +370,5 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             ?? throw new EntityNotFoundException($"Claim '{claimType}' for {capabilityId} not found.");
         await _capabilityClaimRepository.Remove(claim);
         return claim.Id;
-    }
-
-    /*
-     * [2024-07-22] andfris: Temporary solution
-     * The following claims should be stored in a database rather than in code.
-     * This is a temporary solution to get the feature up and running quickly.
-     * If the feature is to be kept, the claims should be moved to a database.
-     */
-    public List<CapabilityClaimOption> ListPossibleClaims()
-    {
-        return new List<CapabilityClaimOption>
-        {
-            new CapabilityClaimOption(claimType: "snyk", claimDescription: "Code is monitored by Snyk"),
-            new CapabilityClaimOption(claimType: "grafana", claimDescription: "Some requirement around Grafana"),
-            new CapabilityClaimOption(claimType: "backup", claimDescription: "Some requirement around backup"),
-        };
     }
 }

@@ -74,19 +74,19 @@ public class ConfigurationLevelService : IConfigurationLevelService
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IMessageContractRepository _messageContractRepository;
     private readonly ICapabilityRepository _capabilityRepository;
-    private readonly ICapabilityApplicationService _capabilityApplicationService;
+    private readonly ICapabilityClaimRepository _capabilityClaimRepository;
 
     public ConfigurationLevelService(
         IKafkaTopicRepository kafkaTopicRepository,
         IMessageContractRepository messageContractRepository,
         ICapabilityRepository capabilityRepository,
-        ICapabilityApplicationService capabilityApplicationService
+        ICapabilityClaimRepository capabilityClaimRepository
     )
     {
         _kafkaTopicRepository = kafkaTopicRepository;
         _messageContractRepository = messageContractRepository;
         _capabilityRepository = capabilityRepository;
-        _capabilityApplicationService = capabilityApplicationService;
+        _capabilityClaimRepository = capabilityClaimRepository;
     }
 
     public async Task<ConfigurationLevelInfo> ComputeConfigurationLevel(CapabilityId capabilityId)
@@ -189,8 +189,8 @@ public class ConfigurationLevelService : IConfigurationLevelService
     {
         var metrics = new List<ConfigurationLevelDetail> { };
 
-        var possibleAssessments = _capabilityApplicationService.ListPossibleClaims();
-        var actualAssessments = await _capabilityApplicationService.GetAllClaims(capabilityId);
+        var possibleAssessments = _capabilityClaimRepository.ListPossibleClaims();
+        var actualAssessments = await _capabilityClaimRepository.GetAll(capabilityId);
 
         foreach (CapabilityClaimOption co in possibleAssessments)
         {
