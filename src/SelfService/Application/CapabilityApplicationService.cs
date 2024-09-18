@@ -336,6 +336,18 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         return false;
     }
 
+    public async Task<bool> CanRemoveClaim(CapabilityId capabilityId, string claimType)
+    {
+        var isAllowedClaim = ListPossibleClaims().Any(co => co.ClaimType == claimType);
+        var alreadyClaimed = await _capabilityClaimRepository.ClaimExists(capabilityId, claimType);
+
+        if (isAllowedClaim && alreadyClaimed)
+        {
+            return true;
+        }
+        return false;
+    }
+
     public async Task<List<CapabilityClaim>> GetAllClaims(CapabilityId capabilityId)
     {
         return await _capabilityClaimRepository.GetAll(capabilityId);
@@ -350,6 +362,16 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         return claim.Id;
     }
 
+    [TransactionalBoundary, Outboxed]
+    public async Task<CapabilityClaimId> RemoveClaim(CapabilityId capabilityId, string claimType)
+    {
+        var claim =
+            await _capabilityClaimRepository.Get(capabilityId, claimType)
+            ?? throw new EntityNotFoundException($"Claim '{claimType}' for {capabilityId} not found.");
+        await _capabilityClaimRepository.Remove(claim);
+        return claim.Id;
+    }
+
     /*
      * [2024-07-22] andfris: Temporary solution
      * The following claims should be stored in a database rather than in code.
@@ -361,6 +383,8 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         return new List<CapabilityClaimOption>
         {
             new CapabilityClaimOption(claimType: "snyk", claimDescription: "Code is monitored by Snyk"),
+            new CapabilityClaimOption(claimType: "grafana", claimDescription: "Some requirement around Grafana"),
+            new CapabilityClaimOption(claimType: "backup", claimDescription: "Some requirement around backup"),
         };
     }
 }
