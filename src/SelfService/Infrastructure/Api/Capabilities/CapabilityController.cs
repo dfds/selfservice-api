@@ -463,6 +463,34 @@ public class CapabilityController : ControllerBase
         return Ok();
     }
 
+    [HttpDelete("{id:required}/claims/{claim:required}")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> RemoveClaimCapability(string id, string claim)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        if (!await _authorizationService.CanClaim(userId, capabilityId))
+            return Unauthorized();
+
+        if (!await _capabilityApplicationService.CanRemoveClaim(capabilityId, claim))
+        {
+            return BadRequest();
+        }
+
+        await _capabilityApplicationService.RemoveClaim(capabilityId, claim);
+
+        return Ok();
+    }
+
     [HttpGet("{id:required}/azureresources/{rid:required}")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]

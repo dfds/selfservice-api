@@ -8,5 +8,9 @@ public interface ICapabilityClaimRepository
 
     Task<bool> ClaimExists(CapabilityId capabilityId, string claimType);
 
+    Task<CapabilityClaim?> Get(CapabilityId capabilityId, string claimType);
+
+    Task Remove(CapabilityClaim claim);
+
     Task<List<CapabilityClaim>> GetAll(CapabilityId capabilityId);
 }

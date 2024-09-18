@@ -27,4 +27,17 @@ public class CapabilityClaimRepository : ICapabilityClaimRepository
     {
         return await _dbContext.CapabilityClaims.Where(x => x.CapabilityId == capabilityId).ToListAsync();
     }
+
+    public async Task<CapabilityClaim?> Get(CapabilityId capabilityId, string claimType)
+    {
+        return await _dbContext.CapabilityClaims.FirstOrDefaultAsync(
+            c => c.CapabilityId == capabilityId && c.Claim == claimType
+        );
+    }
+
+    public async Task Remove(CapabilityClaim claim)
+    {
+        _dbContext.CapabilityClaims.Remove(claim);
+        await _dbContext.SaveChangesAsync();
+    }
 }
