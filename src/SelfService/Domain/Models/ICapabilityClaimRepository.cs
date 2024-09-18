@@ -13,4 +13,6 @@ public interface ICapabilityClaimRepository
     Task Remove(CapabilityClaim claim);
 
     Task<List<CapabilityClaim>> GetAll(CapabilityId capabilityId);
+
+    List<CapabilityClaimOption> ListPossibleClaims();
 }
