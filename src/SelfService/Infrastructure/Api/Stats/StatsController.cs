@@ -1,11 +1,8 @@
-using System.Security.Claims;
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
-using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.Me;

@@ -70,7 +70,7 @@ public static class Domain
         builder.Services.AddTransient<ITeamCapabilityLinkingRepository, TeamCapabilityLinkingRepository>();
         builder.Services.AddTransient<TopVisitorsRepository>();
         builder.Services.AddTransient<IInvitationRepository, InvitationRepository>();
-        builder.Services.AddTransient<ICapabilityClaimRepository, CapabilityClaimRepository>();
+        builder.Services.AddTransient<ISelfAssessmentRepository, selfAssessmentRepository>();
 
         // domain queries
         builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();

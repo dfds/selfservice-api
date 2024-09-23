@@ -153,87 +153,91 @@ public class ApiResourceFactory
         return result;
     }
 
-    private List<CapabilityClaimApiResource> generateCapabilityClaimResources(
-        List<CapabilityClaim> claims,
-        List<CapabilityClaimOption> possibleClaims,
+    private List<SelfAssessmentsApiResource> generateSelfAssessmentResources(
+        List<SelfAssessment> selfAssessments,
+        List<SelfAssessmentOption> possibleSelfAssessments,
         CapabilityId capabilityId
     )
     {
-        var claimResources = new List<CapabilityClaimApiResource>();
+        var selfAssessmentsResources = new List<SelfAssessmentsApiResource>();
 
-        // for each possible claim, check if it exists in the list of claims
-        // If existing, generate a CapabilityClaimApiResource with the information and no claim-link
-        // If not existing, generate a CapabilityClaimApiResource with the available information and a claim-link
-        foreach (var option in possibleClaims)
+        // for each possible self-assessment, check if it exists in the list of self-assessments
+        // If existing, generate a SelfAssessmentApiResource with the information and no link to self-asses
+        // If not existing, generate a SelfAssessmentApiResource with the available information and a link to self-asses
+        foreach (var option in possibleSelfAssessments)
         {
             var exists = false;
-            foreach (var claim in claims)
+            foreach (var selfAssessment in selfAssessments)
             {
-                if (option.ClaimType == claim.Claim)
+                if (option.SelfAssessmentType == selfAssessment.SelfAssessmentType)
                 {
-                    var existingClaim = new CapabilityClaimApiResource(
-                        claim: claim.Claim,
-                        claimDescription: option.ClaimDescription,
-                        claimedAt: claim.RequestedAt,
-                        links: new CapabilityClaimApiResource.CapabilityClaimLinks(claim: null)
+                    var existingSelfAssessment = new SelfAssessmentsApiResource(
+                        selfAssessmentType: selfAssessment.SelfAssessmentType,
+                        description: option.Description,
+                        assessedAt: selfAssessment.RequestedAt,
+                        links: new SelfAssessmentsApiResource.SelfAssessmentLinks(selfAssessment: null)
                     );
-                    claimResources.Add(existingClaim);
+                    selfAssessmentsResources.Add(existingSelfAssessment);
                     exists = true;
                     continue;
                 }
             }
             if (!exists)
             {
-                var newClaim = new CapabilityClaimApiResource(
-                    claim: option.ClaimType,
-                    claimDescription: option.ClaimDescription,
-                    claimedAt: null,
-                    links: new CapabilityClaimApiResource.CapabilityClaimLinks(
-                        claim: new ResourceLink(
+                var newSelfAssessment = new SelfAssessmentsApiResource(
+                    selfAssessmentType: option.SelfAssessmentType,
+                    description: option.Description,
+                    assessedAt: null,
+                    links: new SelfAssessmentsApiResource.SelfAssessmentLinks(
+                        selfAssessment: new ResourceLink(
                             href: _linkGenerator.GetUriByAction(
                                 httpContext: HttpContext,
-                                action: nameof(CapabilityController.ClaimCapability),
+                                action: nameof(CapabilityController.SelfAssess),
                                 controller: GetNameOf<CapabilityController>(),
-                                values: new { id = capabilityId, claim = option.ClaimType }
+                                values: new { id = capabilityId, selfAssessment = option.SelfAssessmentType }
                             ) ?? "",
                             rel: "self",
                             allow: Allow.Post
                         )
                     )
                 );
-                claimResources.Add(newClaim);
+                selfAssessmentsResources.Add(newSelfAssessment);
             }
         }
 
-        return claimResources;
+        return selfAssessmentsResources;
     }
 
-    public async Task<CapabilityClaimListApiResource> Convert(
-        List<CapabilityClaim> claims,
-        List<CapabilityClaimOption> possibleClaims,
+    public async Task<SelfAssessmentListApiResource> Convert(
+        List<SelfAssessment> existingSelfAssessments,
+        List<SelfAssessmentOption> possibleSelfAssessments,
         CapabilityId capabilityId
     )
     {
         var portalUser = HttpContext.User.ToPortalUser();
 
-        var allowClaim = Allow.None;
-        if (await _authorizationService.CanClaim(portalUser.Id, capabilityId))
+        var allowSelfAssessments = Allow.None;
+        if (await _authorizationService.CanSelfAssess(portalUser.Id, capabilityId))
         {
-            allowClaim += Get;
+            allowSelfAssessments += Get;
         }
 
-        var result = new CapabilityClaimListApiResource(
-            claims: generateCapabilityClaimResources(claims, possibleClaims, capabilityId),
-            links: new CapabilityClaimListApiResource.CapabilityClaimListLinks(
+        var result = new SelfAssessmentListApiResource(
+            selfAssessments: generateSelfAssessmentResources(
+                existingSelfAssessments,
+                possibleSelfAssessments,
+                capabilityId
+            ),
+            links: new SelfAssessmentListApiResource.SelfAssessmentListLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
-                        action: nameof(CapabilityController.GetCapabilityClaims),
+                        action: nameof(CapabilityController.GetSelfAssessments),
                         controller: GetNameOf<CapabilityController>(),
                         values: new { id = capabilityId }
                     ) ?? "",
                     rel: "self",
-                    allow: allowClaim
+                    allow: allowSelfAssessments
                 )
             )
         );
@@ -648,25 +652,25 @@ public class ApiResourceFactory
         );
     }
 
-    private async Task<ResourceLink> CreateClaimsLinkFor(Capability capability)
+    private async Task<ResourceLink> CreateSelfAssessmentsLinkFor(Capability capability)
     {
         var portalUser = HttpContext.User.ToPortalUser();
 
-        var allowClaim = Allow.None;
-        if (await _authorizationService.CanClaim(portalUser.Id, capability.Id))
+        var allowSelfAssessment = Allow.None;
+        if (await _authorizationService.CanSelfAssess(portalUser.Id, capability.Id))
         {
-            allowClaim += Get;
+            allowSelfAssessment += Get;
         }
 
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
-                action: nameof(CapabilityController.GetCapabilityClaims),
+                action: nameof(CapabilityController.GetSelfAssessments),
                 controller: GetNameOf<CapabilityController>(),
                 values: new { id = capability.Id }
             ) ?? "",
             rel: "self",
-            allow: allowClaim
+            allow: allowSelfAssessment
         );
     }
 
@@ -698,7 +702,7 @@ public class ApiResourceFactory
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability),
                 configurationLevel: CreateConfigurationLevelLinkFor(capability),
-                claims: await CreateClaimsLinkFor(capability)
+                selfAssessments: await CreateSelfAssessmentsLinkFor(capability)
             )
         );
     }
@@ -1336,7 +1340,7 @@ public class ApiResourceFactory
                     allow: Allow.Get
                 ),
                 invitationsLinks: new MyProfileApiResource.InvitationsLinks(
-                    cabalityInvitations: new ResourceLink(
+                    capalityInvitations: new ResourceLink(
                         href: _linkGenerator.GetUriByAction(
                             httpContext: HttpContext,
                             controller: GetNameOf<InvitationController>(),
