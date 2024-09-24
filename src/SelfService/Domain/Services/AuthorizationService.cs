@@ -1,4 +1,4 @@
-using SelfService.Application;
+﻿using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 
@@ -287,7 +287,7 @@ public class AuthorizationService : IAuthorizationService
         return (kafkaTopic.IsPrivate && isMember) || isCloudEngineer || !kafkaTopic.IsPrivate;
     }
 
-    public async Task<bool> CanClaim(UserId userId, CapabilityId capabilityId)
+    public async Task<bool> CanSelfAssess(UserId userId, CapabilityId capabilityId)
     {
         return await _membershipQuery.HasActiveMembership(userId, capabilityId);
     }

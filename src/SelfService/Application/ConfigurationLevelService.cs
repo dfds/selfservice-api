@@ -18,13 +18,21 @@ public class ConfigurationLevelDetail : Entity<ConfigurationLevelDetail>
     public string identifier { get; set; }
     public string description { get; set; }
     public bool isFocusMetric { get; set; }
+    public bool isSelfAssessed { get; set; }
 
-    public ConfigurationLevelDetail(ConfigurationLevel level, string identifier, string description, bool isFocusMetric)
+    public ConfigurationLevelDetail(
+        ConfigurationLevel level,
+        string identifier,
+        string description,
+        bool isFocusMetric,
+        bool isSelfAssessed
+    )
     {
         this.level = level;
         this.identifier = identifier;
         this.description = description;
         this.isFocusMetric = isFocusMetric;
+        this.isSelfAssessed = isSelfAssessed;
     }
 }
 
@@ -51,6 +59,14 @@ public class ConfigurationLevelInfo : Entity<ConfigurationLevelInfo>
             breakdown.Add(detail);
         }
     }
+
+    public void AddMetrics(List<ConfigurationLevelDetail> metrics)
+    {
+        foreach (var metric in metrics)
+        {
+            AddMetric(metric);
+        }
+    }
 }
 
 public class ConfigurationLevelService : IConfigurationLevelService
@@ -58,16 +74,19 @@ public class ConfigurationLevelService : IConfigurationLevelService
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IMessageContractRepository _messageContractRepository;
     private readonly ICapabilityRepository _capabilityRepository;
+    private readonly ISelfAssessmentRepository _selfAssessmentRepository;
 
     public ConfigurationLevelService(
         IKafkaTopicRepository kafkaTopicRepository,
         IMessageContractRepository messageContractRepository,
-        ICapabilityRepository capabilityRepository
+        ICapabilityRepository capabilityRepository,
+        ISelfAssessmentRepository selfAssessmentRepository
     )
     {
         _kafkaTopicRepository = kafkaTopicRepository;
         _messageContractRepository = messageContractRepository;
         _capabilityRepository = capabilityRepository;
+        _selfAssessmentRepository = selfAssessmentRepository;
     }
 
     public async Task<ConfigurationLevelInfo> ComputeConfigurationLevel(CapabilityId capabilityId)
@@ -76,6 +95,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
         configLevelInfo.AddMetric(await GetKafkaTopicConfigurationLevel(capabilityId));
         configLevelInfo.AddMetric(await GetCostCenterTaggingConfigurationLevel(capabilityId));
         configLevelInfo.AddMetric(await GetSecurityTaggingConfigurationLevel(capabilityId));
+        configLevelInfo.AddMetrics(await GetSelfAssessmentMetrics(capabilityId));
 
         int numComplete = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Complete);
         int numPartial = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Partial);
@@ -122,6 +142,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
             configurationLevel,
             "kafka-topics-schemas-configured",
             $"{numTopicsWithSchema} of {totalTopics} public Kafka topics have schemas",
+            false,
             false
         );
     }
@@ -139,7 +160,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
             _ => "Cost Centre unknown"
         };
 
-        return new ConfigurationLevelDetail(configurationLevel, "cost-centre-tagging", description, true);
+        return new ConfigurationLevelDetail(configurationLevel, "cost-centre-tagging", description, true, false);
     }
 
     public async Task<ConfigurationLevelDetail> GetSecurityTaggingConfigurationLevel(CapabilityId capabilityId)
@@ -159,8 +180,29 @@ public class ConfigurationLevelService : IConfigurationLevelService
             configurationLevel,
             "security-tagging",
             $"{tagsList.Count - missingTags.Count} of {tagsList.Count} Capability Classification tags set",
+            false,
             false
         );
+    }
+
+    public async Task<List<ConfigurationLevelDetail>> GetSelfAssessmentMetrics(CapabilityId capabilityId)
+    {
+        var metrics = new List<ConfigurationLevelDetail> { };
+
+        var possibleAssessments = _selfAssessmentRepository.ListPossibleSelfAssessments();
+        var actualAssessments = await _selfAssessmentRepository.GetSelfAssessmentsForCapability(capabilityId);
+
+        foreach (SelfAssessmentOption sao in possibleAssessments)
+        {
+            var isAssessed = actualAssessments.Any(c => c.SelfAssessmentType == sao.SelfAssessmentType);
+            var configurationLevel = isAssessed ? ConfigurationLevel.Complete : ConfigurationLevel.None;
+
+            metrics.Add(
+                new ConfigurationLevelDetail(configurationLevel, sao.SelfAssessmentType, sao.Description, false, true)
+            );
+        }
+
+        return metrics;
     }
 
     private async Task<(ConfigurationLevel, List<string>)> MetadataContainsTags(

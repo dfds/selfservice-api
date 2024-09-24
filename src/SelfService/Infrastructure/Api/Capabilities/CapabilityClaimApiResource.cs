@@ -3,35 +3,35 @@ using Confluent.Kafka;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
-public class CapabilityClaimApiResource
+public class SelfAssessmentsApiResource
 {
-    public string Claim { get; set; }
-    public DateTime? ClaimedAt { get; set; }
-    public string ClaimDescription { get; set; }
+    public string SelfAssessmentType { get; set; }
+    public DateTime? AssessedAt { get; set; }
+    public string Description { get; set; }
 
     [JsonPropertyName("_links")]
-    public CapabilityClaimLinks Links { get; set; }
+    public SelfAssessmentLinks Links { get; set; }
 
-    public class CapabilityClaimLinks
+    public class SelfAssessmentLinks
     {
-        public ResourceLink? Claim { get; set; }
+        public ResourceLink? SelfAssessment { get; set; }
 
-        public CapabilityClaimLinks(ResourceLink? claim)
+        public SelfAssessmentLinks(ResourceLink? selfAssessment)
         {
-            Claim = claim;
+            SelfAssessment = selfAssessment;
         }
     }
 
-    public CapabilityClaimApiResource(
-        string claim,
-        string claimDescription,
-        DateTime? claimedAt,
-        CapabilityClaimLinks links
+    public SelfAssessmentsApiResource(
+        string selfAssessmentType,
+        string description,
+        DateTime? assessedAt,
+        SelfAssessmentLinks links
     )
     {
-        Claim = claim;
-        ClaimDescription = claimDescription;
-        ClaimedAt = claimedAt;
+        SelfAssessmentType = selfAssessmentType;
+        Description = description;
+        AssessedAt = assessedAt;
         Links = links;
     }
 }

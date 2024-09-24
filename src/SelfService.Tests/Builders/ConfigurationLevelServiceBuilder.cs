@@ -8,6 +8,7 @@ namespace SelfService.Tests.Builders;
 public class ConfigurationLevelServiceBuilder
 {
     private ICapabilityRepository _capabilityRepository = Dummy.Of<ICapabilityRepository>();
+    private ISelfAssessmentRepository _selfAssessmentRepository = Dummy.Of<ISelfAssessmentRepository>();
     private readonly IKafkaTopicRepository _kafkaTopicRepository = Dummy.Of<IKafkaTopicRepository>();
     private readonly IMessageContractRepository _messageContractRepository = Dummy.Of<IMessageContractRepository>();
 
@@ -18,9 +19,23 @@ public class ConfigurationLevelServiceBuilder
         return this;
     }
 
+    public ConfigurationLevelServiceBuilder WithSelfAssessmentRepository(
+        ISelfAssessmentRepository selfAssessmentRepository
+    )
+    {
+        _selfAssessmentRepository = selfAssessmentRepository;
+
+        return this;
+    }
+
     public ConfigurationLevelService Build()
     {
-        return new ConfigurationLevelService(_kafkaTopicRepository, _messageContractRepository, _capabilityRepository);
+        return new ConfigurationLevelService(
+            _kafkaTopicRepository,
+            _messageContractRepository,
+            _capabilityRepository,
+            _selfAssessmentRepository
+        );
     }
 
     public static implicit operator ConfigurationLevelService(ConfigurationLevelServiceBuilder builder) =>

@@ -14,7 +14,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
-    private readonly ICapabilityClaimRepository _capabilityClaimRepository;
+    private readonly ISelfAssessmentRepository _selfAssessmentRepository;
     private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
@@ -27,7 +27,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         ICapabilityRepository capabilityRepository,
         IKafkaTopicRepository kafkaTopicRepository,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
-        ICapabilityClaimRepository capabilityClaimRepository,
+        ISelfAssessmentRepository selfAssessmentRepository,
         ITicketingSystem ticketingSystem,
         SystemTime systemTime,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
@@ -37,7 +37,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _logger = logger;
         _capabilityRepository = capabilityRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
-        _capabilityClaimRepository = capabilityClaimRepository;
+        _selfAssessmentRepository = selfAssessmentRepository;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
@@ -324,43 +324,70 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         return configLevelInfo;
     }
 
-    public async Task<bool> CanClaim(CapabilityId capabilityId, string claimType)
+    public async Task<bool> CanSelfAssessType(CapabilityId capabilityId, string selfAssessmentType)
     {
-        var isAllowedClaim = ListPossibleClaims().Any(co => co.ClaimType == claimType);
-        var notAlreadyClaimed = !await _capabilityClaimRepository.ClaimExists(capabilityId, claimType);
+        var isAllowedToAssess = _selfAssessmentRepository
+            .ListPossibleSelfAssessments()
+            .Any(sao => sao.SelfAssessmentType == selfAssessmentType);
+        var notAlreadyAssessed = !await _selfAssessmentRepository.SelfAssessmentExists(
+            capabilityId,
+            selfAssessmentType
+        );
 
-        if (isAllowedClaim && notAlreadyClaimed)
+        if (isAllowedToAssess && notAlreadyAssessed)
         {
             return true;
         }
         return false;
     }
 
-    public async Task<List<CapabilityClaim>> GetAllClaims(CapabilityId capabilityId)
+    public async Task<bool> CanRemoveSelfAssessmentType(CapabilityId capabilityId, string selfAssessmentType)
     {
-        return await _capabilityClaimRepository.GetAll(capabilityId);
+        var isAllowedToAssess = _selfAssessmentRepository
+            .ListPossibleSelfAssessments()
+            .Any(co => co.SelfAssessmentType == selfAssessmentType);
+        var alreadyAssessed = await _selfAssessmentRepository.SelfAssessmentExists(capabilityId, selfAssessmentType);
+
+        if (isAllowedToAssess && alreadyAssessed)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public async Task<List<SelfAssessment>> GetAllSelfAssessments(CapabilityId capabilityId)
+    {
+        return await _selfAssessmentRepository.GetSelfAssessmentsForCapability(capabilityId);
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task<CapabilityClaimId> AddClaim(CapabilityId capabilityId, string claimType, UserId userId)
+    public async Task<SelfAssessmentId> AddSelfAssessment(
+        CapabilityId capabilityId,
+        string selfAssessmentType,
+        UserId userId
+    )
     {
-        var claimID = new CapabilityClaimId(Guid.NewGuid());
-        var claim = new CapabilityClaim(claimID, claimType, capabilityId, DateTime.Now, userId);
-        await _capabilityClaimRepository.Add(claim);
-        return claim.Id;
+        var selfAssessmentID = new SelfAssessmentId(Guid.NewGuid());
+        var selfAssessment = new SelfAssessment(
+            selfAssessmentID,
+            selfAssessmentType,
+            capabilityId,
+            DateTime.Now,
+            userId
+        );
+        await _selfAssessmentRepository.AddSelfAssessment(selfAssessment);
+        return selfAssessment.Id;
     }
 
-    /*
-     * [2024-07-22] andfris: Temporary solution
-     * The following claims should be stored in a database rather than in code.
-     * This is a temporary solution to get the feature up and running quickly.
-     * If the feature is to be kept, the claims should be moved to a database.
-     */
-    public List<CapabilityClaimOption> ListPossibleClaims()
+    [TransactionalBoundary, Outboxed]
+    public async Task<SelfAssessmentId> RemoveSelfAssessment(CapabilityId capabilityId, string selfAssessmentType)
     {
-        return new List<CapabilityClaimOption>
-        {
-            new CapabilityClaimOption(claimType: "snyk", claimDescription: "Code is monitored by Snyk"),
-        };
+        var selfAssessment =
+            await _selfAssessmentRepository.GetSpecificSelfAssessmentForCapability(capabilityId, selfAssessmentType)
+            ?? throw new EntityNotFoundException(
+                $"SelfAssessment '{selfAssessmentType}' for {capabilityId} not found."
+            );
+        await _selfAssessmentRepository.RemoveSelfAssessment(selfAssessment);
+        return selfAssessment.Id;
     }
 }

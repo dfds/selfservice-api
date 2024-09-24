@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
-public class NewCapabilityClaimRequest
+public class NewSelfAssessmentRequest
 {
     [Required]
-    public string? claim { get; set; } = null;
+    public string? selfAssessmentType { get; set; } = null;
 }

@@ -32,7 +32,7 @@ public class CapabilityController : ControllerBase
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
     private readonly IInvitationApplicationService _invitationApplicationService;
-    private readonly ICapabilityClaimRepository _capabilityClaimRepository;
+    private readonly ISelfAssessmentRepository _selfAssessmentRepository;
     private readonly IAwsEC2QueriesApplicationService _awsEC2QueriesApplicationService;
 
     public CapabilityController(
@@ -53,7 +53,7 @@ public class CapabilityController : ControllerBase
         ILogger<CapabilityController> logger,
         ITeamApplicationService teamApplicationService,
         IInvitationApplicationService invitationApplicationService,
-        ICapabilityClaimRepository capabilityClaimRepository,
+        ISelfAssessmentRepository selfAssessmentRepository,
         IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService
     )
     {
@@ -74,7 +74,7 @@ public class CapabilityController : ControllerBase
         _logger = logger;
         _teamApplicationService = teamApplicationService;
         _invitationApplicationService = invitationApplicationService;
-        _capabilityClaimRepository = capabilityClaimRepository;
+        _selfAssessmentRepository = selfAssessmentRepository;
         _awsEC2QueriesApplicationService = awsEC2QueriesApplicationService;
     }
 
@@ -411,11 +411,11 @@ public class CapabilityController : ControllerBase
         }
     }
 
-    [HttpGet("{id:required}/claims")]
+    [HttpGet("{id:required}/self-assessments")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetCapabilityClaims(string id)
+    public async Task<IActionResult> GetSelfAssessments(string id)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -426,20 +426,20 @@ public class CapabilityController : ControllerBase
         if (!await _capabilityRepository.Exists(capabilityId))
             return NotFound();
 
-        if (!await _authorizationService.CanClaim(userId, capabilityId))
+        if (!await _authorizationService.CanSelfAssess(userId, capabilityId))
             return Unauthorized();
 
-        var capabilityClaims = await _capabilityApplicationService.GetAllClaims(capabilityId);
-        var possibleClaims = _capabilityApplicationService.ListPossibleClaims();
+        var existingSelfAssessments = await _selfAssessmentRepository.GetSelfAssessmentsForCapability(capabilityId);
+        var possibleSelfAssessments = _selfAssessmentRepository.ListPossibleSelfAssessments();
 
-        return Ok(await _apiResourceFactory.Convert(capabilityClaims, possibleClaims, capabilityId));
+        return Ok(await _apiResourceFactory.Convert(existingSelfAssessments, possibleSelfAssessments, capabilityId));
     }
 
-    [HttpPost("{id:required}/claims/{claim:required}")]
+    [HttpPost("{id:required}/self-assessments/{selfAssessment:required}")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> ClaimCapability(string id, string claim)
+    public async Task<IActionResult> SelfAssess(string id, string selfAssessment)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -450,15 +450,43 @@ public class CapabilityController : ControllerBase
         if (!await _capabilityRepository.Exists(capabilityId))
             return NotFound();
 
-        if (!await _authorizationService.CanClaim(userId, capabilityId))
+        if (!await _authorizationService.CanSelfAssess(userId, capabilityId))
             return Unauthorized();
 
-        if (!await _capabilityApplicationService.CanClaim(capabilityId, claim))
+        if (!await _capabilityApplicationService.CanSelfAssessType(capabilityId, selfAssessment))
         {
             return BadRequest();
         }
 
-        await _capabilityApplicationService.AddClaim(capabilityId, claim, userId);
+        await _capabilityApplicationService.AddSelfAssessment(capabilityId, selfAssessment, userId);
+
+        return Ok();
+    }
+
+    [HttpDelete("{id:required}/self-assessments/{selfAssessment:required}")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> RemoveSelfAssessment(string id, string selfAssessment)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        if (!await _authorizationService.CanSelfAssess(userId, capabilityId))
+            return Unauthorized();
+
+        if (!await _capabilityApplicationService.CanRemoveSelfAssessmentType(capabilityId, selfAssessment))
+        {
+            return BadRequest();
+        }
+
+        await _capabilityApplicationService.RemoveSelfAssessment(capabilityId, selfAssessment);
 
         return Ok();
     }

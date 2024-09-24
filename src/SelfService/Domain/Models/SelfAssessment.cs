@@ -1,10 +1,10 @@
 namespace SelfService.Domain.Models;
 
-public class CapabilityClaim : AggregateRoot<CapabilityClaimId>
+public class SelfAssessment : AggregateRoot<SelfAssessmentId>
 {
-    public CapabilityClaim(
-        CapabilityClaimId id,
-        string claim,
+    public SelfAssessment(
+        SelfAssessmentId id,
+        string selfAssessmentType,
         CapabilityId capabilityId,
         DateTime requestedAt,
         string requestedBy
@@ -14,11 +14,11 @@ public class CapabilityClaim : AggregateRoot<CapabilityClaimId>
         CapabilityId = capabilityId;
         RequestedAt = requestedAt;
         RequestedBy = requestedBy;
-        Claim = claim;
+        SelfAssessmentType = selfAssessmentType;
     }
 
     public CapabilityId CapabilityId { get; private set; }
-    public string Claim { get; private set; }
+    public string SelfAssessmentType { get; private set; }
     public DateTime RequestedAt { get; private set; }
     public string RequestedBy { get; private set; }
 }
