@@ -575,7 +575,7 @@ public class ApiResourceFactory
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,
-                action: nameof(CapabilityController.RequestAwsAccount), // this seems horrendously wrong
+                action: nameof(CapabilityController.RequestAwsAccount),
                 controller: GetNameOf<CapabilityController>(),
                 values: new { id = capability.Id }
             ) ?? "",
@@ -587,8 +587,9 @@ public class ApiResourceFactory
     private async Task<ResourceLink> CreateAwsAccountInformationLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
+        var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capability.Id);
 
-        if (await _authorizationService.CanViewAwsAccount(CurrentUser, capability.Id))
+        if (await _authorizationService.CanViewAwsAccountInformation(CurrentUser, capability.Id))
         {
             allowedInteractions += Get;
         }
