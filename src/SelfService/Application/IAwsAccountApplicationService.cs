@@ -1,3 +1,4 @@
+using SelfService.Domain.Events;
 using SelfService.Domain.Models;
 
 namespace SelfService.Application;
@@ -8,4 +9,5 @@ public interface IAwsAccountApplicationService
     Task CreateAwsAccountRequestTicket(AwsAccountId id);
     Task RegisterRealAwsAccount(AwsAccountId id, RealAwsAccountId realAwsAccountId, string? roleEmail);
     Task LinkKubernetesNamespace(AwsAccountId id, string? @namespace);
+    public Task PublishResourceManifestToGit(AwsAccountRequested awsAccountRequested);
 }

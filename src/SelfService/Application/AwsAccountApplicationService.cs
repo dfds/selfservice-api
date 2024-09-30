@@ -1,7 +1,9 @@
 using SelfService.Domain;
+using SelfService.Domain.Events;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
 
@@ -10,6 +12,7 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
     private readonly ILogger<AwsAccountApplicationService> _logger;
     private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly ICapabilityRepository _capabilityRepository;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
     private readonly IHostEnvironment _environment;
@@ -18,6 +21,7 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         ILogger<AwsAccountApplicationService> logger,
         IAwsAccountRepository awsAccountRepository,
         ICapabilityRepository capabilityRepository,
+        IServiceScopeFactory serviceScopeFactory,
         ITicketingSystem ticketingSystem,
         SystemTime systemTime,
         IHostEnvironment environment
@@ -26,6 +30,7 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         _logger = logger;
         _awsAccountRepository = awsAccountRepository;
         _capabilityRepository = capabilityRepository;
+        _serviceScopeFactory = serviceScopeFactory;
         _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
         _environment = environment;
@@ -106,6 +111,8 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
     {
         var message =
             "*New capability context created*\n"
+            + "\n\n>>>NOTE: The following may not be relevant anymore. Please check if the manifest file was created before taking action <<<\n"
+            + "\nWe are aiming to remove this flow, but this message is kept as an interim correctness assurance\n\n"
             + "\nRun the following command from github.com/dfds/aws-account-manifests:\n"
             + "\n```\n"
             + $"CORRELATION_ID=\"{xCorrelationId}\" \\\n"
@@ -143,6 +150,20 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
             CapabilityRootId = capabilityRootId;
             ContextId = contextId;
             ContextName = contextName;
+        }
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task PublishResourceManifestToGit(AwsAccountRequested awsAccountRequested)
+    {
+        var account = await _awsAccountRepository.Get(awsAccountRequested.AccountId!);
+        var capability = await _capabilityRepository.Get(account.CapabilityId);
+        using (var scope = _serviceScopeFactory.CreateScope())
+        {
+            var awsAccountManifestRepository = scope.ServiceProvider.GetService<IAwsAccountManifestRepository>();
+            await awsAccountManifestRepository!.Add(
+                new AwsAccountManifest { AwsAccount = account, Capability = capability }
+            );
         }
     }
 }
