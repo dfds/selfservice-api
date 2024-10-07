@@ -1360,7 +1360,7 @@ public class CapabilityController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("self-assessment-options/{id}/update}")]
+    [HttpPost("self-assessment-options/{id}/update")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
@@ -1399,7 +1399,7 @@ public class CapabilityController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("self-assessment-options/{id}/activate}")]
+    [HttpPost("self-assessment-options/{id}/activate")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
@@ -1430,7 +1430,7 @@ public class CapabilityController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("self-assessment-options/{id}/deactivate}")]
+    [HttpPost("self-assessment-options/{id}/deactivate")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
