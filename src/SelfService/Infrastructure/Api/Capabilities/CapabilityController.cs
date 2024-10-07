@@ -433,7 +433,7 @@ public class CapabilityController : ControllerBase
             return Unauthorized();
 
         var existingSelfAssessments = await _selfAssessmentRepository.GetSelfAssessmentsForCapability(capabilityId);
-        var selfAssesmentOptions = await _selfAssessmentOptionRepository.GetAllSelfAssessmentOptions();
+        var selfAssesmentOptions = await _selfAssessmentOptionRepository.GetActiveSelfAssessmentOptions();
 
         return Ok(await _apiResourceFactory.Convert(existingSelfAssessments, selfAssesmentOptions, capabilityId));
     }

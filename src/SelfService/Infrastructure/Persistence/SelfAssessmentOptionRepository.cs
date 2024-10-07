@@ -23,6 +23,11 @@ public class SelfAssessmentOptionRepository : ISelfAssessmentOptionRepository
         return await _dbContext.SelfAssessmentOptions.ToListAsync();
     }
 
+    public async Task<List<SelfAssessmentOption>> GetActiveSelfAssessmentOptions()
+    {
+        return await _dbContext.SelfAssessmentOptions.Where(o => o.IsActive).ToListAsync();
+    }
+
     public async Task<SelfAssessmentOption?> Get(SelfAssessmentOptionId id)
     {
         return await _dbContext.SelfAssessmentOptions.FindAsync(id);

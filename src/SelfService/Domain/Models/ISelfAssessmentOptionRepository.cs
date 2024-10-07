@@ -6,6 +6,8 @@ public interface ISelfAssessmentOptionRepository
 
     Task<List<SelfAssessmentOption>> GetAllSelfAssessmentOptions();
 
+    Task<List<SelfAssessmentOption>> GetActiveSelfAssessmentOptions();
+
     Task<SelfAssessmentOption?> Get(SelfAssessmentOptionId id);
 
     Task DeactivateSelfAssessmentOption(SelfAssessmentOptionId id);

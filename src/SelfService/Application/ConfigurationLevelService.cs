@@ -192,7 +192,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
     {
         var metrics = new List<ConfigurationLevelDetail> { };
 
-        var selfAssessmentOptions = await _selfAssessmentOptionRepository.GetAllSelfAssessmentOptions();
+        var selfAssessmentOptions = await _selfAssessmentOptionRepository.GetActiveSelfAssessmentOptions();
         var assessments = await _selfAssessmentRepository.GetSelfAssessmentsForCapability(capabilityId);
 
         foreach (SelfAssessmentOption option in selfAssessmentOptions)
