@@ -8,9 +8,9 @@ create table "SelfAssessmentOption"
     "Id" uuid not null,
     "RequestedAt"       timestamp not null,
     "RequestedBy"       varchar(255) not null,
-    "ShortName"         varchar(255) not null,
+    "ShortName"         varchar(255) not null unique,
     "Description"       varchar(255) not null,
-    "Active"            boolean not null,
+    "IsActive"          boolean not null,
     "DocumentationUrl"  varchar(255) not null,
 
     constraint "SelfAssessmentOption_PK" primary key ("Id")

@@ -155,7 +155,7 @@ public class ApiResourceFactory
 
     private List<SelfAssessmentsApiResource> generateSelfAssessmentResources(
         List<SelfAssessment> selfAssessments,
-        List<SelfAssessmentOption> possibleSelfAssessments,
+        List<SelfAssessmentOption> selfAssessmentOptions,
         CapabilityId capabilityId
     )
     {
@@ -164,7 +164,7 @@ public class ApiResourceFactory
         // for each possible self-assessment, check if it exists in the list of self-assessments
         // If existing, generate a SelfAssessmentApiResource with the information and no link to self-asses
         // If not existing, generate a SelfAssessmentApiResource with the available information and a link to self-asses
-        foreach (var option in possibleSelfAssessments)
+        foreach (var option in selfAssessmentOptions)
         {
             var exists = false;
             foreach (var selfAssessment in selfAssessments)
