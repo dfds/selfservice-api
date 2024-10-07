@@ -41,4 +41,5 @@ public interface IAuthorizationService
     Task<bool> CanSeeAwsAccountId(PortalUser portalUser, CapabilityId capabilityId);
     Task<bool> CanRetryCreatingMessageContract(PortalUser portalUser, MessageContractId messageContractId);
     Task<bool> CanSelfAssess(UserId userId, CapabilityId capabilityId);
+    bool CanManageSelfAssessmentOptions(PortalUser portalUser);
 }

@@ -305,4 +305,9 @@ public class AuthorizationService : IAuthorizationService
     {
         return await _membershipQuery.HasActiveMembership(userId, capabilityId);
     }
+
+    public bool CanManageSelfAssessmentOptions(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
 }

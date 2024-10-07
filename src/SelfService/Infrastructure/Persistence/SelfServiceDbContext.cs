@@ -66,6 +66,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<TeamCapabilityLink> TeamCapabilityLinks => Set<TeamCapabilityLink>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<SelfAssessment> SelfAssessments => Set<SelfAssessment>();
+    public DbSet<SelfAssessmentOption> SelfAssessmentOptions => Set<SelfAssessmentOption>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -134,7 +135,10 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder
             .Properties<InvitationTargetTypeOptions>()
             .HaveConversion<ValueObjectEnumConverter<InvitationTargetTypeOptions>>();
+
         configurationBuilder.Properties<SelfAssessmentId>().HaveConversion<SelfAssessmentIdConverter>();
+
+        configurationBuilder.Properties<SelfAssessmentOptionId>().HaveConversion<SelfAssessmentOptionIdConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -400,7 +404,20 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CapabilityId);
             cfg.Property(x => x.RequestedAt);
             cfg.Property(x => x.RequestedBy);
-            cfg.Property(x => x.SelfAssessmentType);
+            cfg.Property(x => x.ShortName);
+        });
+
+        modelBuilder.Entity<SelfAssessmentOption>(cfg =>
+        {
+            cfg.ToTable("SelfAssessmentOption");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.ShortName);
+            cfg.Property(x => x.Description);
+            cfg.Property(x => x.DocumentationUrl);
+            cfg.Property(x => x.IsActive);
+            cfg.Property(x => x.RequestedAt);
+            cfg.Property(x => x.RequestedBy);
         });
     }
 }

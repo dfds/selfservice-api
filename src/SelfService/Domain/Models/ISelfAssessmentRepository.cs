@@ -4,13 +4,14 @@ public interface ISelfAssessmentRepository
 {
     Task AddSelfAssessment(SelfAssessment assessment);
 
-    Task<bool> SelfAssessmentExists(CapabilityId capabilityId, string assessmentType);
+    Task<bool> SelfAssessmentExists(CapabilityId capabilityId, SelfAssessmentOptionId selfAssessmentOptionId);
 
-    Task<SelfAssessment?> GetSpecificSelfAssessmentForCapability(CapabilityId capabilityId, string assessmentType);
+    Task<SelfAssessment?> GetSpecificSelfAssessmentForCapability(
+        CapabilityId capabilityId,
+        SelfAssessmentOptionId selfAssessmentOptionId
+    );
 
     Task RemoveSelfAssessment(SelfAssessment assessment);
 
     Task<List<SelfAssessment>> GetSelfAssessmentsForCapability(CapabilityId capabilityId);
-
-    List<SelfAssessmentOption> ListPossibleSelfAssessments();
 }

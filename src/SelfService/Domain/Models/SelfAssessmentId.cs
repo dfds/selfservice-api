@@ -33,9 +33,9 @@ public class SelfAssessmentId : ValueObject
 
     public static bool TryParse(string? text, out SelfAssessmentId id)
     {
-        if (Guid.TryParse(text, out var accountId))
+        if (Guid.TryParse(text, out var selfAssessmentId))
         {
-            id = new SelfAssessmentId(accountId);
+            id = new SelfAssessmentId(selfAssessmentId);
             return true;
         }
 
