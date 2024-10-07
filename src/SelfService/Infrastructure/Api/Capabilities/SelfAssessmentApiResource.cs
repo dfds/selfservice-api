@@ -4,9 +4,10 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class SelfAssessmentsApiResource
 {
-    public string SelfAssessmentType { get; set; }
+    public string ShortName { get; set; }
     public DateTime? AssessedAt { get; set; }
     public string Description { get; set; }
+    public string DocumentationUrl { get; set; }
 
     [JsonPropertyName("_links")]
     public SelfAssessmentLinks Links { get; set; }
@@ -24,14 +25,16 @@ public class SelfAssessmentsApiResource
     }
 
     public SelfAssessmentsApiResource(
-        string selfAssessmentType,
+        string shortName,
         string description,
+        string documentationUrl,
         DateTime? assessedAt,
         SelfAssessmentLinks links
     )
     {
-        SelfAssessmentType = selfAssessmentType;
+        ShortName = shortName;
         Description = description;
+        DocumentationUrl = documentationUrl;
         AssessedAt = assessedAt;
         Links = links;
     }

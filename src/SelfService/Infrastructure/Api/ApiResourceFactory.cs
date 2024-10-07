@@ -169,11 +169,12 @@ public class ApiResourceFactory
             var exists = false;
             foreach (var selfAssessment in selfAssessments)
             {
-                if (option.SelfAssessmentType == selfAssessment.SelfAssessmentType)
+                if (option.Id == selfAssessment.OptionId)
                 {
                     var existingSelfAssessment = new SelfAssessmentsApiResource(
-                        selfAssessmentType: selfAssessment.SelfAssessmentType,
+                        shortName: selfAssessment.ShortName,
                         description: option.Description,
+                        documentationUrl: option.DocumentationUrl,
                         assessedAt: selfAssessment.RequestedAt,
                         links: new SelfAssessmentsApiResource.SelfAssessmentLinks(
                             addSelfAssessment: null,
@@ -197,8 +198,9 @@ public class ApiResourceFactory
             if (!exists)
             {
                 var newSelfAssessment = new SelfAssessmentsApiResource(
-                    selfAssessmentType: option.SelfAssessmentType,
+                    shortName: option.ShortName,
                     description: option.Description,
+                    documentationUrl: option.DocumentationUrl,
                     assessedAt: null,
                     links: new SelfAssessmentsApiResource.SelfAssessmentLinks(
                         addSelfAssessment: new ResourceLink(
@@ -206,7 +208,7 @@ public class ApiResourceFactory
                                 httpContext: HttpContext,
                                 action: nameof(CapabilityController.AddSelfAssessment),
                                 controller: GetNameOf<CapabilityController>(),
-                                values: new { id = capabilityId, selfAssessment = option.SelfAssessmentType }
+                                values: new { id = capabilityId, SelfAssessmentOptionId = option.Id }
                             ) ?? "",
                             rel: "self",
                             allow: Allow.Post
