@@ -10,6 +10,7 @@ using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Infrastructure.Ticketing;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SelfService.Infrastructure.Api.Prometheus;
+using SelfService.Infrastructure.Kafka;
 
 namespace SelfService.Configuration;
 
@@ -32,6 +33,7 @@ public static class Domain
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
         builder.Services.AddTransient<ITeamApplicationService, TeamApplicationService>();
         builder.Services.AddTransient<IInvitationApplicationService, InvitationApplicationService>();
+        builder.Services.AddTransient<IKafkaSchemaService, KafkaSchemaService>();
 
         if (aws_type == "mock")
         {
@@ -145,6 +147,12 @@ public static class Domain
         {
             client.BaseAddress = platformDataEndpoint;
             client.DefaultRequestHeaders.Add("x-api-key", dataApiKey);
+        });
+
+        var confluentGatewayApiEndpoint = new Uri(builder.Configuration["SS_CONFLUENT_GATEWAY_API_ENDPOINT"] ?? "");
+        builder.Services.AddHttpClient<IConfluentGatewayService, ConfluentGateway>(client =>
+        {
+            client.BaseAddress = confluentGatewayApiEndpoint;
         });
     }
 }
