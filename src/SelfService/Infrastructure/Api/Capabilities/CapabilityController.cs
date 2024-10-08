@@ -1348,9 +1348,9 @@ public class CapabilityController : ControllerBase
         if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
             return Unauthorized();
 
-        await _selfAssessmentOptionRepository.GetAllSelfAssessmentOptions();
+        var selfAssessmentOptions = await _selfAssessmentOptionRepository.GetAllSelfAssessmentOptions();
 
-        return Ok();
+        return Ok(selfAssessmentOptions);
     }
 
     [HttpPost("self-assessment-options")]
