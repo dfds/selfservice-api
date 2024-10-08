@@ -36,7 +36,7 @@ public class SelfAssessmentOption : AggregateRoot<SelfAssessmentOptionId>
     )
     {
         var option = new SelfAssessmentOption(
-            id: new SelfAssessmentOptionId(Guid.NewGuid()),
+            id: SelfAssessmentOptionId.New(),
             shortName: shortName ?? string.Empty,
             description: description ?? string.Empty,
             documentationUrl: documentationUrl ?? string.Empty,

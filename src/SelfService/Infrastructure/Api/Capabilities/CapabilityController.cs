@@ -1350,7 +1350,7 @@ public class CapabilityController : ControllerBase
 
         var selfAssessmentOptions = await _selfAssessmentOptionRepository.GetAllSelfAssessmentOptions();
 
-        return Ok(selfAssessmentOptions);
+        return Ok(_apiResourceFactory.Convert(selfAssessmentOptions));
     }
 
     [HttpPost("self-assessment-options")]

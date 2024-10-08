@@ -223,6 +223,28 @@ public class ApiResourceFactory
         return selfAssessmentsResources;
     }
 
+    public List<SelfAssessmentOptionApiResource> Convert(List<SelfAssessmentOption> selfAssessmentOptions)
+    {
+        var selfAssessmentOptionsResources = new List<SelfAssessmentOptionApiResource>();
+
+        foreach (var option in selfAssessmentOptions)
+        {
+            var optionResource = new SelfAssessmentOptionApiResource(
+                id: option.Id,
+                shortName: option.ShortName,
+                description: option.Description,
+                documentationUrl: option.DocumentationUrl,
+                requestedAt: option.RequestedAt,
+                requestedBy: option.RequestedBy,
+                isActive: option.IsActive,
+                links: new SelfAssessmentOptionApiResource.SelfAssessmentOptionLinks(selfAssessmentOption: null)
+            );
+            selfAssessmentOptionsResources.Add(optionResource);
+        }
+
+        return selfAssessmentOptionsResources;
+    }
+
     public async Task<SelfAssessmentListApiResource> Convert(
         List<SelfAssessment> existingSelfAssessments,
         List<SelfAssessmentOption> possibleSelfAssessments,
