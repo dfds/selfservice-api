@@ -9,6 +9,8 @@ public class ConfigurationLevelServiceBuilder
 {
     private ICapabilityRepository _capabilityRepository = Dummy.Of<ICapabilityRepository>();
     private ISelfAssessmentRepository _selfAssessmentRepository = Dummy.Of<ISelfAssessmentRepository>();
+    private ISelfAssessmentOptionRepository _selfAssessmentOptionRepository =
+        Dummy.Of<ISelfAssessmentOptionRepository>();
     private readonly IKafkaTopicRepository _kafkaTopicRepository = Dummy.Of<IKafkaTopicRepository>();
     private readonly IMessageContractRepository _messageContractRepository = Dummy.Of<IMessageContractRepository>();
 
@@ -34,7 +36,8 @@ public class ConfigurationLevelServiceBuilder
             _kafkaTopicRepository,
             _messageContractRepository,
             _capabilityRepository,
-            _selfAssessmentRepository
+            _selfAssessmentRepository,
+            _selfAssessmentOptionRepository
         );
     }
 

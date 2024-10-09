@@ -33,6 +33,7 @@ public class CapabilityController : ControllerBase
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
     private readonly IInvitationApplicationService _invitationApplicationService;
     private readonly ISelfAssessmentRepository _selfAssessmentRepository;
+    private readonly ISelfAssessmentOptionRepository _selfAssessmentOptionRepository;
     private readonly IAwsEC2QueriesApplicationService _awsEC2QueriesApplicationService;
 
     public CapabilityController(
@@ -54,6 +55,7 @@ public class CapabilityController : ControllerBase
         ITeamApplicationService teamApplicationService,
         IInvitationApplicationService invitationApplicationService,
         ISelfAssessmentRepository selfAssessmentRepository,
+        ISelfAssessmentOptionRepository selfAssessmentOptionRepository,
         IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService
     )
     {
@@ -75,6 +77,7 @@ public class CapabilityController : ControllerBase
         _teamApplicationService = teamApplicationService;
         _invitationApplicationService = invitationApplicationService;
         _selfAssessmentRepository = selfAssessmentRepository;
+        _selfAssessmentOptionRepository = selfAssessmentOptionRepository;
         _awsEC2QueriesApplicationService = awsEC2QueriesApplicationService;
     }
 
@@ -430,16 +433,16 @@ public class CapabilityController : ControllerBase
             return Unauthorized();
 
         var existingSelfAssessments = await _selfAssessmentRepository.GetSelfAssessmentsForCapability(capabilityId);
-        var possibleSelfAssessments = _selfAssessmentRepository.ListPossibleSelfAssessments();
+        var selfAssesmentOptions = await _selfAssessmentOptionRepository.GetActiveSelfAssessmentOptions();
 
-        return Ok(await _apiResourceFactory.Convert(existingSelfAssessments, possibleSelfAssessments, capabilityId));
+        return Ok(await _apiResourceFactory.Convert(existingSelfAssessments, selfAssesmentOptions, capabilityId));
     }
 
-    [HttpPost("{id:required}/self-assessments/{selfAssessment:required}")]
+    [HttpPost("{id:required}/self-assessments/{selfAssessmentOptionId:required}")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> AddSelfAssessment(string id, string selfAssessment)
+    public async Task<IActionResult> AddSelfAssessment(string id, SelfAssessmentOptionId selfAssessmentOptionId)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -453,21 +456,21 @@ public class CapabilityController : ControllerBase
         if (!await _authorizationService.CanSelfAssess(userId, capabilityId))
             return Unauthorized();
 
-        if (!await _capabilityApplicationService.CanSelfAssessType(capabilityId, selfAssessment))
+        if (!await _capabilityApplicationService.CanSelfAssessType(capabilityId, selfAssessmentOptionId))
         {
             return BadRequest();
         }
 
-        await _capabilityApplicationService.AddSelfAssessment(capabilityId, selfAssessment, userId);
+        await _capabilityApplicationService.AddSelfAssessment(capabilityId, selfAssessmentOptionId, userId);
 
         return Ok();
     }
 
-    [HttpDelete("{id:required}/self-assessments/{selfAssessment:required}")]
+    [HttpDelete("{id:required}/self-assessments/{selfAssessmentOptionId:required}")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> RemoveSelfAssessment(string id, string selfAssessment)
+    public async Task<IActionResult> RemoveSelfAssessment(string id, SelfAssessmentOptionId selfAssessmentOptionId)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -481,12 +484,12 @@ public class CapabilityController : ControllerBase
         if (!await _authorizationService.CanSelfAssess(userId, capabilityId))
             return Unauthorized();
 
-        if (!await _capabilityApplicationService.CanRemoveSelfAssessmentType(capabilityId, selfAssessment))
+        if (!await _capabilityApplicationService.CanRemoveSelfAssessmentType(capabilityId, selfAssessmentOptionId))
         {
             return BadRequest();
         }
 
-        await _capabilityApplicationService.RemoveSelfAssessment(capabilityId, selfAssessment);
+        await _capabilityApplicationService.RemoveSelfAssessment(capabilityId, selfAssessmentOptionId);
 
         return Ok();
     }
@@ -1329,5 +1332,151 @@ public class CapabilityController : ControllerBase
         }
         var configurationLevelInfo = await _capabilityApplicationService.GetConfigurationLevel(capabilityId);
         return Ok(configurationLevelInfo);
+    }
+
+    [HttpGet("self-assessment-options")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> GetSelfAssessmentOptions([FromBody] AddSelfAssessmentOptionRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
+            return Unauthorized();
+
+        var selfAssessmentOptions = await _selfAssessmentOptionRepository.GetAllSelfAssessmentOptions();
+
+        return Ok(_apiResourceFactory.Convert(selfAssessmentOptions));
+    }
+
+    [HttpPost("self-assessment-options")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> AddSelfAssessmentOption([FromBody] AddSelfAssessmentOptionRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
+            return Unauthorized();
+
+        var newSelfAssessmentOption = SelfAssessmentOption.New(
+            userId: userId,
+            shortName: request.ShortName,
+            description: request.Description,
+            documentationUrl: request.DocumentationUrl
+        );
+
+        await _selfAssessmentOptionRepository.AddSelfAssessmentOption(newSelfAssessmentOption);
+
+        return Ok();
+    }
+
+    [HttpPost("self-assessment-options/{id}/update")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> UpdateSelfAssessmentOption(
+        [FromRoute] string id,
+        [FromBody] UpdateSelfAssessmentOptionRequest request
+    )
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
+            return Unauthorized();
+
+        if (!SelfAssessmentOptionId.TryParse(id, out var selfAssessmentOptionId))
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid SelfAssessmentOptionId provided",
+                    Status = StatusCodes.Status400BadRequest
+                }
+            );
+        }
+
+        await _selfAssessmentOptionRepository.UpdateSelfAssessmentOption(
+            selfAssessmentOptionId,
+            request.ShortName,
+            request.Description,
+            request.DocumentationUrl
+        );
+
+        return Ok();
+    }
+
+    [HttpPost("self-assessment-options/{id}/activate")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> ActivateSelfAssessmentOption([FromRoute] string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
+            return Unauthorized();
+
+        if (!SelfAssessmentOptionId.TryParse(id, out var selfAssessmentOptionId))
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid SelfAssessmentOptionId provided",
+                    Status = StatusCodes.Status400BadRequest
+                }
+            );
+        }
+
+        await _selfAssessmentOptionRepository.ActivateSelfAssessmentOption(selfAssessmentOptionId);
+
+        return Ok();
+    }
+
+    [HttpPost("self-assessment-options/{id}/deactivate")]
+    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> DeactivateSelfAssessmentOption([FromRoute] string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
+            return Unauthorized();
+
+        if (!SelfAssessmentOptionId.TryParse(id, out var selfAssessmentOptionId))
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid SelfAssessmentOptionId provided",
+                    Status = StatusCodes.Status400BadRequest
+                }
+            );
+        }
+
+        await _selfAssessmentOptionRepository.DeactivateSelfAssessmentOption(selfAssessmentOptionId);
+
+        return Ok();
     }
 }

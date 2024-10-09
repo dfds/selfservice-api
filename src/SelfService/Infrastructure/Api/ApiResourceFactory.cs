@@ -155,7 +155,7 @@ public class ApiResourceFactory
 
     private List<SelfAssessmentsApiResource> generateSelfAssessmentResources(
         List<SelfAssessment> selfAssessments,
-        List<SelfAssessmentOption> possibleSelfAssessments,
+        List<SelfAssessmentOption> selfAssessmentOptions,
         CapabilityId capabilityId
     )
     {
@@ -164,16 +164,17 @@ public class ApiResourceFactory
         // for each possible self-assessment, check if it exists in the list of self-assessments
         // If existing, generate a SelfAssessmentApiResource with the information and no link to self-asses
         // If not existing, generate a SelfAssessmentApiResource with the available information and a link to self-asses
-        foreach (var option in possibleSelfAssessments)
+        foreach (var option in selfAssessmentOptions)
         {
             var exists = false;
             foreach (var selfAssessment in selfAssessments)
             {
-                if (option.SelfAssessmentType == selfAssessment.SelfAssessmentType)
+                if (option.Id == selfAssessment.OptionId)
                 {
                     var existingSelfAssessment = new SelfAssessmentsApiResource(
-                        selfAssessmentType: selfAssessment.SelfAssessmentType,
+                        shortName: selfAssessment.ShortName,
                         description: option.Description,
+                        documentationUrl: option.DocumentationUrl,
                         assessedAt: selfAssessment.RequestedAt,
                         links: new SelfAssessmentsApiResource.SelfAssessmentLinks(
                             addSelfAssessment: null,
@@ -182,7 +183,7 @@ public class ApiResourceFactory
                                     httpContext: HttpContext,
                                     action: nameof(CapabilityController.RemoveSelfAssessment),
                                     controller: GetNameOf<CapabilityController>(),
-                                    values: new { id = capabilityId, selfAssessment = option.SelfAssessmentType }
+                                    values: new { id = capabilityId, SelfAssessmentOptionId = option.Id }
                                 ) ?? "",
                                 rel: "self",
                                 allow: Allow.Delete
@@ -197,8 +198,9 @@ public class ApiResourceFactory
             if (!exists)
             {
                 var newSelfAssessment = new SelfAssessmentsApiResource(
-                    selfAssessmentType: option.SelfAssessmentType,
+                    shortName: option.ShortName,
                     description: option.Description,
+                    documentationUrl: option.DocumentationUrl,
                     assessedAt: null,
                     links: new SelfAssessmentsApiResource.SelfAssessmentLinks(
                         addSelfAssessment: new ResourceLink(
@@ -206,7 +208,7 @@ public class ApiResourceFactory
                                 httpContext: HttpContext,
                                 action: nameof(CapabilityController.AddSelfAssessment),
                                 controller: GetNameOf<CapabilityController>(),
-                                values: new { id = capabilityId, selfAssessment = option.SelfAssessmentType }
+                                values: new { id = capabilityId, SelfAssessmentOptionId = option.Id }
                             ) ?? "",
                             rel: "self",
                             allow: Allow.Post
@@ -219,6 +221,28 @@ public class ApiResourceFactory
         }
 
         return selfAssessmentsResources;
+    }
+
+    public List<SelfAssessmentOptionApiResource> Convert(List<SelfAssessmentOption> selfAssessmentOptions)
+    {
+        var selfAssessmentOptionsResources = new List<SelfAssessmentOptionApiResource>();
+
+        foreach (var option in selfAssessmentOptions)
+        {
+            var optionResource = new SelfAssessmentOptionApiResource(
+                id: option.Id,
+                shortName: option.ShortName,
+                description: option.Description,
+                documentationUrl: option.DocumentationUrl,
+                requestedAt: option.RequestedAt,
+                requestedBy: option.RequestedBy,
+                isActive: option.IsActive,
+                links: new SelfAssessmentOptionApiResource.SelfAssessmentOptionLinks(selfAssessmentOption: null)
+            );
+            selfAssessmentOptionsResources.Add(optionResource);
+        }
+
+        return selfAssessmentOptionsResources;
     }
 
     public async Task<SelfAssessmentListApiResource> Convert(
