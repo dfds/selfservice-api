@@ -95,7 +95,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
         configLevelInfo.AddMetric(await GetKafkaTopicConfigurationLevel(capabilityId));
         configLevelInfo.AddMetric(await GetCostCenterTaggingConfigurationLevel(capabilityId));
         configLevelInfo.AddMetric(await GetSecurityTaggingConfigurationLevel(capabilityId));
-        //configLevelInfo.AddMetrics(await GetSelfAssessmentMetrics(capabilityId));
+        configLevelInfo.AddMetrics(await GetSelfAssessmentMetrics(capabilityId));
 
         int numComplete = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Complete);
         int numPartial = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Partial);

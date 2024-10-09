@@ -175,7 +175,19 @@ public class ApiResourceFactory
                         selfAssessmentType: selfAssessment.SelfAssessmentType,
                         description: option.Description,
                         assessedAt: selfAssessment.RequestedAt,
-                        links: new SelfAssessmentsApiResource.SelfAssessmentLinks(selfAssessment: null)
+                        links: new SelfAssessmentsApiResource.SelfAssessmentLinks(
+                            addSelfAssessment: null,
+                            removeSelfAssessment: new ResourceLink(
+                                href: _linkGenerator.GetUriByAction(
+                                    httpContext: HttpContext,
+                                    action: nameof(CapabilityController.RemoveSelfAssessment),
+                                    controller: GetNameOf<CapabilityController>(),
+                                    values: new { id = capabilityId, selfAssessment = option.SelfAssessmentType }
+                                ) ?? "",
+                                rel: "self",
+                                allow: Allow.Delete
+                            )
+                        )
                     );
                     selfAssessmentsResources.Add(existingSelfAssessment);
                     exists = true;
@@ -189,16 +201,17 @@ public class ApiResourceFactory
                     description: option.Description,
                     assessedAt: null,
                     links: new SelfAssessmentsApiResource.SelfAssessmentLinks(
-                        selfAssessment: new ResourceLink(
+                        addSelfAssessment: new ResourceLink(
                             href: _linkGenerator.GetUriByAction(
                                 httpContext: HttpContext,
-                                action: nameof(CapabilityController.SelfAssess),
+                                action: nameof(CapabilityController.AddSelfAssessment),
                                 controller: GetNameOf<CapabilityController>(),
                                 values: new { id = capabilityId, selfAssessment = option.SelfAssessmentType }
                             ) ?? "",
                             rel: "self",
                             allow: Allow.Post
-                        )
+                        ),
+                        removeSelfAssessment: null
                     )
                 );
                 selfAssessmentsResources.Add(newSelfAssessment);
