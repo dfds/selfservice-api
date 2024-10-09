@@ -11,7 +11,7 @@ create table "SelfAssessmentOption"
     "ShortName"         varchar(255) not null unique,
     "Description"       varchar(255) not null,
     "IsActive"          boolean not null,
-    "DocumentationUrl"  varchar(255) not null,
+    "DocumentationUrl"  text not null,
 
     constraint "SelfAssessmentOption_PK" primary key ("Id")
 );
