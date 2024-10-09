@@ -183,7 +183,7 @@ public class ApiResourceFactory
                                     httpContext: HttpContext,
                                     action: nameof(CapabilityController.RemoveSelfAssessment),
                                     controller: GetNameOf<CapabilityController>(),
-                                    values: new { id = capabilityId, selfAssessment = option.SelfAssessmentType }
+                                    values: new { id = capabilityId, SelfAssessmentOptionId = option.Id }
                                 ) ?? "",
                                 rel: "self",
                                 allow: Allow.Delete
