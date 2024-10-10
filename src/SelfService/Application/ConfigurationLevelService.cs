@@ -75,18 +75,21 @@ public class ConfigurationLevelService : IConfigurationLevelService
     private readonly IMessageContractRepository _messageContractRepository;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly ISelfAssessmentRepository _selfAssessmentRepository;
+    private readonly ISelfAssessmentOptionRepository _selfAssessmentOptionRepository;
 
     public ConfigurationLevelService(
         IKafkaTopicRepository kafkaTopicRepository,
         IMessageContractRepository messageContractRepository,
         ICapabilityRepository capabilityRepository,
-        ISelfAssessmentRepository selfAssessmentRepository
+        ISelfAssessmentRepository selfAssessmentRepository,
+        ISelfAssessmentOptionRepository selfAssessmentOptionRepository
     )
     {
         _kafkaTopicRepository = kafkaTopicRepository;
         _messageContractRepository = messageContractRepository;
         _capabilityRepository = capabilityRepository;
         _selfAssessmentRepository = selfAssessmentRepository;
+        _selfAssessmentOptionRepository = selfAssessmentOptionRepository;
     }
 
     public async Task<ConfigurationLevelInfo> ComputeConfigurationLevel(CapabilityId capabilityId)
@@ -95,7 +98,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
         configLevelInfo.AddMetric(await GetKafkaTopicConfigurationLevel(capabilityId));
         configLevelInfo.AddMetric(await GetCostCenterTaggingConfigurationLevel(capabilityId));
         configLevelInfo.AddMetric(await GetSecurityTaggingConfigurationLevel(capabilityId));
-        //configLevelInfo.AddMetrics(await GetSelfAssessmentMetrics(capabilityId));
+        configLevelInfo.AddMetrics(await GetSelfAssessmentMetrics(capabilityId));
 
         int numComplete = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Complete);
         int numPartial = configLevelInfo.breakdown.Count(detail => detail.level == ConfigurationLevel.Partial);
@@ -189,16 +192,16 @@ public class ConfigurationLevelService : IConfigurationLevelService
     {
         var metrics = new List<ConfigurationLevelDetail> { };
 
-        var possibleAssessments = _selfAssessmentRepository.ListPossibleSelfAssessments();
-        var actualAssessments = await _selfAssessmentRepository.GetSelfAssessmentsForCapability(capabilityId);
+        var selfAssessmentOptions = await _selfAssessmentOptionRepository.GetActiveSelfAssessmentOptions();
+        var assessments = await _selfAssessmentRepository.GetSelfAssessmentsForCapability(capabilityId);
 
-        foreach (SelfAssessmentOption sao in possibleAssessments)
+        foreach (SelfAssessmentOption option in selfAssessmentOptions)
         {
-            var isAssessed = actualAssessments.Any(c => c.SelfAssessmentType == sao.SelfAssessmentType);
+            var isAssessed = assessments.Any(c => c.OptionId == option.Id);
             var configurationLevel = isAssessed ? ConfigurationLevel.Complete : ConfigurationLevel.None;
 
             metrics.Add(
-                new ConfigurationLevelDetail(configurationLevel, sao.SelfAssessmentType, sao.Description, false, true)
+                new ConfigurationLevelDetail(configurationLevel, option.ShortName, option.Description, false, true)
             );
         }
 

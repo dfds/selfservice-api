@@ -1,36 +1,40 @@
 using System.Text.Json.Serialization;
-using Confluent.Kafka;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class SelfAssessmentsApiResource
 {
-    public string SelfAssessmentType { get; set; }
+    public string ShortName { get; set; }
     public DateTime? AssessedAt { get; set; }
     public string Description { get; set; }
+    public string DocumentationUrl { get; set; }
 
     [JsonPropertyName("_links")]
     public SelfAssessmentLinks Links { get; set; }
 
     public class SelfAssessmentLinks
     {
-        public ResourceLink? SelfAssessment { get; set; }
+        public ResourceLink? addSelfAssessment { get; set; }
+        public ResourceLink? removeSelfAssessment { get; set; }
 
-        public SelfAssessmentLinks(ResourceLink? selfAssessment)
+        public SelfAssessmentLinks(ResourceLink? addSelfAssessment, ResourceLink? removeSelfAssessment)
         {
-            SelfAssessment = selfAssessment;
+            this.addSelfAssessment = addSelfAssessment;
+            this.removeSelfAssessment = removeSelfAssessment;
         }
     }
 
     public SelfAssessmentsApiResource(
-        string selfAssessmentType,
+        string shortName,
         string description,
+        string documentationUrl,
         DateTime? assessedAt,
         SelfAssessmentLinks links
     )
     {
-        SelfAssessmentType = selfAssessmentType;
+        ShortName = shortName;
         Description = description;
+        DocumentationUrl = documentationUrl;
         AssessedAt = assessedAt;
         Links = links;
     }
