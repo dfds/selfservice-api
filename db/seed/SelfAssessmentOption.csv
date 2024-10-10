@@ -1,0 +1,2 @@
+Id;RequestedAt;RequestedBy;ShortName;Description;IsActive;DocumentationUrl
+633578a4-ebe0-41de-800f-e256c4fa5211;2024-10-10T12:00:00;system;Snyk;This capability monitors code bases with Snyk;1;https://build.dfds.com
