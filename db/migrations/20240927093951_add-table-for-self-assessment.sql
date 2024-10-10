@@ -1,7 +1,7 @@
 -- 2024-09-27 09:39:51 : add-table-for-self-assessment
 
 ALTER TABLE "SelfAssessment" RENAME COLUMN "SelfAssessmentType" TO "ShortName";
-ALTER TABLE "SelfAssessment" ADD COLUMN "OptionId" uuid not null;
+ALTER TABLE "SelfAssessment" ADD COLUMN "OptionId" uuid;
 
 create table "SelfAssessmentOption"
 (
