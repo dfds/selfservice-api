@@ -28,7 +28,8 @@
         "SS_ARM_GIT_USERNAME": "selfservice-api",
         "SS_ARM_GIT_EMAIL": "ssu@dfds.cloud",
         "SS_ARM_GIT_BRANCH": "master",
-        "SS_AWS_TYPE": "mock"
+        "SS_AWS_TYPE": "mock",
+        "SS_CONFLUENT_GATEWAY_API_ENDPOINT": "http://localhost:8081",
       }
     }
   }
