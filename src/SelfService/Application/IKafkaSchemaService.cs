@@ -6,6 +6,5 @@ namespace SelfService.Application;
 
 public interface IKafkaSchemaService
 {
-    public Task<List<KafkaSchema>> ListSchemas(KafkaSchemaQueryParams queryParams);
-
+    public Task<List<KafkaSchema>> ListSchemas(string clusterId, KafkaSchemaQueryParams queryParams);
 }

@@ -12,24 +12,21 @@ public class KafkaSchemaController : ControllerBase
     private readonly ILogger<KafkaSchemaController> _logger;
     private readonly IKafkaSchemaService _kafkaSchemaService;
 
-    public KafkaSchemaController(
-        ILogger<KafkaSchemaController> logger,
-        IKafkaSchemaService kafkaSchemaService
-    )
+    public KafkaSchemaController(ILogger<KafkaSchemaController> logger, IKafkaSchemaService kafkaSchemaService)
     {
         _logger = logger;
         _kafkaSchemaService = kafkaSchemaService;
     }
 
-    [HttpGet("")]
+    [HttpGet("{clusterId:required}")]
     [ProducesResponseType(typeof(KafkaSchema[]), StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> ListSchemas([FromQuery] KafkaSchemaQueryParams queryParams)
+    public async Task<IActionResult> ListSchemas(string clusterId, [FromQuery] KafkaSchemaQueryParams queryParams)
     {
         try
         {
-            var schemas = await _kafkaSchemaService.ListSchemas(queryParams);
+            var schemas = await _kafkaSchemaService.ListSchemas(clusterId, queryParams);
             return Ok(schemas);
         }
         catch (Exception ex)

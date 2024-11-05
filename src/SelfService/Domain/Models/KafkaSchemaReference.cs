@@ -4,11 +4,7 @@ namespace SelfService.Domain.Models;
 
 public class KafkaSchemaReference
 {
-    public KafkaSchemaReference(
-        string name, 
-        string subject, 
-        int version
-    )
+    public KafkaSchemaReference(string name, string subject, int version)
     {
         Name = name;
         Subject = subject;
@@ -18,5 +14,4 @@ public class KafkaSchemaReference
     public string Name { get; set; }
     public string Subject { get; set; }
     public int Version { get; set; }
-
 }

@@ -6,42 +6,37 @@ using SelfService.Domain.Services;
 
 namespace SelfService.Infrastructure.Kafka;
 
-public class ConfluentGateway : IConfluentGatewayService
+public class ConfluentGatewayService : IConfluentGatewayService
 {
-    private readonly ILogger<ConfluentGateway> _logger;
+    private readonly ILogger<ConfluentGatewayService> _logger;
     private readonly HttpClient _httpClient;
 
-    public ConfluentGateway(ILogger<ConfluentGateway> logger, HttpClient httpClient)
+    public ConfluentGatewayService(ILogger<ConfluentGatewayService> logger, HttpClient httpClient)
     {
         _logger = logger;
         _httpClient = httpClient;
     }
 
-    public async Task<List<KafkaSchema>> ListSchemas(KafkaSchemaQueryParams queryParams)
+    public async Task<List<KafkaSchema>> ListSchemas(string clusterId, KafkaSchemaQueryParams queryParams)
     {
         using var _ = _logger.BeginScope("{Action} on {ImplementationType}", nameof(ListSchemas), GetType().FullName);
 
         try
         {
-            var queryString = "schemas";
+            var queryString = $"clusters/{clusterId}/schemas";
 
+            /* ignore subjectPrefix for now
             if (!string.IsNullOrWhiteSpace(queryParams.SubjectPrefix))
             {
                 queryString += $"?subjectPrefix={queryParams.SubjectPrefix}";
             }
+            */
 
-            Console.WriteLine("Listing schemas");
-            Console.WriteLine($"Query string: {queryString}");
             using HttpResponseMessage response = await _httpClient.GetAsync($"{queryString}");
 
             response.EnsureSuccessStatusCode();
-            Console.WriteLine("Schemas listed");
-            Console.WriteLine(response.Content.ReadAsStringAsync().Result);
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
             var kafkaSchemas = await response.Content.ReadFromJsonAsync<List<KafkaSchema>>(options);
 

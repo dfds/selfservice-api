@@ -10,7 +10,7 @@ public class KafkaSchema
         int id,
         string schemaType,
         List<KafkaSchemaReference> references,
-        string schemaContent,
+        string schema,
         KafkaSchemaMetadata metadata,
         KafkaSchemaRuleSet ruleSet
     )
@@ -20,17 +20,17 @@ public class KafkaSchema
         ID = id;
         SchemaType = schemaType;
         References = references;
-        SchemaContent = schemaContent;
+        Schema = schema;
         Metadata = metadata;
         RuleSet = ruleSet;
     }
+
     public string Subject { get; set; }
     public int Version { get; set; }
     public int ID { get; set; }
     public string SchemaType { get; set; }
     public List<KafkaSchemaReference> References { get; set; }
-    public string SchemaContent { get; set; }
+    public string Schema { get; set; }
     public KafkaSchemaMetadata Metadata { get; set; }
     public KafkaSchemaRuleSet RuleSet { get; set; }
-
 }

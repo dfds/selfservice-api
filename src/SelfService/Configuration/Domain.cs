@@ -150,7 +150,7 @@ public static class Domain
         });
 
         var confluentGatewayApiEndpoint = new Uri(builder.Configuration["SS_CONFLUENT_GATEWAY_API_ENDPOINT"] ?? "");
-        builder.Services.AddHttpClient<IConfluentGatewayService, ConfluentGateway>(client =>
+        builder.Services.AddHttpClient<IConfluentGatewayService, ConfluentGatewayService>(client =>
         {
             client.BaseAddress = confluentGatewayApiEndpoint;
         });

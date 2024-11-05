@@ -15,11 +15,11 @@ public class KafkaSchemaService : IKafkaSchemaService
         _confluentGatewayClient = confluentGatewayClient;
     }
 
-    public async Task<List<KafkaSchema>> ListSchemas(KafkaSchemaQueryParams queryParams)
+    public async Task<List<KafkaSchema>> ListSchemas(string clusterId, KafkaSchemaQueryParams queryParams)
     {
         try
         {
-            return await _confluentGatewayClient.ListSchemas(queryParams);
+            return await _confluentGatewayClient.ListSchemas(clusterId, queryParams);
         }
         catch (Exception ex)
         {

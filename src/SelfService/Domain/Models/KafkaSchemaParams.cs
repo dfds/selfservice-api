@@ -4,10 +4,7 @@ namespace SelfService.Domain.Models;
 
 public class KafkaSchemaParams
 {
-    public KafkaSchemaParams(
-        string property1, 
-        string property2
-    )
+    public KafkaSchemaParams(string property1, string property2)
     {
         Property1 = property1;
         Property2 = property2;

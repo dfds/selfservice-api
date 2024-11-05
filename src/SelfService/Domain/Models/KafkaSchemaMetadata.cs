@@ -17,5 +17,5 @@ public class KafkaSchemaMetadata
 
     public Dictionary<string, List<string>> Tags { get; set; }
     public Dictionary<string, string> Properties { get; set; }
-    public List<string> Sensitive { get; set; }   
+    public List<string> Sensitive { get; set; }
 }
