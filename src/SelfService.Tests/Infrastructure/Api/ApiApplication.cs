@@ -95,6 +95,7 @@ public class ApiApplication : WebApplicationFactory<Program>
         builder.UseSetting("SS_PROMETHEUS_API_ENDPOINT", "http://localhost:9090");
         builder.UseSetting("SS_PLATFORM_DATA_ENDPOINT", "http://localhost:8070");
         builder.UseSetting("SS_PLATFORM_DATA_API_KEY", "dummykey");
+        builder.UseSetting("SS_CONFLUENT_GATEWAY_API_ENDPOINT", "http://localhost:8080");
 
         builder.ConfigureAppConfiguration(x =>
         {
