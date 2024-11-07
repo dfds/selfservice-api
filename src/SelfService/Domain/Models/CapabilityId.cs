@@ -60,7 +60,10 @@ public class CapabilityId : ValueObject
         var preservedNameLength = Math.Min(NameCharLimit, name.Length);
         var suffix = GenerateSuffix();
 
-        var rootId = $"{name[..preservedNameLength]}-{suffix}";
+        var rootIdRoot = $"{name[..preservedNameLength]}";
+        rootIdRoot = Regex.Replace(rootIdRoot, @"-+$", "");
+
+        var rootId = $"{rootIdRoot}-{suffix}";
         var capabilityRootId = rootId.ToLowerInvariant();
 
         id = new CapabilityId(capabilityRootId);
