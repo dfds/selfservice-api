@@ -1,5 +1,6 @@
 Id;CapabilityId;KafkaClusterId;Name;Description;Partitions;Status;CreatedAt;CreatedBy;ModifiedAt;ModifiedBy;Retention
 C670D5DC-89A9-4354-9403-4A1E03D66DA5;cloudengineering-xxx;abc-1234;cloudengineering-xxx.this-is-a-private-topic;For all the private foos;3;Provisioned;2023-02-10T08:00:00;SeedScript;2023-02-10T08:00:00;SeedScript;1d
 269C3064-E1AD-49A8-8FE8-781E04A51303;cloudengineering-xxx;abc-1234;pub.cloudengineering-xxx.this-is-real;Public stuff;3;Provisioned;2023-02-10T08:00:00;SeedScript;2023-03-11T08:00:00;SeedScript;1d
+269C3064-E1AD-49A8-8FE8-781E04A51304;cloudengineering-xxx;abc-1234;cloudengineering.selfservice.test;Public stuff;3;Provisioned;2024-02-10T08:00:00;SeedScript;2024-03-11T08:00:00;SeedScript;1d
 8DB0C6D4-C9AC-41E4-8E17-D5EEFCB5F4D3;marketing-department-xxx;abc-1234;marketing-department-xxx.this-is-a-private-topic;For all the private foos;3;Provisioned;2023-02-10T08:00:00;SeedScript;2023-02-10T08:00:00;SeedScript;1d
 6ACC6871-7AAF-4E57-8136-9ED076903806;marketing-department-xxx;abc-1234;pub.marketing-department-xxx.hello-world;Public stuff;3;Provisioned;2023-02-10T08:00:00;SeedScript;2023-03-11T08:00:00;SeedScript;1d
