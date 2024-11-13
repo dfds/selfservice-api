@@ -1195,6 +1195,16 @@ public class ApiResourceFactory
                             rel: "related",
                             allow: Allow.Get
                         ),
+                        schemas: new ResourceLink(
+                            href: _linkGenerator.GetUriByAction(
+                                httpContext: HttpContext,
+                                action: nameof(KafkaSchemaController.ListSchemas),
+                                controller: GetNameOf<KafkaSchemaController>(),
+                                values: new { subjectPrefix = capabilityId, clusterId = cluster.Id }
+                            ) ?? "",
+                            rel: "related",
+                            allow: Allow.Get
+                        ),
                         requestAccess: new ResourceLink(
                             href: _linkGenerator.GetUriByAction(
                                 httpContext: HttpContext,

@@ -41,6 +41,7 @@ public class KafkaClusterAccessListItemApiResource
     public class KafkaClusterAccessListItem
     {
         public ResourceLink Topics { get; set; }
+        public ResourceLink Schemas { get; set; }
         public ResourceLink Access { get; set; }
         public ResourceLink RequestAccess { get; set; }
         public ResourceLink CreateTopic { get; set; }
@@ -49,11 +50,13 @@ public class KafkaClusterAccessListItemApiResource
             ResourceLink topics,
             ResourceLink access,
             ResourceLink requestAccess,
+            ResourceLink schemas,
             ResourceLink createTopic
         )
         {
             Topics = topics;
             Access = access;
+            Schemas = schemas;
             RequestAccess = requestAccess;
             CreateTopic = createTopic;
         }

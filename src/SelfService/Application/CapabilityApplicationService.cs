@@ -21,6 +21,8 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
     private readonly IConfigurationLevelService _configurationLevelService;
 
+    private readonly IConfluentGatewayService _confluentGatewayService;
+
     private const int PendingDaysUntilDeletion = 7;
 
     public CapabilityApplicationService(
@@ -33,7 +35,8 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         ITicketingSystem ticketingSystem,
         SystemTime systemTime,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
-        IConfigurationLevelService configurationLevelService
+        IConfigurationLevelService configurationLevelService,
+        IConfluentGatewayService confluentGatewayService
     )
     {
         _logger = logger;
@@ -46,6 +49,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _systemTime = systemTime;
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
         _configurationLevelService = configurationLevelService;
+        _confluentGatewayService = confluentGatewayService;
     }
 
     [TransactionalBoundary, Outboxed]
