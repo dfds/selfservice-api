@@ -55,7 +55,8 @@ public class CapabilityApplicationServiceBuilder
             ticketingSystem: Mock.Of<ITicketingSystem>(),
             systemTime: SystemTime.Default,
             selfServiceJsonSchemaService: _selfServiceJsonSchemaService,
-            configurationLevelService: _configurationLevelService
+            configurationLevelService: _configurationLevelService,
+            confluentGatewayService: Mock.Of<IConfluentGatewayService>()
         );
     }
 
