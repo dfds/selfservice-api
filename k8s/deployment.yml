@@ -81,7 +81,7 @@ spec:
               value: "master"
             - name: "DEFAULT_KAFKA_ENABLE_AUTO_COMMIT"
               value: "false"
-            - name: "SS_CONFLUENT_GATEWAY_API"
+            - name: "SS_CONFLUENT_GATEWAY_API_ENDPOINT"
               value: http://confluent-gateway.selfservice:8080
           envFrom:
             - secretRef:
