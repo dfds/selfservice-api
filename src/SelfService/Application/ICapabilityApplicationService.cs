@@ -37,13 +37,11 @@ public interface ICapabilityApplicationService
     Task<bool> CanSelfAssessType(CapabilityId capabilityId, SelfAssessmentOptionId selfAssessmentOptionId);
     Task<bool> CanRemoveSelfAssessmentType(CapabilityId capabilityId, SelfAssessmentOptionId selfAssessmentOptionId);
     Task<List<SelfAssessment>> GetAllSelfAssessments(CapabilityId capabilityId);
-    Task<SelfAssessmentId> AddSelfAssessment(
+
+    Task<SelfAssessmentId> UpdateSelfAssessment(
         CapabilityId capabilityId,
         SelfAssessmentOptionId selfAssessmentOptionId,
-        UserId userId
-    );
-    Task<SelfAssessmentId> RemoveSelfAssessment(
-        CapabilityId capabilityId,
-        SelfAssessmentOptionId selfAssessmentOptionId
+        UserId userId,
+        SelfAssessmentStatus status
     );
 }
