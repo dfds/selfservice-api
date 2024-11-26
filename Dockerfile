@@ -1,10 +1,10 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 as builder
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS builder
 
 COPY src /src
 RUN apt update && apt install -y librdkafka-dev
 RUN cd /src/SelfService && dotnet publish -c Release -o /build/out
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 
 WORKDIR /app
 
