@@ -438,11 +438,14 @@ public class CapabilityController : ControllerBase
         return Ok(await _apiResourceFactory.Convert(existingSelfAssessments, selfAssesmentOptions, capabilityId));
     }
 
-    [HttpPost("{id:required}/self-assessments/{selfAssessmentOptionId:required}")]
+    [HttpPost("{id:required}/self-assessments")]
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> AddSelfAssessment(string id, SelfAssessmentOptionId selfAssessmentOptionId)
+    public async Task<IActionResult> UpdateSelfAssessment(
+        string id,
+        [FromBody] SelfAssessmentRequest selfAssessmentRequest
+    )
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -455,41 +458,29 @@ public class CapabilityController : ControllerBase
 
         if (!await _authorizationService.CanSelfAssess(userId, capabilityId))
             return Unauthorized();
+
+        if (
+            !SelfAssessmentOptionId.TryParse(
+                selfAssessmentRequest.SelfAssessmentOptionId,
+                out var selfAssessmentOptionId
+            )
+        )
+            return NotFound();
 
         if (!await _capabilityApplicationService.CanSelfAssessType(capabilityId, selfAssessmentOptionId))
         {
             return BadRequest();
         }
 
-        await _capabilityApplicationService.AddSelfAssessment(capabilityId, selfAssessmentOptionId, userId);
-
-        return Ok();
-    }
-
-    [HttpDelete("{id:required}/self-assessments/{selfAssessmentOptionId:required}")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> RemoveSelfAssessment(string id, SelfAssessmentOptionId selfAssessmentOptionId)
-    {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
-        if (!CapabilityId.TryParse(id, out var capabilityId))
-            return NotFound();
-
-        if (!await _capabilityRepository.Exists(capabilityId))
-            return NotFound();
-
-        if (!await _authorizationService.CanSelfAssess(userId, capabilityId))
-            return Unauthorized();
-
-        if (!await _capabilityApplicationService.CanRemoveSelfAssessmentType(capabilityId, selfAssessmentOptionId))
-        {
+        if (!SelfAssessmentStatus.TryParse(selfAssessmentRequest.SelfAssessmentStatus, out var selfAssessmentStatus))
             return BadRequest();
-        }
 
-        await _capabilityApplicationService.RemoveSelfAssessment(capabilityId, selfAssessmentOptionId);
+        await _capabilityApplicationService.UpdateSelfAssessment(
+            capabilityId,
+            selfAssessmentOptionId,
+            userId,
+            selfAssessmentStatus
+        );
 
         return Ok();
     }

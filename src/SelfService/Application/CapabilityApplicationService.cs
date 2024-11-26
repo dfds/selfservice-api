@@ -372,10 +372,11 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task<SelfAssessmentId> AddSelfAssessment(
+    public async Task<SelfAssessmentId> UpdateSelfAssessment(
         CapabilityId capabilityId,
         SelfAssessmentOptionId selfAssessmentOptionId,
-        UserId userId
+        UserId userId,
+        SelfAssessmentStatus status
     )
     {
         var selfAssessmentID = new SelfAssessmentId(Guid.NewGuid());
@@ -392,24 +393,10 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             option.ShortName,
             capabilityId,
             DateTime.Now,
-            userId
+            userId,
+            status
         );
-        await _selfAssessmentRepository.AddSelfAssessment(selfAssessment);
-        return selfAssessment.Id;
-    }
-
-    [TransactionalBoundary, Outboxed]
-    public async Task<SelfAssessmentId> RemoveSelfAssessment(
-        CapabilityId capabilityId,
-        SelfAssessmentOptionId selfAssessmentOptionId
-    )
-    {
-        var selfAssessment =
-            await _selfAssessmentRepository.GetSpecificSelfAssessmentForCapability(capabilityId, selfAssessmentOptionId)
-            ?? throw new EntityNotFoundException(
-                $"SelfAssessment Option '{selfAssessmentOptionId}' for {capabilityId} not found."
-            );
-        await _selfAssessmentRepository.RemoveSelfAssessment(selfAssessment);
+        await _selfAssessmentRepository.UpdateSelfAssessment(selfAssessment);
         return selfAssessment.Id;
     }
 }

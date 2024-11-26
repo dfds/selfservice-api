@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 as builder
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS builder
 
 COPY src /src
 RUN apt update && apt install -y librdkafka-dev

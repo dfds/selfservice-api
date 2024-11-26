@@ -12,7 +12,7 @@ public class SelfAssessmentRepository : ISelfAssessmentRepository
         _dbContext = dbContext;
     }
 
-    public async Task AddSelfAssessment(SelfAssessment selfAssessment)
+    public async Task UpdateSelfAssessment(SelfAssessment selfAssessment)
     {
         await _dbContext.SelfAssessments.AddAsync(selfAssessment);
         await _dbContext.SaveChangesAsync();
@@ -41,11 +41,5 @@ public class SelfAssessmentRepository : ISelfAssessmentRepository
         return await _dbContext.SelfAssessments.FirstOrDefaultAsync(
             a => a.CapabilityId == capabilityId && a.OptionId == selfAssessmentOptionId
         );
-    }
-
-    public async Task RemoveSelfAssessment(SelfAssessment selfAssessment)
-    {
-        _dbContext.SelfAssessments.Remove(selfAssessment);
-        await _dbContext.SaveChangesAsync();
     }
 }
