@@ -467,14 +467,12 @@ public class CapabilityController : ControllerBase
         )
             return NotFound();
 
-        if (!await _capabilityApplicationService.CanSelfAssessType(capabilityId, selfAssessmentOptionId))
-        {
-            return BadRequest();
-        }
+        if (!await _capabilityApplicationService.SelfAssessmentOptionExists(capabilityId, selfAssessmentOptionId))
+             return BadRequest();
 
         if (!SelfAssessmentStatus.TryParse(selfAssessmentRequest.SelfAssessmentStatus, out var selfAssessmentStatus))
             return BadRequest();
-
+ 
         await _capabilityApplicationService.UpdateSelfAssessment(
             capabilityId,
             selfAssessmentOptionId,

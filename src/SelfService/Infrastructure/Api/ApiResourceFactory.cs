@@ -164,6 +164,7 @@ public class ApiResourceFactory
         foreach (var option in selfAssessmentOptions)
         {
             var selfAssessmentResource = new SelfAssessmentsApiResource(
+                id: option.Id,
                 shortName: option.ShortName,
                 description: option.Description,
                 documentationUrl: option.DocumentationUrl,
