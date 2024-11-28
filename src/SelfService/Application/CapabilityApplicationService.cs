@@ -331,7 +331,10 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         return configLevelInfo;
     }
 
-    public async Task<bool> SelfAssessmentOptionExists(CapabilityId capabilityId, SelfAssessmentOptionId selfAssessmentOptionId)
+    public async Task<bool> SelfAssessmentOptionExists(
+        CapabilityId capabilityId,
+        SelfAssessmentOptionId selfAssessmentOptionId
+    )
     {
         var selfAssessmentOptions = await _selfAssessmentOptionRepository.GetAllSelfAssessmentOptions();
         if (selfAssessmentOptions.Any(o => o.Id == selfAssessmentOptionId))
@@ -365,7 +368,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             newAssessment = false;
             selfAssessmentID = assessment.Id;
         }
-        
+
         var option = await _selfAssessmentOptionRepository.Get(selfAssessmentOptionId);
         if (option is null)
         {
@@ -384,7 +387,9 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         if (newAssessment)
         {
             await _selfAssessmentRepository.AddSelfAssessment(selfAssessment);
-        } else {
+        }
+        else
+        {
             await _selfAssessmentRepository.UpdateSelfAssessment(selfAssessment);
         }
         return selfAssessment.Id;

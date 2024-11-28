@@ -189,7 +189,8 @@ public class ConfigurationLevelService : IConfigurationLevelService
         );
     }
 
-    private ConfigurationLevel translateStatus(SelfAssessmentStatus status) {
+    private ConfigurationLevel translateStatus(SelfAssessmentStatus status)
+    {
         if (status == SelfAssessmentStatus.NotApplicable)
         {
             return ConfigurationLevel.Partial;
