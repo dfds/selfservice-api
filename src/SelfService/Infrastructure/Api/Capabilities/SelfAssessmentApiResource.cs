@@ -5,6 +5,7 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 public class SelfAssessmentsApiResource
 {
+    public string Id { get; set; }
     public string ShortName { get; set; }
     public DateTime? AssessedAt { get; set; }
     public string Description { get; set; }
@@ -26,6 +27,7 @@ public class SelfAssessmentsApiResource
     }
 
     public SelfAssessmentsApiResource(
+        SelfAssessmentOptionId id,
         string shortName,
         string description,
         string documentationUrl,
@@ -34,6 +36,7 @@ public class SelfAssessmentsApiResource
         SelfAssessmentLinks links
     )
     {
+        Id = id.ToString();
         ShortName = shortName;
         Description = description;
         DocumentationUrl = documentationUrl;

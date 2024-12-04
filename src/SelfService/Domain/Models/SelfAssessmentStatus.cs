@@ -2,9 +2,9 @@ namespace SelfService.Domain.Models;
 
 public class SelfAssessmentStatus : ValueObject
 {
-    public static readonly SelfAssessmentStatus NotApplicable = new("Not Applicable");
-    public static readonly SelfAssessmentStatus Satisfied = new("Satisfied");
-    public static readonly SelfAssessmentStatus Violated = new("Violated");
+    public static readonly SelfAssessmentStatus NotApplicable = new("NOT_APPLICABLE");
+    public static readonly SelfAssessmentStatus Satisfied = new("SATISFIED");
+    public static readonly SelfAssessmentStatus Violated = new("VIOLATED");
 
     private readonly string _value;
 

@@ -24,7 +24,7 @@ public class SelfAssessment : AggregateRoot<SelfAssessmentId>
     public SelfAssessmentOptionId OptionId { get; private set; }
     public CapabilityId CapabilityId { get; private set; }
     public string ShortName { get; private set; }
-    public DateTime RequestedAt { get; private set; }
+    public DateTime RequestedAt { get; set; }
     public string RequestedBy { get; private set; }
-    public string Status { get; private set; }
+    public string Status { get; set; }
 }
