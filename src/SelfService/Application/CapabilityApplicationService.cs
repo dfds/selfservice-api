@@ -331,35 +331,13 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         return configLevelInfo;
     }
 
-    public async Task<bool> CanSelfAssessType(CapabilityId capabilityId, SelfAssessmentOptionId selfAssessmentOptionId)
-    {
-        var selfAssessmentOptions = await _selfAssessmentOptionRepository.GetAllSelfAssessmentOptions();
-        var isAllowedToAssess = selfAssessmentOptions.Any(o => o.Id == selfAssessmentOptionId);
-        var notAlreadyAssessed = !await _selfAssessmentRepository.SelfAssessmentExists(
-            capabilityId,
-            selfAssessmentOptionId
-        );
-
-        if (isAllowedToAssess && notAlreadyAssessed)
-        {
-            return true;
-        }
-        return false;
-    }
-
-    public async Task<bool> CanRemoveSelfAssessmentType(
+    public async Task<bool> SelfAssessmentOptionExists(
         CapabilityId capabilityId,
         SelfAssessmentOptionId selfAssessmentOptionId
     )
     {
         var selfAssessmentOptions = await _selfAssessmentOptionRepository.GetAllSelfAssessmentOptions();
-        var isAllowedToAssess = selfAssessmentOptions.Any(o => o.Id == selfAssessmentOptionId);
-        var alreadyAssessed = await _selfAssessmentRepository.SelfAssessmentExists(
-            capabilityId,
-            selfAssessmentOptionId
-        );
-
-        if (isAllowedToAssess && alreadyAssessed)
+        if (selfAssessmentOptions.Any(o => o.Id == selfAssessmentOptionId))
         {
             return true;
         }
@@ -372,13 +350,24 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task<SelfAssessmentId> AddSelfAssessment(
+    public async Task<SelfAssessmentId> UpdateSelfAssessment(
         CapabilityId capabilityId,
         SelfAssessmentOptionId selfAssessmentOptionId,
-        UserId userId
+        UserId userId,
+        SelfAssessmentStatus status
     )
     {
+        var newAssessment = true;
         var selfAssessmentID = new SelfAssessmentId(Guid.NewGuid());
+        var assessment = await _selfAssessmentRepository.GetSpecificSelfAssessmentForCapability(
+            capabilityId,
+            selfAssessmentOptionId
+        );
+        if (assessment is not null)
+        {
+            newAssessment = false;
+            selfAssessmentID = assessment.Id;
+        }
 
         var option = await _selfAssessmentOptionRepository.Get(selfAssessmentOptionId);
         if (option is null)
@@ -392,24 +381,17 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             option.ShortName,
             capabilityId,
             DateTime.Now,
-            userId
+            userId,
+            status
         );
-        await _selfAssessmentRepository.AddSelfAssessment(selfAssessment);
-        return selfAssessment.Id;
-    }
-
-    [TransactionalBoundary, Outboxed]
-    public async Task<SelfAssessmentId> RemoveSelfAssessment(
-        CapabilityId capabilityId,
-        SelfAssessmentOptionId selfAssessmentOptionId
-    )
-    {
-        var selfAssessment =
-            await _selfAssessmentRepository.GetSpecificSelfAssessmentForCapability(capabilityId, selfAssessmentOptionId)
-            ?? throw new EntityNotFoundException(
-                $"SelfAssessment Option '{selfAssessmentOptionId}' for {capabilityId} not found."
-            );
-        await _selfAssessmentRepository.RemoveSelfAssessment(selfAssessment);
+        if (newAssessment)
+        {
+            await _selfAssessmentRepository.AddSelfAssessment(selfAssessment);
+        }
+        else
+        {
+            await _selfAssessmentRepository.UpdateSelfAssessment(selfAssessment);
+        }
         return selfAssessment.Id;
     }
 }

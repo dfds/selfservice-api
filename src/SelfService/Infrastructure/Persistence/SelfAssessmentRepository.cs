@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
 
@@ -15,6 +16,19 @@ public class SelfAssessmentRepository : ISelfAssessmentRepository
     public async Task AddSelfAssessment(SelfAssessment selfAssessment)
     {
         await _dbContext.SelfAssessments.AddAsync(selfAssessment);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task UpdateSelfAssessment(SelfAssessment selfAssessment)
+    {
+        var assessment = await _dbContext.SelfAssessments.FindAsync(selfAssessment.Id);
+        if (assessment is null)
+        {
+            throw new InvalidOperationException($"Self-assessment with id {selfAssessment.Id} not found.");
+        }
+
+        assessment.Status = selfAssessment.Status;
+        assessment.RequestedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
     }
 
@@ -41,11 +55,5 @@ public class SelfAssessmentRepository : ISelfAssessmentRepository
         return await _dbContext.SelfAssessments.FirstOrDefaultAsync(
             a => a.CapabilityId == capabilityId && a.OptionId == selfAssessmentOptionId
         );
-    }
-
-    public async Task RemoveSelfAssessment(SelfAssessment selfAssessment)
-    {
-        _dbContext.SelfAssessments.Remove(selfAssessment);
-        await _dbContext.SaveChangesAsync();
     }
 }

@@ -9,7 +9,8 @@ public enum ConfigurationLevel
 {
     None,
     Partial,
-    Complete
+    Complete,
+    Unknown,
 }
 
 public class ConfigurationLevelDetail : Entity<ConfigurationLevelDetail>
@@ -188,6 +189,23 @@ public class ConfigurationLevelService : IConfigurationLevelService
         );
     }
 
+    private ConfigurationLevel translateStatus(SelfAssessmentStatus status)
+    {
+        if (status == SelfAssessmentStatus.NotApplicable)
+        {
+            return ConfigurationLevel.Partial;
+        }
+        if (status == SelfAssessmentStatus.Satisfied)
+        {
+            return ConfigurationLevel.Complete;
+        }
+        if (status == SelfAssessmentStatus.Violated)
+        {
+            return ConfigurationLevel.None;
+        }
+        return ConfigurationLevel.Unknown;
+    }
+
     public async Task<List<ConfigurationLevelDetail>> GetSelfAssessmentMetrics(CapabilityId capabilityId)
     {
         var metrics = new List<ConfigurationLevelDetail> { };
@@ -197,11 +215,32 @@ public class ConfigurationLevelService : IConfigurationLevelService
 
         foreach (SelfAssessmentOption option in selfAssessmentOptions)
         {
-            var isAssessed = assessments.Any(c => c.OptionId == option.Id);
-            var configurationLevel = isAssessed ? ConfigurationLevel.Complete : ConfigurationLevel.None;
-
+            var exists = assessments.Any(a => a.OptionId == option.Id);
+            if (!exists)
+            {
+                metrics.Add(
+                    new ConfigurationLevelDetail(
+                        ConfigurationLevel.Unknown,
+                        option.ShortName,
+                        option.Description,
+                        false,
+                        true
+                    )
+                );
+                continue;
+            }
+        }
+        foreach (SelfAssessment assessment in assessments)
+        {
+            var option = selfAssessmentOptions.First(o => o.Id == assessment.OptionId);
             metrics.Add(
-                new ConfigurationLevelDetail(configurationLevel, option.ShortName, option.Description, false, true)
+                new ConfigurationLevelDetail(
+                    translateStatus(assessment.Status),
+                    option.ShortName,
+                    option.Description,
+                    false,
+                    true
+                )
             );
         }
 
