@@ -1,5 +1,24 @@
 namespace SelfService.Domain.Models;
 
+using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+public class ECRRepositoryIdJsonConverter : JsonConverter<ECRRepositoryId>
+{
+    public override ECRRepositoryId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var value = reader.GetString();
+        return ECRRepositoryId.Parse(value);
+    }
+
+    public override void Write(Utf8JsonWriter writer, ECRRepositoryId value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString());
+    }
+}
+
+[JsonConverter(typeof(ECRRepositoryIdJsonConverter))]
 public class ECRRepositoryId : ValueObject
 {
     private readonly Guid _value;

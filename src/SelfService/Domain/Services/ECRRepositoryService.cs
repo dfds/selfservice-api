@@ -106,6 +106,11 @@ public class ECRRepositoryService : IECRRepositoryService
         );
     }
 
+    private string getUri(string name)
+    {
+        return $"579478677147.dkr.ecr.eu-central-1.amazonaws.com/{name}";
+    }
+
     [TransactionalBoundary]
     public async Task<ECRRepository> AddRepository(string name, string description, UserId userId)
     {
@@ -127,7 +132,8 @@ public class ECRRepositoryService : IECRRepositoryService
             throw new Exception($"Error creating repo {name}: {e.Message}");
         }
 
-        var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, userId, DateTime.UtcNow);
+        var uri = getUri(name);
+        var newRepository = new ECRRepository(new ECRRepositoryId(), name, description, uri, userId, DateTime.UtcNow);
         _logger.LogInformation("Adding new ECRRepository to the database: {ECRRepositoryName}", name);
         await _ecrRepositoryRepository.Add(newRepository);
         return newRepository;
@@ -193,11 +199,13 @@ public class ECRRepositoryService : IECRRepositoryService
 
             foreach (var name in repositoriesNotInDb)
             {
+                var uri = getUri(name);
                 newRepositories.Add(
                     new ECRRepository(
                         new ECRRepositoryId(),
                         name,
                         CreatedByCloudEngineeringTeamDescription,
+                        uri,
                         _cloudEngineeringTeamUserId,
                         null
                     )

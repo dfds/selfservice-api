@@ -22,10 +22,11 @@ public class AwsMockApplicationService : IAwsEC2QueriesApplicationService, IAwsE
     );
     */
 
-    public async Task CreateECRRepo(string name)
+    public async Task<string> CreateECRRepo(string name)
     {
         ecrRepositories.Add(name);
         await Task.CompletedTask;
+        return $"suchAnAdress/{name}";
     }
 
     public async Task DeleteECRRepo(string name)
