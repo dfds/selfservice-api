@@ -7,6 +7,7 @@ public class ECRRepositoryBuilder
     private ECRRepositoryId _id;
     private string _name;
     private string _description;
+    private string _uri;
     private string _createdBy;
     private DateTime? _requestedAt;
 
@@ -15,6 +16,7 @@ public class ECRRepositoryBuilder
         _id = Guid.NewGuid();
         _name = "ecr repo test";
         _description = "this is the description for ecr repo test";
+        _uri = "some-account.aws.com/ecr/ecr-repo-test";
         _createdBy = nameof(ECRRepositoryBuilder);
         _requestedAt = DateTime.UtcNow;
     }
@@ -43,12 +45,19 @@ public class ECRRepositoryBuilder
         return this;
     }
 
+    public ECRRepositoryBuilder WithUri(string uri)
+    {
+        _uri = uri;
+        return this;
+    }
+
     public ECRRepository Build()
     {
         return new ECRRepository(
             id: _id,
             name: _name,
             description: _description,
+            uri: _uri,
             createdBy: _createdBy,
             requestedAt: _requestedAt
         );
