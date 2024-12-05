@@ -8,7 +8,14 @@ public class ECRRepository : Entity<ECRRepositoryId>
     public string CreatedBy { get; private set; }
     public DateTime? RequestedAt { get; private set; }
 
-    public ECRRepository(ECRRepositoryId id, string name, string description, string uri, string createdBy, DateTime? requestedAt)
+    public ECRRepository(
+        ECRRepositoryId id,
+        string name,
+        string description,
+        string uri,
+        string createdBy,
+        DateTime? requestedAt
+    )
         : base(id)
     {
         Name = name;
