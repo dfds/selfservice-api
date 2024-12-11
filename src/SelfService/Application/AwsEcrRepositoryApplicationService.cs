@@ -47,7 +47,7 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
     ///
     /// In case of failure setting the policy we delete the repo to not have orphaned repos
     /// </summary>
-    public async Task CreateECRRepo(string name)
+    public async Task<string> CreateECRRepo(string name)
     {
         var roleArn = "arn:aws:iam::579478677147:role/CreateECRRepos";
         var credentials = await awsRoleManager.AssumeRoleAsync(roleArn, RegionEndpoint.EUCentral1);
@@ -78,6 +78,8 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
 
             throw new Exception($"Unable to set ECR repo policy, deleting repo: {e}");
         }
+
+        return $"579478677147.dkr.ecr.eu-central-1.amazonaws.com/{name}";
     }
 
     /// <summary>

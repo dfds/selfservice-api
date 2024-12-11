@@ -34,16 +34,13 @@ public interface ICapabilityApplicationService
     Task<bool> DoesOnlyModifyRequiredProperties(string jsonMetadata, CapabilityId capabilityId);
     Task<ConfigurationLevelInfo> GetConfigurationLevel(CapabilityId capabilityId);
 
-    Task<bool> CanSelfAssessType(CapabilityId capabilityId, SelfAssessmentOptionId selfAssessmentOptionId);
-    Task<bool> CanRemoveSelfAssessmentType(CapabilityId capabilityId, SelfAssessmentOptionId selfAssessmentOptionId);
+    Task<bool> SelfAssessmentOptionExists(CapabilityId capabilityId, SelfAssessmentOptionId selfAssessmentOptionId);
     Task<List<SelfAssessment>> GetAllSelfAssessments(CapabilityId capabilityId);
-    Task<SelfAssessmentId> AddSelfAssessment(
+
+    Task<SelfAssessmentId> UpdateSelfAssessment(
         CapabilityId capabilityId,
         SelfAssessmentOptionId selfAssessmentOptionId,
-        UserId userId
-    );
-    Task<SelfAssessmentId> RemoveSelfAssessment(
-        CapabilityId capabilityId,
-        SelfAssessmentOptionId selfAssessmentOptionId
+        UserId userId,
+        SelfAssessmentStatus status
     );
 }

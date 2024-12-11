@@ -161,63 +161,38 @@ public class ApiResourceFactory
     {
         var selfAssessmentsResources = new List<SelfAssessmentsApiResource>();
 
-        // for each possible self-assessment, check if it exists in the list of self-assessments
-        // If existing, generate a SelfAssessmentApiResource with the information and no link to self-asses
-        // If not existing, generate a SelfAssessmentApiResource with the available information and a link to self-asses
         foreach (var option in selfAssessmentOptions)
         {
-            var exists = false;
+            var selfAssessmentResource = new SelfAssessmentsApiResource(
+                id: option.Id,
+                shortName: option.ShortName,
+                description: option.Description,
+                documentationUrl: option.DocumentationUrl,
+                status: null,
+                assessedAt: null,
+                links: new SelfAssessmentsApiResource.SelfAssessmentLinks(
+                    updateSelfAssessment: new ResourceLink(
+                        href: _linkGenerator.GetUriByAction(
+                            httpContext: HttpContext,
+                            action: nameof(CapabilityController.UpdateSelfAssessment),
+                            controller: GetNameOf<CapabilityController>(),
+                            values: new { id = capabilityId }
+                        ) ?? "",
+                        rel: "self",
+                        allow: Allow.Post
+                    )
+                )
+            );
             foreach (var selfAssessment in selfAssessments)
             {
                 if (option.Id == selfAssessment.OptionId)
                 {
-                    var existingSelfAssessment = new SelfAssessmentsApiResource(
-                        shortName: selfAssessment.ShortName,
-                        description: option.Description,
-                        documentationUrl: option.DocumentationUrl,
-                        assessedAt: selfAssessment.RequestedAt,
-                        links: new SelfAssessmentsApiResource.SelfAssessmentLinks(
-                            addSelfAssessment: null,
-                            removeSelfAssessment: new ResourceLink(
-                                href: _linkGenerator.GetUriByAction(
-                                    httpContext: HttpContext,
-                                    action: nameof(CapabilityController.RemoveSelfAssessment),
-                                    controller: GetNameOf<CapabilityController>(),
-                                    values: new { id = capabilityId, SelfAssessmentOptionId = option.Id }
-                                ) ?? "",
-                                rel: "self",
-                                allow: Allow.Delete
-                            )
-                        )
-                    );
-                    selfAssessmentsResources.Add(existingSelfAssessment);
-                    exists = true;
-                    continue;
+                    selfAssessmentResource.AssessedAt = selfAssessment.RequestedAt;
+                    selfAssessmentResource.Status = selfAssessment.Status;
                 }
             }
-            if (!exists)
-            {
-                var newSelfAssessment = new SelfAssessmentsApiResource(
-                    shortName: option.ShortName,
-                    description: option.Description,
-                    documentationUrl: option.DocumentationUrl,
-                    assessedAt: null,
-                    links: new SelfAssessmentsApiResource.SelfAssessmentLinks(
-                        addSelfAssessment: new ResourceLink(
-                            href: _linkGenerator.GetUriByAction(
-                                httpContext: HttpContext,
-                                action: nameof(CapabilityController.AddSelfAssessment),
-                                controller: GetNameOf<CapabilityController>(),
-                                values: new { id = capabilityId, SelfAssessmentOptionId = option.Id }
-                            ) ?? "",
-                            rel: "self",
-                            allow: Allow.Post
-                        ),
-                        removeSelfAssessment: null
-                    )
-                );
-                selfAssessmentsResources.Add(newSelfAssessment);
-            }
+
+            selfAssessmentsResources.Add(selfAssessmentResource);
         }
 
         return selfAssessmentsResources;

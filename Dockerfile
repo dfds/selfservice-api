@@ -1,12 +1,12 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 as builder
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS builder
 
 COPY src /src
 RUN apt update && apt install -y librdkafka-dev
 RUN cd /src/SelfService && dotnet publish -c Release -o /build/out
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
-WORKDIR /app
+WORKDIR /ssapi
 
 # ADD Curl
 # RUN apk update && apk add curl && apk add ca-certificates librdkafka-dev && rm -rf /var/cache/apk/*
@@ -18,19 +18,19 @@ RUN curl -o /tmp/rds-combined-ca-bundle.pem https://truststore.pki.rds.amazonaws
   && update-ca-certificates
 
 # OpenSSL cert for Kafka
-RUN curl -sS -o /app/cert.pem https://curl.se/ca/cacert.pem
-ENV DEFAULT_KAFKA_SSL_CA_LOCATION=/app/cert.pem
+RUN curl -sS -o /ssapi/cert.pem https://curl.se/ca/cacert.pem
+ENV DEFAULT_KAFKA_SSL_CA_LOCATION=/ssapi/cert.pem
 
 # create and use non-root user
 RUN adduser \
   --disabled-password \
-  --home /app \
-  --gecos '' app \
-  && chown -R app /app
-USER app
+  --home /ssapi \
+  --gecos '' ssapi \
+  && chown -R ssapi /ssapi
+USER ssapi
 
-COPY --chown=app:app static/known_hosts /app/.ssh/known_hosts
-COPY --chown=app:app static/gitconfig /app/.ssh/config
+COPY --chown=ssapi:ssapi static/known_hosts /ssapi/.ssh/known_hosts
+COPY --chown=ssapi:ssapi static/gitconfig /ssapi/.ssh/config
 
 ENV DOTNET_RUNNING_IN_CONTAINER=true \
   ASPNETCORE_URLS=http://+:8080
