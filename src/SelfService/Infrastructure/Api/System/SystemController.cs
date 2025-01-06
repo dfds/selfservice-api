@@ -28,15 +28,12 @@ public class SystemController : ControllerBase
             {
                 Items = visitorRecords
                     .OrderBy(x => x.Rank)
-                    .Select(
-                        x =>
-                            new
-                            {
-                                Id = x.Id.ToString(),
-                                Name = x.Name,
-                                Rank = x.Rank,
-                            }
-                    ),
+                    .Select(x => new
+                    {
+                        Id = x.Id.ToString(),
+                        Name = x.Name,
+                        Rank = x.Rank,
+                    }),
             }
         );
     }

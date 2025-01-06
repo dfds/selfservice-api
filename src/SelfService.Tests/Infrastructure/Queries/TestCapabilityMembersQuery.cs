@@ -75,7 +75,7 @@ public class TestCapabilityMembersQuery
         await using var databaseFactory = new InMemoryDatabaseFactory();
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
-        var expectedMembers = new[] { A.Member.WithUserId("1").Build(), A.Member.WithUserId("2").Build(), };
+        var expectedMembers = new[] { A.Member.WithUserId("1").Build(), A.Member.WithUserId("2").Build() };
 
         var stubCapability = A.Capability.Build();
 

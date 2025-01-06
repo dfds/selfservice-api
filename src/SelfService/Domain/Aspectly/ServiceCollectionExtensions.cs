@@ -1,5 +1,5 @@
-using SelfService.Domain.Aspectly;
 using Castle.DynamicProxy;
+using SelfService.Domain.Aspectly;
 
 namespace Microsoft.Extensions.DependencyInjection;
 

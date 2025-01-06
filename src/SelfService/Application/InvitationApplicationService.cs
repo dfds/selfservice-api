@@ -26,8 +26,8 @@ public class InvitationApplicationService : IInvitationApplicationService
 
     public async Task<List<Invitation>> GetActiveInvitations(UserId userId)
     {
-        var invitations = await _invitationRepository.GetAllWithPredicate(
-            x => x.Invitee == userId && x.Status == InvitationStatusOptions.Active
+        var invitations = await _invitationRepository.GetAllWithPredicate(x =>
+            x.Invitee == userId && x.Status == InvitationStatusOptions.Active
         );
 
         return invitations;
@@ -38,8 +38,8 @@ public class InvitationApplicationService : IInvitationApplicationService
         InvitationTargetTypeOptions targetType
     )
     {
-        var invitations = await _invitationRepository.GetAllWithPredicate(
-            x => x.Invitee == userId && x.Status == InvitationStatusOptions.Active && x.TargetType == targetType
+        var invitations = await _invitationRepository.GetAllWithPredicate(x =>
+            x.Invitee == userId && x.Status == InvitationStatusOptions.Active && x.TargetType == targetType
         );
 
         return invitations;

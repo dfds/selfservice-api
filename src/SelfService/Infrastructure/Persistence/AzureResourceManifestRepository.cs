@@ -180,94 +180,34 @@ public class AzureResourceManifest
         var plannedSunset = jsonObject["dfds.planned_sunset"]?.ToString() ?? "";
 
         return $$"""
-                 terraform {
-                   source = "git::https://github.com/dfds/azure-infrastructure-modules.git//capability-context?{{options}}"
-                 }
-                 
-                 include {
-                   path = "${find_in_parent_folders()}"
-                 }
-                 
-                 inputs = {
-                   name                        = "dfds_ssu_{{AzureResource?.Environment}}_{{Capability?.Id}}"
-                   tribe                       = "{{tribe}}"
-                   team                        = "{{team}}"
-                   email                       = "aws.{{Capability?.Id}}@dfds.com"
-                   context_id                  = "{{AzureResource?.Id}}"
-                   correlation_id              = "{{correlationId}}"
-                   capability_name             = "{{Capability?.Name}}"
-                   capability_root_id          = "{{Capability?.Id}}"
-                   context_name                = "{{AzureResource?.Environment}}"
-                   capability_id               = "{{Capability?.Id}}"
-                   owner                       = "{{owner}}"
-                   environment                 = "{{AzureResource?.Environment}}"
-                   costcentre                  = "{{costCentre}}"
-                   availability                = "{{availability}}"
-                   planned_sunset              = "{{plannedSunset}}"
-                   enable_capability_access    = true
-
-                   subscription_id = "${get_env("CORE_SUBSCRIPTION_ID", "")}"
-                 }
-                 """;
-    }
-}
-
-class CommandExecutor
-{
-    public String? Output { get; set; }
-    public String? Error { get; set; }
-    public int ExitCode { get; set; }
-
-    public static CommandExecutor Run(String process, String args, String workingDirectory, int timeout)
-    {
-        var proc = new Process()
-        {
-            StartInfo = new ProcessStartInfo()
-            {
-                FileName = process,
-                WorkingDirectory = workingDirectory,
-                Arguments = args,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
+            terraform {
+              source = "git::https://github.com/dfds/azure-infrastructure-modules.git//capability-context?{{options}}"
             }
-        };
-        proc.Start();
-        if (timeout == 0)
-        {
-            proc.WaitForExit();
-        }
-        else
-        {
-            proc.WaitForExit(timeout);
-        }
 
-        var output = proc.StandardOutput.ReadToEnd();
-        var error = proc.StandardError.ReadToEnd();
-        return new CommandExecutor
-        {
-            Output = output,
-            Error = error,
-            ExitCode = proc.ExitCode
-        };
-    }
+            include {
+              path = "${find_in_parent_folders()}"
+            }
 
-    public void ThrowIfError()
-    {
-        if (ExitCode != 0)
-        {
-            throw new CommandErrorException(Error!);
-        }
-    }
-}
+            inputs = {
+              name                        = "dfds_ssu_{{AzureResource?.Environment}}_{{Capability?.Id}}"
+              tribe                       = "{{tribe}}"
+              team                        = "{{team}}"
+              email                       = "aws.{{Capability?.Id}}@dfds.com"
+              context_id                  = "{{AzureResource?.Id}}"
+              correlation_id              = "{{correlationId}}"
+              capability_name             = "{{Capability?.Name}}"
+              capability_root_id          = "{{Capability?.Id}}"
+              context_name                = "{{AzureResource?.Environment}}"
+              capability_id               = "{{Capability?.Id}}"
+              owner                       = "{{owner}}"
+              environment                 = "{{AzureResource?.Environment}}"
+              costcentre                  = "{{costCentre}}"
+              availability                = "{{availability}}"
+              planned_sunset              = "{{plannedSunset}}"
+              enable_capability_access    = true
 
-public class CommandErrorException : Exception
-{
-    public String ErrorOutput { get; set; }
-
-    public CommandErrorException(string message)
-        : base($"Error encountered while executing command: {message}")
-    {
-        ErrorOutput = message;
+              subscription_id = "${get_env("CORE_SUBSCRIPTION_ID", "")}"
+            }
+            """;
     }
 }

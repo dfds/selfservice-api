@@ -1,6 +1,6 @@
-using SelfService.Domain.Models;
-using System.Text.Json.Nodes;
 using System.Linq;
+using System.Text.Json.Nodes;
+using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
@@ -161,7 +161,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
         {
             ConfigurationLevel.None => "Cost Centre unknown",
             ConfigurationLevel.Complete => "Cost Centre known",
-            _ => "Cost Centre unknown"
+            _ => "Cost Centre unknown",
         };
 
         return new ConfigurationLevelDetail(configurationLevel, "cost-centre-tagging", description, true, false);
@@ -173,7 +173,7 @@ public class ConfigurationLevelService : IConfigurationLevelService
         {
             "dfds.data.classification",
             "dfds.service.availability",
-            "dfds.service.criticality"
+            "dfds.service.criticality",
         };
         (ConfigurationLevel configurationLevel, List<string> missingTags) = await MetadataContainsTags(
             capabilityId,

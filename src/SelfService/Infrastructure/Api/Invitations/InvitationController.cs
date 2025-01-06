@@ -50,7 +50,7 @@ public class InvitationController : ControllerBase
                 new ProblemDetails()
                 {
                     Title = "Invalid target type",
-                    Detail = $"The target type {targetType} is not valid"
+                    Detail = $"The target type {targetType} is not valid",
                 }
             );
         }
@@ -83,7 +83,7 @@ public class InvitationController : ControllerBase
                 new ProblemDetails()
                 {
                     Title = "Invalid invitation id",
-                    Detail = $"The invitation id {id} is not valid"
+                    Detail = $"The invitation id {id} is not valid",
                 }
             );
         }
@@ -112,7 +112,7 @@ public class InvitationController : ControllerBase
                 new ProblemDetails()
                 {
                     Title = "Invalid invitation id",
-                    Detail = $"The invitation id {id} is not valid"
+                    Detail = $"The invitation id {id} is not valid",
                 }
             );
         }
@@ -141,7 +141,7 @@ public class InvitationController : ControllerBase
                 new ProblemDetails()
                 {
                     Title = "Invalid invitation id",
-                    Detail = $"The invitation id {id} is not valid"
+                    Detail = $"The invitation id {id} is not valid",
                 }
             );
         }

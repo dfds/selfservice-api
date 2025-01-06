@@ -1,7 +1,7 @@
 using Amazon;
+using Amazon.Runtime;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
-using Amazon.Runtime;
 
 namespace SelfService.Application;
 

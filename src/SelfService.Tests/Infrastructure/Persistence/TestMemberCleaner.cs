@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using SelfService.Tests.Comparers;
-using SelfService.Tests.TestDoubles;
 using Moq;
-using SelfService.Infrastructure.Persistence;
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Persistence;
+using SelfService.Tests.Comparers;
+using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Persistence;
 
@@ -20,8 +20,8 @@ public class TestMemberCleaner
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         SystemTime systemTime = SystemTime.Default;
-        var membershipCleaner = A.DeactivatedMemberCleanerApplicationService
-            .WithMemberRepository(new MemberRepository(dbContext))
+        var membershipCleaner = A
+            .DeactivatedMemberCleanerApplicationService.WithMemberRepository(new MemberRepository(dbContext))
             .WithMembershipRepository(new MembershipRepository(dbContext))
             .WithMembershipApplicationRepository(new MembershipApplicationRepository(dbContext, systemTime))
             .Build();
@@ -29,20 +29,20 @@ public class TestMemberCleaner
         var capability = A.Capability.Build();
 
         var memberActive = A.Membership.WithCapabilityId(capability.Id).WithUserId("useractive@dfds.com").Build();
-        var memberDeactivated = A.Membership
-            .WithCapabilityId(capability.Id)
+        var memberDeactivated = A
+            .Membership.WithCapabilityId(capability.Id)
             .WithUserId("userdeactivated@dfds.com")
             .Build();
-        var memberNotfound1 = A.Membership
-            .WithCapabilityId(capability.Id)
+        var memberNotfound1 = A
+            .Membership.WithCapabilityId(capability.Id)
             .WithUserId("usernotinazure1@dfds.com")
             .Build();
-        var memberNotfound2 = A.Membership
-            .WithCapabilityId(capability.Id)
+        var memberNotfound2 = A
+            .Membership.WithCapabilityId(capability.Id)
             .WithUserId("usernotinazure2@dfds.com")
             .Build();
-        var memberNotfound3 = A.Membership
-            .WithCapabilityId(capability.Id)
+        var memberNotfound3 = A
+            .Membership.WithCapabilityId(capability.Id)
             .WithUserId("usernotinazure2@dfds.com")
             .Build();
 
@@ -85,8 +85,8 @@ public class TestMemberCleaner
         var membershipApplicationRepo = A.MembershipApplicationRepository.WithDbContext(dbContext).Build();
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
-        var membershipApplicationService = A.MembershipApplicationService
-            .WithMembershipRepository(membershipRepo)
+        var membershipApplicationService = A
+            .MembershipApplicationService.WithMembershipRepository(membershipRepo)
             .WithMembershipApplicationRepository(membershipApplicationRepo)
             .WithCapabilityRepository(capabilityRepo)
             .Build();
@@ -109,8 +109,8 @@ public class TestMemberCleaner
         authService.Setup(x => x.CanApprove(approverMember.Id, application)).ReturnsAsync(true);
 
         // We need to also check if we can approve the application
-        var membershipApplicationServiceWithAuth = A.MembershipApplicationService
-            .WithMembershipApplicationRepository(membershipApplicationRepo)
+        var membershipApplicationServiceWithAuth = A
+            .MembershipApplicationService.WithMembershipApplicationRepository(membershipApplicationRepo)
             .WithAuthorizationService(authService.Object)
             .Build();
 
@@ -126,8 +126,8 @@ public class TestMemberCleaner
 
         //now the repository is in the right state
 
-        var membershipCleaner = A.DeactivatedMemberCleanerApplicationService
-            .WithMemberRepository(memberRepo)
+        var membershipCleaner = A
+            .DeactivatedMemberCleanerApplicationService.WithMemberRepository(memberRepo)
             .WithMembershipRepository(membershipRepo)
             .WithMembershipApplicationRepository(membershipApplicationRepo)
             .WithInvitationRepository(A.InvitationRepository.WithDbContext(dbContext).Build())

@@ -21,10 +21,13 @@ public class KafkaTopicQuery : IKafkaTopicQuery
         {
             { CapabilityId: null, IncludePrivate: true } => GenerateSqlQueryForAllTopicsAccessibleForUser(userId),
             { CapabilityId: null, IncludePrivate: not true } => GenerateSqlQueryForAllPublicTopics(),
-            { CapabilityId: not null, IncludePrivate: true }
-                => GenerateSqlQueryForAllTopicsWithCapability(userId, queryParams.CapabilityId),
-            { CapabilityId: not null, IncludePrivate: not true }
-                => GenerateSqlQueryForPublicTopicsWithCapability(queryParams.CapabilityId),
+            { CapabilityId: not null, IncludePrivate: true } => GenerateSqlQueryForAllTopicsWithCapability(
+                userId,
+                queryParams.CapabilityId
+            ),
+            { CapabilityId: not null, IncludePrivate: not true } => GenerateSqlQueryForPublicTopicsWithCapability(
+                queryParams.CapabilityId
+            ),
         };
 
         var query = _dbContext.KafkaTopics.FromSql(sql);

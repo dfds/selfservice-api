@@ -57,8 +57,8 @@ public class TeamApplicationService : ITeamApplicationService
             throw new EntityNotFoundException("Capability does not exist");
         }
 
-        var linking = await _teamCapabilityLinkingRepository.FindByPredicate(
-            x => x.TeamId == teamId && x.CapabilityId == capabilityId
+        var linking = await _teamCapabilityLinkingRepository.FindByPredicate(x =>
+            x.TeamId == teamId && x.CapabilityId == capabilityId
         );
 
         if (linking != null)
@@ -126,8 +126,8 @@ public class TeamApplicationService : ITeamApplicationService
     [TransactionalBoundary]
     public async Task RemoveLinkToCapability(TeamId teamId, CapabilityId capabilityId)
     {
-        var linking = await _teamCapabilityLinkingRepository.FindByPredicate(
-            x => x.TeamId == teamId && x.CapabilityId == capabilityId
+        var linking = await _teamCapabilityLinkingRepository.FindByPredicate(x =>
+            x.TeamId == teamId && x.CapabilityId == capabilityId
         );
 
         if (linking == null)

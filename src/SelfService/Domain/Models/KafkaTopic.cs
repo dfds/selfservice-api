@@ -125,7 +125,7 @@ public class KafkaTopic : AggregateRoot<KafkaTopicId>
                 KafkaClusterId = kafkaClusterId.ToString(),
                 CapabilityId = capabilityId.ToString(),
                 Partitions = instance.Partitions.ToValue(),
-                Retention = instance.Retention.ToString()
+                Retention = instance.Retention.ToString(),
             }
         );
 

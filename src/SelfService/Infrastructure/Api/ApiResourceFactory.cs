@@ -1,16 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Amazon.EC2;
+using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Models;
+using SelfService.Domain.Queries;
+using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
+using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
-using SelfService.Domain.Queries;
-using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.Api.Teams;
-using SelfService.Infrastructure.Api.Invitations;
 using static SelfService.Infrastructure.Api.Method;
-using Amazon.EC2;
 
 namespace SelfService.Infrastructure.Api;
 
@@ -782,7 +782,7 @@ public class ApiResourceFactory
             AwsAccountStatus.Requested => "Requested",
             AwsAccountStatus.Pending => "Pending",
             AwsAccountStatus.Completed => "Completed",
-            _ => "Pending"
+            _ => "Pending",
         };
     }
 
@@ -819,7 +819,7 @@ public class ApiResourceFactory
             AzureResourceStatus.Requested => "Requested",
             AzureResourceStatus.Pending => "Pending",
             AzureResourceStatus.Completed => "Completed",
-            _ => "Pending"
+            _ => "Pending",
         };
     }
 
@@ -1164,7 +1164,7 @@ public class ApiResourceFactory
                                 {
                                     capabilityId,
                                     clusterId = cluster.Id,
-                                    includePrivate = true
+                                    includePrivate = true,
                                 }
                             ) ?? "",
                             rel: "related",
@@ -1230,8 +1230,8 @@ public class ApiResourceFactory
     {
         var resource = new MembershipApplicationThatUserCanApproveListApiResource(
             items: applications
-                .Select(
-                    application => ConvertToMembershipApplicationThatUserCanApproveApiResource(application, currentUser)
+                .Select(application =>
+                    ConvertToMembershipApplicationThatUserCanApproveApiResource(application, currentUser)
                 )
                 .ToArray(),
             links: new MembershipApplicationThatUserCanApproveListApiResource.MembershipApplicationListLinks(

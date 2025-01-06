@@ -54,7 +54,7 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
             "dfds.planned_sunset",
             "dfds.owner",
             "dfds.cost.centre",
-            "dfds.service.availability"
+            "dfds.service.availability",
         };
         foreach (var tag in mandatoryTags)
         {

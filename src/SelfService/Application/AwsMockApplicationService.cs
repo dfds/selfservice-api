@@ -4,8 +4,9 @@ namespace SelfService.Application;
 
 public class AwsMockApplicationService : IAwsEC2QueriesApplicationService, IAwsECRRepositoryApplicationService
 {
-    private List<string> ecrRepositories =
-        new(new string[] { "predetermined repository 1", "predetermined repository 2", "predetermined repository 3" });
+    private List<string> ecrRepositories = new(
+        new string[] { "predetermined repository 1", "predetermined repository 2", "predetermined repository 3" }
+    );
     private List<VPCInformation> vpcs = new();
 
     /*

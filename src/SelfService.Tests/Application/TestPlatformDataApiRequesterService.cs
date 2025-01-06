@@ -24,25 +24,25 @@ public class TestPlatformDataApiRequesterService
             {
                 TimeStamp = earliest.AddDays(3),
                 Value = 0.1f,
-                Tag = capability.Id
+                Tag = capability.Id,
             },
             new()
             {
                 TimeStamp = earliest.AddDays(1),
                 Value = 0.1f,
-                Tag = capability.Id
+                Tag = capability.Id,
             },
             new()
             {
                 TimeStamp = earliest.AddDays(4),
                 Value = 0.1f,
-                Tag = capability.Id
+                Tag = capability.Id,
             },
             new()
             {
                 TimeStamp = DateTime.UtcNow.AddDays(2),
                 Value = 0.1f,
-                Tag = capability.Id
+                Tag = capability.Id,
             },
         };
 

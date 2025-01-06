@@ -192,7 +192,7 @@ public class UserStatusChecker : IUserStatusChecker
         string url = $"{_baseUrl}/users/{upn}";
         var queryParams = new Dictionary<string, string?>
         {
-            { "$select", "displayName,accountEnabled,id,identities,mail,userPrincipalName" }
+            { "$select", "displayName,accountEnabled,id,identities,mail,userPrincipalName" },
         };
         url = QueryHelpers.AddQueryString(url, queryParams);
 
@@ -218,7 +218,7 @@ public class UserStatusChecker : IUserStatusChecker
         var queryParams = new Dictionary<string, string?>
         {
             { "$select", "displayName,accountEnabled,id,identities,mail,userPrincipalName" },
-            { "$filter", $"mail eq '{email.ToLower()}'" }
+            { "$filter", $"mail eq '{email.ToLower()}'" },
         };
         url = QueryHelpers.AddQueryString(url, queryParams);
 

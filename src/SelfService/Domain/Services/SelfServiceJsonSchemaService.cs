@@ -1,8 +1,8 @@
 using System.Text.Json.Nodes;
-using SelfService.Domain.Models;
+using Confluent.Kafka;
 using Json.Schema;
 using SelfService.Domain.Exceptions;
-using Confluent.Kafka;
+using SelfService.Domain.Models;
 
 namespace SelfService.Domain.Services;
 

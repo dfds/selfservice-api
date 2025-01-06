@@ -1,16 +1,16 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Prometheus;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.BackgroundJobs;
+using SelfService.Infrastructure.Kafka;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Infrastructure.Ticketing;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using SelfService.Infrastructure.Api.Prometheus;
-using SelfService.Infrastructure.Kafka;
 
 namespace SelfService.Configuration;
 
@@ -39,12 +39,16 @@ public static class Domain
         {
             builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsMockApplicationService>();
             builder.Services.AddTransient<IAwsEC2QueriesApplicationService, AwsMockApplicationService>();
+            builder.Services.AddTransient<IAwsAccountManifestRepository, NoOpAwsAccountManifestRepository>();
         }
         else
         {
             builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
             builder.Services.AddTransient<IAwsEC2QueriesApplicationService, AwsEC2QueriesApplicationService>();
             builder.Services.AddTransient<IAwsRoleManger, AwsRoleManager>();
+            // aws account manifests
+            builder.Services.AddTransient<AwsAccountManifestRepositoryConfig>();
+            builder.Services.AddTransient<IAwsAccountManifestRepository, AwsAccountManifestRepository>();
         }
 
         // domain services
