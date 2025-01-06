@@ -1327,7 +1327,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> GetSelfAssessmentOptions([FromBody] AddSelfAssessmentOptionRequest request)
+    public async Task<IActionResult> GetSelfAssessmentOptions()
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
