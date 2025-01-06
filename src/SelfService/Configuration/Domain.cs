@@ -39,12 +39,16 @@ public static class Domain
         {
             builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsMockApplicationService>();
             builder.Services.AddTransient<IAwsEC2QueriesApplicationService, AwsMockApplicationService>();
+            builder.Services.AddTransient<IAwsAccountManifestRepository, NoOpAwsAccountManifestRepository>();
         }
         else
         {
             builder.Services.AddTransient<IAwsECRRepositoryApplicationService, AwsEcrRepositoryApplicationService>();
             builder.Services.AddTransient<IAwsEC2QueriesApplicationService, AwsEC2QueriesApplicationService>();
             builder.Services.AddTransient<IAwsRoleManger, AwsRoleManager>();
+            // aws account manifests
+            builder.Services.AddTransient<AwsAccountManifestRepositoryConfig>();
+            builder.Services.AddTransient<IAwsAccountManifestRepository, AwsAccountManifestRepository>();
         }
 
         // domain services
@@ -97,10 +101,6 @@ public static class Domain
 
         // aad-aws-sync
         builder.Services.AddTransient<IAadAwsSyncCapabilityQuery, AadAwsSyncCapabilityQuery>();
-
-        // aws account manifests
-        builder.Services.AddTransient<AwsAccountManifestRepositoryConfig>();
-        builder.Services.AddTransient<IAwsAccountManifestRepository, AwsAccountManifestRepository>();
 
         // azure
         var azureResourceManifestEnabled = builder.Configuration["SS_ARM_ENABLED"];
