@@ -12,7 +12,7 @@ public abstract class HttpHelper
         var response = new HttpResponseMessage
         {
             StatusCode = HttpStatusCode.OK,
-            Content = new StringContent(mockResponse)
+            Content = new StringContent(mockResponse),
         };
 
         mockHttpHandler

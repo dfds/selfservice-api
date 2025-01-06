@@ -35,13 +35,13 @@ public class TestJsonSchemaService
     public async Task parse_json_with_valid_schema_with_no_required_fields_but_additional_properties_not_allowed()
     {
         string jsonSchema = """
-                            {
-                            "$id": "https://example.com/person.schema.json",
-                            "$schema": "https://json-schema.org/draft/2020-12/schema",
-                            "title": "Person",
-                            "additionalProperties": false
-                            }
-                            """;
+            {
+            "$id": "https://example.com/person.schema.json",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "Person",
+            "additionalProperties": false
+            }
+            """;
 
         _mock
             .Setup(x => x.GetLatestSchema(SelfServiceJsonSchemaObjectId.Capability))
@@ -71,21 +71,21 @@ public class TestJsonSchemaService
     public async Task parse_json_with_valid_schema_with_required_fields()
     {
         string jsonSchema = """
-                            {
-                                "$id": "https://example.com/person.schema.json",
-                                "$schema": "https://json-schema.org/draft/2020-12/schema",
-                                "required": ["firstName", "hasLastName"],
-                                "properties": {
-                                  "firstName": {
-                                    "type": "string"
-                                  },
-                                  "hasLastName": {
-                                    "type": "boolean"
-                                  }
-                                },
-                                "additionalProperties": false
-                            }
-                            """;
+            {
+                "$id": "https://example.com/person.schema.json",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "required": ["firstName", "hasLastName"],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "hasLastName": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+            }
+            """;
 
         _mock
             .Setup(x => x.GetLatestSchema(SelfServiceJsonSchemaObjectId.Capability))

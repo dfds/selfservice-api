@@ -18,8 +18,8 @@ public class TestInvitationApplicationService
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
-        var invitationService = A.InvitationApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+        var invitationService = A
+            .InvitationApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .WithInvitationRepository(invitationRepo)
             .Build();
 
@@ -32,8 +32,8 @@ public class TestInvitationApplicationService
         await invitationService.CreateCapabilityInvitations(dummyInvitees, dummyInviterId, testCapability);
         await dbContext.SaveChangesAsync();
 
-        var invitations = await invitationRepo.GetAllWithPredicate(
-            x => x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
+        var invitations = await invitationRepo.GetAllWithPredicate(x =>
+            x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
         );
         Assert.Equal(2, invitations.Count);
     }
@@ -47,8 +47,8 @@ public class TestInvitationApplicationService
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
-        var invitationService = A.InvitationApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+        var invitationService = A
+            .InvitationApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .WithInvitationRepository(invitationRepo)
             .Build();
 
@@ -61,8 +61,8 @@ public class TestInvitationApplicationService
         await invitationService.CreateCapabilityInvitations(dummyInvitees, dummyInviterId, testCapability);
         await dbContext.SaveChangesAsync();
 
-        var invitations = await invitationRepo.GetAllWithPredicate(
-            x => x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
+        var invitations = await invitationRepo.GetAllWithPredicate(x =>
+            x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
         );
         Assert.Equal(2, invitations.Count);
     }
@@ -76,8 +76,8 @@ public class TestInvitationApplicationService
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
-        var invitationService = A.InvitationApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+        var invitationService = A
+            .InvitationApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .WithInvitationRepository(invitationRepo)
             .Build();
 
@@ -93,8 +93,8 @@ public class TestInvitationApplicationService
         await invitationService.CreateCapabilityInvitations(dummyInvitees, dummyInviterId, testCapability);
         await dbContext.SaveChangesAsync();
 
-        invitations = await invitationRepo.GetAllWithPredicate(
-            x => x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
+        invitations = await invitationRepo.GetAllWithPredicate(x =>
+            x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
         );
         Assert.Equal(2, invitations.Count);
 
@@ -103,8 +103,8 @@ public class TestInvitationApplicationService
         await invitationService.CreateCapabilityInvitations(dummyInvitees, dummyInviterId, testCapability);
         await dbContext.SaveChangesAsync();
 
-        invitations = await invitationRepo.GetAllWithPredicate(
-            x => x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
+        invitations = await invitationRepo.GetAllWithPredicate(x =>
+            x.TargetId == testCapability.Id && x.TargetType == InvitationTargetTypeOptions.Capability
         );
         Assert.Equal(2, invitations.Count);
     }
@@ -118,8 +118,8 @@ public class TestInvitationApplicationService
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
-        var invitationService = A.InvitationApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+        var invitationService = A
+            .InvitationApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .WithInvitationRepository(invitationRepo)
             .Build();
 
@@ -154,8 +154,8 @@ public class TestInvitationApplicationService
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
-        var invitationService = A.InvitationApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+        var invitationService = A
+            .InvitationApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .WithInvitationRepository(invitationRepo)
             .Build();
 
@@ -180,16 +180,16 @@ public class TestInvitationApplicationService
         );
         Assert.Single(capabilityInvitations);
 
-        var acceptedInvitations = await invitationRepo.GetAllWithPredicate(
-            x => x.Status == InvitationStatusOptions.Accepted && x.Invitee == dummyInvitee1Id
+        var acceptedInvitations = await invitationRepo.GetAllWithPredicate(x =>
+            x.Status == InvitationStatusOptions.Accepted && x.Invitee == dummyInvitee1Id
         );
         Assert.Empty(acceptedInvitations);
 
         await invitationService.AcceptInvitation(capabilityInvitations[0].Id);
         await dbContext.SaveChangesAsync();
 
-        acceptedInvitations = await invitationRepo.GetAllWithPredicate(
-            x => x.Status == InvitationStatusOptions.Accepted && x.Invitee == dummyInvitee1Id
+        acceptedInvitations = await invitationRepo.GetAllWithPredicate(x =>
+            x.Status == InvitationStatusOptions.Accepted && x.Invitee == dummyInvitee1Id
         );
         Assert.Single(acceptedInvitations);
 
@@ -209,8 +209,8 @@ public class TestInvitationApplicationService
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
-        var invitationService = A.InvitationApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+        var invitationService = A
+            .InvitationApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .WithInvitationRepository(invitationRepo)
             .Build();
 
@@ -235,16 +235,16 @@ public class TestInvitationApplicationService
         );
         Assert.Single(capabilityInvitations);
 
-        var acceptedInvitations = await invitationRepo.GetAllWithPredicate(
-            x => x.Status == InvitationStatusOptions.Declined && x.Invitee == dummyInvitee1Id
+        var acceptedInvitations = await invitationRepo.GetAllWithPredicate(x =>
+            x.Status == InvitationStatusOptions.Declined && x.Invitee == dummyInvitee1Id
         );
         Assert.Empty(acceptedInvitations);
 
         await invitationService.DeclineInvitation(capabilityInvitations[0].Id);
         await dbContext.SaveChangesAsync();
 
-        acceptedInvitations = await invitationRepo.GetAllWithPredicate(
-            x => x.Status == InvitationStatusOptions.Declined && x.Invitee == dummyInvitee1Id
+        acceptedInvitations = await invitationRepo.GetAllWithPredicate(x =>
+            x.Status == InvitationStatusOptions.Declined && x.Invitee == dummyInvitee1Id
         );
         Assert.Single(acceptedInvitations);
 
@@ -264,14 +264,14 @@ public class TestInvitationApplicationService
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
-        var invitationService = A.InvitationApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+        var invitationService = A
+            .InvitationApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .WithInvitationRepository(invitationRepo)
             .Build();
 
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
-        var membershipService = A.MembershipApplicationService
-            .WithMembershipRepository(membershipRepo)
+        var membershipService = A
+            .MembershipApplicationService.WithMembershipRepository(membershipRepo)
             .WithInvitationRepository(invitationRepo)
             .Build();
 

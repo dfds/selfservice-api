@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
-using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Api.Invitations;
-using System.Text.Json;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
@@ -121,7 +121,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Invalid metadata",
                     Detail = jsonMetadataResult.GetErrorString(),
-                    Status = StatusCodes.Status400BadRequest
+                    Status = StatusCodes.Status400BadRequest,
                 }
             );
 
@@ -186,7 +186,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Access denied!",
                     Detail = "The user id is not valid and access to the resource cannot be granted.",
-                    Status = StatusCodes.Status401Unauthorized
+                    Status = StatusCodes.Status401Unauthorized,
                 }
             );
 
@@ -196,7 +196,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Capability not found",
                     Detail = $"No capability with id \"{id}\" is know by the system.",
-                    Status = StatusCodes.Status404NotFound
+                    Status = StatusCodes.Status404NotFound,
                 }
             );
 
@@ -207,7 +207,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Capability not found",
                     Detail = $"No capability with id \"{id}\" is know by the system.",
-                    Status = StatusCodes.Status404NotFound
+                    Status = StatusCodes.Status404NotFound,
                 }
             );
 
@@ -328,7 +328,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Error",
                     Detail = ex.Message,
-                    Status = StatusCodes.Status500InternalServerError
+                    Status = StatusCodes.Status500InternalServerError,
                 }
             );
         }
@@ -382,7 +382,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Invalid metadata",
                     Detail = "Metadata missing environment empty",
-                    Status = StatusCodes.Status400BadRequest
+                    Status = StatusCodes.Status400BadRequest,
                 }
             );
 
@@ -578,7 +578,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found",
-                    Detail = $"Capability \"{capabilityId}\" is unknown by the system."
+                    Detail = $"Capability \"{capabilityId}\" is unknown by the system.",
                 }
             );
         }
@@ -589,7 +589,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Already has pending membership application",
                     Detail =
-                        $"User \"{userId}\" already has a pending membership application for capability \"{capabilityId}\"."
+                        $"User \"{userId}\" already has a pending membership application for capability \"{capabilityId}\".",
                 }
             );
         }
@@ -599,7 +599,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Already member",
-                    Detail = $"User \"{userId}\" is already member of capability \"{capabilityId}\"."
+                    Detail = $"User \"{userId}\" is already member of capability \"{capabilityId}\".",
                 }
             );
         }
@@ -697,7 +697,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = "User id is not valid and thus cannot leave any capabilities."
+                    Detail = "User id is not valid and thus cannot leave any capabilities.",
                 }
             );
 
@@ -707,7 +707,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
 
@@ -723,7 +723,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Membership not cancelled.",
-                    Detail = $"A membership of user \"{userId}\" for capability \"{id}\" could not be found."
+                    Detail = $"A membership of user \"{userId}\" for capability \"{id}\" could not be found.",
                 }
             );
         }
@@ -739,7 +739,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = "User id is not valid and thus cannot leave any capabilities."
+                    Detail = "User id is not valid and thus cannot leave any capabilities.",
                 }
             );
 
@@ -748,7 +748,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
 
@@ -758,7 +758,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
 
@@ -779,7 +779,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = "User id is not valid and thus cannot leave any capabilities."
+                    Detail = "User id is not valid and thus cannot leave any capabilities.",
                 }
             );
 
@@ -788,7 +788,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
 
@@ -797,7 +797,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Kafka cluster not found.",
-                    Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found."
+                    Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found.",
                 }
             );
 
@@ -806,7 +806,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Not a capability member",
-                    Detail = $"User is not a member of capability {capabilityId}"
+                    Detail = $"User is not a member of capability {capabilityId}",
                 }
             );
 
@@ -816,7 +816,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Kafka cluster not found.",
-                    Detail = $"Kafka cluster \"{clusterId}\" could has not found."
+                    Detail = $"Kafka cluster \"{clusterId}\" could has not found.",
                 }
             );
 
@@ -827,7 +827,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Kafka cluster access not found.",
                     Detail =
-                        $"Access to Kafka cluster \"{clusterId}\" for capability \"{capabilityId}\" has not been requested."
+                        $"Access to Kafka cluster \"{clusterId}\" for capability \"{capabilityId}\" has not been requested.",
                 }
             );
 
@@ -855,7 +855,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = "User id is not valid and thus cannot leave any capabilities."
+                    Detail = "User id is not valid and thus cannot leave any capabilities.",
                 }
             );
 
@@ -864,7 +864,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
 
@@ -873,7 +873,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Kafka cluster not found.",
-                    Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found."
+                    Detail = $"A Kafka cluster with id \"{clusterId}\" could not be found.",
                 }
             );
 
@@ -899,7 +899,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = "User id is not valid and thus cannot leave any capabilities."
+                    Detail = "User id is not valid and thus cannot leave any capabilities.",
                 }
             );
 
@@ -908,7 +908,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
 
@@ -920,7 +920,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Not authorized",
                     Detail =
-                        $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\"."
+                        $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\".",
                 }
             );
 
@@ -956,7 +956,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = "User id is not valid and thus cannot leave any capabilities."
+                    Detail = "User id is not valid and thus cannot leave any capabilities.",
                 }
             );
 
@@ -965,7 +965,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
 
@@ -977,7 +977,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Not authorized",
                     Detail =
-                        $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\"."
+                        $"User \"{userId}\" is not authorized to cancel deletion request for capability \"{capabilityId}\".",
                 }
             );
 
@@ -1013,7 +1013,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
 
@@ -1037,7 +1037,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = "User id is not valid and thus set capability metadata."
+                    Detail = "User id is not valid and thus set capability metadata.",
                 }
             );
 
@@ -1046,7 +1046,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
 
@@ -1056,7 +1056,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Not authorized",
-                    Detail = $"User \"{userId}\" is not authorized to set capability metadata."
+                    Detail = $"User \"{userId}\" is not authorized to set capability metadata.",
                 }
             );
 
@@ -1066,7 +1066,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Invalid metadata",
                     Detail = "Request body is empty",
-                    Status = StatusCodes.Status400BadRequest
+                    Status = StatusCodes.Status400BadRequest,
                 }
             );
 
@@ -1083,7 +1083,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Invalid json metadata",
                     Detail = e.Message,
-                    Status = StatusCodes.Status400BadRequest
+                    Status = StatusCodes.Status400BadRequest,
                 }
             );
         }
@@ -1110,7 +1110,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = "User id is not valid and thus set capability metadata."
+                    Detail = "User id is not valid and thus set capability metadata.",
                 }
             );
 
@@ -1119,7 +1119,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
 
@@ -1129,7 +1129,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Not authorized",
-                    Detail = $"User \"{userId}\" is not authorized to set capability metadata."
+                    Detail = $"User \"{userId}\" is not authorized to set capability metadata.",
                 }
             );
 
@@ -1139,7 +1139,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Invalid metadata",
                     Detail = "Request body is empty",
-                    Status = StatusCodes.Status400BadRequest
+                    Status = StatusCodes.Status400BadRequest,
                 }
             );
 
@@ -1154,7 +1154,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Invalid json metadata",
                     Detail = e.Message,
-                    Status = StatusCodes.Status400BadRequest
+                    Status = StatusCodes.Status400BadRequest,
                 }
             );
         }
@@ -1180,7 +1180,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
         }
@@ -1201,7 +1201,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = "User id is not valid and thus set capability metadata."
+                    Detail = "User id is not valid and thus set capability metadata.",
                 }
             );
 
@@ -1210,7 +1210,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
         var portalUser = HttpContext.User.ToPortalUser();
@@ -1220,7 +1220,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "User unauthorized",
-                    Detail = $"user \"{userId}\" isn't authorized to join capabilities directly."
+                    Detail = $"user \"{userId}\" isn't authorized to join capabilities directly.",
                 }
             );
         }
@@ -1234,7 +1234,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "User already in capability",
-                    Detail = $"AddUserToCapability: {e.Message}."
+                    Detail = $"AddUserToCapability: {e.Message}.",
                 }
             );
         }
@@ -1278,7 +1278,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found."
+                    Detail = $"A capability with id \"{id}\" could not be found.",
                 }
             );
         }
@@ -1289,7 +1289,7 @@ public class CapabilityController : ControllerBase
                 {
                     Title = "Invalid request",
                     Detail = "Request body Invitees is not provided",
-                    Status = StatusCodes.Status400BadRequest
+                    Status = StatusCodes.Status400BadRequest,
                 }
             );
         }
@@ -1392,7 +1392,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid SelfAssessmentOptionId provided",
-                    Status = StatusCodes.Status400BadRequest
+                    Status = StatusCodes.Status400BadRequest,
                 }
             );
         }
@@ -1428,7 +1428,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid SelfAssessmentOptionId provided",
-                    Status = StatusCodes.Status400BadRequest
+                    Status = StatusCodes.Status400BadRequest,
                 }
             );
         }
@@ -1459,7 +1459,7 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid SelfAssessmentOptionId provided",
-                    Status = StatusCodes.Status400BadRequest
+                    Status = StatusCodes.Status400BadRequest,
                 }
             );
         }

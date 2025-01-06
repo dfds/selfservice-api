@@ -14,8 +14,8 @@ public class TestTeamApplicationService
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
-        var teamService = A.TeamApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+        var teamService = A
+            .TeamApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .WithCapabilityRepository(capabilityRepo)
             .Build();
 
@@ -49,8 +49,8 @@ public class TestTeamApplicationService
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
-        var teamService = A.TeamApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+        var teamService = A
+            .TeamApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .WithCapabilityRepository(capabilityRepo)
             .Build();
 
@@ -84,8 +84,8 @@ public class TestTeamApplicationService
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
 
-        var teamService = A.TeamApplicationService
-            .WithDbContextAndDefaultRepositories(dbContext)
+        var teamService = A
+            .TeamApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .WithCapabilityRepository(capabilityRepo)
             .WithMembershipRepository(membershipRepo)
             .Build();
@@ -111,7 +111,7 @@ public class TestTeamApplicationService
             await membershipRepo.Add(A.Membership.WithCapabilityId(capabilityA.Id).WithUserId(s).Build());
         }
 
-        var testUsersInCapabilityB = new[] { "john@dfds.com", "fred@dfds.com", "eddy@dfds.com", };
+        var testUsersInCapabilityB = new[] { "john@dfds.com", "fred@dfds.com", "eddy@dfds.com" };
 
         foreach (var s in testUsersInCapabilityB)
         {

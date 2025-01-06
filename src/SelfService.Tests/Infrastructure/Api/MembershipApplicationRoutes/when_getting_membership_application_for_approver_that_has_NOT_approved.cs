@@ -9,8 +9,8 @@ public class when_getting_membership_application_for_approver_that_has_NOT_appro
 {
     private const string SomeApprover = "some-approver";
 
-    private readonly MembershipApplication _aMembershipApplication = A.MembershipApplication
-        .WithApplicant("some-user")
+    private readonly MembershipApplication _aMembershipApplication = A
+        .MembershipApplication.WithApplicant("some-user")
         .WithApproval(builder => builder.WithApprovedBy(SomeApprover))
         .Build();
 

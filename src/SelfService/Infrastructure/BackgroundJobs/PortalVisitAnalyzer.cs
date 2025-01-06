@@ -43,7 +43,7 @@ public class PortalVisitAnalyzer : BackgroundService
             DayOfWeek.Friday => now.Subtract(TimeSpan.FromDays(4)),
             DayOfWeek.Saturday => now.Subtract(TimeSpan.FromDays(5)),
             DayOfWeek.Sunday => now.Subtract(TimeSpan.FromDays(6)),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(),
         };
     }
 
@@ -62,8 +62,8 @@ public class PortalVisitAnalyzer : BackgroundService
         var windowBegin = GetStartOfWeek(systemTime.Now.ToUniversalTime());
         var windowEnd = systemTime.Now.ToUniversalTime();
 
-        var visits = await dbContext.PortalVisits
-            .Where(x => x.VisitedAt >= windowBegin && x.VisitedAt <= windowEnd)
+        var visits = await dbContext
+            .PortalVisits.Where(x => x.VisitedAt >= windowBegin && x.VisitedAt <= windowEnd)
             .ToListAsync(cancellationToken);
 
         var windowDataSet = visits.GroupBy(x => x.VisitedBy).ToArray();

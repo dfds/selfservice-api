@@ -95,7 +95,7 @@ string CreateTimeSeriesFinoutJson()
             {
                 Tag = capabilityIdA,
                 TimeStamp = current,
-                Value = lowCostsSequence
+                Value = lowCostsSequence,
             }
         );
         lowCostsSequence += easing((float)random.NextDouble()) * randMinMax(-lowFluctuation, lowFluctuation);
@@ -109,7 +109,7 @@ string CreateTimeSeriesFinoutJson()
             {
                 Tag = capabilityIdB,
                 TimeStamp = current,
-                Value = highCostsSequence
+                Value = highCostsSequence,
             }
         );
         highCostsSequence += easing((float)random.NextDouble()) * randMinMax(-highFluctuation, highFluctuation);
@@ -142,14 +142,14 @@ string CreateAwsResourcesJson()
             counts.Add(awsId, new List<PlatformDataApiAwsResourceCount>());
         }
 
-        counts[awsId].Add(new PlatformDataApiAwsResourceCount() { ResourceId = resourceId, Count = count, });
+        counts[awsId].Add(new PlatformDataApiAwsResourceCount() { ResourceId = resourceId, Count = count });
     }
 
     var awsResourceCounts = new List<PlatformDataApiAwsResourceCounts>();
     foreach (var (awsId, awsCounts) in counts)
     {
         awsResourceCounts.Add(
-            new PlatformDataApiAwsResourceCounts() { AwsAccountId = awsId, Counts = awsCounts.ToArray(), }
+            new PlatformDataApiAwsResourceCounts() { AwsAccountId = awsId, Counts = awsCounts.ToArray() }
         );
     }
 

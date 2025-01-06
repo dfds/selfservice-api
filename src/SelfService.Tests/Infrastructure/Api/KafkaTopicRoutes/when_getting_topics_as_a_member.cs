@@ -9,14 +9,14 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
 {
     private readonly Capability _aCapability = A.Capability.Build();
 
-    private readonly KafkaTopic _aPrivateTopic = A.KafkaTopic
-        .WithId(KafkaTopicId.New())
+    private readonly KafkaTopic _aPrivateTopic = A
+        .KafkaTopic.WithId(KafkaTopicId.New())
         .WithKafkaClusterId("foo")
         .WithName("im-private")
         .Build();
 
-    private readonly KafkaTopic _aPublicTopic = A.KafkaTopic
-        .WithId(KafkaTopicId.New())
+    private readonly KafkaTopic _aPublicTopic = A
+        .KafkaTopic.WithId(KafkaTopicId.New())
         .WithKafkaClusterId("foo")
         .WithName("pub.im-public")
         .Build();
@@ -65,7 +65,7 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
 
         var values = document?.SelectElements("items")?.Select(x => x.GetProperty("id").GetString()).ToArray();
 
-        Assert.Equal(expected: new[] { _aPrivateTopic.Id.ToString(), _aPublicTopic.Id.ToString(), }, actual: values);
+        Assert.Equal(expected: new[] { _aPrivateTopic.Id.ToString(), _aPublicTopic.Id.ToString() }, actual: values);
     }
 
     [Fact]

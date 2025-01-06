@@ -180,34 +180,34 @@ public class AzureResourceManifest
         var plannedSunset = jsonObject["dfds.planned_sunset"]?.ToString() ?? "";
 
         return $$"""
-                 terraform {
-                   source = "git::https://github.com/dfds/azure-infrastructure-modules.git//capability-context?{{options}}"
-                 }
-                 
-                 include {
-                   path = "${find_in_parent_folders()}"
-                 }
-                 
-                 inputs = {
-                   name                        = "dfds_ssu_{{AzureResource?.Environment}}_{{Capability?.Id}}"
-                   tribe                       = "{{tribe}}"
-                   team                        = "{{team}}"
-                   email                       = "aws.{{Capability?.Id}}@dfds.com"
-                   context_id                  = "{{AzureResource?.Id}}"
-                   correlation_id              = "{{correlationId}}"
-                   capability_name             = "{{Capability?.Name}}"
-                   capability_root_id          = "{{Capability?.Id}}"
-                   context_name                = "{{AzureResource?.Environment}}"
-                   capability_id               = "{{Capability?.Id}}"
-                   owner                       = "{{owner}}"
-                   environment                 = "{{AzureResource?.Environment}}"
-                   costcentre                  = "{{costCentre}}"
-                   availability                = "{{availability}}"
-                   planned_sunset              = "{{plannedSunset}}"
-                   enable_capability_access    = true
+            terraform {
+              source = "git::https://github.com/dfds/azure-infrastructure-modules.git//capability-context?{{options}}"
+            }
 
-                   subscription_id = "${get_env("CORE_SUBSCRIPTION_ID", "")}"
-                 }
-                 """;
+            include {
+              path = "${find_in_parent_folders()}"
+            }
+
+            inputs = {
+              name                        = "dfds_ssu_{{AzureResource?.Environment}}_{{Capability?.Id}}"
+              tribe                       = "{{tribe}}"
+              team                        = "{{team}}"
+              email                       = "aws.{{Capability?.Id}}@dfds.com"
+              context_id                  = "{{AzureResource?.Id}}"
+              correlation_id              = "{{correlationId}}"
+              capability_name             = "{{Capability?.Name}}"
+              capability_root_id          = "{{Capability?.Id}}"
+              context_name                = "{{AzureResource?.Environment}}"
+              capability_id               = "{{Capability?.Id}}"
+              owner                       = "{{owner}}"
+              environment                 = "{{AzureResource?.Environment}}"
+              costcentre                  = "{{costCentre}}"
+              availability                = "{{availability}}"
+              planned_sunset              = "{{plannedSunset}}"
+              enable_capability_access    = true
+
+              subscription_id = "${get_env("CORE_SUBSCRIPTION_ID", "")}"
+            }
+            """;
     }
 }

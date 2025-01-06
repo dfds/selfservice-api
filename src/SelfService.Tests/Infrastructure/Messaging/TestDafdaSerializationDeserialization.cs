@@ -10,13 +10,12 @@ namespace SelfService.Tests.Infrastructure.Messaging;
 public class TestDafdaSerializationDeserialization
 {
     // Copy of code in Dafda.JsonFactory
-    private readonly JsonSerializerOptions _jsonSerializerOptions =
-        new()
-        {
-            PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            NumberHandling = JsonNumberHandling.AllowReadingFromString
-        };
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+    };
 
     private const string TestApplicationId = "applicationId";
     private const string TestCapabilityId = "capabilityId";
@@ -108,7 +107,7 @@ public class TestDafdaSerializationDeserialization
                 CapabilityId = TestCapabilityId,
                 KafkaClusterId = TestKafkaClusterId,
                 KafkaTopicId = TestTopicId,
-                KafkaTopicName = TestTopicName
+                KafkaTopicName = TestTopicName,
             }
         );
     }
@@ -131,7 +130,7 @@ public class TestDafdaSerializationDeserialization
             {
                 KafkaTopicId = TestTopicId,
                 MessageContractId = TestMessageContractId,
-                MessageType = TestMessageType
+                MessageType = TestMessageType,
             }
         );
     }
@@ -164,7 +163,7 @@ public class TestDafdaSerializationDeserialization
             {
                 PortalVisitId = TestPortalVisitId,
                 VisitedAt = "now",
-                VisitedBy = TestUser
+                VisitedBy = TestUser,
             }
         );
     }
@@ -187,7 +186,7 @@ public class TestDafdaSerializationDeserialization
             {
                 CapabilityId = TestCapabilityId,
                 MembershipId = TestMemberShipId,
-                UserId = TestUser
+                UserId = TestUser,
             }
         );
     }
@@ -197,7 +196,7 @@ public class TestDafdaSerializationDeserialization
     {
         await dafda_serialize_deserialize(new KafkaClusterAccessGranted());
         await dafda_serialize_deserialize(
-            new KafkaClusterAccessGranted { CapabilityId = TestCapabilityId, KafkaClusterId = TestKafkaClusterId, }
+            new KafkaClusterAccessGranted { CapabilityId = TestCapabilityId, KafkaClusterId = TestKafkaClusterId }
         );
     }
 
@@ -210,7 +209,7 @@ public class TestDafdaSerializationDeserialization
             {
                 ClusterId = TestKafkaClusterId,
                 TopicId = TestTopicId,
-                TopicName = TestTopicName
+                TopicName = TestTopicName,
             }
         );
     }
@@ -224,7 +223,7 @@ public class TestDafdaSerializationDeserialization
             {
                 ClusterId = TestKafkaClusterId,
                 TopicId = TestTopicId,
-                TopicName = TestTopicName
+                TopicName = TestTopicName,
             }
         );
     }

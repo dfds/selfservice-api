@@ -19,8 +19,8 @@ class CommandExecutor
                 Arguments = args,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                CreateNoWindow = true
-            }
+                CreateNoWindow = true,
+            },
         };
         proc.Start();
         if (timeout == 0)
@@ -38,7 +38,7 @@ class CommandExecutor
         {
             Output = output,
             Error = error,
-            ExitCode = proc.ExitCode
+            ExitCode = proc.ExitCode,
         };
     }
 

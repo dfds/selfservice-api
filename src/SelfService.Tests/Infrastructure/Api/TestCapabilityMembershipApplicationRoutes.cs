@@ -1,5 +1,5 @@
-﻿using SelfService.Domain.Models;
-using System.Text.Json;
+﻿using System.Text.Json;
+using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Tests.TestDoubles;
 
@@ -290,8 +290,8 @@ public class TestCapabilityMembershipApplicationRoutes
     [Fact]
     public async Task get_membership_applications_for_a_capability_returns_expected_allow_on_membership_application_approvals_self_link_when_empty()
     {
-        var stubMembershipApplication = A.MembershipApplication
-            .WithApprovals(Enumerable.Empty<MembershipApproval>())
+        var stubMembershipApplication = A
+            .MembershipApplication.WithApprovals(Enumerable.Empty<MembershipApproval>())
             .Build();
 
         await using var application = new ApiApplication();

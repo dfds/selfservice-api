@@ -35,13 +35,12 @@ public static class ConsumerConfiguration
 
 public class LegacyIncomingMessageFactory : IIncomingMessageFactory
 {
-    private static readonly JsonSerializerOptions JsonSerializerOptions =
-        new()
-        {
-            PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            NumberHandling = JsonNumberHandling.AllowReadingFromString
-        };
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+    };
 
     public TransportLevelMessage Create(string rawMessage)
     {

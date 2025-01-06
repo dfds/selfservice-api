@@ -34,7 +34,7 @@ public class TestECRRepositoryRepository
         var stubs = new List<ECRRepository>()
         {
             A.ECRRepository.WithName("ecr/first-stub").Build(),
-            A.ECRRepository.WithName("ecr/second-stub").Build()
+            A.ECRRepository.WithName("ecr/second-stub").Build(),
         };
         var sut = A.ECRRepositoryRepository.WithDbContext(dbContext).Build();
 

@@ -21,8 +21,8 @@ public static class Api
             });
         });
 
-        builder.Services
-            .AddControllers()
+        builder
+            .Services.AddControllers()
             .ConfigureApiBehaviorOptions(options =>
             {
                 options.SuppressModelStateInvalidFilter = true;

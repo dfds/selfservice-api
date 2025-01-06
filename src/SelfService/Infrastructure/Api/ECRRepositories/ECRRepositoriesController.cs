@@ -92,7 +92,7 @@ public class ECRRepositoriesController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Uncaught Exception",
-                    Detail = $"CreateECRRepository: {e.InnerException}."
+                    Detail = $"CreateECRRepository: {e.InnerException}.",
                 }
             );
         }

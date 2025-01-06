@@ -15,7 +15,7 @@ public static class SwaggerConfiguration
                 {
                     Description = "SelfService API",
                     Version = "v1",
-                    Title = "SelfService API"
+                    Title = "SelfService API",
                 }
             );
 

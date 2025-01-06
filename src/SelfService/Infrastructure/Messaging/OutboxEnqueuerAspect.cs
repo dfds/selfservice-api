@@ -1,6 +1,6 @@
 ﻿using Dafda.Outbox;
-using SelfService.Domain.Models;
 using SelfService.Domain.Aspectly;
+using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Messaging;
@@ -52,8 +52,8 @@ public class OutboxEnqueuerAspect : IAspect
 
     private IEventSource[] GetAggregates()
     {
-        return _dbContext.ChangeTracker
-            .Entries<IEventSource>()
+        return _dbContext
+            .ChangeTracker.Entries<IEventSource>()
             .Where(x => x.Entity.GetEvents().Any())
             .Select(x => x.Entity)
             .ToArray();

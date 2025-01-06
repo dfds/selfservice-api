@@ -47,7 +47,7 @@ public class MeController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Access Denied!",
-                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id."
+                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
                 }
             );
         }
@@ -67,7 +67,7 @@ public class MeController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Access Denied!",
-                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id."
+                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
                 }
             );
         }
@@ -78,7 +78,7 @@ public class MeController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid email",
-                    Detail = $"Email \"{request.Email}\" for user \"{userId}\" is not valid."
+                    Detail = $"Email \"{request.Email}\" for user \"{userId}\" is not valid.",
                 }
             );
         }
@@ -94,8 +94,8 @@ public class MeController : ControllerBase
         {
             new Stat(
                 Title: "Capabilities",
-                Value: await _dbContext.Capabilities
-                    .Where(x => x.Status != CapabilityStatusOptions.Deleted)
+                Value: await _dbContext
+                    .Capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted)
                     .CountAsync()
             ),
             new Stat(Title: "AWS Accounts", Value: await _dbContext.AwsAccounts.CountAsync()),

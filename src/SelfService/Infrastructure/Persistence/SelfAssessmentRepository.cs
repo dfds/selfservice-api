@@ -37,8 +37,8 @@ public class SelfAssessmentRepository : ISelfAssessmentRepository
         SelfAssessmentOptionId selfAssessmentOptionId
     )
     {
-        return await _dbContext.SelfAssessments.AnyAsync(
-            a => a.CapabilityId == capabilityId && a.OptionId == selfAssessmentOptionId
+        return await _dbContext.SelfAssessments.AnyAsync(a =>
+            a.CapabilityId == capabilityId && a.OptionId == selfAssessmentOptionId
         );
     }
 
@@ -52,8 +52,8 @@ public class SelfAssessmentRepository : ISelfAssessmentRepository
         SelfAssessmentOptionId selfAssessmentOptionId
     )
     {
-        return await _dbContext.SelfAssessments.FirstOrDefaultAsync(
-            a => a.CapabilityId == capabilityId && a.OptionId == selfAssessmentOptionId
+        return await _dbContext.SelfAssessments.FirstOrDefaultAsync(a =>
+            a.CapabilityId == capabilityId && a.OptionId == selfAssessmentOptionId
         );
     }
 }

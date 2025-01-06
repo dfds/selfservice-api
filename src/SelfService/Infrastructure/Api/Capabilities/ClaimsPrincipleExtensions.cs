@@ -17,8 +17,8 @@ public static class ClaimsPrincipleExtensions
             throw new Exception($"Unable to extract user id from ClaimsPrincipal {principal}");
         }
 
-        var roles = principal.Identities
-            .SelectMany(identity => identity.Claims)
+        var roles = principal
+            .Identities.SelectMany(identity => identity.Claims)
             .Where(claim => claim.Type == ClaimTypes.Role)
             .Select(claim => UserRole.Parse(claim.Value));
 

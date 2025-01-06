@@ -75,7 +75,7 @@ public class TestMessageType
     {
         get
         {
-            var values = new object[] { "foo", "bar", "foo-bar", "foo_bar", "1-2", "1_2", };
+            var values = new object[] { "foo", "bar", "foo-bar", "foo_bar", "1-2", "1_2" };
 
             return values.Select(x => new object[] { x });
         }

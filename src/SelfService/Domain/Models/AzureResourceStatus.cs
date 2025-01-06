@@ -4,5 +4,5 @@ public enum AzureResourceStatus
 {
     Requested,
     Pending,
-    Completed
+    Completed,
 }

@@ -45,8 +45,8 @@ public class StatsController : ControllerBase
     private async Task<Stat[]> ComposeStats()
     {
         //first fetch/compute the values:
-        int capabilitiesStat = await _dbContext.Capabilities
-            .Where(x => x.Status != CapabilityStatusOptions.Deleted)
+        int capabilitiesStat = await _dbContext
+            .Capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted)
             .CountAsync();
 
         int awsAccountsStat = await _dbContext.AwsAccounts.CountAsync();
@@ -55,12 +55,12 @@ public class StatsController : ControllerBase
 
         int kafkaClustersStat = await _dbContext.KafkaClusters.Where(x => x.Enabled).CountAsync();
 
-        int publicTopicsStat = await _dbContext.KafkaTopics
-            .Where(x => ((string)x.Name).StartsWith("pub."))
+        int publicTopicsStat = await _dbContext
+            .KafkaTopics.Where(x => ((string)x.Name).StartsWith("pub."))
             .CountAsync();
 
-        int privateTopicsStat = await _dbContext.KafkaTopics
-            .Where(x => !((string)x.Name).StartsWith("pub."))
+        int privateTopicsStat = await _dbContext
+            .KafkaTopics.Where(x => !((string)x.Name).StartsWith("pub."))
             .CountAsync();
 
         return new Stat[]

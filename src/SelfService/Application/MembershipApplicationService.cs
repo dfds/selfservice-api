@@ -301,12 +301,10 @@ public class MembershipApplicationService : IMembershipApplicationService
         var memberships = await _membershipApplicationRepository.GetAll();
         var membershipsThatUserCanApprove = memberships
             .ToList()
-            .Where(
-                x =>
-                    capabilities.Any(
-                        cap =>
-                            cap.Id == x.CapabilityId && x.Status == MembershipApplicationStatusOptions.PendingApprovals
-                    )
+            .Where(x =>
+                capabilities.Any(cap =>
+                    cap.Id == x.CapabilityId && x.Status == MembershipApplicationStatusOptions.PendingApprovals
+                )
             );
 
         return membershipsThatUserCanApprove.ToList();

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SelfService.Tests.Comparers;
 using SelfService.Domain.Models;
+using SelfService.Tests.Comparers;
 
 namespace SelfService.Tests.Infrastructure.Persistence;
 
@@ -36,8 +36,7 @@ public class TestCapabilityRepository
         await repo.Add(A.Capability.WithId("active"));
         await repo.Add(A.Capability.WithId("pending-new").WithStatus(CapabilityStatusOptions.PendingDeletion));
         await repo.Add(
-            A.Capability
-                .WithId("pending-old")
+            A.Capability.WithId("pending-old")
                 .WithStatus(CapabilityStatusOptions.PendingDeletion)
                 .WithModifiedAt(DateTime.UtcNow.AddDays(-8))
         );

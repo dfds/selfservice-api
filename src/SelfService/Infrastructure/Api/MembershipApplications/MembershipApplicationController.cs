@@ -57,7 +57,7 @@ public class MembershipApplicationController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "MembershipApplication not found",
-                    Detail = $"MembershipApplication \"{membershipApplicationId}\" is unknown by the system."
+                    Detail = $"MembershipApplication \"{membershipApplicationId}\" is unknown by the system.",
                 }
             );
         }
@@ -83,7 +83,7 @@ public class MembershipApplicationController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Access denied!",
-                    Detail = $"User is not authorized to access membership application \"{id}\"."
+                    Detail = $"User is not authorized to access membership application \"{id}\".",
                 }
             );
         }
@@ -94,7 +94,7 @@ public class MembershipApplicationController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Membership application not found",
-                    Detail = $"Membership application \"{membershipApplicationId}\" is unknown by the system."
+                    Detail = $"Membership application \"{membershipApplicationId}\" is unknown by the system.",
                 }
             );
         }
@@ -106,7 +106,7 @@ public class MembershipApplicationController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Membership application not found",
-                    Detail = $"Membership application \"{membershipApplicationId}\" is unknown by the system."
+                    Detail = $"Membership application \"{membershipApplicationId}\" is unknown by the system.",
                 }
             );
         }
@@ -119,7 +119,7 @@ public class MembershipApplicationController : ControllerBase
                 {
                     Title = "Access denied!",
                     Detail =
-                        $"User \"{userId}\" is not authorized to access membership application \"{membershipApplicationId}\"."
+                        $"User \"{userId}\" is not authorized to access membership application \"{membershipApplicationId}\".",
                 }
             );
         }
@@ -153,7 +153,7 @@ public class MembershipApplicationController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Membership application not found.",
-                    Detail = $"A membership application with id \"{id}\" could not be found."
+                    Detail = $"A membership application with id \"{id}\" could not be found.",
                 }
             );
         }
@@ -165,7 +165,7 @@ public class MembershipApplicationController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "User unauthorized",
-                    Detail = $"user \"{userId}\" isn't authorized to delete membership applications."
+                    Detail = $"user \"{userId}\" isn't authorized to delete membership applications.",
                 }
             );
         }
@@ -197,7 +197,7 @@ public class MembershipApplicationController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Membership application not found.",
-                    Detail = $"A membership application with id \"{id}\" could not be found."
+                    Detail = $"A membership application with id \"{id}\" could not be found.",
                 }
             );
         }
@@ -213,7 +213,7 @@ public class MembershipApplicationController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Membership application not found.",
-                    Detail = $"A membership application with id \"{id}\" could not be found."
+                    Detail = $"A membership application with id \"{id}\" could not be found.",
                 }
             );
         }

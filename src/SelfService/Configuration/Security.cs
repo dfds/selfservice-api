@@ -10,8 +10,8 @@ public static class Security
 {
     public static void AddSecurity(this WebApplicationBuilder builder)
     {
-        builder.Services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        builder
+            .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
 
         builder.Services.AddAuthorization();

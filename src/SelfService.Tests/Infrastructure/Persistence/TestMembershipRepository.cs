@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using SelfService.Tests.Comparers;
-using SelfService.Tests.TestDoubles;
 using Microsoft.Extensions.Logging;
+using SelfService.Domain;
 using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence;
-using SelfService.Domain;
+using SelfService.Tests.Comparers;
+using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Persistence;
 

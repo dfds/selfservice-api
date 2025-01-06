@@ -11,8 +11,8 @@ public static class Logging
         builder.Host.UseSerilog(
             (context, configuration) =>
             {
-                configuration.Enrich
-                    .FromLogContext()
+                configuration
+                    .Enrich.FromLogContext()
                     .MinimumLevel.Verbose()
                     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                     .MinimumLevel.Override("Microsoft.IdentityModel", LogEventLevel.Warning)

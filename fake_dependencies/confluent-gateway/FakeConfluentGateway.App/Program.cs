@@ -77,7 +77,7 @@ app.MapPost(
                     {
                         CapabilityId = capabilityId,
                         ContextId = contextId,
-                        NamespaceName = capabilityId
+                        NamespaceName = capabilityId,
                     };
 
                     await legacyProducer.SendK8sNamespaceCreatedAndAwsArnConnected(message);

@@ -7,8 +7,8 @@ namespace SelfService.Tests.Infrastructure.Api.MembershipApplicationRoutes;
 
 public class when_getting_membership_application_for_approver_that_has_approved : IAsyncLifetime
 {
-    private readonly MembershipApplication _aMembershipApplication = A.MembershipApplication
-        .WithApplicant("some-user")
+    private readonly MembershipApplication _aMembershipApplication = A
+        .MembershipApplication.WithApplicant("some-user")
         .WithApproval(builder => builder.WithApprovedBy("foo@bar.com"))
         .Build();
 

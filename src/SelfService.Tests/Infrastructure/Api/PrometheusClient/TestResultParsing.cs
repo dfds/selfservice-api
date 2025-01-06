@@ -1,9 +1,9 @@
-using Microsoft.Extensions.Logging;
 using System.Net;
-using SelfService.Infrastructure.Api.Prometheus;
-using SelfService.Application;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
+using SelfService.Application;
+using SelfService.Infrastructure.Api.Prometheus;
 
 namespace SelfService.Tests.Infrastructure.Api;
 

@@ -9,8 +9,8 @@ public class when_getting_topics_as_a_NON_member : IAsyncLifetime
 {
     private readonly Capability _aCapability = A.Capability.Build();
 
-    private readonly KafkaTopic _aTopic = A.KafkaTopic
-        .WithId(KafkaTopicId.New())
+    private readonly KafkaTopic _aTopic = A
+        .KafkaTopic.WithId(KafkaTopicId.New())
         .WithKafkaClusterId("foo")
         .WithName("pub.im-public")
         .Build();

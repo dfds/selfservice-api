@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -5,7 +6,6 @@ using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace SelfService.Tests.Application;
 

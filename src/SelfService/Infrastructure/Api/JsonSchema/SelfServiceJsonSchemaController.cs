@@ -30,7 +30,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 {
                     Title = "Invalid object Id",
                     Detail =
-                        $"{id} is not a valid object id, valid object ids are: {SelfServiceJsonSchemaObjectId.ValidTypesString()}"
+                        $"{id} is not a valid object id, valid object ids are: {SelfServiceJsonSchemaObjectId.ValidTypesString()}",
                 }
             );
 
@@ -70,7 +70,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 {
                     Title = "Invalid object Id",
                     Detail =
-                        $"{id} is not a valid object id, valid object ids are: {SelfServiceJsonSchemaObjectId.ValidTypesString()}"
+                        $"{id} is not a valid object id, valid object ids are: {SelfServiceJsonSchemaObjectId.ValidTypesString()}",
                 }
             );
 
@@ -87,7 +87,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid Schema",
-                    Detail = $"Schema in request is not a valid json schema: {e.Message}"
+                    Detail = $"Schema in request is not a valid json schema: {e.Message}",
                 }
             );
         }
@@ -110,7 +110,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid Schema",
-                    Detail = $"Schema in request is not a valid json schema: {e.Message}"
+                    Detail = $"Schema in request is not a valid json schema: {e.Message}",
                 }
             );
         }
@@ -143,7 +143,7 @@ public class SelfServiceJsonSchemaController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid Schema",
-                    Detail = $"Schema in request is not a valid json schema: {e.Message}"
+                    Detail = $"Schema in request is not a valid json schema: {e.Message}",
                 }
             );
         }

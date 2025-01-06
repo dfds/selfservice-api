@@ -41,16 +41,16 @@ public class MessageContractRepository : IMessageContractRepository
 
     public async Task<IEnumerable<MessageContract>> FindBy(KafkaTopicId topicId)
     {
-        return await _dbContext.MessageContracts
-            .Where(x => x.KafkaTopicId == topicId)
+        return await _dbContext
+            .MessageContracts.Where(x => x.KafkaTopicId == topicId)
             .OrderBy(x => x.MessageType)
             .ToListAsync();
     }
 
     public async Task<MessageContract?> GetLatestSchema(KafkaTopicId topicId, MessageType messageType)
     {
-        var messageContracts = await _dbContext.MessageContracts
-            .Where(x => x.KafkaTopicId == topicId)
+        var messageContracts = await _dbContext
+            .MessageContracts.Where(x => x.KafkaTopicId == topicId)
             .Where(x => x.MessageType == messageType)
             .OrderBy(x => x.SchemaVersion)
             .ToListAsync();
@@ -63,8 +63,8 @@ public class MessageContractRepository : IMessageContractRepository
 
     public async Task<bool> Exists(KafkaTopicId topicId, MessageType messageType)
     {
-        return await _dbContext.MessageContracts
-            .Where(x => x.KafkaTopicId == topicId && x.MessageType == messageType)
+        return await _dbContext
+            .MessageContracts.Where(x => x.KafkaTopicId == topicId && x.MessageType == messageType)
             .AnyAsync();
     }
 

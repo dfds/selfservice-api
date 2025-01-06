@@ -49,7 +49,7 @@ public class MetricsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "PlatformDataApi unreachable",
-                    Detail = $"PlatformDataApi error: {e.Message}."
+                    Detail = $"PlatformDataApi error: {e.Message}.",
                 }
             );
         }
@@ -95,7 +95,7 @@ public class MetricsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "PlatformDataApi unreachable",
-                    Detail = $"PlatformDataApi error: {e.Message}."
+                    Detail = $"PlatformDataApi error: {e.Message}.",
                 }
             );
         }
@@ -139,7 +139,7 @@ public class MetricsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "PlatformDataApi unreachable",
-                    Detail = $"PlatformDataApi error: {e.Message}."
+                    Detail = $"PlatformDataApi error: {e.Message}.",
                 }
             );
         }

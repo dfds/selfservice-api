@@ -19,8 +19,8 @@ public class KafkaClusterAccessRepository : IKafkaClusterAccessRepository
 
     public async Task<KafkaClusterAccess?> FindBy(CapabilityId capabilityId, KafkaClusterId kafkaClusterId)
     {
-        var kafkaClusterAccess = await _context.KafkaClusterAccess.SingleOrDefaultAsync(
-            x => x.CapabilityId == capabilityId && x.KafkaClusterId == kafkaClusterId
+        var kafkaClusterAccess = await _context.KafkaClusterAccess.SingleOrDefaultAsync(x =>
+            x.CapabilityId == capabilityId && x.KafkaClusterId == kafkaClusterId
         );
 
         return kafkaClusterAccess;

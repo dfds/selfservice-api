@@ -5,7 +5,7 @@ public enum ValidateJsonMetadataResultCode
     SuccessNoSchema,
     SuccessValidJsonMetadata,
     SuccessSchemaHasNoRequiredFields,
-    Error
+    Error,
 }
 
 public class ValidateJsonMetadataResult
@@ -40,7 +40,7 @@ public class ValidateJsonMetadataResult
         {
             JsonMetadata = jsonMetadata,
             JsonSchemaVersion = jsonSchemaVersion,
-            ResultCode = resultCode
+            ResultCode = resultCode,
         };
     }
 }

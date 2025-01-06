@@ -151,7 +151,7 @@ public class TestPostgresMappings
         await using var databaseFactory = new ExternalDatabaseFactory();
         var dbContext = await databaseFactory.CreateDbContext();
 
-        var stubApprovals = new[] { A.MembershipApproval.Build(), A.MembershipApproval.Build(), };
+        var stubApprovals = new[] { A.MembershipApproval.Build(), A.MembershipApproval.Build() };
 
         var stub = A.MembershipApplication.WithApprovals(stubApprovals).Build();
 

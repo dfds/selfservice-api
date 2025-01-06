@@ -4,5 +4,5 @@ public enum AwsAccountStatus
 {
     Requested,
     Pending,
-    Completed
+    Completed,
 }
