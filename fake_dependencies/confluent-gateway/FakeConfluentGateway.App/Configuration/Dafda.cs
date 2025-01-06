@@ -109,7 +109,7 @@ public static class Dafda
         {
             PropertyNameCaseInsensitive = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            NumberHandling = JsonNumberHandling.AllowReadingFromString
+            NumberHandling = JsonNumberHandling.AllowReadingFromString,
         };
 
         public string PayloadFormat => "application/json";
@@ -122,7 +122,7 @@ public static class Dafda
                 EventName = payloadDescriptor.MessageType,
                 CorrelationId = Guid.NewGuid().ToString("N"),
                 Sender = Assembly.GetExecutingAssembly().FullName,
-                Payload = payloadDescriptor.MessageData
+                Payload = payloadDescriptor.MessageData,
             };
             var messageFrom = JsonSerializer.Serialize(message, JsonSerializerOptions);
 

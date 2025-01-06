@@ -1,9 +1,9 @@
 using Amazon;
-using Amazon.SecurityToken;
-using Amazon.SecurityToken.Model;
-using Amazon.Runtime;
 using Amazon.EC2;
 using Amazon.EC2.Model;
+using Amazon.Runtime;
+using Amazon.SecurityToken;
+using Amazon.SecurityToken.Model;
 using SelfService.Domain.Models;
 
 namespace SelfService.Application;
@@ -44,7 +44,7 @@ public class AwsEC2QueriesApplicationService : IAwsEC2QueriesApplicationService
                         {
                             VpcId = vpc.VpcId,
                             CidrBlock = vpc.CidrBlock,
-                            Region = region.SystemName
+                            Region = region.SystemName,
                         };
                         allVpcs.Add(VpcInformation);
                     }
@@ -76,9 +76,9 @@ public class AwsEC2QueriesApplicationService : IAwsEC2QueriesApplicationService
                             new Filter
                             {
                                 Name = "resource-id",
-                                Values = new List<string> { vpc.VpcId }
-                            }
-                        }
+                                Values = new List<string> { vpc.VpcId },
+                            },
+                        },
                     };
                     var tagsResponse = await ec2Client.DescribeTagsAsync(describeTagsRequest);
 

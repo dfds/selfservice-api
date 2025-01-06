@@ -41,24 +41,24 @@ public class KafkaTopicRepository : IKafkaTopicRepository
 
     public async Task<IEnumerable<KafkaTopic>> GetAllPublic()
     {
-        return await _dbContext.KafkaTopics
-            .Where(x => ((string)x.Name).StartsWith("pub."))
+        return await _dbContext
+            .KafkaTopics.Where(x => ((string)x.Name).StartsWith("pub."))
             .OrderBy(x => x.Name)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<KafkaTopic>> FindBy(CapabilityId capabilityId)
     {
-        return await _dbContext.KafkaTopics
-            .Where(x => x.CapabilityId == capabilityId)
+        return await _dbContext
+            .KafkaTopics.Where(x => x.CapabilityId == capabilityId)
             .OrderBy(x => x.Name)
             .ToListAsync();
     }
 
     public async Task<KafkaTopic?> FindBy(KafkaTopicName name, KafkaClusterId clusterId)
     {
-        return await _dbContext.KafkaTopics
-            .Where(x => x.Name == name && x.KafkaClusterId == clusterId)
+        return await _dbContext
+            .KafkaTopics.Where(x => x.Name == name && x.KafkaClusterId == clusterId)
             .SingleOrDefaultAsync();
     }
 

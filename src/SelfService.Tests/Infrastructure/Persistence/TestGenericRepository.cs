@@ -144,9 +144,9 @@ public class TestGenericRepository
     public async Task using_deal_db_set_works()
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext<SelfServiceDbContext>(
-            options => new TestDbContext(options)
-        );
+        var dbContext = await databaseFactory.CreateDbContext<SelfServiceDbContext>(options => new TestDbContext(
+            options
+        ));
 
         var repo = new GenericRepository<KafkaTopic, KafkaTopicId>(dbContext.KafkaTopics);
         var kafkaTopic = A.KafkaTopic.Build();

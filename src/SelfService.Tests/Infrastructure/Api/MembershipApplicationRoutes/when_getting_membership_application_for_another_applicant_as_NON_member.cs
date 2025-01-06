@@ -7,8 +7,8 @@ namespace SelfService.Tests.Infrastructure.Api.MembershipApplicationRoutes;
 
 public class when_getting_membership_application_for_another_applicant_as_NON_member : IAsyncLifetime
 {
-    private readonly MembershipApplication _aMembershipApplication = A.MembershipApplication
-        .WithApplicant("some-user")
+    private readonly MembershipApplication _aMembershipApplication = A
+        .MembershipApplication.WithApplicant("some-user")
         .Build();
 
     private HttpResponseMessage _response = null!;

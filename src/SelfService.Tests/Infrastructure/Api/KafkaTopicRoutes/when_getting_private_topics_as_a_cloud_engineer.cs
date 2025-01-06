@@ -8,8 +8,8 @@ namespace SelfService.Tests.Infrastructure.Api.KafkaTopicRoutes;
 
 public class when_getting_private_topics_as_a_cloud_engineer : IAsyncLifetime
 {
-    private readonly KafkaTopic _aPrivateTopic = A.KafkaTopic
-        .WithId(KafkaTopicId.New())
+    private readonly KafkaTopic _aPrivateTopic = A
+        .KafkaTopic.WithId(KafkaTopicId.New())
         .WithKafkaClusterId("foo")
         .WithName("im-private")
         .Build();

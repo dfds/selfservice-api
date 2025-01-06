@@ -75,7 +75,7 @@ public class UserActionMiddleware : IMiddleware
             Service = "selfservice-api",
             Username = portalUser.Id,
             RequestData = rawRequestContent,
-            Timestamp = unixTimestamp
+            Timestamp = unixTimestamp,
         };
 
         await _messagingService.SendDomainEvent(evt);

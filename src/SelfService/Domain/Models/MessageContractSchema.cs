@@ -121,8 +121,8 @@ public class MessageContractSchema : ValueObject
         JsonDocument asDocument = JsonDocument.Parse(_value);
         try
         {
-            return asDocument.RootElement
-                .GetProperty("properties")
+            return asDocument
+                .RootElement.GetProperty("properties")
                 .GetProperty("schemaVersion")
                 .GetProperty("const")
                 .GetInt32();

@@ -9,32 +9,32 @@ namespace SelfService.Tests.Application;
 public class TestCapabilityApplicationService
 {
     private const string JsonMetadata = """
-                                            {
-                                                "foo": "bar"
-                                            }
-                                        """;
+            {
+                "foo": "bar"
+            }
+        """;
 
     private const string InvalidJsonMetadata = """
-                                                   {
-                                                       "not": "valid"
-                                                   }
-                                               """;
+            {
+                "not": "valid"
+            }
+        """;
 
     private const string SchemaEmpty = """{}""";
 
     private const string SchemaWithRequiredField = """
-                                                   {
-                                                     "$schema": "https://json-schema.org/draft/2020-12/schema",
-                                                     "required":["foo"],
-                                                     "additionalProperties": false,
-                                                     "properties":
-                                                       {
-                                                         "foo": {
-                                                           "type": "string"
-                                                         }
-                                                       }
-                                                   }
-                                                   """;
+        {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "required":["foo"],
+          "additionalProperties": false,
+          "properties":
+            {
+              "foo": {
+                "type": "string"
+              }
+            }
+        }
+        """;
 
     private readonly Mock<ISelfServiceJsonSchemaRepository> _mock = new();
 
@@ -63,8 +63,8 @@ public class TestCapabilityApplicationService
         _mock.Setup(x => x.GetLatestSchema(SelfServiceJsonSchemaObjectId.Capability)).ReturnsAsync(() => schema);
         var sut = A.SelfServiceJsonSchemaService.WithJsonSchemaRepository(_mock.Object).Build();
         var confService = A.ConfigurationLevelService.WithCapabilityRepository(repo).Build();
-        var capabilityService = A.CapabilityApplicationService
-            .WithCapabilityRepository(repo)
+        var capabilityService = A
+            .CapabilityApplicationService.WithCapabilityRepository(repo)
             .WithSelfServiceJsonSchemaService(sut)
             .WithConfigurationLevelService(confService)
             .Build();

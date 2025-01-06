@@ -9,58 +9,58 @@ public class TestMessageContractValidation
     private string BuildProperty(string name, string type, string example)
     {
         return $$"""
-                 "{{name}}": {
-                       "type": "{{type}}",
-                       "examples": [
-                         "{{example}}"
-                       ]
-                    }
-                 """;
+            "{{name}}": {
+                  "type": "{{type}}",
+                  "examples": [
+                    "{{example}}"
+                  ]
+               }
+            """;
     }
 
     private string BuildData(string[] properties, bool additionalProperties)
     {
         return $$"""
-                 {
-                   "type": "object",
-                   "properties": {{{string.Join(",", properties)}}},
-                   "additionalProperties": {{additionalProperties.ToString().ToLower()}}
-                 }
-                 """;
+            {
+              "type": "object",
+              "properties": {{{string.Join(",", properties)}}},
+              "additionalProperties": {{additionalProperties.ToString().ToLower()}}
+            }
+            """;
     }
 
     private string GetSchema(int version, string data)
     {
         return $$"""
-                 {
-                   "type": "object",
-                   "properties": {
-                    "schemaVersion":{
-                        "type": "integer",
-                        "const":{{version}}
-                    },
-                     "messageId": {
-                       "type": "string",
-                       "examples": [
-                         "<123>"
-                       ]
-                     },
-                     "type": {
-                       "type": "string",
-                       "examples": [
-                         "dfds-envelope"
-                       ]
-                     },
-                     "data": {{data}}
-                   },
-                   "required": [
-                     "messageId",
-                     "type",
-                     "data",
-                     "schemaVersion"
-                   ]
-                 }
-                 """;
+            {
+              "type": "object",
+              "properties": {
+               "schemaVersion":{
+                   "type": "integer",
+                   "const":{{version}}
+               },
+                "messageId": {
+                  "type": "string",
+                  "examples": [
+                    "<123>"
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "examples": [
+                    "dfds-envelope"
+                  ]
+                },
+                "data": {{data}}
+              },
+              "required": [
+                "messageId",
+                "type",
+                "data",
+                "schemaVersion"
+              ]
+            }
+            """;
     }
 
     [Fact]
@@ -74,8 +74,8 @@ public class TestMessageContractValidation
         await kafkaTopicRepository.Add(testKafkaTopic);
         await dbContext.SaveChangesAsync();
 
-        var kafkaTopicApplicationService = A.KafkaTopicApplicationService
-            .WithKafkaTopicRepository(kafkaTopicRepository)
+        var kafkaTopicApplicationService = A
+            .KafkaTopicApplicationService.WithKafkaTopicRepository(kafkaTopicRepository)
             .WithMessageContractRepository(messageContractRepository)
             .Build();
 
@@ -102,15 +102,15 @@ public class TestMessageContractValidation
                 new[]
                 {
                     BuildProperty("someTest", "integer", "1"),
-                    BuildProperty("someNewProperty", "string", "hello")
+                    BuildProperty("someNewProperty", "string", "hello"),
                 },
                 openContentModelFirstSchema
             )
         );
 
         var testKafkaTopic = A.KafkaTopic.Build();
-        var testMessageContract = A.MessageContract
-            .WithKafkaTopicId(testKafkaTopic.Id)
+        var testMessageContract = A
+            .MessageContract.WithKafkaTopicId(testKafkaTopic.Id)
             .WithSchema(firstValidSchema)
             .WithSchemaVersion(1)
             .WithType(MessageType.Parse("test"))
@@ -123,8 +123,8 @@ public class TestMessageContractValidation
         await messageContractRepository.Add(testMessageContract);
         await dbContext.SaveChangesAsync();
 
-        var kafkaTopicApplicationService = A.KafkaTopicApplicationService
-            .WithKafkaTopicRepository(kafkaTopicRepository)
+        var kafkaTopicApplicationService = A
+            .KafkaTopicApplicationService.WithKafkaTopicRepository(kafkaTopicRepository)
             .WithMessageContractRepository(messageContractRepository)
             .Build();
 
@@ -152,8 +152,8 @@ public class TestMessageContractValidation
         var firstValidSchema = GetSchema(1, BuildData(properties.ToArray(), openContentModelFirstSchema));
 
         var testKafkaTopic = A.KafkaTopic.Build();
-        var testMessageContract = A.MessageContract
-            .WithKafkaTopicId(testKafkaTopic.Id)
+        var testMessageContract = A
+            .MessageContract.WithKafkaTopicId(testKafkaTopic.Id)
             .WithSchema(firstValidSchema)
             .WithSchemaVersion(1)
             .WithType(MessageType.Parse("test"))
@@ -166,8 +166,8 @@ public class TestMessageContractValidation
         await messageContractRepository.Add(testMessageContract);
         await dbContext.SaveChangesAsync();
 
-        var kafkaTopicApplicationService = A.KafkaTopicApplicationService
-            .WithKafkaTopicRepository(kafkaTopicRepository)
+        var kafkaTopicApplicationService = A
+            .KafkaTopicApplicationService.WithKafkaTopicRepository(kafkaTopicRepository)
             .WithMessageContractRepository(messageContractRepository)
             .Build();
 
@@ -233,8 +233,8 @@ public class TestMessageContractValidation
         var firstValidSchema = GetSchema(1, BuildData(properties.ToArray(), false));
 
         var testKafkaTopic = A.KafkaTopic.Build();
-        var testMessageContract = A.MessageContract
-            .WithKafkaTopicId(testKafkaTopic.Id)
+        var testMessageContract = A
+            .MessageContract.WithKafkaTopicId(testKafkaTopic.Id)
             .WithSchema(firstValidSchema)
             .WithSchemaVersion(1)
             .WithType(MessageType.Parse("test"))
@@ -247,8 +247,8 @@ public class TestMessageContractValidation
         await messageContractRepository.Add(testMessageContract);
         await dbContext.SaveChangesAsync();
 
-        var kafkaTopicApplicationService = A.KafkaTopicApplicationService
-            .WithKafkaTopicRepository(kafkaTopicRepository)
+        var kafkaTopicApplicationService = A
+            .KafkaTopicApplicationService.WithKafkaTopicRepository(kafkaTopicRepository)
             .WithMessageContractRepository(messageContractRepository)
             .Build();
 
@@ -279,39 +279,39 @@ public class TestMessageContractValidation
         string CreateSchemaWithRequired(string[] required)
         {
             return $$"""
-                     {
-                       "type": "object",
-                       "properties": {
-                        "schemaVersion":{
-                            "type": "integer",
-                            "const": 1
-                        },
-                         "messageId": {
-                           "type": "string",
-                           "examples": [
-                             "<123>"
-                           ]
-                         },
-                         "type": {
-                           "type": "string",
-                           "examples": [
-                             "dfds-envelope"
-                           ]
-                         },
-                         "data": {
-                             "some_data": {
-                               "type": "string",
-                               "examples": [
-                                 "dfds-envelope"
-                               ]
-                             }
-                         }
-                       },
-                       "required": [
-                          {{string.Join(",", required.Select(p => $"\"{p}\""))}}
-                       ]
-                     }
-                     """;
+                {
+                  "type": "object",
+                  "properties": {
+                   "schemaVersion":{
+                       "type": "integer",
+                       "const": 1
+                   },
+                    "messageId": {
+                      "type": "string",
+                      "examples": [
+                        "<123>"
+                      ]
+                    },
+                    "type": {
+                      "type": "string",
+                      "examples": [
+                        "dfds-envelope"
+                      ]
+                    },
+                    "data": {
+                        "some_data": {
+                          "type": "string",
+                          "examples": [
+                            "dfds-envelope"
+                          ]
+                        }
+                    }
+                  },
+                  "required": [
+                     {{string.Join(",", required.Select(p => $"\"{p}\""))}}
+                  ]
+                }
+                """;
         }
 
         void AssertThrows(string[] required)

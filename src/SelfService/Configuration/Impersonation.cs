@@ -31,7 +31,7 @@ public static class Impersonation
                         new Claim[]
                         {
                             new Claim(ClaimTypes.NameIdentifier, impersonateAs),
-                            new Claim(ClaimTypes.Name, impersonateAs)
+                            new Claim(ClaimTypes.Name, impersonateAs),
                         }
                     );
 

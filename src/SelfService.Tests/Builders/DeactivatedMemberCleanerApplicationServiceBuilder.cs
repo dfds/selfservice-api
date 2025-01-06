@@ -1,11 +1,11 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SelfService.Application;
 using SelfService.Domain;
 using SelfService.Domain.Models;
+using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
-using Microsoft.Extensions.Logging;
-using SelfService.Infrastructure.BackgroundJobs;
-using SelfService.Application;
 
 namespace SelfService.Tests.Builders;
 

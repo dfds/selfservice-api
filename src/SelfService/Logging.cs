@@ -14,8 +14,8 @@ public static class Serilog
             {
                 _ = bool.TryParse(Environment.GetEnvironmentVariable("HUMAN_READABLE_LOG"), out var humanReadableLog);
 
-                configuration.Enrich
-                    .FromLogContext()
+                configuration
+                    .Enrich.FromLogContext()
                     .Enrich.WithProperty("Application", "SelfService.Api")
                     .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
                     .MinimumLevel.Information()

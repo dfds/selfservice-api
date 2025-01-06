@@ -58,8 +58,8 @@ public class CapabilityKafkaTopicsQuery : ICapabilityKafkaTopicsQuery
 
     public async Task<IEnumerable<KafkaTopic>> FindBy(CapabilityId capabilityId)
     {
-        return await _dbContext.KafkaTopics
-            .Where(x => x.CapabilityId == capabilityId)
+        return await _dbContext
+            .KafkaTopics.Where(x => x.CapabilityId == capabilityId)
             .OrderBy(x => x.Name)
             .ToListAsync();
     }
@@ -84,10 +84,9 @@ public class MembershipQuery : IMembershipQuery
         var memberships = await _membershipCache
             .GetOrAdd(
                 userId,
-                id =>
-                    new Lazy<Task<List<Membership>>>(
-                        () => _dbContext.Memberships.Where(x => x.UserId == id).ToListAsync()
-                    )
+                id => new Lazy<Task<List<Membership>>>(
+                    () => _dbContext.Memberships.Where(x => x.UserId == id).ToListAsync()
+                )
             )
             .Value;
 
@@ -96,12 +95,11 @@ public class MembershipQuery : IMembershipQuery
 
     public async Task<bool> HasActiveMembershipApplication(UserId userId, CapabilityId capabilityId)
     {
-        var activeMembershipApplications = await _dbContext.MembershipApplications
-            .Where(
-                x =>
-                    x.Applicant == userId
-                    && x.CapabilityId == capabilityId
-                    && x.Status == MembershipApplicationStatusOptions.PendingApprovals
+        var activeMembershipApplications = await _dbContext
+            .MembershipApplications.Where(x =>
+                x.Applicant == userId
+                && x.CapabilityId == capabilityId
+                && x.Status == MembershipApplicationStatusOptions.PendingApprovals
             )
             .CountAsync();
 
@@ -169,10 +167,10 @@ public class CapabilityMembershipApplicationQuery : ICapabilityMembershipApplica
 
     public async Task<IEnumerable<MembershipApplication>> FindPendingBy(CapabilityId capabilityId)
     {
-        return await _dbContext.MembershipApplications
-            .Include(x => x.Approvals)
-            .Where(
-                x => x.CapabilityId == capabilityId && x.Status == MembershipApplicationStatusOptions.PendingApprovals
+        return await _dbContext
+            .MembershipApplications.Include(x => x.Approvals)
+            .Where(x =>
+                x.CapabilityId == capabilityId && x.Status == MembershipApplicationStatusOptions.PendingApprovals
             )
             .OrderBy(x => x.SubmittedAt)
             .ToListAsync();

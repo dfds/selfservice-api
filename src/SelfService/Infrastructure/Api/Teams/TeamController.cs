@@ -73,7 +73,7 @@ public class TeamController : ControllerBase
                     new ProblemDetails
                     {
                         Title = "Invalid capability id",
-                        Detail = $"The capability id {requestLinkedCapabilityId} is not valid"
+                        Detail = $"The capability id {requestLinkedCapabilityId} is not valid",
                     }
                 );
             }
@@ -126,7 +126,7 @@ public class TeamController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid capability id",
-                    Detail = $"The capability id {capabilityId} is not valid"
+                    Detail = $"The capability id {capabilityId} is not valid",
                 }
             );
         }
@@ -161,7 +161,7 @@ public class TeamController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid capability id",
-                    Detail = $"The capability id {capabilityId} is not valid"
+                    Detail = $"The capability id {capabilityId} is not valid",
                 }
             );
         }

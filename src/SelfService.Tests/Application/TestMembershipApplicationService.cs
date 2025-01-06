@@ -21,8 +21,8 @@ public class TestMembershipApplicationService
         CapabilityId capabilityId = "reflect2improve-GPU-cluster-mgmt-qxyz";
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
-        var membershipApplicationService = A.MembershipApplicationService
-            .WithMembershipRepository(membershipRepo)
+        var membershipApplicationService = A
+            .MembershipApplicationService.WithMembershipRepository(membershipRepo)
             .WithInvitationRepository(invitationRepo)
             .Build();
 
@@ -48,8 +48,8 @@ public class TestMembershipApplicationService
         CapabilityId capabilityId = "reflect2improve-GPU-cluster-mgmt-qxyz";
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
-        var membershipApplicationService = A.MembershipApplicationService
-            .WithMembershipRepository(membershipRepo)
+        var membershipApplicationService = A
+            .MembershipApplicationService.WithMembershipRepository(membershipRepo)
             .WithInvitationRepository(invitationRepo)
             .Build();
 

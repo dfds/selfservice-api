@@ -13,7 +13,7 @@ public class TestMembershipApplicationRepository
         await using var databaseFactory = new InMemoryDatabaseFactory();
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
-        var stubApprovals = new[] { A.MembershipApproval.Build(), A.MembershipApproval.Build(), };
+        var stubApprovals = new[] { A.MembershipApproval.Build(), A.MembershipApproval.Build() };
 
         var stub = A.MembershipApplication
         //.WithApprovals(stubApprovals)

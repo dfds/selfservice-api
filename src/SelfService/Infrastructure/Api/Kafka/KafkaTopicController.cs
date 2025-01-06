@@ -104,7 +104,7 @@ public class KafkaTopicController : ControllerBase
             {
                 Title = "Access denied",
                 Detail =
-                    $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+                    $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to.",
             }
         );
     }
@@ -139,7 +139,7 @@ public class KafkaTopicController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid topic description",
-                    Detail = $"The value \"{request.Description}\" is not a valid topic description."
+                    Detail = $"The value \"{request.Description}\" is not a valid topic description.",
                 }
             );
         }
@@ -159,7 +159,7 @@ public class KafkaTopicController : ControllerBase
                 {
                     Title = "Access denied",
                     Detail =
-                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to.",
                 }
             );
         }
@@ -203,7 +203,7 @@ public class KafkaTopicController : ControllerBase
                 {
                     Title = "Access denied",
                     Detail =
-                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to.",
                 }
             );
         }
@@ -249,7 +249,7 @@ public class KafkaTopicController : ControllerBase
                 {
                     Title = "Access denied",
                     Detail =
-                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to.",
                 }
             );
         }
@@ -311,7 +311,7 @@ public class KafkaTopicController : ControllerBase
                 {
                     Title = "Access denied",
                     Detail =
-                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to.",
                 }
             );
         }
@@ -402,7 +402,7 @@ public class KafkaTopicController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Kafka topic not found",
-                    Detail = $"Kafka topic with id \"{id}\" is not known by the system."
+                    Detail = $"Kafka topic with id \"{id}\" is not known by the system.",
                 }
             );
         }
@@ -415,7 +415,7 @@ public class KafkaTopicController : ControllerBase
                 {
                     Title = "Access denied!",
                     Detail =
-                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to.",
                 }
             );
         }
@@ -442,7 +442,7 @@ public class KafkaTopicController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid message contract envelope",
-                    Detail = $"Failed to add message contract: {e.Message}."
+                    Detail = $"Failed to add message contract: {e.Message}.",
                 }
             );
         }
@@ -452,7 +452,7 @@ public class KafkaTopicController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Invalid message contract request",
-                    Detail = $"Failed to add message contract: {e.Message}."
+                    Detail = $"Failed to add message contract: {e.Message}.",
                 }
             );
         }
@@ -509,7 +509,7 @@ public class KafkaTopicController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Uncaught Exception",
-                    Detail = $"Failed to retry creating message contract: {e.InnerException}."
+                    Detail = $"Failed to retry creating message contract: {e.InnerException}.",
                 }
             );
         }
@@ -552,7 +552,7 @@ public class KafkaTopicController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Kafka topic not found",
-                    Detail = $"Kafka topic with id \"{id}\" is not known by the system."
+                    Detail = $"Kafka topic with id \"{id}\" is not known by the system.",
                 }
             );
         }
@@ -565,7 +565,7 @@ public class KafkaTopicController : ControllerBase
                 {
                     Title = "Access denied!",
                     Detail =
-                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to."
+                        $"Topic \"{topic.Name}\" belongs to a capability that user \"{userId}\" does not have access to.",
                 }
             );
         }

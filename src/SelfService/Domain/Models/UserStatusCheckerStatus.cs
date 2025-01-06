@@ -11,16 +11,15 @@ public class UserStatusCheckerStatus : ValueObject
 
     private readonly string _value;
 
-    private static readonly Dictionary<string, UserStatusCheckerStatus> UserStatusMap =
-        new()
-        {
-            { Deactivated.ToString(), Deactivated },
-            { Found.ToString(), Found },
-            { NotFound.ToString(), NotFound },
-            { NoAuthToken.ToString(), NoAuthToken },
-            { BadAuthToken.ToString(), BadAuthToken },
-            { Unknown.ToString(), Unknown }
-        };
+    private static readonly Dictionary<string, UserStatusCheckerStatus> UserStatusMap = new()
+    {
+        { Deactivated.ToString(), Deactivated },
+        { Found.ToString(), Found },
+        { NotFound.ToString(), NotFound },
+        { NoAuthToken.ToString(), NoAuthToken },
+        { BadAuthToken.ToString(), BadAuthToken },
+        { Unknown.ToString(), Unknown },
+    };
 
     private UserStatusCheckerStatus(string status)
     {

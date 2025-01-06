@@ -38,8 +38,8 @@ public class MetricsService
                 jsonMetadataDeserialised != null && jsonMetadataDeserialised.ContainsKey(CostCentreKey)
                     ? jsonMetadataDeserialised[CostCentreKey].GetString()!
                     : "";
-            CapabilityMetrics.CapabilityMetric
-                .WithLabels(capability.Name, capability.Id, context?.AWSAccountId ?? "", costCentre)
+            CapabilityMetrics
+                .CapabilityMetric.WithLabels(capability.Name, capability.Id, context?.AWSAccountId ?? "", costCentre)
                 .Set(1);
         }
     }

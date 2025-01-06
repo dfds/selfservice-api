@@ -27,9 +27,10 @@ internal class PipelineStepFactory
             return Enumerable.Empty<PipelineStep>();
         }
 
-        return registration.Duno.Select(
-            x => new PipelineStep(aspect: CreateAspect(x.AspectType), triggerAttribute: x.Attribute)
-        );
+        return registration.Duno.Select(x => new PipelineStep(
+            aspect: CreateAspect(x.AspectType),
+            triggerAttribute: x.Attribute
+        ));
     }
 
     public IAspect CreateAspect(Type aspectType) => (IAspect)_serviceProvider.GetRequiredService(aspectType);

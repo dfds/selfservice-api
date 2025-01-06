@@ -56,7 +56,7 @@ public class TestKafkaTopicStatus
                 "provisioning",
                 "Provisioning",
                 "provisioned",
-                null!
+                null!,
             };
 
             return invalidValues.Select(x => new[] { x });

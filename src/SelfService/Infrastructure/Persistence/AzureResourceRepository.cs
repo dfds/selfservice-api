@@ -41,8 +41,8 @@ public class AzureResourceRepository : IAzureResourceRepository
 
     public async Task<bool> Exists(CapabilityId capabilityId, string environment)
     {
-        return await _dbContext.AzureResources.AnyAsync(
-            x => x.CapabilityId == capabilityId && x.Environment == environment
+        return await _dbContext.AzureResources.AnyAsync(x =>
+            x.CapabilityId == capabilityId && x.Environment == environment
         );
     }
 

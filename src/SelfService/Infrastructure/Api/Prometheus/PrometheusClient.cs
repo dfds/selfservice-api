@@ -1,7 +1,7 @@
 using System.Net.Http;
 using System.Text.Json;
-using SelfService.Domain.Exceptions;
 using SelfService.Application;
+using SelfService.Domain.Exceptions;
 
 namespace SelfService.Infrastructure.Api.Prometheus;
 

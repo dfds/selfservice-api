@@ -14,8 +14,8 @@ public class SelfServiceJsonSchemaRepository : ISelfServiceJsonSchemaRepository
 
     public Task<SelfServiceJsonSchema?> GetSchema(SelfServiceJsonSchemaObjectId objectId, int schemaVersion)
     {
-        return _dbContext.SelfServiceJsonSchemas.SingleOrDefaultAsync(
-            x => x.SchemaVersion == schemaVersion && x.ObjectId == objectId
+        return _dbContext.SelfServiceJsonSchemas.SingleOrDefaultAsync(x =>
+            x.SchemaVersion == schemaVersion && x.ObjectId == objectId
         );
     }
 

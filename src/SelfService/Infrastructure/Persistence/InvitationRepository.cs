@@ -9,8 +9,8 @@ public class InvitationRepository : GenericRepository<Invitation, InvitationId>,
 
     public async Task<List<Invitation>> GetActiveInvitations(UserId userId, string targetId)
     {
-        var invitations = await GetAllWithPredicate(
-            x => x.Invitee == userId && x.Status == InvitationStatusOptions.Active && x.TargetId == targetId
+        var invitations = await GetAllWithPredicate(x =>
+            x.Invitee == userId && x.Status == InvitationStatusOptions.Active && x.TargetId == targetId
         );
         return invitations;
     }
@@ -21,12 +21,11 @@ public class InvitationRepository : GenericRepository<Invitation, InvitationId>,
         InvitationId invitationId
     )
     {
-        var invitations = await GetAllWithPredicate(
-            x =>
-                x.Invitee == userId
-                && x.Status == InvitationStatusOptions.Active
-                && x.TargetId == targetId
-                && x.Id != invitationId
+        var invitations = await GetAllWithPredicate(x =>
+            x.Invitee == userId
+            && x.Status == InvitationStatusOptions.Active
+            && x.TargetId == targetId
+            && x.Id != invitationId
         );
         return invitations;
     }

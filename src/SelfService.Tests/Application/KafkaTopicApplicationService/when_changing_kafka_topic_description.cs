@@ -9,8 +9,8 @@ public class when_changing_kafka_topic_description : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var sut = A.KafkaTopicApplicationService
-            .WithKafkaTopicRepository(new StubKafkaTopicRepository(_aTopic))
+        var sut = A
+            .KafkaTopicApplicationService.WithKafkaTopicRepository(new StubKafkaTopicRepository(_aTopic))
             .WithSystemTime(new DateTime(2000, 1, 1))
             .Build();
 

@@ -1,9 +1,9 @@
 using Amazon;
 using Amazon.ECR;
 using Amazon.ECR.Model;
+using Amazon.Runtime;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
-using Amazon.Runtime;
 
 namespace SelfService.Application;
 
@@ -14,31 +14,31 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
     private string GetPermissionJson(string awsAccountId)
     {
         return $$"""
-                 {
-                   "Version": "2012-10-17",
-                   "Statement": [
-                     {
-                       "Sid": "Allow pull from all",
-                       "Effect": "Allow",
-                       "Principal": {
-                         "AWS": [
-                           "arn:aws:iam::{{awsAccountId}}:root"
-                         ]
-                       },
-                       "Action": [
-                         "ecr:BatchCheckLayerAvailability",
-                         "ecr:BatchGetImage",
-                         "ecr:GetDownloadUrlForLayer"
-                       ]
-                     }
-                   ]
-                 }
-                 """;
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "Allow pull from all",
+                  "Effect": "Allow",
+                  "Principal": {
+                    "AWS": [
+                      "arn:aws:iam::{{awsAccountId}}:root"
+                    ]
+                  },
+                  "Action": [
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:BatchGetImage",
+                    "ecr:GetDownloadUrlForLayer"
+                  ]
+                }
+              ]
+            }
+            """;
     }
 
     private AmazonECRClient NewAwsECRClient(AWSCredentials credentials)
     {
-        return new AmazonECRClient(credentials, new AmazonECRConfig { RegionEndpoint = RegionEndpoint.EUCentral1, });
+        return new AmazonECRClient(credentials, new AmazonECRConfig { RegionEndpoint = RegionEndpoint.EUCentral1 });
     }
 
     /// <summary>
@@ -68,13 +68,13 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
         {
             var policyJson = GetPermissionJson(accountId);
             await client.SetRepositoryPolicyAsync(
-                new SetRepositoryPolicyRequest { RepositoryName = name, PolicyText = policyJson, }
+                new SetRepositoryPolicyRequest { RepositoryName = name, PolicyText = policyJson }
             );
         }
         catch (Exception e)
         {
             // To not have orphaned repos, delete the repo if setting the policy fails
-            await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = name, });
+            await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = name });
 
             throw new Exception($"Unable to set ECR repo policy, deleting repo: {e}");
         }
@@ -91,7 +91,7 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
         var credentials = await awsRoleManager.AssumeRoleAsync(roleArn, RegionEndpoint.EUCentral1);
         var client = NewAwsECRClient(credentials);
 
-        await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = name, });
+        await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = name });
     }
 
     public async Task<List<string>> GetECRRepositories()

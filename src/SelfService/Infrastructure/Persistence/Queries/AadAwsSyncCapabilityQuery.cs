@@ -32,17 +32,14 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
                     .Select<Membership, MemberDto>(member => new MemberDto { Email = member.UserId })
                     .ToArray(),
                 Contexts = awsAccounts
-                    .Select<AwsAccount, ContextDto>(
-                        context =>
-                            new ContextDto
-                            {
-                                Id = context.Id,
-                                Name = "default",
-                                AWSRoleArn = "",
-                                AWSAccountId = context.Registration.AccountId?.ToString(),
-                                AWSRoleEmail = context.Registration.RoleEmail
-                            }
-                    )
+                    .Select<AwsAccount, ContextDto>(context => new ContextDto
+                    {
+                        Id = context.Id,
+                        Name = "default",
+                        AWSRoleArn = "",
+                        AWSAccountId = context.Registration.AccountId?.ToString(),
+                        AWSRoleEmail = context.Registration.RoleEmail,
+                    })
                     .ToArray(),
             };
     }
