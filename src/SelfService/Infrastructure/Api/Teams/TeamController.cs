@@ -183,7 +183,7 @@ public class TeamController : ControllerBase
 
         var capabilities = await _teamApplicationService.GetLinkedCapabilities(teamId);
 
-        return Ok(await _apiResourceFactory.Convert(capabilities));
+        return Ok(_apiResourceFactory.Convert(capabilities));
     }
 
     [HttpGet("{id}/members")]
