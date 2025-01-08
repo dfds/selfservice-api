@@ -286,7 +286,7 @@ public class ApiResourceFactory
         );
     }
 
-    public async Task<CapabilityListApiResource> Convert(IEnumerable<Capability> capabilities)
+    public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
     {
         var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
         capabilities = showDeleted
@@ -297,8 +297,7 @@ public class ApiResourceFactory
 
         foreach (var capability in capabilitiesSelected)
         {
-            var showAwsAccountId = await _authorizationService.CanSeeAwsAccountId(PortalUser, capability.Id);
-            var awsAccountId = showAwsAccountId ? _awsAccountIdQuery.FindBy(capability.Id) : null;
+            var awsAccountId = _awsAccountIdQuery.FindBy(capability.Id);
             capability.AwsAccountId = awsAccountId == null ? "" : awsAccountId.ToString();
         }
 
