@@ -87,7 +87,7 @@ public class CapabilityController : ControllerBase
     {
         var capabilities = await _capabilityRepository.GetAll();
 
-        return Ok(await _apiResourceFactory.Convert(capabilities));
+        return Ok(_apiResourceFactory.Convert(capabilities));
     }
 
     [HttpPost("")]

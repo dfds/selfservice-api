@@ -286,7 +286,7 @@ public class ApiResourceFactory
         );
     }
 
-    public async Task<CapabilityListApiResource> Convert(IEnumerable<Capability> capabilities)
+    public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
     {
         var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
         capabilities = showDeleted
