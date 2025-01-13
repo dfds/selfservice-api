@@ -78,9 +78,12 @@ public class MembershipApplicationService : IMembershipApplicationService
             creatorId,
             capabilityId
         );
-        try {
+        try
+        {
             await CreateAndAddMembership(capabilityId, creatorId);
-        } catch (AlreadyHasActiveMembershipException) {
+        }
+        catch (AlreadyHasActiveMembershipException)
+        {
             _logger.LogWarning(
                 "Creator {CreatorId} is already a member of capability {CapabilityId}",
                 creatorId,
@@ -118,9 +121,12 @@ public class MembershipApplicationService : IMembershipApplicationService
             throw EntityNotFoundException<Capability>.UsingId(membershipApplication.CapabilityId);
         }
 
-        try {
+        try
+        {
             await CreateAndAddMembership(membershipApplication.CapabilityId, membershipApplication.Applicant);
-        } catch (AlreadyHasActiveMembershipException) {
+        }
+        catch (AlreadyHasActiveMembershipException)
+        {
             _logger.LogWarning(
                 "User {UserId} is already a member of capability {CapabilityId}",
                 membershipApplication.Applicant,
@@ -308,14 +314,13 @@ public class MembershipApplicationService : IMembershipApplicationService
             userId,
             capabilityId
         );
-        try {
+        try
+        {
             await CreateAndAddMembership(capabilityId, userId);
-        } catch (AlreadyHasActiveMembershipException) {
-            _logger.LogWarning(
-                "User {UserId} is already a member of capability {CapabilityId}",
-                userId,
-                capabilityId
-            );
+        }
+        catch (AlreadyHasActiveMembershipException)
+        {
+            _logger.LogWarning("User {UserId} is already a member of capability {CapabilityId}", userId, capabilityId);
         }
     }
 
