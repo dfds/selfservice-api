@@ -78,7 +78,18 @@ public class MembershipApplicationService : IMembershipApplicationService
             creatorId,
             capabilityId
         );
-        await CreateAndAddMembership(capabilityId, creatorId);
+        try
+        {
+            await CreateAndAddMembership(capabilityId, creatorId);
+        }
+        catch (AlreadyHasActiveMembershipException)
+        {
+            _logger.LogWarning(
+                "Creator {CreatorId} is already a member of capability {CapabilityId}",
+                creatorId,
+                capabilityId
+            );
+        }
     }
 
     [TransactionalBoundary, Outboxed]
@@ -110,7 +121,18 @@ public class MembershipApplicationService : IMembershipApplicationService
             throw EntityNotFoundException<Capability>.UsingId(membershipApplication.CapabilityId);
         }
 
-        await CreateAndAddMembership(membershipApplication.CapabilityId, membershipApplication.Applicant);
+        try
+        {
+            await CreateAndAddMembership(membershipApplication.CapabilityId, membershipApplication.Applicant);
+        }
+        catch (AlreadyHasActiveMembershipException)
+        {
+            _logger.LogWarning(
+                "User {UserId} is already a member of capability {CapabilityId}",
+                membershipApplication.Applicant,
+                membershipApplication.CapabilityId
+            );
+        }
     }
 
     [TransactionalBoundary, Outboxed]
@@ -292,7 +314,14 @@ public class MembershipApplicationService : IMembershipApplicationService
             userId,
             capabilityId
         );
-        await CreateAndAddMembership(capabilityId, userId);
+        try
+        {
+            await CreateAndAddMembership(capabilityId, userId);
+        }
+        catch (AlreadyHasActiveMembershipException)
+        {
+            _logger.LogWarning("User {UserId} is already a member of capability {CapabilityId}", userId, capabilityId);
+        }
     }
 
     public async Task<IEnumerable<MembershipApplication>> GetMembershipsApplicationsThatUserCanApprove(UserId userId)
