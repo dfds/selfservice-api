@@ -1,7 +1,7 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "selfservice-api.fullname" . -}}
 {{- $svcPort := .Values.service.port -}}
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: {{ $fullName }}
@@ -67,7 +67,7 @@ spec:
 {{- if .Values.ingress.matches }}
 {{- range .Values.ingress.matches }}
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: {{ .name }}
