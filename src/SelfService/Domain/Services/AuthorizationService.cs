@@ -270,8 +270,9 @@ public class AuthorizationService : IAuthorizationService
     {
         var membershipApp = await _membershipApplicationRepository.Get(membershipApplicationId);
         var hasMembership = await _membershipQuery.HasActiveMembership(userId, membershipApp.CapabilityId);
+        var isApplicant = membershipApp.Applicant == userId;
 
-        return hasMembership || IsCloudEngineerEnabled(portalUser);
+        return isApplicant || hasMembership || IsCloudEngineerEnabled(portalUser);
     }
 
     public async Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId)

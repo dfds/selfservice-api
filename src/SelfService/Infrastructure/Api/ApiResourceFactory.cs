@@ -1077,6 +1077,45 @@ public class ApiResourceFactory
         );
     }
 
+    public OutstandingMembershipApplicationsForUserApiResource ConvertToOutstandingMembershipApplicationForUserApiResource(
+        MembershipApplication application,
+        UserId currentUser
+    )
+    {
+        var isCurrentUserTheApplicant = application.Applicant == currentUser;
+
+        // hide list of approvals if current user is the applicant
+        var approvals = isCurrentUserTheApplicant ? Enumerable.Empty<MembershipApproval>() : application.Approvals;
+
+        var allowedApprovalInteractions = Allow.None;
+        if (isCurrentUserTheApplicant)
+        {
+            allowedApprovalInteractions += Get;
+            allowedApprovalInteractions += Delete;
+        }
+
+        return new OutstandingMembershipApplicationsForUserApiResource(
+            id: application.Id.ToString(),
+            capabilityId: application.CapabilityId.ToString(),
+            applicant: application.Applicant,
+            submittedAt: application.SubmittedAt.ToUniversalTime().ToString("O"),
+            expiresOn: application.ExpiresOn.ToUniversalTime().ToString("O"),
+            approvals: Convert(approvals, application.Id, allowedApprovalInteractions),
+            links: new MembershipApplicationApiResource.MembershipApplicationLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(MembershipApplicationController.GetById),
+                        controller: GetNameOf<MembershipApplicationController>(),
+                        values: new { id = application.Id.ToString() }
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                )
+            )
+        );
+    }
+
     private MembershipApprovalListApiResource Convert(
         IEnumerable<MembershipApproval> approvals,
         MembershipApplicationId parentApplicationId,
@@ -1239,6 +1278,33 @@ public class ApiResourceFactory
                         httpContext: HttpContext,
                         controller: GetNameOf<MembershipApplicationController>(),
                         action: nameof(MembershipApplicationController.MembershipsThatUserCanApprove)
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                )
+            )
+        );
+
+        return Task.FromResult(resource);
+    }
+
+    public Task<OutstandingMembershipApplicationsForUserListApiResource> ConvertOutstandingApplications(
+        IEnumerable<MembershipApplication> applications,
+        UserId currentUser
+    )
+    {
+        var resource = new OutstandingMembershipApplicationsForUserListApiResource(
+            items: applications
+                .Select(application =>
+                    ConvertToOutstandingMembershipApplicationForUserApiResource(application, currentUser)
+                )
+                .ToArray(),
+            links: new OutstandingMembershipApplicationsForUserListApiResource.MembershipApplicationListLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<MembershipApplicationController>(),
+                        action: nameof(MembershipApplicationController.MyOutstandingApplications)
                     ) ?? "",
                     rel: "self",
                     allow: Allow.Get
