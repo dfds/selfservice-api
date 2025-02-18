@@ -342,9 +342,7 @@ public class MembershipApplicationService : IMembershipApplicationService
     public async Task<IEnumerable<MembershipApplication>> GetOutstandingMembershipsApplicationsForUser(UserId userId)
     {
         var memberships = await _membershipApplicationRepository.GetAll();
-        var outstandingMembershipsApplicationsForUser = memberships
-            .ToList()
-            .Where(x => x.Applicant == userId);
+        var outstandingMembershipsApplicationsForUser = memberships.ToList().Where(x => x.Applicant == userId);
 
         return outstandingMembershipsApplicationsForUser.ToList();
     }
