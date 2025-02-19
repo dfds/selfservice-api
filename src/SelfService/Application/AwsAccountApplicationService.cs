@@ -111,9 +111,8 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
     {
         var message =
             "*New capability context created*\n"
-            + "\n\n>>>NOTE: The following may not be relevant anymore. Please check if the manifest file was created before taking action <<<\n"
-            + "\nWe are aiming to remove this flow, but this message is kept as an interim correctness assurance\n\n"
-            + "\nRun the following command from github.com/dfds/aws-account-manifests:\n"
+            + "\n\n>>>Please check if the manifest file for the following capability was created in github.com/dfds/aws-account-manifests<<<\n"
+            + "\nIn case the manifest file wasn't crated, run the following command from github.com/dfds/aws-account-manifests:\n"
             + "\n```\n"
             + $"CORRELATION_ID=\"{xCorrelationId}\" \\\n"
             + $"CAPABILITY_NAME=\"{payload.CapabilityName}\" \\\n"
