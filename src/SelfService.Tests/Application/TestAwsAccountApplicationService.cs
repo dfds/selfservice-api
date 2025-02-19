@@ -43,8 +43,7 @@ public class TestAwsAccountApplicationService
                 + $"ACCOUNT_NAME=\"{capability.Id}\" \\\n"
                 + // NB: for now account name and capability root id is the same by design
                 "CONTEXT_NAME=\"default\" \\\n"
-                + $"CONTEXT_ID=\"{awsAccount.Id}\" \\\n"
-                + "\nIn case the manifest file wasn't crated, run generate-tfvars script in github.com/dfds/aws-account-manifests\n",
+                + $"CONTEXT_ID=\"{awsAccount.Id}\" \\\n",
             spy.Message
         );
     }

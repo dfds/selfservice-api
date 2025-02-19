@@ -119,8 +119,7 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
             + $"ACCOUNT_NAME=\"{payload.CapabilityRootId}\" \\\n"
             + // NB: for now account name and capability root id is the same by design
             $"CONTEXT_NAME=\"{payload.ContextName}\" \\\n"
-            + $"CONTEXT_ID=\"{payload.ContextId}\" \\\n"
-            + "\nIn case the manifest file wasn't crated, run the following command from github.com/dfds/aws-account-manifests:\n";
+            + $"CONTEXT_ID=\"{payload.ContextId}\" \\\n";
 
         return message;
     }
