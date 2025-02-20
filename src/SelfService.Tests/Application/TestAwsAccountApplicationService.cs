@@ -35,10 +35,7 @@ public class TestAwsAccountApplicationService
 
         Assert.Equal(
             "*New capability context created*\n"
-                + "\n\n>>>NOTE: The following may not be relevant anymore. Please check if the manifest file was created before taking action <<<\n"
-                + "\nWe are aiming to remove this flow, but this message is kept as an interim correctness assurance\n\n"
-                + "\nRun the following command from github.com/dfds/aws-account-manifests:\n"
-                + "\n```\n"
+                + "\n\n>>>Please check if the manifest file for the following capability was created in github.com/dfds/aws-account-manifests<<<\n"
                 + $"CORRELATION_ID=\"\" \\\n"
                 + $"CAPABILITY_NAME=\"{capability.Name}\" \\\n"
                 + $"CAPABILITY_ID=\"{capability.Id}\" \\\n"
@@ -46,9 +43,7 @@ public class TestAwsAccountApplicationService
                 + $"ACCOUNT_NAME=\"{capability.Id}\" \\\n"
                 + // NB: for now account name and capability root id is the same by design
                 "CONTEXT_NAME=\"default\" \\\n"
-                + $"CONTEXT_ID=\"{awsAccount.Id}\" \\\n"
-                + "./generate-tfvars.sh"
-                + "\n```",
+                + $"CONTEXT_ID=\"{awsAccount.Id}\" \\\n",
             spy.Message
         );
     }

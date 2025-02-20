@@ -142,7 +142,7 @@ public class MembershipApplicationController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown user id",
-                    Detail = $"User id is not valid and cannot be used to approve a membership application.",
+                    Detail = $"User id is not valid and cannot be used to delete a membership application.",
                 }
             );
         }
@@ -249,5 +249,26 @@ public class MembershipApplicationController : ControllerBase
         var result = await _membershipApplicationService.GetMembershipsApplicationsThatUserCanApprove(userId);
 
         return Ok(await _apiResourceFactory.Convert(result, userId));
+    }
+
+    [HttpGet("my-outstanding-applications")]
+    [ProducesResponseType(typeof(MembershipApplicationListApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> MyOutstandingApplications()
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = $"User id is not valid and cannot be used to approve a membership application.",
+                }
+            );
+        }
+        var result = await _membershipApplicationService.GetOutstandingMembershipsApplicationsForUser(userId);
+
+        return Ok(await _apiResourceFactory.ConvertOutstandingApplications(result, userId));
     }
 }
