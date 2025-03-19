@@ -11,6 +11,11 @@ public class MetricsService
     private readonly IAadAwsSyncCapabilityQuery _aadAwsSyncCapabilityQuery;
     private readonly ICapabilityRepository _capabilityRepository;
     private const string CostCentreKey = "dfds.cost.centre";
+    private const string OwnerKey = "dfds.owner";
+    private const string PlannedSunsetKey = "dfds.planned_sunset";
+    private const string DataClassificationKey = "dfds.data.classification";
+    private const string ServiceCriticalityKey = "dfds.service.criticality";
+    private const string ServiceAvailabilityKey = "dfds.service.availability";
 
     public MetricsService(
         ILogger<MetricsService> logger,
@@ -21,6 +26,13 @@ public class MetricsService
         _logger = logger;
         _aadAwsSyncCapabilityQuery = aadAwsSyncCapabilityQuery;
         _capabilityRepository = capabilityRepository;
+    }
+
+    private string GetJsonMetadataValue(Dictionary<string, JsonElement>? jsonMetadataDeserialised, string key)
+    {
+        return jsonMetadataDeserialised != null && jsonMetadataDeserialised.ContainsKey(key)
+            ? jsonMetadataDeserialised[key].GetString()!
+            : "";
     }
 
     public async Task UpdateMetrics()
@@ -34,12 +46,26 @@ public class MetricsService
             var context = capability.Contexts.FirstOrDefault();
             var jsonMetadata = capabilitiesMapped[capability.Id].JsonMetadata;
             var jsonMetadataDeserialised = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonMetadata);
-            var costCentre =
-                jsonMetadataDeserialised != null && jsonMetadataDeserialised.ContainsKey(CostCentreKey)
-                    ? jsonMetadataDeserialised[CostCentreKey].GetString()!
-                    : "";
+
+            var costCentre = GetJsonMetadataValue(jsonMetadataDeserialised, CostCentreKey);
+            var owner = GetJsonMetadataValue(jsonMetadataDeserialised, OwnerKey);
+            var plannedSunset = GetJsonMetadataValue(jsonMetadataDeserialised, PlannedSunsetKey);
+            var dataClassificatoin = GetJsonMetadataValue(jsonMetadataDeserialised, DataClassificationKey);
+            var serviceCriticality = GetJsonMetadataValue(jsonMetadataDeserialised, ServiceCriticalityKey);
+            var serviceAvailability = GetJsonMetadataValue(jsonMetadataDeserialised, ServiceAvailabilityKey);
+
             CapabilityMetrics
-                .CapabilityMetric.WithLabels(capability.Name, capability.Id, context?.AWSAccountId ?? "", costCentre)
+                .CapabilityMetric.WithLabels(
+                    capability.Name,
+                    capability.Id,
+                    context?.AWSAccountId ?? "",
+                    costCentre,
+                    owner,
+                    plannedSunset,
+                    dataClassificatoin,
+                    serviceCriticality,
+                    serviceAvailability
+                )
                 .Set(1);
         }
     }
