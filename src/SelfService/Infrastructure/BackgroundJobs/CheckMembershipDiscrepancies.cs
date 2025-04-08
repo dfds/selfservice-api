@@ -66,9 +66,7 @@ public class CheckMembershipDiscrepancies : BackgroundService
         }
 
         logger.LogDebug("Checking for invitation and membership discrepancies...");
-        var applications = await applicationRepository.GetAllWithPredicate(x =>
-            x.Status == MembershipApplicationStatusOptions.PendingApprovals
-        );
+        var applications = await applicationRepository.FindAllPending();
         foreach (var application in applications)
         {
             var relevantMemberships = await membershipRepository.GetAllWithPredicate(x =>

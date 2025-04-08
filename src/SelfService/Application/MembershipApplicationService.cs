@@ -1,4 +1,5 @@
-﻿using SelfService.Domain;
+﻿using Microsoft.Extensions.Azure;
+using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;

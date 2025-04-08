@@ -35,6 +35,16 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
         return result;
     }
 
+    public async Task<IEnumerable<MembershipApplication>> FindAllPending()
+    {
+        var result = await _dbContext
+            .MembershipApplications.Include(x => x.Approvals)
+            .Where(x => x.Status == MembershipApplicationStatusOptions.PendingApprovals)
+            .ToListAsync();
+
+        return result;
+    }
+
     public async Task<IEnumerable<MembershipApplication>> GetAll()
     {
         var result = await _dbContext.MembershipApplications.ToListAsync();
