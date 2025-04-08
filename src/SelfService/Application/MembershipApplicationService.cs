@@ -46,13 +46,6 @@ public class MembershipApplicationService : IMembershipApplicationService
 
     private async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId)
     {
-        // Note: requires [TransactionalBoundary], which should be wrapped elsewhere
-        var existingInvitations = await _invitationRepository.GetActiveInvitations(userId, capabilityId);
-        foreach (var invitation in existingInvitations)
-        {
-            invitation.Cancel();
-        }
-
         if (await _membershipRepository.IsAlreadyMember(capabilityId, userId))
         {
             throw new AlreadyHasActiveMembershipException(
@@ -66,6 +59,22 @@ public class MembershipApplicationService : IMembershipApplicationService
         );
 
         await _membershipRepository.Add(newMembership);
+
+        // Note: requires [TransactionalBoundary], which should be wrapped elsewhere
+        var existingInvitations = await _invitationRepository.GetActiveInvitations(userId, capabilityId);
+        foreach (var invitation in existingInvitations)
+        {
+            invitation.Cancel();
+        }
+
+        var existingApplications = await _membershipApplicationRepository.GetAllForUserAndCapability(
+            userId,
+            capabilityId
+        );
+        foreach (var application in existingApplications)
+        {
+            application.Cancel();
+        }
 
         _logger.LogInformation("User {UserId} has joined capability {CapabilityId}", userId, capabilityId);
     }
@@ -248,7 +257,7 @@ public class MembershipApplicationService : IMembershipApplicationService
     {
         using var _ = _logger.BeginScope(
             "{Action} on {ImplementationType}",
-            nameof(SubmitMembershipApplication),
+            nameof(CancelExpiredMembershipApplications),
             GetType().FullName
         );
 

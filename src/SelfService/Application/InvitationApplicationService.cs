@@ -1,6 +1,7 @@
 using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
 
@@ -9,18 +10,21 @@ public class InvitationApplicationService : IInvitationApplicationService
     private readonly IInvitationRepository _invitationRepository;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IMembershipRepository _membershipRepository;
+    private readonly IMembershipApplicationRepository _membershipApplicationRepository;
     private readonly ILogger<InvitationApplicationService> _logger;
 
     public InvitationApplicationService(
         IInvitationRepository invitationRepository,
         ICapabilityRepository capabilityRepository,
         IMembershipRepository membershipRepository,
+        IMembershipApplicationRepository membershipApplicationRepository,
         ILogger<InvitationApplicationService> logger
     )
     {
         _invitationRepository = invitationRepository;
         _capabilityRepository = capabilityRepository;
         _membershipRepository = membershipRepository;
+        _membershipApplicationRepository = membershipApplicationRepository;
         _logger = logger;
     }
 
@@ -67,7 +71,56 @@ public class InvitationApplicationService : IInvitationApplicationService
 
         invitation.Decline();
 
+        // cancel all similar invitations
+        var similarInvitations = await _invitationRepository.GetOtherActiveInvitationsForSameTarget(
+            invitation.Invitee,
+            invitation.TargetId,
+            invitation.Id
+        );
+        foreach (var i in similarInvitations)
+        {
+            i.Cancel();
+        }
+
+        // cancel all similar applications
+        var similarApplications = await _membershipApplicationRepository.GetAllForUserAndCapability(
+            userId: invitation.Invitee,
+            capabilityId: invitation.TargetId
+        );
+        foreach (var a in similarApplications)
+        {
+            a.Cancel();
+        }
+
         return invitation;
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task CancelExpiredCapabilityInvitations()
+    {
+        using var _ = _logger.BeginScope(
+            "{Action} on {ImplementationType}",
+            nameof(CancelExpiredCapabilityInvitations),
+            GetType().FullName
+        );
+
+        var expiredInvitations = await _invitationRepository.GetExpiredInvitations();
+
+        // Please note: this violates the principle around "don't change multiple aggregates within the same transaction",
+        // but this is a deliberate choice and serves to be an exception to the rule. The reasoning behind breaking
+        // the principle is that it's the SAME type of aggregate (e.g. MembershipApplication) and they need to be
+        // changed for the SAME business reason: they have expired.
+
+        foreach (var invitation in expiredInvitations)
+        {
+            _logger.LogInformation(
+                "Capability invitation for user {UserId} for capability {CapabilityId} has expired and is being cancelled.",
+                invitation.Invitee,
+                invitation.TargetId
+            );
+
+            invitation.Cancel();
+        }
     }
 
     [TransactionalBoundary]
@@ -117,6 +170,16 @@ public class InvitationApplicationService : IInvitationApplicationService
             foreach (var i in similarInvitations)
             {
                 i.Cancel();
+            }
+
+            // cancel all similar applications
+            var similarApplications = await _membershipApplicationRepository.GetAllForUserAndCapability(
+                userId: invitation.Invitee,
+                capabilityId: invitation.TargetId
+            );
+            foreach (var a in similarApplications)
+            {
+                a.Cancel();
             }
 
             return invitation;

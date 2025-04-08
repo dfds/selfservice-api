@@ -94,4 +94,11 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
 
         return applications;
     }
+
+    public async Task<List<MembershipApplication>> GetAllForUserAndCapability(UserId userId, CapabilityId capabilityId)
+    {
+        var applications = await _dbContext.MembershipApplications.Where(x => x.Applicant == userId).ToListAsync();
+
+        return applications;
+    }
 }

@@ -1,11 +1,17 @@
+using SelfService.Domain;
 using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Persistence;
 
 public class InvitationRepository : GenericRepository<Invitation, InvitationId>, IInvitationRepository
 {
-    public InvitationRepository(SelfServiceDbContext dbContext)
-        : base(dbContext.Invitations) { }
+    private readonly SystemTime _systemTime;
+
+    public InvitationRepository(SelfServiceDbContext dbContext, SystemTime systemTime)
+        : base(dbContext.Invitations)
+    {
+        _systemTime = systemTime;
+    }
 
     public async Task<List<Invitation>> GetActiveInvitations(UserId userId, string targetId)
     {
@@ -13,6 +19,13 @@ public class InvitationRepository : GenericRepository<Invitation, InvitationId>,
             x.Invitee == userId && x.Status == InvitationStatusOptions.Active && x.TargetId == targetId
         );
         return invitations;
+    }
+
+    public async Task<List<Invitation>> GetExpiredInvitations()
+    {
+        var now = _systemTime.Now;
+        var expiredInvitations = await GetAllWithPredicate(x => x.CreatedAt < now);
+        return expiredInvitations;
     }
 
     public async Task<List<Invitation>> GetOtherActiveInvitationsForSameTarget(
