@@ -52,4 +52,9 @@ public class MembershipRepository : GenericRepository<Membership, MembershipId>,
 
         return memberships;
     }
+
+    public async Task<List<Membership>> GetAllMembershipsForUserId(UserId userId)
+    {
+        return await GetAllWithPredicate(x => x.UserId == userId);
+    }
 }

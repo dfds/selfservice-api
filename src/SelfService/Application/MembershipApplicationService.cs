@@ -262,23 +262,24 @@ public class MembershipApplicationService : IMembershipApplicationService
             GetType().FullName
         );
 
-        var expiredApplications = await _membershipApplicationRepository.FindExpiredApplications();
+        var applications = await _membershipApplicationRepository.FindAllPending();
 
         // Please note: this violates the principle around "don't change multiple aggregates within the same transaction",
         // but this is a deliberate choice and serves to be an exception to the rule. The reasoning behind breaking
         // the principle is that it's the SAME type of aggregate (e.g. MembershipApplication) and they need to be
         // changed for the SAME business reason: they have expired.
-
-        foreach (var application in expiredApplications)
+        var now = DateTime.Now;
+        foreach (var application in applications)
         {
-            _logger.LogInformation(
-                "Membership application {MembershipApplicationId} by user {UserId} for capability {CapabilityId} has expired and is being cancelled.",
-                application.Id,
-                application.Applicant,
-                application.CapabilityId
-            );
-
-            application.Cancel();
+            if (application.ExpiresOn < now)
+            {
+                _logger.LogDebug(
+                    "Membership application to {capability} for user {user} has expired",
+                    application.CapabilityId,
+                    application.Applicant
+                );
+                await _membershipApplicationRepository.Remove(application);
+            }
         }
     }
 

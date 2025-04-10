@@ -17,5 +17,4 @@ public interface IInvitationApplicationService
     Task<List<Invitation>> CreateCapabilityInvitations(List<string> invitees, UserId inviter, Capability capability);
     Task<Invitation> AcceptInvitation(InvitationId invitationId);
     Task<Invitation> DeclineInvitation(InvitationId invitationId);
-    Task CancelExpiredCapabilityInvitations();
 }

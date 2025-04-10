@@ -6,4 +6,6 @@ public interface IMembershipRepository : IGenericRepository<Membership, Membersh
     Task<bool> IsAlreadyMember(CapabilityId capabilityId, UserId userId);
     Task<Membership?> CancelWithCapabilityId(CapabilityId capabilityId, UserId userId);
     Task<List<Membership>> CancelAllMembershipsWithUserId(UserId userId);
+    Task<List<Membership>> GetAllMembershipsForUserId(UserId userId);
+
 }
