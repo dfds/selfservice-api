@@ -107,7 +107,7 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
 
     public async Task<List<MembershipApplication>> GetAllForUserAndCapability(UserId userId, CapabilityId capabilityId)
     {
-        var applications = await _dbContext.MembershipApplications.Where(x => x.Applicant == userId).ToListAsync();
+        var applications = await _dbContext.MembershipApplications.Where(x => x.Applicant == userId && x.CapabilityId == capabilityId).ToListAsync();
 
         return applications;
     }
