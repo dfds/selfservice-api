@@ -15,5 +15,4 @@ public interface IMembershipApplicationService
     Task JoinCapability(CapabilityId capabilityId, UserId userId);
     Task<IEnumerable<MembershipApplication>> GetMembershipsApplicationsThatUserCanApprove(UserId userId);
     Task<IEnumerable<MembershipApplication>> GetOutstandingMembershipsApplicationsForUser(UserId userId);
-    
 }

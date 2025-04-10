@@ -7,5 +7,4 @@ public interface IMembershipRepository : IGenericRepository<Membership, Membersh
     Task<Membership?> CancelWithCapabilityId(CapabilityId capabilityId, UserId userId);
     Task<List<Membership>> CancelAllMembershipsWithUserId(UserId userId);
     Task<List<Membership>> GetAllMembershipsForUserId(UserId userId);
-
 }

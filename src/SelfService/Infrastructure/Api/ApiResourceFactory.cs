@@ -286,7 +286,10 @@ public class ApiResourceFactory
         );
     }
 
-    public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities, IEnumerable<Membership> currentUserMemberships)
+    public CapabilityListApiResource Convert(
+        IEnumerable<Capability> capabilities,
+        IEnumerable<Membership> currentUserMemberships
+    )
     {
         var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
         capabilities = showDeleted
