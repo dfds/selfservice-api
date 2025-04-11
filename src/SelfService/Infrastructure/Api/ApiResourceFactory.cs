@@ -286,7 +286,10 @@ public class ApiResourceFactory
         );
     }
 
-    public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
+    public CapabilityListApiResource Convert(
+        IEnumerable<Capability> capabilities,
+        IEnumerable<Membership> currentUserMemberships
+    )
     {
         var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
         capabilities = showDeleted
@@ -299,7 +302,39 @@ public class ApiResourceFactory
         {
             var awsAccountId = _awsAccountIdQuery.FindBy(capability.Id);
             capability.AwsAccountId = awsAccountId == null ? "" : awsAccountId.ToString();
+
+            var membership = currentUserMemberships.FirstOrDefault(x => x.CapabilityId == capability.Id);
+            if (membership != null)
+            {
+                capability.UserIsMember = true;
+            }
         }
+
+        return new CapabilityListApiResource(
+            items: capabilitiesSelected.ToArray(),
+            links: new CapabilityListApiResource.CapabilityListLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<CapabilityController>(),
+                        action: nameof(CapabilityController.GetAllCapabilities)
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                )
+            )
+        );
+    }
+
+    // This conversion is used by Teams, so we don't need to check for membership
+    public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
+    {
+        var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
+        capabilities = showDeleted
+            ? capabilities
+            : capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted);
+
+        var capabilitiesSelected = capabilities.Select(ConvertToListItem).ToList();
 
         return new CapabilityListApiResource(
             items: capabilitiesSelected.ToArray(),
@@ -328,6 +363,7 @@ public class ApiResourceFactory
             description: capability.Description,
             jsonMetadata: capability.JsonMetadata,
             awsAccountId: "",
+            userIsMember: false, // this will be updated in the calling method
             links: new CapabilityListItemApiResource.CapabilityListItemLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(

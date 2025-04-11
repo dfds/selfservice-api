@@ -116,6 +116,7 @@ public static class Domain
 
         // background jobs
         builder.Services.AddHostedService<CancelExpiredMembershipApplications>();
+        builder.Services.AddHostedService<CheckMembershipDiscrepancies>();
         builder.Services.AddHostedService<RemoveDeactivatedMemberships>();
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
         builder.Services.AddHostedService<ActOnPendingCapabilityDeletions>();

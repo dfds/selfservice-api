@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using SelfService.Application;
+using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
@@ -12,12 +13,15 @@ public class InvitationApplicationServiceBuilder
     private ICapabilityRepository _capabilityRepository = Dummy.Of<ICapabilityRepository>();
     private ILogger<InvitationApplicationService> _logger = Dummy.Of<ILogger<InvitationApplicationService>>();
     private IMembershipRepository _membershipRepository = Dummy.Of<IMembershipRepository>();
+    private IMembershipApplicationRepository _membershipApplicationRepository =
+        Dummy.Of<IMembershipApplicationRepository>();
 
     public InvitationApplicationServiceBuilder WithDbContextAndDefaultRepositories(SelfServiceDbContext dbContext)
     {
-        _invitationRepository = new InvitationRepository(dbContext);
+        _invitationRepository = new InvitationRepository(dbContext, SystemTime.Default);
         _capabilityRepository = new CapabilityRepository(dbContext);
         _membershipRepository = new MembershipRepository(dbContext);
+        _membershipApplicationRepository = new MembershipApplicationRepository(dbContext, SystemTime.Default);
         return this;
     }
 
@@ -39,6 +43,14 @@ public class InvitationApplicationServiceBuilder
         return this;
     }
 
+    public InvitationApplicationServiceBuilder WithMembershipApplicationRepository(
+        IMembershipApplicationRepository membershipApplicationRepository
+    )
+    {
+        _membershipApplicationRepository = membershipApplicationRepository;
+        return this;
+    }
+
     public InvitationApplicationServiceBuilder WithLogger(ILogger<InvitationApplicationService> logger)
     {
         _logger = logger;
@@ -47,6 +59,12 @@ public class InvitationApplicationServiceBuilder
 
     public InvitationApplicationService Build()
     {
-        return new(_invitationRepository, _capabilityRepository, _membershipRepository, _logger);
+        return new(
+            _invitationRepository,
+            _capabilityRepository,
+            _membershipRepository,
+            _membershipApplicationRepository,
+            _logger
+        );
     }
 }

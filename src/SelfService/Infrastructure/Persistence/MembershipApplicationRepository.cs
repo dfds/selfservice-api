@@ -35,6 +35,16 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
         return result;
     }
 
+    public async Task<IEnumerable<MembershipApplication>> FindAllPending()
+    {
+        var result = await _dbContext
+            .MembershipApplications.Include(x => x.Approvals)
+            .Where(x => x.Status == MembershipApplicationStatusOptions.PendingApprovals)
+            .ToListAsync();
+
+        return result;
+    }
+
     public async Task<IEnumerable<MembershipApplication>> GetAll()
     {
         var result = await _dbContext.MembershipApplications.ToListAsync();
@@ -91,6 +101,15 @@ public class MembershipApplicationRepository : IMembershipApplicationRepository
         {
             await Remove(membershipApplication);
         }
+
+        return applications;
+    }
+
+    public async Task<List<MembershipApplication>> GetAllForUserAndCapability(UserId userId, CapabilityId capabilityId)
+    {
+        var applications = await _dbContext
+            .MembershipApplications.Where(x => x.Applicant == userId && x.CapabilityId == capabilityId)
+            .ToListAsync();
 
         return applications;
     }

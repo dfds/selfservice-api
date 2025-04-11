@@ -1,6 +1,7 @@
 using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
 
@@ -9,18 +10,21 @@ public class InvitationApplicationService : IInvitationApplicationService
     private readonly IInvitationRepository _invitationRepository;
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IMembershipRepository _membershipRepository;
+    private readonly IMembershipApplicationRepository _membershipApplicationRepository;
     private readonly ILogger<InvitationApplicationService> _logger;
 
     public InvitationApplicationService(
         IInvitationRepository invitationRepository,
         ICapabilityRepository capabilityRepository,
         IMembershipRepository membershipRepository,
+        IMembershipApplicationRepository membershipApplicationRepository,
         ILogger<InvitationApplicationService> logger
     )
     {
         _invitationRepository = invitationRepository;
         _capabilityRepository = capabilityRepository;
         _membershipRepository = membershipRepository;
+        _membershipApplicationRepository = membershipApplicationRepository;
         _logger = logger;
     }
 
@@ -66,6 +70,27 @@ public class InvitationApplicationService : IInvitationApplicationService
         }
 
         invitation.Decline();
+
+        // cancel all similar invitations
+        var similarInvitations = await _invitationRepository.GetOtherActiveInvitationsForSameTarget(
+            invitation.Invitee,
+            invitation.TargetId,
+            invitation.Id
+        );
+        foreach (var i in similarInvitations)
+        {
+            i.Cancel();
+        }
+
+        // cancel all similar applications
+        var similarApplications = await _membershipApplicationRepository.GetAllForUserAndCapability(
+            userId: invitation.Invitee,
+            capabilityId: invitation.TargetId
+        );
+        foreach (var a in similarApplications)
+        {
+            a.Cancel();
+        }
 
         return invitation;
     }
@@ -117,6 +142,16 @@ public class InvitationApplicationService : IInvitationApplicationService
             foreach (var i in similarInvitations)
             {
                 i.Cancel();
+            }
+
+            // cancel all similar applications
+            var similarApplications = await _membershipApplicationRepository.GetAllForUserAndCapability(
+                userId: invitation.Invitee,
+                capabilityId: invitation.TargetId
+            );
+            foreach (var a in similarApplications)
+            {
+                a.Cancel();
             }
 
             return invitation;

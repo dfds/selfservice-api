@@ -270,10 +270,7 @@ public class TestInvitationApplicationService
             .Build();
 
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
-        var membershipService = A
-            .MembershipApplicationService.WithMembershipRepository(membershipRepo)
-            .WithInvitationRepository(invitationRepo)
-            .Build();
+        var membershipService = A.MembershipApplicationService.WithDbContextAndDefaultRepositories(dbContext).Build();
 
         var testCapability = A.Capability.Build();
         await capabilityRepo.Add(testCapability);

@@ -48,7 +48,7 @@ public class DeactivatedMemberCleanerApplicationService : IDeactivatedMemberClea
     public async Task RemoveDeactivatedMemberships(IUserStatusChecker userStatusChecker)
     {
         _logger.LogDebug("Started looking for deactivated users");
-        if (!(await userStatusChecker.TrySetAuthToken()))
+        if (!await userStatusChecker.TrySetAuthToken())
         {
             _logger.LogError("Unable to Remove Deactivated Memberships, no valid auth token found");
             return;
