@@ -5,6 +5,7 @@ using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Builders;
@@ -26,6 +27,15 @@ public class MembershipApplicationServiceBuilder
         _authorizationService = Dummy.Of<IAuthorizationService>();
         _invitationRepository = Dummy.Of<IInvitationRepository>();
         _myCapabilitiesQuery = Dummy.Of<IMyCapabilitiesQuery>();
+    }
+
+    public MembershipApplicationServiceBuilder WithDbContextAndDefaultRepositories(SelfServiceDbContext dbContext)
+    {
+        _invitationRepository = new InvitationRepository(dbContext, SystemTime.Default);
+        _capabilityRepository = new CapabilityRepository(dbContext);
+        _membershipRepository = new MembershipRepository(dbContext);
+        _membershipApplicationRepository = new MembershipApplicationRepository(dbContext, SystemTime.Default);
+        return this;
     }
 
     public MembershipApplicationServiceBuilder WithMembershipRepository(IMembershipRepository membershipRepository)

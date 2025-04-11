@@ -22,8 +22,7 @@ public class TestMembershipApplicationService
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
         var membershipApplicationService = A
-            .MembershipApplicationService.WithMembershipRepository(membershipRepo)
-            .WithInvitationRepository(invitationRepo)
+            .MembershipApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .Build();
 
         await membershipApplicationService.AddCreatorAsInitialMember(capabilityId, userId);
@@ -49,8 +48,7 @@ public class TestMembershipApplicationService
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
         var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
         var membershipApplicationService = A
-            .MembershipApplicationService.WithMembershipRepository(membershipRepo)
-            .WithInvitationRepository(invitationRepo)
+            .MembershipApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .Build();
 
         await membershipApplicationService.JoinCapability(capabilityId, userId);
