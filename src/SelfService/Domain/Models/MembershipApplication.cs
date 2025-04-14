@@ -1,4 +1,5 @@
 using SelfService.Domain.Events;
+using SelfService.Domain.Exceptions;
 
 namespace SelfService.Domain.Models;
 
@@ -98,7 +99,8 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
     {
         if (_status == MembershipApplicationStatusOptions.Finalized)
         {
-            throw new Exception($"Cannot cancel an already finalized membership application {Id}");
+            throw new MembershipAlreadyFinalisedException(
+                $"Cannot cancel an already finalized membership application {Id}");
         }
 
         if (_status == MembershipApplicationStatusOptions.Cancelled)

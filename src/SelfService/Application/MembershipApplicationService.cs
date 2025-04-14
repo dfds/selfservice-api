@@ -74,7 +74,14 @@ public class MembershipApplicationService : IMembershipApplicationService
         );
         foreach (var application in existingApplications)
         {
-            application.Cancel();
+            try
+            {
+                application.Cancel();
+            }
+            catch (MembershipAlreadyFinalisedException ex)
+            {
+                _logger.LogError(ex.Message);
+            }
         }
 
         _logger.LogInformation("User {UserId} has joined capability {CapabilityId}", userId, capabilityId);
