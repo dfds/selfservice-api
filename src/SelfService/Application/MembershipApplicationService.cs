@@ -1,4 +1,5 @@
-﻿using SelfService.Domain;
+﻿using Microsoft.Extensions.Azure;
+using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
@@ -46,13 +47,6 @@ public class MembershipApplicationService : IMembershipApplicationService
 
     private async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId)
     {
-        // Note: requires [TransactionalBoundary], which should be wrapped elsewhere
-        var existingInvitations = await _invitationRepository.GetActiveInvitations(userId, capabilityId);
-        foreach (var invitation in existingInvitations)
-        {
-            invitation.Cancel();
-        }
-
         if (await _membershipRepository.IsAlreadyMember(capabilityId, userId))
         {
             throw new AlreadyHasActiveMembershipException(
@@ -66,6 +60,22 @@ public class MembershipApplicationService : IMembershipApplicationService
         );
 
         await _membershipRepository.Add(newMembership);
+
+        // Note: requires [TransactionalBoundary], which should be wrapped elsewhere
+        var existingInvitations = await _invitationRepository.GetActiveInvitations(userId, capabilityId);
+        foreach (var invitation in existingInvitations)
+        {
+            invitation.Cancel();
+        }
+
+        var existingApplications = await _membershipApplicationRepository.GetAllForUserAndCapability(
+            userId,
+            capabilityId
+        );
+        foreach (var application in existingApplications)
+        {
+            application.Cancel();
+        }
 
         _logger.LogInformation("User {UserId} has joined capability {CapabilityId}", userId, capabilityId);
     }
@@ -248,27 +258,28 @@ public class MembershipApplicationService : IMembershipApplicationService
     {
         using var _ = _logger.BeginScope(
             "{Action} on {ImplementationType}",
-            nameof(SubmitMembershipApplication),
+            nameof(CancelExpiredMembershipApplications),
             GetType().FullName
         );
 
-        var expiredApplications = await _membershipApplicationRepository.FindExpiredApplications();
+        var applications = await _membershipApplicationRepository.FindAllPending();
 
         // Please note: this violates the principle around "don't change multiple aggregates within the same transaction",
         // but this is a deliberate choice and serves to be an exception to the rule. The reasoning behind breaking
         // the principle is that it's the SAME type of aggregate (e.g. MembershipApplication) and they need to be
         // changed for the SAME business reason: they have expired.
-
-        foreach (var application in expiredApplications)
+        var now = DateTime.Now;
+        foreach (var application in applications)
         {
-            _logger.LogInformation(
-                "Membership application {MembershipApplicationId} by user {UserId} for capability {CapabilityId} has expired and is being cancelled.",
-                application.Id,
-                application.Applicant,
-                application.CapabilityId
-            );
-
-            application.Cancel();
+            if (application.ExpiresOn < now)
+            {
+                _logger.LogDebug(
+                    "Membership application to {capability} for user {user} has expired",
+                    application.CapabilityId,
+                    application.Applicant
+                );
+                await _membershipApplicationRepository.Remove(application);
+            }
         }
     }
 

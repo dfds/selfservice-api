@@ -113,6 +113,7 @@ public class CapabilityListItemApiResource
     public string Description { get; set; }
     public string JsonMetadata { get; set; }
     public string AwsAccountId { get; set; }
+    public bool UserIsMember { get; set; }
 
     [JsonPropertyName("_links")]
     public CapabilityListItemLinks Links { get; set; }
@@ -136,7 +137,8 @@ public class CapabilityListItemApiResource
         string description,
         string jsonMetadata,
         string awsAccountId,
-        CapabilityListItemLinks links
+        CapabilityListItemLinks links,
+        bool userIsMember
     )
     {
         Id = id;
@@ -148,5 +150,6 @@ public class CapabilityListItemApiResource
         JsonMetadata = jsonMetadata;
         AwsAccountId = awsAccountId;
         Links = links;
+        UserIsMember = userIsMember;
     }
 }

@@ -1,4 +1,7 @@
 Id;CapabilityId;Applicant;Status;SubmittedAt;ExpiresOn
 fffffffb-ad0c-45b9-a33f-5fdcb32b87bc;notmycapability-xx2;andfris@dfds.com;PendingApprovals;2000-01-01;3000-01-01
+fffffffb-ad0c-45b9-a33f-6fdcb34b97dc;notmycapability-xx3;andfris@dfds.com;PendingApprovals;2000-01-01;3000-01-01
+fffffffb-ad0c-45b9-a33f-5fdcb32c45bc;notmycapability-xx1;andfris@dfds.com;PendingApprovals;2000-01-01;2025-01-01
+fffffffb-ad0c-45b9-a45f-5fdcb32b87bd;cloudengineering-xxx;andfris@dfds.com;PendingApprovals;2000-01-01;3000-01-01
 183fb4f4-9d0c-45b9-a33f-5fdcb32b88bc;cloudengineering-xxx;john@doe.com;PendingApprovals;2000-01-01;3000-01-01
-ffffffff-9d0c-45b9-a33f-5fdcb32b88bc;cloudengineering-xxx;emwee@dfds.com;PendingApprovals;2000-01-01;3000-01-01
+ffffffff-9d0c-45b9-a33f-5fdcb32b88bd;cloudengineering-xxx;emwee@dfds.com;PendingApprovals;2000-01-01;3000-01-01

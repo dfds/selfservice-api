@@ -29,6 +29,7 @@ public class CapabilityController : ControllerBase
     private readonly ITeamApplicationService _teamApplicationService;
     private readonly ILogger<CapabilityController> _logger;
     private readonly IMembershipApplicationService _membershipApplicationService;
+    private readonly IMembershipRepository _membershipRepository;
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
     private readonly IInvitationApplicationService _invitationApplicationService;
@@ -49,6 +50,7 @@ public class CapabilityController : ControllerBase
         IAwsAccountApplicationService awsAccountApplicationService,
         IAzureResourceApplicationService azureResourceApplicationService,
         IMembershipApplicationService membershipApplicationService,
+        IMembershipRepository membershipRepository,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
         ILogger<CapabilityController> logger,
@@ -71,6 +73,7 @@ public class CapabilityController : ControllerBase
         _awsAccountApplicationService = awsAccountApplicationService;
         _azureResourceApplicationService = azureResourceApplicationService;
         _membershipApplicationService = membershipApplicationService;
+        _membershipRepository = membershipRepository;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
         _logger = logger;
@@ -85,9 +88,13 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(CapabilityListApiResource), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllCapabilities()
     {
-        var capabilities = await _capabilityRepository.GetAll();
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
 
-        return Ok(_apiResourceFactory.Convert(capabilities));
+        var capabilities = await _capabilityRepository.GetAll();
+        var userMemberships = await _membershipRepository.GetAllMembershipsForUserId(userId);
+
+        return Ok(_apiResourceFactory.Convert(capabilities, userMemberships));
     }
 
     [HttpPost("")]
