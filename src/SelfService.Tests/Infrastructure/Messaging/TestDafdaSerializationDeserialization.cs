@@ -28,7 +28,7 @@ public class TestDafdaSerializationDeserialization
     private const string TestPortalVisitId = "portalVisitId";
     private const string TestDescription = "description";
     private const string TestSchema = "schema";
-    private const string TestMemberShipId = "membershipId";
+    private const string TestMembershipId = "membershipId";
 
     private async Task dafda_serialize_deserialize<T>(T domainEvent)
         where T : IDomainEvent
@@ -173,7 +173,7 @@ public class TestDafdaSerializationDeserialization
     {
         await dafda_serialize_deserialize(new UserHasJoinedCapability());
         await dafda_serialize_deserialize(
-            new UserHasJoinedCapability { CapabilityId = TestCapabilityId, MembershipId = TestMemberShipId }
+            new UserHasJoinedCapability { CapabilityId = TestCapabilityId, MembershipId = TestMembershipId }
         );
     }
 
@@ -185,7 +185,7 @@ public class TestDafdaSerializationDeserialization
             new UserHasLeftCapability
             {
                 CapabilityId = TestCapabilityId,
-                MembershipId = TestMemberShipId,
+                MembershipId = TestMembershipId,
                 UserId = TestUser,
             }
         );
@@ -240,7 +240,7 @@ public class TestDafdaSerializationDeserialization
     {
         await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenSubmitted());
         await dafda_serialize_deserialize(
-            new NewMembershipInvitationHasBeenSubmitted { MembershipInvitationId = TestMemberShipId }
+            new NewMembershipInvitationHasBeenSubmitted { MembershipInvitationId = TestMembershipId }
         );
     }
 
@@ -249,7 +249,7 @@ public class TestDafdaSerializationDeserialization
     {
         await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenDeclined());
         await dafda_serialize_deserialize(
-            new NewMembershipInvitationHasBeenDeclined { MembershipInvitationId = TestMemberShipId }
+            new NewMembershipInvitationHasBeenDeclined { MembershipInvitationId = TestMembershipId }
         );
     }
 
@@ -258,7 +258,7 @@ public class TestDafdaSerializationDeserialization
     {
         await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenAccepted());
         await dafda_serialize_deserialize(
-            new NewMembershipInvitationHasBeenAccepted { MembershipInvitationId = TestMemberShipId }
+            new NewMembershipInvitationHasBeenAccepted { MembershipInvitationId = TestMembershipId }
         );
     }
 
@@ -267,7 +267,7 @@ public class TestDafdaSerializationDeserialization
     {
         await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenCancelled());
         await dafda_serialize_deserialize(
-            new NewMembershipInvitationHasBeenCancelled { MembershipInvitationId = TestMemberShipId }
+            new NewMembershipInvitationHasBeenCancelled { MembershipInvitationId = TestMembershipId }
         );
     }
 }
