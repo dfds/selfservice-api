@@ -234,4 +234,40 @@ public class TestDafdaSerializationDeserialization
         await dafda_serialize_deserialize(new SchemaRegistered());
         await dafda_serialize_deserialize(new SchemaRegistered { MessageContractId = TestMessageContractId });
     }
+
+    [Fact]
+    public async Task dafda_serialize_deserialize_membership_invitation_has_been_submitted()
+    {
+        await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenSubmitted());
+        await dafda_serialize_deserialize(
+            new NewMembershipInvitationHasBeenSubmitted { MembershipInvitationId = TestMemberShipId }
+        );
+    }
+
+    [Fact]
+    public async Task dafda_serialize_deserialize_membership_invitation_has_been_declined()
+    {
+        await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenDeclined());
+        await dafda_serialize_deserialize(
+            new NewMembershipInvitationHasBeenDeclined { MembershipInvitationId = TestMemberShipId }
+        );
+    }
+
+    [Fact]
+    public async Task dafda_serialize_deserialize_membership_invitation_has_been_accepted()
+    {
+        await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenAccepted());
+        await dafda_serialize_deserialize(
+            new NewMembershipInvitationHasBeenAccepted { MembershipInvitationId = TestMemberShipId }
+        );
+    }
+    
+    [Fact]
+    public async Task dafda_serialize_deserialize_membership_invitation_has_been_cancelled()
+    {
+        await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenCancelled());
+        await dafda_serialize_deserialize(
+            new NewMembershipInvitationHasBeenCancelled { MembershipInvitationId = TestMemberShipId }
+        );
+    }
 }

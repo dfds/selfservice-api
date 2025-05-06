@@ -99,6 +99,25 @@ public static class ConsumerConfiguration
                     messageType: "membership-application-cancelled",
                     keySelector: x => x.MembershipApplicationId!
                 );
+
+            options
+                .ForTopic($"{SelfServicePrefix}.membershipinvitation")
+                .Register<NewMembershipInvitationHasBeenSubmitted>(
+                    messageType: "membership-invitation-submitted",
+                    keySelector: x => x.MembershipInvitationId!
+                )
+                .Register<NewMembershipInvitationHasBeenAccepted>(
+                    messageType: "membership-invitation-accepted",
+                    keySelector: x => x.MembershipInvitationId!
+                )
+                .Register<NewMembershipInvitationHasBeenDeclined>(
+                    messageType: "membership-invitation-declined",
+                    keySelector: x => x.MembershipInvitationId!
+                )
+                .Register<NewMembershipInvitationHasBeenCancelled>(
+                    messageType: "membership-invitation-cancelled",
+                    keySelector: x => x.MembershipInvitationId!
+                );
             // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs
         });
 

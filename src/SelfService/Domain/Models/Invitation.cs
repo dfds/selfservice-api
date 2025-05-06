@@ -1,13 +1,15 @@
+using SelfService.Domain.Events;
+
 namespace SelfService.Domain.Models;
 
-public class Invitation : Entity<InvitationId>
+public class Invitation : AggregateRoot<InvitationId>
 {
     public UserId Invitee { get; private set; }
     public string TargetId { get; private set; }
     public InvitationTargetTypeOptions TargetType { get; private set; }
     public InvitationStatusOptions Status { get; private set; }
-    public string Description { get; private set; }
     public string CreatedBy { get; private set; }
+    public string Description { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime ModifiedAt { get; private set; }
 
@@ -16,8 +18,8 @@ public class Invitation : Entity<InvitationId>
         UserId invitee,
         string targetId,
         InvitationTargetTypeOptions targetType,
-        InvitationStatusOptions status,
         string description,
+        InvitationStatusOptions status,
         string createdBy,
         DateTime createdAt,
         DateTime modifiedAt
@@ -38,17 +40,55 @@ public class Invitation : Entity<InvitationId>
     {
         Status = InvitationStatusOptions.Declined;
         ModifiedAt = DateTime.UtcNow;
+        Raise(
+            new NewMembershipInvitationHasBeenDeclined { MembershipInvitationId = Id.ToString() }
+        );
     }
 
     public void Accept()
     {
         Status = InvitationStatusOptions.Accepted;
         ModifiedAt = DateTime.UtcNow;
+        Raise(
+            new NewMembershipInvitationHasBeenAccepted { MembershipInvitationId = Id.ToString() }
+        );
     }
 
     public void Cancel()
     {
         Status = InvitationStatusOptions.Cancelled;
         ModifiedAt = DateTime.UtcNow;
+        Raise(
+            new NewMembershipInvitationHasBeenCancelled { MembershipInvitationId = Id.ToString() }
+        );
+    }
+
+    public static Invitation New(string targetId, InvitationTargetTypeOptions targetType, UserId invitee, UserId createdBy, DateTime createdAt, string description)
+    {
+        var instance = new Invitation(
+            id: InvitationId.New(),
+            targetId: targetId.ToString(),
+            targetType: targetType,
+            invitee: invitee,
+            description: description,
+            status: InvitationStatusOptions.Active,
+            createdBy: createdBy,
+            createdAt: createdAt,
+            modifiedAt: createdAt
+        );
+
+        instance.Raise(
+            new NewMembershipInvitationHasBeenSubmitted {
+                MembershipInvitationId = instance.Id.ToString(),
+                Invitee = instance.Invitee.ToString(),
+                TargetId = instance.TargetId,
+                TargetType = instance.TargetType.ToString(),
+                Description = instance.Description,
+                CreatedBy = instance.CreatedBy,
+                CreatedAt = instance.CreatedAt
+            }
+        );
+
+        return instance;
     }
 }
