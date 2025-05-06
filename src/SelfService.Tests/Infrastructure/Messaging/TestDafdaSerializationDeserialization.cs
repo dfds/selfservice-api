@@ -261,7 +261,7 @@ public class TestDafdaSerializationDeserialization
             new NewMembershipInvitationHasBeenAccepted { MembershipInvitationId = TestMemberShipId }
         );
     }
-    
+
     [Fact]
     public async Task dafda_serialize_deserialize_membership_invitation_has_been_cancelled()
     {

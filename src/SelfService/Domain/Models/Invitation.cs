@@ -40,30 +40,31 @@ public class Invitation : AggregateRoot<InvitationId>
     {
         Status = InvitationStatusOptions.Declined;
         ModifiedAt = DateTime.UtcNow;
-        Raise(
-            new NewMembershipInvitationHasBeenDeclined { MembershipInvitationId = Id.ToString() }
-        );
+        Raise(new NewMembershipInvitationHasBeenDeclined { MembershipInvitationId = Id.ToString() });
     }
 
     public void Accept()
     {
         Status = InvitationStatusOptions.Accepted;
         ModifiedAt = DateTime.UtcNow;
-        Raise(
-            new NewMembershipInvitationHasBeenAccepted { MembershipInvitationId = Id.ToString() }
-        );
+        Raise(new NewMembershipInvitationHasBeenAccepted { MembershipInvitationId = Id.ToString() });
     }
 
     public void Cancel()
     {
         Status = InvitationStatusOptions.Cancelled;
         ModifiedAt = DateTime.UtcNow;
-        Raise(
-            new NewMembershipInvitationHasBeenCancelled { MembershipInvitationId = Id.ToString() }
-        );
+        Raise(new NewMembershipInvitationHasBeenCancelled { MembershipInvitationId = Id.ToString() });
     }
 
-    public static Invitation New(string targetId, InvitationTargetTypeOptions targetType, UserId invitee, UserId createdBy, DateTime createdAt, string description)
+    public static Invitation New(
+        string targetId,
+        InvitationTargetTypeOptions targetType,
+        UserId invitee,
+        UserId createdBy,
+        DateTime createdAt,
+        string description
+    )
     {
         var instance = new Invitation(
             id: InvitationId.New(),
@@ -78,14 +79,15 @@ public class Invitation : AggregateRoot<InvitationId>
         );
 
         instance.Raise(
-            new NewMembershipInvitationHasBeenSubmitted {
+            new NewMembershipInvitationHasBeenSubmitted
+            {
                 MembershipInvitationId = instance.Id.ToString(),
                 Invitee = instance.Invitee.ToString(),
                 TargetId = instance.TargetId,
                 TargetType = instance.TargetType.ToString(),
                 Description = instance.Description,
                 CreatedBy = instance.CreatedBy,
-                CreatedAt = instance.CreatedAt
+                CreatedAt = instance.CreatedAt,
             }
         );
 
