@@ -77,6 +77,7 @@ services:
         "cloudengineering.selfservice.membership"
         "cloudengineering.selfservice.member"
         "cloudengineering.selfservice.membershipapplication"
+        "cloudengineering.selfservice.membershipinvitation"
         "cloudengineering.selfservice.awsaccount"
         "cloudengineering.selfservice.kafkaclusteraccess"
         "cloudengineering.selfservice.kafkatopic"
