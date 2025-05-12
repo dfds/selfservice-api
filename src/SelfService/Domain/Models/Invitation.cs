@@ -38,23 +38,20 @@ public class Invitation : AggregateRoot<InvitationId>
 
     public void Decline()
     {
-        Status = InvitationStatusOptions.Declined;
-        ModifiedAt = DateTime.UtcNow;
-        Raise(new NewMembershipInvitationHasBeenDeclined { MembershipInvitationId = Id.ToString() });
+        UpdateStatus(InvitationStatusOptions.Declined);
+        RaiseEvent(new NewMembershipInvitationHasBeenDeclined { MembershipInvitationId = Id.ToString() });
     }
 
     public void Accept()
     {
-        Status = InvitationStatusOptions.Accepted;
-        ModifiedAt = DateTime.UtcNow;
-        Raise(new NewMembershipInvitationHasBeenAccepted { MembershipInvitationId = Id.ToString() });
+        UpdateStatus(InvitationStatusOptions.Accepted);
+        RaiseEvent(new NewMembershipInvitationHasBeenAccepted { MembershipInvitationId = Id.ToString() });
     }
 
     public void Cancel()
     {
-        Status = InvitationStatusOptions.Cancelled;
-        ModifiedAt = DateTime.UtcNow;
-        Raise(new NewMembershipInvitationHasBeenCancelled { MembershipInvitationId = Id.ToString() });
+        UpdateStatus(InvitationStatusOptions.Cancelled);
+        RaiseEvent(new NewMembershipInvitationHasBeenCancelled { MembershipInvitationId = Id.ToString() });
     }
 
     public static Invitation New(
@@ -78,19 +75,33 @@ public class Invitation : AggregateRoot<InvitationId>
             modifiedAt: createdAt
         );
 
-        instance.Raise(
-            new NewMembershipInvitationHasBeenSubmitted
-            {
-                MembershipInvitationId = instance.Id.ToString(),
-                Invitee = instance.Invitee.ToString(),
-                TargetId = instance.TargetId,
-                TargetType = instance.TargetType.ToString(),
-                Description = instance.Description,
-                CreatedBy = instance.CreatedBy,
-                CreatedAt = instance.CreatedAt,
-            }
-        );
+        instance.RaiseEvent(instance.CreateSubmittedEvent());
 
         return instance;
+    }
+    
+    private void UpdateStatus(InvitationStatusOptions newStatus)
+    {
+        Status = newStatus;
+        ModifiedAt = DateTime.UtcNow;
+    }
+
+    private void RaiseEvent(object domainEvent)
+    {
+        Raise(domainEvent);
+    }
+
+    private NewMembershipInvitationHasBeenSubmitted CreateSubmittedEvent()
+    {
+        return new NewMembershipInvitationHasBeenSubmitted
+        {
+            MembershipInvitationId = Id.ToString(),
+            Invitee = Invitee.ToString(),
+            TargetId = TargetId,
+            TargetType = TargetType.ToString(),
+            Description = Description,
+            CreatedBy = CreatedBy,
+            CreatedAt = CreatedAt
+        };
     }
 }
