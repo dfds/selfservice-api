@@ -100,7 +100,8 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
         if (_status == MembershipApplicationStatusOptions.Finalized)
         {
             throw new MembershipAlreadyFinalisedException(
-                $"Cannot cancel an already finalized membership application {Id}");
+                $"Cannot cancel an already finalized membership application {Id}"
+            );
         }
 
         if (_status == MembershipApplicationStatusOptions.Cancelled)
