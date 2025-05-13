@@ -79,7 +79,7 @@ public class Invitation : AggregateRoot<InvitationId>
 
         return instance;
     }
-    
+
     private void UpdateStatus(InvitationStatusOptions newStatus)
     {
         Status = newStatus;
@@ -91,9 +91,8 @@ public class Invitation : AggregateRoot<InvitationId>
         Raise(domainEvent);
     }
 
-    private NewMembershipInvitationHasBeenSubmitted CreateSubmittedEvent()
-    {
-        return new NewMembershipInvitationHasBeenSubmitted
+    private NewMembershipInvitationHasBeenSubmitted CreateSubmittedEvent() =>
+        new NewMembershipInvitationHasBeenSubmitted
         {
             MembershipInvitationId = Id.ToString(),
             Invitee = Invitee.ToString(),
@@ -101,7 +100,6 @@ public class Invitation : AggregateRoot<InvitationId>
             TargetType = TargetType.ToString(),
             Description = Description,
             CreatedBy = CreatedBy,
-            CreatedAt = CreatedAt
+            CreatedAt = CreatedAt,
         };
-    }
 }
