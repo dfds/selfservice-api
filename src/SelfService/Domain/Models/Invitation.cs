@@ -86,7 +86,7 @@ public class Invitation : AggregateRoot<InvitationId>
         ModifiedAt = DateTime.UtcNow;
     }
 
-    private void RaiseEvent(object domainEvent)
+    private void RaiseEvent(IDomainEvent domainEvent)
     {
         Raise(domainEvent);
     }
