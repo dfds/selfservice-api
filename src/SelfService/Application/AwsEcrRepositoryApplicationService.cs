@@ -27,8 +27,8 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
                         {
                             AWS = new[]
                             {
-                                $"arn:aws:iam::{awsAccountId}:root",
-                                $"arn:aws:iam::{awsBackupAccountId}:root",
+                                $"arn:aws:iam::{awsAccountId.Trim()}:root",
+                                $"arn:aws:iam::{awsBackupAccountId.Trim()}:root",
                             },
                         },
                         Action = new[]
