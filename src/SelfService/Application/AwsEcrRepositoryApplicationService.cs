@@ -80,7 +80,7 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
         catch (Exception e)
         {
             // To not have orphaned repos, delete the repo if setting the policy fails
-            await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = name });
+            // await client.DeleteRepositoryAsync(new DeleteRepositoryRequest { RepositoryName = name });
 
             throw new Exception($"Unable to set ECR repo policy, deleting repo: {e}");
         }
