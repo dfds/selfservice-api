@@ -13,29 +13,35 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
 
     private string GetPermissionJson(string awsAccountId, string awsBackupAccountId)
     {
-        return $$"""
+        return System.Text.Json.JsonSerializer.Serialize(
+            new
             {
-              "Version": "2012-10-17",
-              "Statement": [
+                Version = "2012-10-17",
+                Statement = new[]
                 {
-                  "Sid": "Allow pull from all",
-                  "Effect": "Allow",
-                  "Principal": {
-                    "AWS": [
-                      "arn:aws:iam::{{awsAccountId}}:root",
-                      "arn:aws:iam::{{awsBackupAccountId}}:root"
-                    ]
-                  },
-                  "Action": [
-                    "ecr:BatchCheckLayerAvailability",
-                    "ecr:BatchGetImage",
-                    "ecr:GetDownloadUrlForLayer",
-                    "ecr:ListImages"
-                  ]
-                }
-              ]
+                    new
+                    {
+                        Sid = "Allow pull from all",
+                        Effect = "Allow",
+                        Principal = new
+                        {
+                            AWS = new[]
+                            {
+                                $"arn:aws:iam::{awsAccountId}:root",
+                                $"arn:aws:iam::{awsBackupAccountId}:root",
+                            },
+                        },
+                        Action = new[]
+                        {
+                            "ecr:BatchCheckLayerAvailability",
+                            "ecr:BatchGetImage",
+                            "ecr:GetDownloadUrlForLayer",
+                            "ecr:ListImages",
+                        },
+                    },
+                },
             }
-            """;
+        );
     }
 
     private AmazonECRClient NewAwsECRClient(AWSCredentials credentials)
