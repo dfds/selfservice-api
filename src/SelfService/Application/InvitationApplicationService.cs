@@ -89,7 +89,10 @@ public class InvitationApplicationService : IInvitationApplicationService
         );
         foreach (var a in similarApplications)
         {
-            a.Cancel();
+            if (a.Status == MembershipApplicationStatusOptions.PendingApprovals)
+            {
+                a.Cancel();
+            }
         }
 
         return invitation;
@@ -151,7 +154,10 @@ public class InvitationApplicationService : IInvitationApplicationService
             );
             foreach (var a in similarApplications)
             {
-                a.Cancel();
+                if (a.Status == MembershipApplicationStatusOptions.PendingApprovals)
+                {
+                    a.Cancel();
+                }
             }
 
             return invitation;
