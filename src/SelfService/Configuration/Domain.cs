@@ -121,7 +121,6 @@ public static class Domain
         builder.Services.AddHostedService<PortalVisitAnalyzer>();
         builder.Services.AddHostedService<ActOnPendingCapabilityDeletions>();
         builder.Services.AddHostedService<ECRRepositorySynchronizer>();
-        builder.Services.AddHostedService<ECRRepositoryPermissionChecker>();
         builder.Services.AddHostedService<UpdateOutOfSyncEcrRepos>();
         builder.Services.AddHostedService<MetricsUpdater>();
 
