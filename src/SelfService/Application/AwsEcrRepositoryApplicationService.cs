@@ -59,9 +59,9 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
         if (accountId == null)
             throw new Exception("ECR_PULL_PERMISSION_AWS_ACCOUNT_ID environment variable is not set");
 
-        var backupAccountId = Environment.GetEnvironmentVariable("ECR_PULL_PERMISSION_BACKUP_AWS_ACCOUNT_ID");
+        var backupAccountId = Environment.GetEnvironmentVariable("ECR_PULL_PERMISSION_AWS_BACKUP_ACCOUNT_ID");
         if (backupAccountId == null)
-            throw new Exception("ECR_PULL_PERMISSION_BACKUP_AWS_ACCOUNT_ID environment variable is not set");
+            throw new Exception("ECR_PULL_PERMISSION_AWS_BACKUP_ACCOUNT_ID environment variable is not set");
 
         await client.CreateRepositoryAsync(
             new CreateRepositoryRequest
