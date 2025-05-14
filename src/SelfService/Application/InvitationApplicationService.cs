@@ -89,7 +89,10 @@ public class InvitationApplicationService : IInvitationApplicationService
         );
         foreach (var a in similarApplications)
         {
-            a.Cancel();
+            if (a.Status == MembershipApplicationStatusOptions.PendingApprovals)
+            {
+                a.Cancel();
+            }
         }
 
         return invitation;
@@ -151,7 +154,10 @@ public class InvitationApplicationService : IInvitationApplicationService
             );
             foreach (var a in similarApplications)
             {
-                a.Cancel();
+                if (a.Status == MembershipApplicationStatusOptions.PendingApprovals)
+                {
+                    a.Cancel();
+                }
             }
 
             return invitation;
@@ -160,7 +166,7 @@ public class InvitationApplicationService : IInvitationApplicationService
         throw new NotSupportedException("Only capabilities are supported for invitations");
     }
 
-    [TransactionalBoundary]
+    [TransactionalBoundary, Outboxed]
     public async Task<Invitation> CreateInvitation(
         UserId invitee,
         string description,
@@ -169,16 +175,13 @@ public class InvitationApplicationService : IInvitationApplicationService
         UserId createdBy
     )
     {
-        var invitation = new Invitation(
-            id: InvitationId.New(),
+        var invitation = Invitation.New(
             invitee: invitee,
             description: description,
             targetId: targetId,
             targetType: targetType,
-            status: InvitationStatusOptions.Active,
             createdBy: createdBy,
-            createdAt: DateTime.UtcNow,
-            modifiedAt: DateTime.UtcNow
+            createdAt: DateTime.UtcNow
         );
 
         await _invitationRepository.Add(invitation);
@@ -186,7 +189,7 @@ public class InvitationApplicationService : IInvitationApplicationService
         return invitation;
     }
 
-    [TransactionalBoundary]
+    [TransactionalBoundary, Outboxed]
     public async Task<List<Invitation>> CreateCapabilityInvitations(
         List<string> invitees,
         UserId inviter,
