@@ -11,7 +11,7 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
 {
     private IAwsRoleManger awsRoleManager => new AwsRoleManager();
 
-    private string GetPermissionJson(string awsAccountId)
+    private string GetPermissionJson(string awsAccountId, string awsBackupAccountId)
     {
         return $$"""
             {
@@ -22,13 +22,15 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
                   "Effect": "Allow",
                   "Principal": {
                     "AWS": [
-                      "arn:aws:iam::{{awsAccountId}}:root"
+                      "arn:aws:iam::{{awsAccountId}}:root",
+                      "arn:aws:iam::{{awsBackupAccountId}}:root"
                     ]
                   },
                   "Action": [
                     "ecr:BatchCheckLayerAvailability",
                     "ecr:BatchGetImage",
-                    "ecr:GetDownloadUrlForLayer"
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:ListImages"
                   ]
                 }
               ]
@@ -57,6 +59,10 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
         if (accountId == null)
             throw new Exception("ECR_PULL_PERMISSION_AWS_ACCOUNT_ID environment variable is not set");
 
+        var backupAccountId = Environment.GetEnvironmentVariable("ECR_PULL_PERMISSION_BACKUP_AWS_ACCOUNT_ID");
+        if (backupAccountId == null)
+            throw new Exception("ECR_PULL_PERMISSION_BACKUP_AWS_ACCOUNT_ID environment variable is not set");
+
         await client.CreateRepositoryAsync(
             new CreateRepositoryRequest
             {
@@ -66,7 +72,7 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
         );
         try
         {
-            var policyJson = GetPermissionJson(accountId);
+            var policyJson = GetPermissionJson(accountId, backupAccountId);
             await client.SetRepositoryPolicyAsync(
                 new SetRepositoryPolicyRequest { RepositoryName = name, PolicyText = policyJson }
             );

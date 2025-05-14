@@ -18,6 +18,7 @@ app:
     msgraphSecretRef: selfservice-api-msgraph
     platformdataSecretRef: selfservice-api-platformdata
     ecrPullPermissionAwsAccountId: "123456789"
+    ecrPullPermissionAwsBackupAccountId: "987654321"
 
   environment:
     - name: SS_CONNECTION_STRING
