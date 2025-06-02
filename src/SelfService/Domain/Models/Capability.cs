@@ -68,6 +68,23 @@ public class Capability : AggregateRoot<CapabilityId>
         return Id.ToString();
     }
 
+    public void RaiseEvent(IDomainEvent domainEvent)
+    {
+        Raise(domainEvent);
+    }
+
+    public void UpdateName(string name, UserId userId)
+    {
+        if (Status != CapabilityStatusOptions.Active)
+        {
+            throw new InvalidOperationException("Capability is not active");
+        }
+
+        Name = name;
+        ModifiedAt = DateTime.UtcNow;
+        ModifiedBy = userId;
+    }
+
     public void RequestDeletion(UserId userId)
     {
         if (Status != CapabilityStatusOptions.Active)

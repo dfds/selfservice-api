@@ -174,9 +174,7 @@ public class MembershipApplicationService : IMembershipApplicationService
             );
         }
 
-        var membersOfCapability = await _membershipRepository.GetAllWithPredicate(
-            x => x.CapabilityId == capabilityId
-        );
+        var membersOfCapability = await _membershipRepository.GetAllWithPredicate(x => x.CapabilityId == capabilityId);
         var membersOfCapabilityUserIds = membersOfCapability.Select(x => x.UserId.ToString()).ToList();
 
         var existingApplication = await _membershipApplicationRepository.FindPendingBy(capabilityId, userId);
