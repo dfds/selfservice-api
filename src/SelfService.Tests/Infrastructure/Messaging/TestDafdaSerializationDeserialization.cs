@@ -270,4 +270,17 @@ public class TestDafdaSerializationDeserialization
             new NewMembershipInvitationHasBeenCancelled { MembershipInvitationId = TestMembershipId }
         );
     }
+
+    [Fact]
+    public async Task dafda_serialize_deserialize_capability_deletion_request_submitted()
+    {
+        await dafda_serialize_deserialize(
+            new CapabilityDeletionRequestSubmitted(
+                TestCapabilityId,
+                new List<string> { TestUser },
+                TestUser,
+                DateTime.UtcNow
+            )
+        );
+    }
 }

@@ -116,7 +116,12 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
         }
     }
 
-    public static MembershipApplication New(CapabilityId capabilityId, UserId applicant, DateTime submittedAt, List<string> possibleApprovers)
+    public static MembershipApplication New(
+        CapabilityId capabilityId,
+        UserId applicant,
+        DateTime submittedAt,
+        List<string> possibleApprovers
+    )
     {
         var instance = new MembershipApplication(
             id: MembershipApplicationId.New(),
@@ -137,7 +142,7 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
                 Approvers = possibleApprovers,
                 Description = "Membership application submitted",
                 CreatedBy = applicant.ToString(),
-                CreatedAt = submittedAt
+                CreatedAt = submittedAt,
             }
         );
 

@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json.Nodes;
 using SelfService.Domain;
+using SelfService.Domain.Events;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
@@ -16,6 +17,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
     private readonly ISelfAssessmentRepository _selfAssessmentRepository;
     private readonly ISelfAssessmentOptionRepository _selfAssessmentOptionRepository;
+    private readonly IMembershipRepository _membershipRepository;
     private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
@@ -32,6 +34,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ISelfAssessmentRepository selfAssessmentRepository,
         ISelfAssessmentOptionRepository selfAssessmentOptionRepository,
+        IMembershipRepository membershipRepository,
         ITicketingSystem ticketingSystem,
         SystemTime systemTime,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
@@ -45,6 +48,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _selfAssessmentRepository = selfAssessmentRepository;
         _selfAssessmentOptionRepository = selfAssessmentOptionRepository;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
+        _membershipRepository = membershipRepository;
         _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
@@ -198,6 +202,12 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
         var modificationTime = _systemTime.Now;
         capability.RequestDeletion(userId);
+
+        var members = await _membershipRepository.FindBy(capabilityId);
+        var memberEmails = members.Select(m => m.UserId.ToString()).ToList();
+        capability.RaiseEvent(
+            new CapabilityDeletionRequestSubmitted(capabilityId, memberEmails, userId, modificationTime)
+        );
     }
 
     [TransactionalBoundary, Outboxed]
