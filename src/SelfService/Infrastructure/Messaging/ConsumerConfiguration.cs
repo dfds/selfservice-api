@@ -21,9 +21,10 @@ public static class ConsumerConfiguration
             options.WithOutboxEntryRepository<OutboxEntryRepository>();
             options
                 .ForTopic($"{SelfServicePrefix}.capability")
-                .Register<CapabilityCreated>(
-                    messageType: CapabilityCreated.EventType,
-                    keySelector: x => x.CapabilityId
+                .Register<CapabilityCreated>(messageType: CapabilityCreated.EventType, keySelector: x => x.CapabilityId)
+                .Register<CapabilityDeletionRequestSubmitted>(
+                    messageType: CapabilityDeletionRequestSubmitted.EventType,
+                    keySelector: x => x.CapabilityId!
                 );
 
             options
