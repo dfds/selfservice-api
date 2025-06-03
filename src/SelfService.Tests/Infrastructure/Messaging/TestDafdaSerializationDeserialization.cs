@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dafda.Serializing;
+using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Events;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Messaging;
@@ -274,13 +275,15 @@ public class TestDafdaSerializationDeserialization
     [Fact]
     public async Task dafda_serialize_deserialize_capability_deletion_request_submitted()
     {
+        await dafda_serialize_deserialize(new CapabilityDeletionRequestSubmitted());
         await dafda_serialize_deserialize(
-            new CapabilityDeletionRequestSubmitted(
-                TestCapabilityId,
-                new List<string> { TestUser },
-                TestUser,
-                DateTime.UtcNow
-            )
+            new CapabilityDeletionRequestSubmitted
+            {
+                CapabilityId = TestCapabilityId,
+                Members = new List<string> { TestUser },
+                CreatedBy = TestUser,
+                CreatedAt = DateTime.UtcNow
+            }
         );
     }
 }

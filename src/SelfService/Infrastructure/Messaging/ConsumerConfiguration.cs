@@ -24,7 +24,7 @@ public static class ConsumerConfiguration
                 .Register<CapabilityCreated>(messageType: CapabilityCreated.EventType, keySelector: x => x.CapabilityId)
                 .Register<CapabilityDeletionRequestSubmitted>(
                     messageType: CapabilityDeletionRequestSubmitted.EventType,
-                    keySelector: x => x.CapabilityId
+                    keySelector: x => x.CapabilityId!
                 );
 
             options
