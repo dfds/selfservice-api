@@ -206,11 +206,12 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         var members = await _membershipRepository.FindBy(capabilityId);
         var memberEmails = members.Select(m => m.UserId.ToString()).ToList();
         capability.RaiseEvent(
-            new CapabilityDeletionRequestSubmitted {
+            new CapabilityDeletionRequestSubmitted
+            {
                 CapabilityId = capabilityId,
                 Members = memberEmails,
                 CreatedBy = userId,
-                CreatedAt = modificationTime
+                CreatedAt = modificationTime,
             }
         );
     }

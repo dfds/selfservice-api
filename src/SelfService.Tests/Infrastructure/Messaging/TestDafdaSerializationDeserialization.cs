@@ -282,7 +282,7 @@ public class TestDafdaSerializationDeserialization
                 CapabilityId = TestCapabilityId,
                 Members = new List<string> { TestUser },
                 CreatedBy = TestUser,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             }
         );
     }
