@@ -52,6 +52,7 @@ public class CapabilityApplicationServiceBuilder
             selfAssessmentRepository: Mock.Of<ISelfAssessmentRepository>(),
             selfAssessmentOptionRepository: Mock.Of<ISelfAssessmentOptionRepository>(),
             kafkaClusterAccessRepository: Mock.Of<IKafkaClusterAccessRepository>(),
+            membershipRepository: Mock.Of<IMembershipRepository>(),
             ticketingSystem: Mock.Of<ITicketingSystem>(),
             systemTime: SystemTime.Default,
             selfServiceJsonSchemaService: _selfServiceJsonSchemaService,
