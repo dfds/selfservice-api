@@ -3,6 +3,7 @@ using SelfService;
 using SelfService.Configuration;
 using SelfService.Infrastructure.Api;
 using SelfService.Infrastructure.Api.Configuration;
+using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Messaging;
 using SelfService.Infrastructure.Messaging.Legacy;
 using SelfService.Infrastructure.Metrics;
@@ -26,8 +27,9 @@ try
     builder.AddDomain();
     builder.AddApi();
     builder.AddSecurity();
-
+    
     builder.Services.AddHttpContextAccessor();
+    builder.AddRbac();
     builder.Services.AddTransient<Impersonation.ImpersonationMiddleware>();
     builder.Services.AddTransient<UserActionMiddleware>();
     builder.Services.AddTransient<UserImpersonation>();
@@ -55,8 +57,8 @@ try
     app.UseHttpMetrics();
 
     app.UseUserActionMiddleware();
-
     app.UseUserImpersonationMiddleware();
+    app.UseAuthCheckerMiddleware();
 
     app.Run();
 }

@@ -6,6 +6,7 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Invitations;
+using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
@@ -86,6 +87,8 @@ public class CapabilityController : ControllerBase
 
     [HttpGet("")]
     [ProducesResponseType(typeof(CapabilityListApiResource), StatusCodes.Status200OK)]
+    [RequiresPermission("topics", "read-private")]
+    [RequiresPermission("topics", "create")]
     public async Task<IActionResult> GetAllCapabilities()
     {
         if (!User.TryGetUserId(out var userId))
