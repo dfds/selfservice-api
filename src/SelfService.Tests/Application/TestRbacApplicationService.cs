@@ -57,7 +57,6 @@ public class TestRbacApplicationService
                 Accesses = [
                     new()
                     {
-                        Target = "topics",
                         Permissions = [permissions.Find(x => x.Namespace == "topics" && x.Name == "read-private")!, permissions.Find(x => x.Namespace == "topics" && x.Name == "create")!]
                     }
                 ]
@@ -90,6 +89,81 @@ public class TestRbacApplicationService
         
         
         return Task.CompletedTask;
+    }
+
+    [Fact]
+    public void UserAllow()
+    {
+        var test01GroupId = Guid.NewGuid();
+        var rbacSvc = CreateTestRbacApplicationService([
+            new Group
+            {
+                Id = test01GroupId,
+                Name = "test01 - users",
+                Members = ["test01@dfds.cloud"]
+            }
+        ], [
+            new AccessPolicy {
+            AccessType = AccessType.Capability,
+            ObjectIds = ["test01"],
+            Entities = [new Entity {EntityType = EntityType.Group, Id = test01GroupId.ToString()}],
+            Accesses = [new Access {Permissions = [
+                new Permission { Namespace = "topics", Name = "create"},
+                new Permission { Namespace = "topics", Name = "read-private"}
+            ]}]
+            },
+            new AccessPolicy {
+                AccessType = AccessType.Capability,
+                ObjectIds = ["test02"],
+                Entities = [new Entity {EntityType = EntityType.Group, Id = test01GroupId.ToString()}, new Entity {EntityType = EntityType.User, Id = "test03@dfds.cloud"}],
+                Accesses = [new Access {Permissions = [
+                    new Permission { Namespace = "topics", Name = "read-public"}
+                ]}]
+            }
+        ]);
+        
+        Assert.True(rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "create"}], "test01").Permitted());
+        Assert.True(rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-private"}], "test01").Permitted());
+        Assert.True(rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02").Permitted());
+        Assert.True(rbacSvc.IsUserPermitted("test03@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02").Permitted());
+    }
+    
+    [Fact]
+    public void UserDeny()
+    {
+        var test01GroupId = Guid.NewGuid();
+        var rbacSvc = CreateTestRbacApplicationService([
+            new Group
+            {
+                Id = test01GroupId,
+                Name = "test01 - users",
+                Members = ["test01@dfds.cloud"]
+            }
+        ], [
+            new AccessPolicy {
+                AccessType = AccessType.Capability,
+                ObjectIds = ["test01"],
+                Entities = [new Entity {EntityType = EntityType.Group, Id = test01GroupId.ToString()}],
+                Accesses = [new Access {Permissions = [
+                    new Permission { Namespace = "topics", Name = "create"},
+                    new Permission { Namespace = "topics", Name = "read-private"}
+                ]}]
+            },
+            new AccessPolicy {
+                AccessType = AccessType.Capability,
+                ObjectIds = ["test02"],
+                Entities = [new Entity {EntityType = EntityType.Group, Id = test01GroupId.ToString()}],
+                Accesses = [new Access {Permissions = [
+                    new Permission { Namespace = "topics", Name = "read-public"}
+                ]}]
+            }
+        ]);
+        
+        Assert.False(rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "create"}], "test01").Permitted());
+        Assert.False(rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-private"}], "test01").Permitted());
+        Assert.False(rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02").Permitted());
+        Assert.False(rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test01").Permitted());
+        Assert.False(rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "capability-management", Name = "request-deletion"}], "test01").Permitted());
     }
 
     [Fact]
