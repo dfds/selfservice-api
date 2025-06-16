@@ -1,0 +1,5 @@
+Id;CreatedAt;AssignedEntityType;AssignedEntityId;Name;Type;Resource
+A3C94E8E-3B11-4D17-8DB4-6D72F346FDB6;2000-01-01;User;emcla@dfds.com;Contributor;Capability;sandbox-emcla-pmyxn
+7D118725-0AA1-4D55-A83C-2CF91C11FFAB;2000-01-01;Group;AB51B47F-DCED-4AFF-912B-EB4EFFCC95B3;Contributor;Capability;sandbox-emcla-pmyxn
+7B1DA97B-C3A7-446F-8B76-BD3247E6E7DA;2000-01-01;User;emcla@dfds.com;Owner;Capability;cool-beans-xxx
+63B7EBA4-EFA6-4195-8609-F974B500D2D0;2000-01-01;User;emcla@dfds.com;Reader;Capability;cloudengineering-xxx
