@@ -2,13 +2,13 @@ namespace SelfService.Application;
 
 public class RbacApplicationService : IRbacApplicationService
 {
-    private Dictionary<String, Group> _groups;
-    private List<AccessPolicy> _accessPolicies;
+    public Dictionary<String, Group> Groups;
+    public List<AccessPolicy> AccessPolicies;
 
     public RbacApplicationService()
     {
-        _groups = new Dictionary<String, Group>();
-        _accessPolicies = new List<AccessPolicy>();
+        Groups = new Dictionary<String, Group>();
+        AccessPolicies = new List<AccessPolicy>();
     }
 
     public PermittedResponse IsUserPermitted(string user, List<Permission> permissions, string objectId)
@@ -48,7 +48,7 @@ public class RbacApplicationService : IRbacApplicationService
     public List<AccessPolicy> GetApplicablePoliciesUser(string user)
     {
         var payload = new List<AccessPolicy>();
-        foreach (var policy in _accessPolicies)
+        foreach (var policy in AccessPolicies)
         {
             var isValid = false;
             foreach (var entity in policy.Entities)
@@ -56,7 +56,7 @@ public class RbacApplicationService : IRbacApplicationService
                 switch (entity.EntityType)
                 {
                     case EntityType.Group:
-                        if (_groups[entity.Id].ContainsMember(user))
+                        if (Groups[entity.Id].ContainsMember(user))
                         {
                             isValid = true;
                         }
@@ -82,57 +82,7 @@ public class RbacApplicationService : IRbacApplicationService
         return payload;
     }
     
-    public static RbacApplicationService BootstrapTestService()
-    {
-        // groups
-        var groups = new Dictionary<string, Group>();
-        var groupCloudEngineeringCloudAdmin = new Group
-        {
-            Id = Guid.Parse("1C053AEC-FB32-4B32-8E0B-3FFE97C2C4D2"),
-            Members = ["emcla@dfds.com"],
-            Name = "CloudEngineering - CloudAdmin"
-        };
-        groups.Add(groupCloudEngineeringCloudAdmin.Id.ToString(), groupCloudEngineeringCloudAdmin);
-
-        var permissions = Permission.BootstrapPermissions();
-        
-        // access policies
-        var accessPolicies = new List<AccessPolicy>();
-        accessPolicies.Add(new AccessPolicy
-        {
-            AccessType = AccessType.Capability,
-            Entities =
-            [
-                new()
-                {
-                    EntityType = EntityType.Group,
-                    Id = groupCloudEngineeringCloudAdmin.Id.ToString()
-                },
-                new ()
-                {
-                    EntityType = EntityType.User,
-                    Id = "andfris@dfds.com"
-                }
-            ],
-            ObjectIds = ["sandbox-emcla-pmyxn"],
-            Accesses = [
-                new()
-                {
-                    Target = "topics",
-                    Permissions = [permissions.Find(x => x.Namespace == "topics" && x.Name == "read-private")!, permissions.Find(x => x.Namespace == "topics" && x.Name == "create")!]
-                }
-            ]
-        });
-        
-        RbacApplicationService service = new RbacApplicationService
-        {
-            _groups = groups,
-            _accessPolicies = accessPolicies
-        };
-        return service;
-    }
 }
-
 
 public enum AccessType
 {
