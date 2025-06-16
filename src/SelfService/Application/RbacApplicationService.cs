@@ -56,7 +56,7 @@ public class RbacApplicationService : IRbacApplicationService
                 switch (entity.EntityType)
                 {
                     case EntityType.Group:
-                        if (Groups[entity.Id].ContainsMember(user))
+                        if (Groups.ContainsKey(entity.Id) && Groups[entity.Id].ContainsMember(user))
                         {
                             isValid = true;
                         }
@@ -198,7 +198,6 @@ public class Permission
 
 public class Access
 {
-    public string Target { get; set; } = "";
     public List<Permission> Permissions { get; set; } = new List<Permission>();
 }
 
