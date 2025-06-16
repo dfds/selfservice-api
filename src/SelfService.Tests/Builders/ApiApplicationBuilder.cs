@@ -1,3 +1,4 @@
+using SelfService.Application;
 using SelfService.Configuration;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
@@ -67,6 +68,7 @@ public class ApiApplicationBuilder
         application.ReplaceService<IMembershipQuery>(_membershipQuery);
         application.ReplaceService<ICapabilityDeletionStatusQuery>(_capabilityDeletionStatusQuery);
         application.ReplaceService<IMessagingService>(new StubMessagingService());
+        application.ReplaceService<IRbacApplicationService>(new RbacApplicationService());
         return application;
     }
 }
