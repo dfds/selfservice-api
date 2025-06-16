@@ -20,6 +20,12 @@ public class AuthChecker : IMiddleware
         var endpoint = context.Features.Get<IEndpointFeature>()?.Endpoint;
         var requiresPermissionAttribute = endpoint?.Metadata.GetMetadata<RequiresPermissionAttribute>();
         
+        if (requiresPermissionAttribute == null) // todo: Handle when attribute is not available
+        {
+            await next(context);
+            return;
+        }
+        
         PortalUser portalUser;
         try
         {
