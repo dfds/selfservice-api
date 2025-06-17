@@ -1,3 +1,5 @@
+-- noinspection SqlNoDataSourceInspectionForFile
+
 -- 2025-06-16 12:58:00 : add-rbac-schemas
 
 CREATE TABLE IF NOT EXISTS "RbacPermissionGrants"

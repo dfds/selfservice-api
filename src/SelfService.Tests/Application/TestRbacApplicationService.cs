@@ -186,4 +186,15 @@ public class TestRbacApplicationService
         var rbacSvc = CreateTestRbacApplicationService(null, null);
         Assert.True(rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "read-private"}], "sandbox-emcla-pmyxn").Permitted());
     }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async void UserAllowUsingDbStore()
+    {
+        await using var databaseFactory = new ExternalDatabaseFactory();
+        var dbContext = await databaseFactory.CreateDbContext();
+
+        var permissions =  dbContext.RbacPermissionGrants.ToList();
+
+    }
 }

@@ -67,6 +67,8 @@ public class SelfServiceDbContext : DbContext
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<SelfAssessment> SelfAssessments => Set<SelfAssessment>();
     public DbSet<SelfAssessmentOption> SelfAssessmentOptions => Set<SelfAssessmentOption>();
+    public DbSet<RbacPermissionGrant> RbacPermissionGrants => Set<RbacPermissionGrant>();
+    public DbSet<RbacRoleGrant> RbacRoleGrants => Set<RbacRoleGrant>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -139,6 +141,10 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<SelfAssessmentId>().HaveConversion<SelfAssessmentIdConverter>();
 
         configurationBuilder.Properties<SelfAssessmentOptionId>().HaveConversion<SelfAssessmentOptionIdConverter>();
+
+        configurationBuilder.Properties<RbacPermissionGrantId>().HaveConversion<ValueObjectGuidConverter<RbacPermissionGrantId>>();
+
+        configurationBuilder.Properties<RbacRoleGrantId>().HaveConversion<ValueObjectGuidConverter<RbacRoleGrantId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -418,6 +424,33 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.IsActive);
             cfg.Property(x => x.RequestedAt);
             cfg.Property(x => x.RequestedBy);
+        });
+
+        modelBuilder.Entity<RbacPermissionGrant>(cfg =>
+        {
+            cfg.ToTable("RbacPermissionGrants");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.AssignedEntityType).HasConversion<string>();
+            cfg.Property(x => x.AssignedEntityId);
+            cfg.Property(x => x.Namespace);
+            cfg.Property(x => x.Permission);
+            cfg.Property(x => x.Type);
+            cfg.Property(x => x.Resource);
+        });
+        
+        modelBuilder.Entity<RbacRoleGrant>(cfg =>
+        {
+            cfg.ToTable("RbacRoleGrants");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.AssignedEntityType).HasConversion<string>();;
+            cfg.Property(x => x.AssignedEntityId);
+            cfg.Property(x => x.Name);
+            cfg.Property(x => x.Type);
+            cfg.Property(x => x.Resource);
         });
     }
 }
