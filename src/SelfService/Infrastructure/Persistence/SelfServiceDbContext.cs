@@ -69,6 +69,8 @@ public class SelfServiceDbContext : DbContext
     public DbSet<SelfAssessmentOption> SelfAssessmentOptions => Set<SelfAssessmentOption>();
     public DbSet<ReleaseNote> ReleaseNotes => Set<ReleaseNote>();
     public DbSet<ReleaseNoteHistory> ReleaseNoteHistory => Set<ReleaseNoteHistory>();
+    public DbSet<RbacPermissionGrant> RbacPermissionGrants => Set<RbacPermissionGrant>();
+    public DbSet<RbacRoleGrant> RbacRoleGrants => Set<RbacRoleGrant>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -142,9 +144,15 @@ public class SelfServiceDbContext : DbContext
 
         configurationBuilder.Properties<SelfAssessmentOptionId>().HaveConversion<SelfAssessmentOptionIdConverter>();
 
+<<<<<<< HEAD
         configurationBuilder.Properties<ReleaseNoteId>().HaveConversion<ReleaseNoteIdConverter>();
 
         configurationBuilder.Properties<ReleaseNoteHistoryId>().HaveConversion<ReleaseNoteHistoryIdConverter>();
+=======
+        configurationBuilder.Properties<RbacPermissionGrantId>().HaveConversion<ValueObjectGuidConverter<RbacPermissionGrantId>>();
+
+        configurationBuilder.Properties<RbacRoleGrantId>().HaveConversion<ValueObjectGuidConverter<RbacRoleGrantId>>();
+>>>>>>> fe4f88d (wip: Added DB types for RbacRoleGrant and RbacPermissionGrant)
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -426,6 +434,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.RequestedBy);
         });
 
+<<<<<<< HEAD
         modelBuilder.Entity<ReleaseNote>(cfg =>
         {
             cfg.ToTable("ReleaseNote");
@@ -457,6 +466,33 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.ModifiedBy);
             cfg.Property(x => x.IsActive);
             cfg.Property(x => x.Version);
+=======
+        modelBuilder.Entity<RbacPermissionGrant>(cfg =>
+        {
+            cfg.ToTable("RbacPermissionGrants");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.AssignedEntityType).HasConversion<string>();
+            cfg.Property(x => x.AssignedEntityId);
+            cfg.Property(x => x.Namespace);
+            cfg.Property(x => x.Permission);
+            cfg.Property(x => x.Type);
+            cfg.Property(x => x.Resource);
+        });
+
+        modelBuilder.Entity<RbacRoleGrant>(cfg =>
+        {
+            cfg.ToTable("RbacRoleGrants");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.AssignedEntityType).HasConversion<string>();;
+            cfg.Property(x => x.AssignedEntityId);
+            cfg.Property(x => x.Name);
+            cfg.Property(x => x.Type);
+            cfg.Property(x => x.Resource);
+>>>>>>> fe4f88d (wip: Added DB types for RbacRoleGrant and RbacPermissionGrant)
         });
     }
 }
