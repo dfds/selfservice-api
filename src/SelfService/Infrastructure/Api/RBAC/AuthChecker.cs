@@ -39,10 +39,10 @@ public class AuthChecker : IMiddleware
             return;
         }
 
-        if (!_rbacApplicationService.IsUserPermitted(portalUser.Id.ToString(),
+        if (!(await _rbacApplicationService.IsUserPermitted(portalUser.Id.ToString(),
                 new List<Permission>
                     { new() { Namespace = requiresPermissionAttribute!.Ns, Name = requiresPermissionAttribute!.Name } },
-                "sandbox-emcla-pmyxn").Permitted())
+                "sandbox-emcla-pmyxn")).Permitted())
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             await context.Response.WriteAsync($"Missing permission {requiresPermissionAttribute!.Name}");
