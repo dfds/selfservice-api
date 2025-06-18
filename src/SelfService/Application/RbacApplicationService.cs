@@ -1,18 +1,26 @@
+using SelfService.Domain.Models;
+
 namespace SelfService.Application;
 
 public class RbacApplicationService : IRbacApplicationService
 {
     public Dictionary<String, Group> Groups;
     public List<AccessPolicy> AccessPolicies;
+    public IRbacPermissionGrantRepository PermissionGrantRepository;
+    public IRbacRoleGrantRepository RoleGrantRepository;
 
-    public RbacApplicationService()
+    public RbacApplicationService(IRbacPermissionGrantRepository permissionGrantRepository, IRbacRoleGrantRepository roleGrantRepository)
     {
+        PermissionGrantRepository = permissionGrantRepository;
+        RoleGrantRepository = roleGrantRepository;
         Groups = new Dictionary<String, Group>();
         AccessPolicies = new List<AccessPolicy>();
     }
 
-    public PermittedResponse IsUserPermitted(string user, List<Permission> permissions, string objectId)
+    public async Task<PermittedResponse> IsUserPermitted(string user, List<Permission> permissions, string objectId)
     {
+        var perms = await PermissionGrantRepository.GetAll();
+        
         var resp = new PermittedResponse();
         var userPolicies = GetApplicablePoliciesUser(user);
         permissions.ForEach(p => resp.PermissionMatrix.Add(p.Name, new PermissionMatrix(p)));
