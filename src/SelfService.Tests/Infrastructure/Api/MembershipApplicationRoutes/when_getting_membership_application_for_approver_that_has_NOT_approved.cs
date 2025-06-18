@@ -23,6 +23,8 @@ public class when_getting_membership_application_for_approver_that_has_NOT_appro
         application.ReplaceService<IMembershipApplicationQuery>(
             new StubMembershipApplicationQuery(_aMembershipApplication)
         );
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/membershipapplications/{_aMembershipApplication.Id}");

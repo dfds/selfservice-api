@@ -18,6 +18,8 @@ public class when_deleting_a_private_kafka_topic_as_NON_member_of_owning_capabil
         application.ReplaceService(Dummy.Of<IKafkaTopicApplicationService>());
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
         application.ReplaceService<IKafkaTopicRepository>(new StubKafkaTopicRepository(stubKafkaTopic));
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
 

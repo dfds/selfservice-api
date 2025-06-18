@@ -31,6 +31,8 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
             new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo"))
         );
         application.ReplaceService<IKafkaTopicQuery>(new StubKafkaTopicQuery(_aPrivateTopic, _aPublicTopic));
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/kafkatopics?capabilityId={_aCapability.Id}");

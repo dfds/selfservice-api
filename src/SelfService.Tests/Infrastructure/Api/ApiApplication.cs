@@ -10,6 +10,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SelfService.Application;
 using SelfService.Infrastructure.Messaging;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
@@ -21,12 +22,14 @@ public class ApiApplication : WebApplicationFactory<Program>
     private readonly List<Action<IServiceCollection>> _serviceCollectionModifiers = new();
     private readonly Dictionary<string, string?> _customConfiguration = new();
     private readonly string _environment;
+    private readonly bool _overrideDb;
 
     private Action<FakeAuthenticationSchemeOptions>? _authOptionsConfig;
 
-    public ApiApplication(bool configureForProduction = true)
+    public ApiApplication(bool configureForProduction = true, bool overrideDb = false)
     {
         _environment = configureForProduction ? Environments.Production : Environments.Development;
+        _overrideDb = overrideDb;
         this.ReplaceService<IMessagingService>(new StubMessagingService());
     }
 
@@ -119,10 +122,14 @@ public class ApiApplication : WebApplicationFactory<Program>
         builder.ConfigureTestServices(services =>
         {
             // todo: WHHYYYYYYYY https://github.com/dotnet/efcore/blob/34d1953667427d870e768a99116112522953fd0c/src/EFCore/Extensions/EntityFrameworkServiceCollectionExtensions.cs#L881-L898
-            foreach (var option in services.Where(s => s.ServiceType.BaseType == typeof(DbContextOptions)).ToList())
+            if (_overrideDb)
             {
-                services.Remove(option);
+                foreach (var option in services.Where(s => s.ServiceType.BaseType == typeof(DbContextOptions)).ToList())
+                {
+                    services.Remove(option);
+                }                
             }
+
             
             _serviceCollectionModifiers.ForEach(cfg => cfg(services));
 

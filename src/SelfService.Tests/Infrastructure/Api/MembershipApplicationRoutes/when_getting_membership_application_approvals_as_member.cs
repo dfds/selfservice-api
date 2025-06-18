@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Tests.TestDoubles;
@@ -21,6 +22,8 @@ public class when_getting_membership_application_approvals_as_member : IAsyncLif
         application.ReplaceService<IMembershipApplicationQuery>(
             new StubMembershipApplicationQuery(_aMembershipApplication)
         );
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/membershipapplications/{_aMembershipApplication.Id}/approvals");

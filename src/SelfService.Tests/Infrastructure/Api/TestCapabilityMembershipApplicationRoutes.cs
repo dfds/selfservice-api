@@ -17,6 +17,8 @@ public class TestCapabilityMembershipApplicationRoutes
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .WithMembershipQuery(new StubMembershipQuery())
             .Build();
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -39,6 +41,8 @@ public class TestCapabilityMembershipApplicationRoutes
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .Build();
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -64,6 +68,8 @@ public class TestCapabilityMembershipApplicationRoutes
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .WithMembershipQuery(new StubMembershipQuery())
             .Build();
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -89,6 +95,8 @@ public class TestCapabilityMembershipApplicationRoutes
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .WithMembershipQuery(new StubMembershipQuery(hasActiveMembershipApplication: true))
             .Build();
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -115,6 +123,8 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery()
         );
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}/membershipapplications");
@@ -138,6 +148,8 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery()
         );
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}/membershipapplications");
@@ -161,6 +173,8 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery()
         );
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}/membershipapplications");
@@ -190,6 +204,8 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery(stubMembershipApplication)
         );
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}/membershipapplications");
@@ -213,6 +229,8 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery(stubMembershipApplication)
         );
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/foo/membershipapplications");
@@ -251,6 +269,8 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery(stubMembershipApplication)
         );
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/foo/membershipapplications");
@@ -274,6 +294,8 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery(stubMembershipApplication)
         );
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/foo/membershipapplications");
@@ -300,6 +322,8 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery(stubMembershipApplication)
         );
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/foo/membershipapplications");

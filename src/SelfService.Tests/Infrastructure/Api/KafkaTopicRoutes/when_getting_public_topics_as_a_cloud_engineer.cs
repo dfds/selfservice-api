@@ -30,6 +30,8 @@ public class when_getting_public_topics_as_a_cloud_engineer : IAsyncLifetime
             new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo"))
         );
         application.ReplaceService<IKafkaTopicQuery>(new StubKafkaTopicQuery(_aPublicTopic));
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         application.ConfigureFakeAuthentication(options =>
         {

@@ -19,6 +19,8 @@ public class when_changing_kafka_topic_description_with_invalid_input_as_member_
         application.ReplaceService(Dummy.Of<IKafkaTopicApplicationService>());
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
         application.ReplaceService<IKafkaTopicRepository>(new StubKafkaTopicRepository(stubKafkaTopic));
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
 
         using var client = application.CreateClient();
 
