@@ -28,3 +28,25 @@ CREATE TABLE IF NOT EXISTS "RbacRoleGrants"
 
     constraint "RbacRoleGrants_PK" primary key ("Id")
 );
+
+CREATE TABLE IF NOT EXISTS "RbacGroup"
+(
+    "Id"          uuid      not null,
+    "CreatedAt"   timestamp not null default current_timestamp,
+    "UpdatedAt"   timestamp not null default current_timestamp,
+    "Name"        text      not null,
+    "Description" text      not null,
+
+    constraint "RbacGroup_PK" primary key ("Id")
+);
+
+CREATE TABLE IF NOT EXISTS "RbacGroupMember"
+(
+    "GroupId"   uuid         not null,
+    "UserId"    varchar(255) not null,
+    "CreatedAt" timestamp    not null default current_timestamp,
+
+    constraint "RbacGroupMember_PK" primary key ("GroupId", "UserId"),
+    constraint "RbacGroup_UserId_FK" foreign key ("UserId") references "Member" ("Id") on delete cascade,
+    constraint "RbacGroup_GroupId_FK" foreign key ("GroupId") references "RbacGroup" ("Id") on delete cascade
+);
