@@ -1,4 +1,8 @@
 using SelfService.Application;
+using Microsoft.Extensions.DependencyInjection;
+using SelfService.Domain.Models;
+using SelfService.Infrastructure.Persistence;
+using SelfService.Tests.Infrastructure.Api;
 
 namespace SelfService.Tests.Application;
 
@@ -10,11 +14,46 @@ public class RbacTestData
         Members = ["emcla@dfds.com"],
         Name = "CloudEngineering - CloudAdmin"
     };
+
+    public static async Task<RbacInMemoryTestFixture> NewInMemoryFixture(bool populateDatabase = true, List<RbacPermissionGrant>? rbacPermissionGrantsSeed = null, List<RbacRoleGrant>? rbacRoleGrantsSeed = null)
+    {
+        var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+
+        if (populateDatabase)
+        {
+            TestRbacApplicationService.PopulateRbac(dbContext, rbacPermissionGrantsSeed, rbacRoleGrantsSeed);
+        }
+        
+        TestRbacApplicationService.CreateTestRbacApplicationService(dbContext, null, null);
+        var application = await new ApiApplicationBuilder()
+            .WithSelfServiceDbContext(dbContext)
+            .ConfigureRbac()
+            .BuildAsync();
+
+        var fixture = new RbacInMemoryTestFixture(databaseFactory, dbContext, application);
+        return fixture;
+    }
+}
+
+public class RbacInMemoryTestFixture
+{
+    public InMemoryDatabaseFactory InMemoryDatabaseFactory { get; set; }
+    public ApiApplication ApiApplication { get; set; }
+    
+    public SelfServiceDbContext DbContext { get; set; }
+
+    public RbacInMemoryTestFixture(InMemoryDatabaseFactory inMemoryDatabaseFactory, SelfServiceDbContext selfServiceDbContext, ApiApplication apiApplication)
+    {
+        InMemoryDatabaseFactory = inMemoryDatabaseFactory;
+        DbContext = selfServiceDbContext;
+        ApiApplication = apiApplication;
+    }
 }
 
 public class TestRbacApplicationService
 {
-    public static RbacApplicationService CreateTestRbacApplicationService(List<Group>? groupsSeed, List<AccessPolicy>? accessPoliciesSeed)
+    internal static void CreateTestRbacApplicationService(SelfServiceDbContext dbContext, List<Group>? groupsSeed, List<AccessPolicy>? accessPoliciesSeed)
     {
         // groups
         Dictionary<string, Group> groups = new Dictionary<string, Group>();
@@ -26,7 +65,7 @@ public class TestRbacApplicationService
         {
             groups.Add(RbacTestData.CloudEngineeringCloudAdmin.Id.ToString(), RbacTestData.CloudEngineeringCloudAdmin);
         }
-
+    
         var permissions = Permission.BootstrapPermissions();
         
         // access policies
@@ -62,40 +101,77 @@ public class TestRbacApplicationService
                 ]
             });   
         }
-        
-        RbacApplicationService service = new RbacApplicationService
+    }
+
+    internal async static void PopulateRbac(SelfServiceDbContext dbContext, List<RbacPermissionGrant>? rbacPermissionGrantsSeed, List<RbacRoleGrant>? rbacRoleGrantsSeed)
+    {
+        if (rbacPermissionGrantsSeed != null)
         {
-            Groups = groups,
-            AccessPolicies = accessPolicies
-        };
-        return service;
+            dbContext.RbacPermissionGrants.AddRange(rbacPermissionGrantsSeed);
+            await dbContext.SaveChangesAsync();
+        }
+        else
+        {
+            dbContext.RbacPermissionGrants.Add(new RbacPermissionGrant (
+                id: RbacPermissionGrantId.New(),
+                createdAt: DateTime.Now,
+                assignedEntityType: AssignedEntityType.User,
+                assignedEntityId: "andfris@dfds.com",
+                @namespace: "topics",
+                permission: "create",
+                type: "capability",
+                resource: "sandbox-emcla-pmyxn"
+                ));
+            
+            await dbContext.SaveChangesAsync();
+        }
+
+        if (rbacRoleGrantsSeed != null)
+        {
+            dbContext.RbacRoleGrants.AddRange(rbacRoleGrantsSeed);
+            await dbContext.SaveChangesAsync();
+        }
+        else
+        {
+            dbContext.RbacRoleGrants.Add(new RbacRoleGrant (
+                id: RbacRoleGrantId.New(),
+                createdAt: DateTime.Now,
+                assignedEntityType: AssignedEntityType.User,
+                assignedEntityId: "andfris@dfds.com",
+                name: "Contributor",
+                type: "capability",
+                resource: "sandbox-emcla-pmyxn"
+            ));
+            
+            await dbContext.SaveChangesAsync();
+        }
     }
 
     [Fact]
-    public Task Baseline()
+    public async void Baseline()
     {
-        var rbacSvc = CreateTestRbacApplicationService(null, null);
-
+        var fixture = await RbacTestData.NewInMemoryFixture();
+        var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
+        
         var cases = new List<PermittedResponse>
         {
-            rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "create"}], "sandbox-emcla-pmyxn"),
-            rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "create"}, new Permission { Namespace = "topics", Name = "read-private"}], "sandbox-emcla-pmyxn"),
-            rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "read-public"}], "sandbox-emcla-pmyxn"),
-            rbacSvc.IsUserPermitted("andfris@dfds.com", [new Permission { Namespace = "topics", Name = "read-private"}], "sandbox-emcla-pmyxn"),
-            rbacSvc.IsUserPermitted("andfris@dfds.com", [new Permission { Namespace = "topics", Name = "read-private"}], "andfris-sandbox-6-aeyex"),
+            await rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "create"}], "sandbox-emcla-pmyxn"),
+            await rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "create"}, new Permission { Namespace = "topics", Name = "read-private"}], "sandbox-emcla-pmyxn"),
+            await rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "read-public"}], "sandbox-emcla-pmyxn"),
+            await rbacSvc.IsUserPermitted("andfris@dfds.com", [new Permission { Namespace = "topics", Name = "read-private"}], "sandbox-emcla-pmyxn"),
+            await rbacSvc.IsUserPermitted("andfris@dfds.com", [new Permission { Namespace = "topics", Name = "read-private"}], "andfris-sandbox-6-aeyex"),
         };
         
         cases.ForEach(c => Console.WriteLine(c.Permitted()));
-        
-        
-        return Task.CompletedTask;
     }
 
     [Fact]
-    public void UserAllow()
+    public async void UserAllow()
     {
         var test01GroupId = Guid.NewGuid();
-        var rbacSvc = CreateTestRbacApplicationService([
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+        CreateTestRbacApplicationService(dbContext, [
             new Group
             {
                 Id = test01GroupId,
@@ -104,13 +180,13 @@ public class TestRbacApplicationService
             }
         ], [
             new AccessPolicy {
-            AccessType = AccessType.Capability,
-            ObjectIds = ["test01"],
-            Entities = [new Entity {EntityType = EntityType.Group, Id = test01GroupId.ToString()}],
-            Accesses = [new Access {Permissions = [
-                new Permission { Namespace = "topics", Name = "create"},
-                new Permission { Namespace = "topics", Name = "read-private"}
-            ]}]
+                AccessType = AccessType.Capability,
+                ObjectIds = ["test01"],
+                Entities = [new Entity {EntityType = EntityType.Group, Id = test01GroupId.ToString()}],
+                Accesses = [new Access {Permissions = [
+                    new Permission { Namespace = "topics", Name = "create"},
+                    new Permission { Namespace = "topics", Name = "read-private"}
+                ]}]
             },
             new AccessPolicy {
                 AccessType = AccessType.Capability,
@@ -121,18 +197,25 @@ public class TestRbacApplicationService
                 ]}]
             }
         ]);
-        
-        Assert.True(rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "create"}], "test01").Permitted());
-        Assert.True(rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-private"}], "test01").Permitted());
-        Assert.True(rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02").Permitted());
-        Assert.True(rbacSvc.IsUserPermitted("test03@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02").Permitted());
+        var application = await new ApiApplicationBuilder()
+            .WithSelfServiceDbContext(dbContext)
+            .ConfigureRbac()
+            .BuildAsync();
+        var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
+
+        Assert.True((await rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "create"}], "test01")).Permitted());
+        Assert.True((await rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-private"}], "test01")).Permitted());
+        Assert.True((await rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02")).Permitted());
+        Assert.True((await rbacSvc.IsUserPermitted("test03@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02")).Permitted());
     }
     
     [Fact]
-    public void UserDeny()
+    public async void UserDeny()
     {
         var test01GroupId = Guid.NewGuid();
-        var rbacSvc = CreateTestRbacApplicationService([
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+        CreateTestRbacApplicationService(dbContext, [
             new Group
             {
                 Id = test01GroupId,
@@ -158,43 +241,76 @@ public class TestRbacApplicationService
                 ]}]
             }
         ]);
+        var application = await new ApiApplicationBuilder()
+            .WithSelfServiceDbContext(dbContext)
+            .ConfigureRbac()
+            .BuildAsync();
+        var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
         
-        Assert.False(rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "create"}], "test01").Permitted());
-        Assert.False(rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-private"}], "test01").Permitted());
-        Assert.False(rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02").Permitted());
-        Assert.False(rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test01").Permitted());
-        Assert.False(rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "capability-management", Name = "request-deletion"}], "test01").Permitted());
+        Assert.False((await rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "create"}], "test01")).Permitted());
+        Assert.False((await rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-private"}], "test01")).Permitted());
+        Assert.False((await rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02")).Permitted());
+        Assert.False((await rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test01")).Permitted());
+        Assert.False((await rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "capability-management", Name = "request-deletion"}], "test01")).Permitted());
     }
 
     [Fact]
-    public void UserWithTopicCreateCanCreate()
+    public async void UserWithTopicCreateCanCreate()
     {
-        var rbacSvc = CreateTestRbacApplicationService(null, null);
-        Assert.True(rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "create"}], "sandbox-emcla-pmyxn").Permitted());
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+        CreateTestRbacApplicationService(dbContext, null, null);
+        var application = await new ApiApplicationBuilder()
+            .WithSelfServiceDbContext(dbContext)
+            .ConfigureRbac()
+            .BuildAsync();
+        var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
+        
+        Assert.True((await rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "create"}], "sandbox-emcla-pmyxn")).Permitted());
     }
     
     [Fact]
-    public void UserWithTopicReadCanNotCreate()
+    public async void UserWithTopicReadCanNotCreate()
     {
-        var rbacSvc = CreateTestRbacApplicationService(null, null);
-        Assert.False(rbacSvc.IsUserPermitted("emclaa@dfds.com", [new Permission { Namespace = "topics", Name = "create"}], "sandbox-emcla-pmyxn").Permitted());
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+        CreateTestRbacApplicationService(dbContext, null, null);
+        var application = await new ApiApplicationBuilder()
+            .WithSelfServiceDbContext(dbContext)
+            .ConfigureRbac()
+            .BuildAsync();
+        var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
+        
+        Assert.False((await rbacSvc.IsUserPermitted("emclaa@dfds.com", [new Permission { Namespace = "topics", Name = "create"}], "sandbox-emcla-pmyxn")).Permitted());
     }
     
     [Fact]
-    public void UserWithTopicReadPrivateCanReadPrivate()
+    public async void UserWithTopicReadPrivateCanReadPrivate()
     {
-        var rbacSvc = CreateTestRbacApplicationService(null, null);
-        Assert.True(rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "read-private"}], "sandbox-emcla-pmyxn").Permitted());
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+        CreateTestRbacApplicationService(dbContext, null, null);
+        var application = await new ApiApplicationBuilder()
+            .WithSelfServiceDbContext(dbContext)
+            .ConfigureRbac()
+            .BuildAsync();
+        var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
+        
+        Assert.True((await rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "read-private"}], "sandbox-emcla-pmyxn")).Permitted());
     }
 
     [Fact]
     [Trait("Category", "Integration")]
     public async void UserAllowUsingDbStore()
     {
-        await using var databaseFactory = new ExternalDatabaseFactory();
-        var dbContext = await databaseFactory.CreateDbContext();
+        var application = await new ApiApplicationBuilder()
+            .WithLocalDb()
+            .ConfigureRbac()
+            .BuildAsync();
+        var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
+        var dbContext = application.Services.GetService<SelfServiceDbContext>()!;
 
-        var permissions =  dbContext.RbacPermissionGrants.ToList();
-
+        var permissions = dbContext.RbacPermissionGrants.ToList();
+        var roles = dbContext.RbacRoleGrants.ToList();
     }
 }

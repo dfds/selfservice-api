@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SelfService.Application;
 using SelfService.Configuration;
 using SelfService.Domain.Models;
@@ -10,6 +12,7 @@ using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Builders;
 
+
 public class ApiApplicationBuilder
 {
     private IAwsAccountRepository _awsAccountRepository;
@@ -17,6 +20,10 @@ public class ApiApplicationBuilder
     private IReleaseNoteRepository _releaseNoteRepository;
     private IMembershipQuery _membershipQuery;
     private ICapabilityDeletionStatusQuery _capabilityDeletionStatusQuery;
+    private Action<IServiceCollection> _configureRbac;
+    private Action<IServiceCollection> _configureDb;
+    private const string DefaultConnectionString =
+        "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db;timeout=2;Command Timeout=2;";
 
     public ApiApplicationBuilder()
     {
@@ -25,6 +32,8 @@ public class ApiApplicationBuilder
         _releaseNoteRepository = new StubReleaseNoteRepository();
         _membershipQuery = new StubMembershipQuery();
         _capabilityDeletionStatusQuery = new StubCapabilityDeletionStatusQuery();
+        _configureRbac = cfg => { };
+        _configureDb = cfg => { };
     }
 
     public ApiApplicationBuilder WithAwsAccountRepository(IAwsAccountRepository awsAccountRepository)
@@ -59,6 +68,40 @@ public class ApiApplicationBuilder
         return this;
     }
 
+    public ApiApplicationBuilder ConfigureRbac()
+    {
+        _configureRbac = svc =>
+        {
+            svc.AddTransient<IRbacPermissionGrantRepository, RbacPermissionGrantRepository>();
+            svc.AddTransient<IRbacRoleGrantRepository, RbacRoleGrantRepository>();
+            svc.AddTransient<IRbacApplicationService, RbacApplicationService>();
+        };
+        return this;
+    }
+
+    public Task<ApiApplicationBuilder> WithSelfServiceDbContext(SelfServiceDbContext selfServiceDbContext)
+    {
+        _configureDb = svc =>
+        {
+            svc.AddSingleton<SelfServiceDbContext>(selfServiceDbContext);
+        };
+
+        return Task.FromResult(this);
+    }
+
+    public Task<ApiApplicationBuilder> WithLocalDb()
+    {
+        _configureDb = svc =>
+        {
+            svc.AddDbContext<SelfServiceDbContext>(opts =>
+            {
+                opts.UseNpgsql(Environment.GetEnvironmentVariable("SS_CONNECTION_STRING") ?? DefaultConnectionString);
+            });
+        };
+
+        return Task.FromResult(this);
+    }
+
     public ApiApplication Build()
     {
         var application = new ApiApplication();
@@ -68,7 +111,41 @@ public class ApiApplicationBuilder
         application.ReplaceService<IMembershipQuery>(_membershipQuery);
         application.ReplaceService<ICapabilityDeletionStatusQuery>(_capabilityDeletionStatusQuery);
         application.ReplaceService<IMessagingService>(new StubMessagingService());
-        application.ReplaceService<IRbacApplicationService>(new RbacApplicationService());
+
+        application.ConfigureService(cfg =>
+        {
+            _configureDb(cfg);
+            _configureRbac(cfg);
+        });
         return application;
+    }
+}
+
+public static class ApiApplicationBuilderExtensions
+{
+    public static async Task<ApiApplicationBuilder> ConfigureRbac(this Task<ApiApplicationBuilder> builderTask)
+    {
+        var builder = await builderTask;
+        return builder.ConfigureRbac();
+    }
+
+    public static async Task<ApiApplicationBuilder> WithSelfServiceDbContext(
+        this Task<ApiApplicationBuilder> builderTask, SelfServiceDbContext selfServiceDbContext)
+    {
+        var builder = await builderTask;
+        return await builder.WithSelfServiceDbContext(selfServiceDbContext);
+    }
+
+    public static async Task<ApiApplicationBuilder> WithLocalDb(
+        this Task<ApiApplicationBuilder> builderTask)
+    {
+        var builder = await builderTask;
+        return await builder.WithLocalDb();
+    }
+
+    public static async Task<ApiApplication> BuildAsync(this Task<ApiApplicationBuilder> builderTask)
+    {
+        var builder = await builderTask;
+        return builder.Build();
     }
 }

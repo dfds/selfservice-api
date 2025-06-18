@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SelfService.Infrastructure.Messaging;
+using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Api;
@@ -116,6 +118,12 @@ public class ApiApplication : WebApplicationFactory<Program>
 
         builder.ConfigureTestServices(services =>
         {
+            // todo: WHHYYYYYYYY https://github.com/dotnet/efcore/blob/34d1953667427d870e768a99116112522953fd0c/src/EFCore/Extensions/EntityFrameworkServiceCollectionExtensions.cs#L881-L898
+            foreach (var option in services.Where(s => s.ServiceType.BaseType == typeof(DbContextOptions)).ToList())
+            {
+                services.Remove(option);
+            }
+            
             _serviceCollectionModifiers.ForEach(cfg => cfg(services));
 
             if (_authOptionsConfig != null)
