@@ -25,6 +25,8 @@ public class ApiApplicationBuilder
     private const string DefaultConnectionString =
         "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db;timeout=2;Command Timeout=2;";
 
+    private bool _overrideDb = false;
+
     public ApiApplicationBuilder()
     {
         _awsAccountRepository = new StubAwsAccountRepository();
@@ -81,6 +83,7 @@ public class ApiApplicationBuilder
 
     public Task<ApiApplicationBuilder> WithSelfServiceDbContext(SelfServiceDbContext selfServiceDbContext)
     {
+        _overrideDb = true;
         _configureDb = svc =>
         {
             svc.AddSingleton<SelfServiceDbContext>(selfServiceDbContext);
@@ -91,6 +94,7 @@ public class ApiApplicationBuilder
 
     public Task<ApiApplicationBuilder> WithLocalDb()
     {
+        _overrideDb = true;
         _configureDb = svc =>
         {
             svc.AddDbContext<SelfServiceDbContext>(opts =>
@@ -104,7 +108,7 @@ public class ApiApplicationBuilder
 
     public ApiApplication Build()
     {
-        var application = new ApiApplication();
+        var application = new ApiApplication(overrideDb: _overrideDb);
         application.ReplaceService<IAwsAccountRepository>(_awsAccountRepository);
         application.ReplaceService<ICapabilityRepository>(_capabilityRepository);
         application.ReplaceService<IReleaseNoteRepository>(_releaseNoteRepository);
