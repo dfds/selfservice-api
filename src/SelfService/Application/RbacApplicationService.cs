@@ -6,23 +6,24 @@ public class RbacApplicationService : IRbacApplicationService
 {
     public Dictionary<String, Group> Groups;
     public List<AccessPolicy> AccessPolicies;
-    public IRbacPermissionGrantRepository PermissionGrantRepository;
-    public IRbacRoleGrantRepository RoleGrantRepository;
+    private readonly IRbacPermissionGrantRepository _permissionGrantRepository;
+    private readonly IRbacRoleGrantRepository _roleGrantRepository;
 
     public RbacApplicationService(IRbacPermissionGrantRepository permissionGrantRepository, IRbacRoleGrantRepository roleGrantRepository)
     {
-        PermissionGrantRepository = permissionGrantRepository;
-        RoleGrantRepository = roleGrantRepository;
+        _permissionGrantRepository = permissionGrantRepository;
+        _roleGrantRepository = roleGrantRepository;
         Groups = new Dictionary<String, Group>();
         AccessPolicies = new List<AccessPolicy>();
     }
 
     public async Task<PermittedResponse> IsUserPermitted(string user, List<Permission> permissions, string objectId)
     {
-        var perms = await PermissionGrantRepository.GetAll();
-        
         var resp = new PermittedResponse();
         var userPolicies = GetApplicablePoliciesUser(user);
+        var userPermissions = await GetPermissionGrantsForUser(user);
+        var userRoles = await GetRoleGrantsForUser(user);
+        
         permissions.ForEach(p => resp.PermissionMatrix.Add(p.Name, new PermissionMatrix(p)));
         
         var accessGrantingPolicies = userPolicies.FindAll(ap =>
@@ -52,7 +53,19 @@ public class RbacApplicationService : IRbacApplicationService
         
         return resp;
     }
+
+
+    public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForUser(string user)
+    {
+        return await _permissionGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user);
+    }
+
+    public async Task<List<RbacRoleGrant>> GetRoleGrantsForUser(string user)
+    {
+        return await _roleGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user);
+    }
     
+    // old
     public List<AccessPolicy> GetApplicablePoliciesUser(string user)
     {
         var payload = new List<AccessPolicy>();
