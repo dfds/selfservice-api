@@ -67,6 +67,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<SelfAssessment> SelfAssessments => Set<SelfAssessment>();
     public DbSet<SelfAssessmentOption> SelfAssessmentOptions => Set<SelfAssessmentOption>();
+    public DbSet<ReleaseNote> ReleaseNotes => Set<ReleaseNote>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -139,6 +140,8 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<SelfAssessmentId>().HaveConversion<SelfAssessmentIdConverter>();
 
         configurationBuilder.Properties<SelfAssessmentOptionId>().HaveConversion<SelfAssessmentOptionIdConverter>();
+
+        configurationBuilder.Properties<ReleaseNoteId>().HaveConversion<ReleaseNoteIdConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -418,6 +421,21 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.IsActive);
             cfg.Property(x => x.RequestedAt);
             cfg.Property(x => x.RequestedBy);
+        });
+
+        modelBuilder.Entity<ReleaseNote>(cfg =>
+        {
+            cfg.ToTable("ReleaseNote");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.Title);
+            cfg.Property(x => x.ReleaseDate);
+            cfg.Property(x => x.Content);
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.ModifiedAt);
+            cfg.Property(x => x.ModifiedBy);
+            cfg.Property(x => x.IsActive);
         });
     }
 }
