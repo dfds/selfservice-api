@@ -6,12 +6,12 @@ namespace SelfService.Domain.Services;
 public class ReleaseNoteService : IReleaseNoteService
 {
     private readonly ILogger<ECRRepositoryService> _logger;
-    private readonly ReleaseNoteRepository _releaseNoteRepository;
+    private readonly IReleaseNoteRepository _releaseNoteRepository;
     private SystemTime _systemTime;
 
     public ReleaseNoteService(
         ILogger<ECRRepositoryService> logger,
-        ReleaseNoteRepository releaseNoteRepository,
+        IReleaseNoteRepository releaseNoteRepository,
         SystemTime systemTime
     )
     {
@@ -20,6 +20,7 @@ public class ReleaseNoteService : IReleaseNoteService
         _systemTime = systemTime;
     }
 
+    [TransactionalBoundary]
     public async Task<ReleaseNote> AddReleaseNote(
         string title,
         string content,
@@ -44,6 +45,7 @@ public class ReleaseNoteService : IReleaseNoteService
         return releaseNote;
     }
 
+    [TransactionalBoundary]
     public async Task ToggleIsActive(ReleaseNoteId id)
     {
         await _releaseNoteRepository.ToggleActive(id);

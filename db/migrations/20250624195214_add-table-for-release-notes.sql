@@ -7,8 +7,8 @@ create table "ReleaseNote" (
     "Content"           text not null,
     "CreatedAt"         timestamp not null default now(),
     "CreatedBy"         varchar(255) not null,
-    "UpdatedAt"         timestamp not null default now(),
-    "UpdatedBy"         varchar(255) not null,
+    "ModifiedAt"         timestamp not null default now(),
+    "ModifiedBy"         varchar(255) not null,
     "IsActive"          boolean not null default true,
 
     constraint "ReleaseNotes_PK" primary key ("Id")
