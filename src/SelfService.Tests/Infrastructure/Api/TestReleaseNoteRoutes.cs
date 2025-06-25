@@ -51,8 +51,4 @@ public class TestReleaseNoteRoutes
 
         Assert.Empty(allowValues!);
     }
-
-    // [andfris: 2025-06-25] TODO: Add tests for cloud-engineer permissions.
-    // This is not currently supported by the test setup, so it requires additional work to implement.
-    // For now it is enough to know, that permissions are empty by default.
 }
