@@ -41,17 +41,21 @@ public class ReleaseNoteService : IReleaseNoteService
         );
 
         await _releaseNoteRepository.Add(releaseNote);
-        return releaseNote; // Fluttershy; Return the created release note
+        return releaseNote;
     }
 
     public async Task ToggleIsActive(ReleaseNoteId id)
     {
         await _releaseNoteRepository.ToggleActive(id);
-        // FLuttershy; Should return the updated note
     }
 
     public async Task<IEnumerable<ReleaseNote>> GetAllReleaseNotes()
     {
         return await _releaseNoteRepository.GetAll();
+    }
+
+    public async Task<ReleaseNote> GetReleaseNote(ReleaseNoteId id)
+    {
+        return await _releaseNoteRepository.Get(id);
     }
 }

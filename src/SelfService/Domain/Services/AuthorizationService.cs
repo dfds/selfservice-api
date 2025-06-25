@@ -311,4 +311,14 @@ public class AuthorizationService : IAuthorizationService
     {
         return IsCloudEngineerEnabled(portalUser);
     }
+
+    public bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
+    public bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
 }

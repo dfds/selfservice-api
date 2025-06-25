@@ -10,6 +10,7 @@ using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.Api.Teams;
+using SelfService.Infrastructure.Api.ReleaseNotes;
 using static SelfService.Infrastructure.Api.Method;
 
 namespace SelfService.Infrastructure.Api;
@@ -1616,6 +1617,88 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "related",
                     allow: Allow.Post
+                )
+            )
+        );
+    }
+
+    public ReleaseNoteApiResource Convert(ReleaseNote releaseNote)
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+        var allowedInteractions = Allow.None;
+        if (_authorizationService.IsAuthorizedToToggleReleaseNoteIsActive(portalUser))
+        {
+            allowedInteractions += Post;
+        }
+
+        return new ReleaseNoteApiResource(
+            id: releaseNote.Id.ToString(),
+            title: releaseNote.Title,
+            releaseDate: releaseNote.ReleaseDate,
+            content: releaseNote.Content,
+            createdAt: releaseNote.CreatedAt,
+            createdBy: releaseNote.CreatedBy,
+            modifiedAt: releaseNote.ModifiedAt,
+            modifiedBy: releaseNote.ModifiedBy,
+            isActive: releaseNote.IsActive,
+            links: new ReleaseNoteApiResource.ReleaseNoteLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(ReleaseNotesController.GetReleaseNote),
+                        controller: GetNameOf<ReleaseNotesController>(),
+                        values: new { id = releaseNote.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                ),
+                toggleIsActive: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(ReleaseNotesController.ToggleIsActive),
+                        controller: GetNameOf<ReleaseNotesController>(),
+                        values: new { id = releaseNote.Id }
+                    ) ?? "",
+                    rel: "toggleIsActive",
+                    allow: allowedInteractions
+                )
+            )
+        );
+    }
+
+    public ReleaseNoteListApiResource Convert(
+        IEnumerable<ReleaseNote> releaseNotes
+    )
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+        var allowedInteractions = Allow.None;
+        if (_authorizationService.IsAuthorizedToCreateReleaseNotes(portalUser))
+        {
+            allowedInteractions += Post;
+        }
+
+        var items = releaseNotes.Select(Convert).ToArray();
+
+        return new ReleaseNoteListApiResource(
+            items: items,
+            links: new ReleaseNoteListApiResource.ReleaseNoteListLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(ReleaseNotesController.GetReleaseNotes),
+                        controller: GetNameOf<ReleaseNotesController>()
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                ),
+                createReleaseNote: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(ReleaseNotesController.CreateReleaseNote),
+                        controller: GetNameOf<ReleaseNotesController>()
+                    ) ?? "",
+                    rel: "create",
+                    allow: allowedInteractions
                 )
             )
         );

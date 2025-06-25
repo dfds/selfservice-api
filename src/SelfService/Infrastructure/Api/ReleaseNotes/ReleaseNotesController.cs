@@ -10,14 +10,17 @@ namespace SelfService.Infrastructure.Api.ReleaseNotes;
 [ApiController]
 public class ReleaseNotesController : ControllerBase
 {
+    private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IReleaseNoteService _releaseNoteService;
     private readonly IAuthorizationService _authorizationService;
 
     public ReleaseNotesController(
+        ApiResourceFactory apiResourceFactory,
         IReleaseNoteService releaseNoteService,
         IAuthorizationService authorizationService
     )
     {
+        _apiResourceFactory = apiResourceFactory;
         _releaseNoteService = releaseNoteService;
         _authorizationService = authorizationService;
     }
@@ -32,7 +35,7 @@ public class ReleaseNotesController : ControllerBase
         try
         {
             var releaseNotes = await _releaseNoteService.GetAllReleaseNotes();
-            return Ok(releaseNotes);
+            return Ok(_apiResourceFactory.Convert(releaseNotes));
         }
         catch (Exception e)
         {
@@ -61,6 +64,12 @@ public class ReleaseNotesController : ControllerBase
                 return Unauthorized();
             }
 
+            var portalUser = HttpContext.User.ToPortalUser();
+            if (!_authorizationService.IsAuthorizedToCreateReleaseNotes(portalUser))
+            {
+                return Unauthorized();
+            }
+
             if (!IsValidRequest(request))
             {
                 return BadRequest(
@@ -80,7 +89,7 @@ public class ReleaseNotesController : ControllerBase
                 request.ReleaseDate,
                 userId
             );
-            return Ok(newNote);
+            return Ok(_apiResourceFactory.Convert(newNote));
         }
         catch (Exception e)
         {
@@ -94,12 +103,53 @@ public class ReleaseNotesController : ControllerBase
         }
     }
 
-    [HttpGet("{id:required}/toggle-active")]
+    [HttpGet("{id:required}")]
+    [ProducesResponseType(typeof(ReleaseNote), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    public async Task<IActionResult> GetReleaseNote(string id)
+    { 
+        if (!ReleaseNoteId.TryParse(id, out var parsedId))
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid Release Note Id",
+                    Detail = $"{id} is not a valid release note id.",
+                }
+            );
+        }
+
+        try
+        {
+            var releaseNote = await _releaseNoteService.GetReleaseNote(parsedId);
+            if (releaseNote == null)
+            {
+                return NotFound(
+                    new ProblemDetails
+                    {
+                        Title = "Release Note Not Found",
+                        Detail = $"Release note with id {id} does not exist.",
+                    }
+                );
+            }
+            return Ok(_apiResourceFactory.Convert(releaseNote));
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetReleaseNote: {e.Message}." }
+            );
+        }
+    }
+
+    [HttpPost("{id:required}/toggle-active")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> ToggleReleaseNoteIsActive(string id)
+    public async Task<IActionResult> ToggleIsActive(string id)
     {
         if (!ReleaseNoteId.TryParse(id, out var parsedId))
         {
@@ -110,6 +160,12 @@ public class ReleaseNotesController : ControllerBase
                     Detail = $"{id} is not a valid release note id.",
                 }
             );
+        }
+
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!_authorizationService.IsAuthorizedToToggleReleaseNoteIsActive(portalUser))
+        {
+            return Unauthorized();
         }
 
         try

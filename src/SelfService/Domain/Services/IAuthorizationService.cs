@@ -42,4 +42,7 @@ public interface IAuthorizationService
     Task<bool> CanRetryCreatingMessageContract(PortalUser portalUser, MessageContractId messageContractId);
     Task<bool> CanSelfAssess(UserId userId, CapabilityId capabilityId);
     bool CanManageSelfAssessmentOptions(PortalUser portalUser);
+
+    bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser);
+    bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser);
 }
