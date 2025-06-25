@@ -1,4 +1,3 @@
-
 using System.Text.Json;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;

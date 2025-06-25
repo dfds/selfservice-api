@@ -57,7 +57,6 @@ public class ReleaseNoteBuilder
         return this;
     }
 
-
     public ReleaseNote Build()
     {
         var releaseNote = new ReleaseNote(

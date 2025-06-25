@@ -39,12 +39,6 @@ public class ReleaseNoteComparer : IEqualityComparer<ReleaseNote?>
 
     public int GetHashCode(ReleaseNote obj)
     {
-        return HashCode.Combine(
-            obj.Id,
-            obj.Title,
-            obj.Content,
-            obj.ReleaseDate,
-            obj.IsActive
-        );
+        return HashCode.Combine(obj.Id, obj.Title, obj.Content, obj.ReleaseDate, obj.IsActive);
     }
 }
