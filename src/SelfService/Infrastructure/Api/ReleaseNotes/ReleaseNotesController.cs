@@ -73,32 +73,19 @@ public class ReleaseNotesController : ControllerBase
             if (!IsValidRequest(request))
             {
                 return BadRequest(
-                    new ProblemDetails
-                    {
-                        Title = "Invalid Request",
-                        Detail = "Title and content must not be empty.",
-                    }
+                    new ProblemDetails { Title = "Invalid Request", Detail = "Title and content must not be empty." }
                 );
             }
             var title = request.Title?.Trim()!;
             var content = request.Content?.Trim()!;
 
-            var newNote = await _releaseNoteService.AddReleaseNote(
-                title,
-                content,
-                request.ReleaseDate,
-                userId
-            );
+            var newNote = await _releaseNoteService.AddReleaseNote(title, content, request.ReleaseDate, userId);
             return Ok(_apiResourceFactory.Convert(newNote));
         }
         catch (Exception e)
         {
             return CustomObjectResult.InternalServerError(
-                new ProblemDetails
-                {
-                    Title = "Uncaught Exception",
-                    Detail = $"CreateReleaseNote: {e.InnerException}.",
-                }
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"CreateReleaseNote: {e.InnerException}." }
             );
         }
     }
@@ -109,7 +96,7 @@ public class ReleaseNotesController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<IActionResult> GetReleaseNote(string id)
-    { 
+    {
         if (!ReleaseNoteId.TryParse(id, out var parsedId))
         {
             return BadRequest(

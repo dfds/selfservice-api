@@ -74,7 +74,7 @@ public class ReleaseNote : AggregateRoot<ReleaseNoteId>
         Raise(domainEvent);
     }
     */
-    
+
     public void ToggleIsActive()
     {
         IsActive = !IsActive;

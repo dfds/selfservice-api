@@ -8,9 +8,9 @@ using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
+using SelfService.Infrastructure.Api.ReleaseNotes;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.Api.Teams;
-using SelfService.Infrastructure.Api.ReleaseNotes;
 using static SelfService.Infrastructure.Api.Method;
 
 namespace SelfService.Infrastructure.Api;
@@ -1666,9 +1666,7 @@ public class ApiResourceFactory
         );
     }
 
-    public ReleaseNoteListApiResource Convert(
-        IEnumerable<ReleaseNote> releaseNotes
-    )
+    public ReleaseNoteListApiResource Convert(IEnumerable<ReleaseNote> releaseNotes)
     {
         var portalUser = HttpContext.User.ToPortalUser();
         var allowedInteractions = Allow.None;

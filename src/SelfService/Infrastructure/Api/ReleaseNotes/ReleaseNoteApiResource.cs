@@ -21,8 +21,8 @@ public class ReleaseNoteApiResource
     public class ReleaseNoteLinks
     {
         public ResourceLink Self { get; set; }
-        public ResourceLink? ToggleIsActive { get; set; } 
-    
+        public ResourceLink? ToggleIsActive { get; set; }
+
         public ReleaseNoteLinks(ResourceLink self, ResourceLink? toggleIsActive = null)
         {
             Self = self;

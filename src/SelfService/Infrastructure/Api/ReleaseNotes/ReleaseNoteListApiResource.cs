@@ -15,7 +15,7 @@ public class ReleaseNoteListApiResource
         public ResourceLink Self { get; set; }
 
         public ResourceLink? CreateReleaseNote { get; set; }
-    
+
         public ReleaseNoteListLinks(ResourceLink self, ResourceLink? createReleaseNote = null)
         {
             Self = self;
@@ -23,10 +23,7 @@ public class ReleaseNoteListApiResource
         }
     }
 
-    public ReleaseNoteListApiResource(
-        ReleaseNoteApiResource[] items,
-        ReleaseNoteListLinks links
-    )
+    public ReleaseNoteListApiResource(ReleaseNoteApiResource[] items, ReleaseNoteListLinks links)
     {
         Items = items;
         Links = links;
