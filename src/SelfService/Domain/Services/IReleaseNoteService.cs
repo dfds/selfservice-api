@@ -11,7 +11,10 @@ public interface IReleaseNoteService
         string content,
         DateTime releaseDate,
         UserId createdBy,
+        int version,
         bool isActive = true
     );
+
+    Task UpdateReleaseNote(ReleaseNoteId id, string title, string content, DateTime releaseDate, string modifiedBy);
     Task ToggleIsActive(ReleaseNoteId id);
 }

@@ -68,7 +68,8 @@ public class ReleaseNoteBuilder
             createdBy: _createdBy,
             modifiedAt: _modifiedAt,
             modifiedBy: _modifiedBy,
-            isActive: _isActive
+            isActive: _isActive,
+            version: 1
         );
 
         return releaseNote;

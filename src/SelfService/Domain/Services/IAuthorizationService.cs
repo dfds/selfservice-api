@@ -44,5 +44,7 @@ public interface IAuthorizationService
     bool CanManageSelfAssessmentOptions(PortalUser portalUser);
 
     bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser);
+    bool IsAuthorizedToUpdateReleaseNote(PortalUser portalUser);
     bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser);
+    bool IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser);
 }

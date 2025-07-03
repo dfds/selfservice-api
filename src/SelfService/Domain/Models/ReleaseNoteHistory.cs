@@ -3,10 +3,11 @@ using SelfService.Domain.Events;
 
 namespace SelfService.Domain.Models;
 
-public class ReleaseNote : AggregateRoot<ReleaseNoteId>
+public class ReleaseNoteHistory : AggregateRoot<ReleaseNoteHistoryId>
 {
-    public ReleaseNote(
-        ReleaseNoteId id,
+    public ReleaseNoteHistory(
+        ReleaseNoteHistoryId id,
+        ReleaseNoteId releaseNoteId,
         string title,
         DateTime releaseDate,
         string content,
@@ -20,6 +21,7 @@ public class ReleaseNote : AggregateRoot<ReleaseNoteId>
         : base(id)
     {
         Title = title;
+        ReleaseNoteId = releaseNoteId;
         ReleaseDate = releaseDate;
         Content = content;
         CreatedAt = createdAt;
@@ -30,7 +32,8 @@ public class ReleaseNote : AggregateRoot<ReleaseNoteId>
         Version = version;
     }
 
-    public static ReleaseNote CreateReleaseNote(
+    public static ReleaseNoteHistory CreateReleaseNoteHistory(
+        ReleaseNoteHistoryId releaseNoteHistoryId,
         ReleaseNoteId releaseNoteId,
         string title,
         DateTime releaseDate,
@@ -43,7 +46,8 @@ public class ReleaseNote : AggregateRoot<ReleaseNoteId>
         int version
     )
     {
-        var releaseNote = new ReleaseNote(
+        var releaseNote = new ReleaseNoteHistory(
+            releaseNoteHistoryId,
             releaseNoteId,
             title,
             releaseDate,
@@ -58,15 +62,16 @@ public class ReleaseNote : AggregateRoot<ReleaseNoteId>
         return releaseNote;
     }
 
-    public string Title { get; set; }
-    public DateTime ReleaseDate { get; set; }
-    public string Content { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime ModifiedAt { get; set; }
-    public string CreatedBy { get; set; }
-    public string ModifiedBy { get; set; }
-    public bool IsActive { get; set; }
-    public int Version { get; set; }
+    public string Title { get; private set; }
+    public ReleaseNoteId ReleaseNoteId { get; private set; }
+    public DateTime ReleaseDate { get; private set; }
+    public string Content { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime ModifiedAt { get; private set; }
+    public string CreatedBy { get; private set; }
+    public string ModifiedBy { get; private set; }
+    public bool IsActive { get; private set; }
+    public int Version { get; private set; }
 
     public override string ToString()
     {

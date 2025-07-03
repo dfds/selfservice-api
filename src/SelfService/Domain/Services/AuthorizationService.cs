@@ -316,8 +316,19 @@ public class AuthorizationService : IAuthorizationService
     {
         return IsCloudEngineerEnabled(portalUser);
     }
+    
+    public bool IsAuthorizedToUpdateReleaseNote(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
 
     public bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+    
+    public bool IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser);
     }

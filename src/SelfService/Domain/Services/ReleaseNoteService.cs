@@ -26,6 +26,7 @@ public class ReleaseNoteService : IReleaseNoteService
         string content,
         DateTime releaseDate,
         UserId createdBy,
+        int version,
         bool isActive = true
     )
     {
@@ -38,7 +39,8 @@ public class ReleaseNoteService : IReleaseNoteService
             createdBy.ToString(),
             _systemTime.Now, // modifiedAt is the same as createdAt for initial creation
             createdBy.ToString(), // modifiedBy is the same as createdBy for initial creation
-            isActive
+            isActive,
+            version
         );
 
         await _releaseNoteRepository.Add(releaseNote);
@@ -49,6 +51,12 @@ public class ReleaseNoteService : IReleaseNoteService
     public async Task ToggleIsActive(ReleaseNoteId id)
     {
         await _releaseNoteRepository.ToggleActive(id);
+    }
+
+    [TransactionalBoundary]
+    public async Task UpdateReleaseNote(ReleaseNoteId id, string title, string content, DateTime releaseDate, string modifiedBy)
+    {
+        await _releaseNoteRepository.Update(id, title, content, releaseDate, modifiedBy);
     }
 
     public async Task<IEnumerable<ReleaseNote>> GetAllReleaseNotes()

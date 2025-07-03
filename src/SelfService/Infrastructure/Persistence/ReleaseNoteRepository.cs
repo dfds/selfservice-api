@@ -29,6 +29,30 @@ public class ReleaseNoteRepository : IReleaseNoteRepository
         await _dbContext.ReleaseNotes.AddAsync(releaseNote);
     }
 
+    public async Task Update(ReleaseNoteId id, string title, string content, DateTime releaseDate, string modifiedBy)
+    {
+        var dbReleaseNote = await _dbContext.ReleaseNotes.FindAsync(id);
+        if (dbReleaseNote is null)
+        {
+            throw EntityNotFoundException<ReleaseNote>.UsingId(id);
+        }
+        
+        // Create ReleaseNoteHistory based on current version of ReleaseNote
+        var releaseNoteHistory = new ReleaseNoteHistory(ReleaseNoteHistoryId.New(), dbReleaseNote.Id, dbReleaseNote.Title, dbReleaseNote.ReleaseDate, dbReleaseNote.Content, dbReleaseNote.CreatedAt, dbReleaseNote.CreatedBy, dbReleaseNote.ModifiedAt, dbReleaseNote.ModifiedBy, dbReleaseNote.IsActive, dbReleaseNote.Version);
+        _dbContext.ReleaseNoteHistory.Add(releaseNoteHistory);
+        
+        // Update ReleaseNote, bump version
+        dbReleaseNote.Title = title;
+        dbReleaseNote.Version += 1;
+        dbReleaseNote.Content = content;
+        dbReleaseNote.ModifiedBy = modifiedBy;
+        dbReleaseNote.ModifiedAt = DateTime.Now;
+        dbReleaseNote.ReleaseDate = releaseDate;
+        _dbContext.ReleaseNotes.Update(dbReleaseNote);
+        
+        await _dbContext.SaveChangesAsync();
+    }
+
     public async Task<IEnumerable<ReleaseNote>> GetAll()
     {
         return await _dbContext.ReleaseNotes.OrderBy(x => x.ReleaseDate).ToListAsync();

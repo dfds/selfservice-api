@@ -11,6 +11,11 @@ public class StubReleaseNoteRepository : IReleaseNoteRepository
         _releaseNote = releaseNote;
     }
 
+    public Task Update(ReleaseNote releaseNote)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<ReleaseNote> Get(ReleaseNoteId id)
     {
         return Task.FromResult(_releaseNote!);

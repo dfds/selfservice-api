@@ -35,6 +35,15 @@ public class ReleaseNotesController : ControllerBase
         try
         {
             var releaseNotes = await _releaseNoteService.GetAllReleaseNotes();
+            if (!Request.Query.ContainsKey("includeDrafts"))
+            {
+                var portalUser = HttpContext.User.ToPortalUser();
+                if (!_authorizationService.IsAuthorizedToListDraftReleaseNotes(portalUser))
+                {
+                    return Unauthorized();
+                }
+                releaseNotes = releaseNotes.Where(r => r.IsActive);
+            }
             return Ok(_apiResourceFactory.Convert(releaseNotes));
         }
         catch (Exception e)
@@ -77,15 +86,53 @@ public class ReleaseNotesController : ControllerBase
                 );
             }
             var title = request.Title?.Trim()!;
-            var content = request.Content?.Trim()!;
 
-            var newNote = await _releaseNoteService.AddReleaseNote(title, content, request.ReleaseDate, userId);
+            var newNote = await _releaseNoteService.AddReleaseNote(title, request.Content!, request.ReleaseDate, userId, 1, request.IsActive);
             return Ok(_apiResourceFactory.Convert(newNote));
         }
         catch (Exception e)
         {
             return CustomObjectResult.InternalServerError(
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"CreateReleaseNote: {e.InnerException}." }
+            );
+        }
+    }
+    
+    [HttpPut("{id:required}")]
+    [ProducesResponseType(typeof(ReleaseNote), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    public async Task<IActionResult> UpdateReleaseNote([FromBody] NewReleaseNotesRequest request, string id)
+    {
+        try
+        {
+            if (!User.TryGetUserId(out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var portalUser = HttpContext.User.ToPortalUser();
+            if (!_authorizationService.IsAuthorizedToUpdateReleaseNote(portalUser))
+            {
+                return Unauthorized();
+            }
+
+            if (!IsValidRequest(request))
+            {
+                return BadRequest(
+                    new ProblemDetails { Title = "Invalid Request", Detail = "Title and content must not be empty." }
+                );
+            }
+            var title = request.Title?.Trim()!;
+
+            await _releaseNoteService.UpdateReleaseNote(ReleaseNoteId.Parse(id), title, request.Content!, request.ReleaseDate, portalUser.Id.ToString());
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"UpdateReleaseNote: {e.InnerException}." }
             );
         }
     }
