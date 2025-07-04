@@ -42,8 +42,10 @@ public class ReleaseNotesController : ControllerBase
                 {
                     return Unauthorized();
                 }
+
                 releaseNotes = releaseNotes.Where(r => r.IsActive);
             }
+            releaseNotes = releaseNotes.OrderByDescending(r => r.ReleaseDate);
             return Ok(_apiResourceFactory.Convert(releaseNotes));
         }
         catch (Exception e)

@@ -16,6 +16,11 @@ public class StubReleaseNoteRepository : IReleaseNoteRepository
         throw new NotImplementedException();
     }
 
+    public Task Update(ReleaseNoteId id, string title, string content, DateTime releaseDate, string modifiedBy)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<ReleaseNote> Get(ReleaseNoteId id)
     {
         return Task.FromResult(_releaseNote!);
