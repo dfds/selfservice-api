@@ -35,14 +35,16 @@ public class ReleaseNotesController : ControllerBase
         try
         {
             var releaseNotes = await _releaseNoteService.GetAllReleaseNotes();
-            if (!Request.Query.ContainsKey("includeDrafts"))
+            if (Request.Query.ContainsKey("includeDrafts"))
             {
                 var portalUser = HttpContext.User.ToPortalUser();
                 if (!_authorizationService.IsAuthorizedToListDraftReleaseNotes(portalUser))
                 {
                     return Unauthorized();
                 }
-
+            }
+            else
+            {
                 releaseNotes = releaseNotes.Where(r => r.IsActive);
             }
             releaseNotes = releaseNotes.OrderByDescending(r => r.ReleaseDate);
