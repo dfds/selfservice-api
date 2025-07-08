@@ -143,7 +143,7 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<SelfAssessmentOptionId>().HaveConversion<SelfAssessmentOptionIdConverter>();
 
         configurationBuilder.Properties<ReleaseNoteId>().HaveConversion<ReleaseNoteIdConverter>();
-        
+
         configurationBuilder.Properties<ReleaseNoteHistoryId>().HaveConversion<ReleaseNoteHistoryIdConverter>();
     }
 
@@ -441,7 +441,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.IsActive);
             cfg.Property(x => x.Version);
         });
-        
+
         modelBuilder.Entity<ReleaseNoteHistory>(cfg =>
         {
             cfg.ToTable("ReleaseNoteHistory");

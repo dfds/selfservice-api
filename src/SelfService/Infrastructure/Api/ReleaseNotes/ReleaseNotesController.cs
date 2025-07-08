@@ -91,7 +91,14 @@ public class ReleaseNotesController : ControllerBase
             }
             var title = request.Title?.Trim()!;
 
-            var newNote = await _releaseNoteService.AddReleaseNote(title, request.Content!, request.ReleaseDate, userId, 1, request.IsActive);
+            var newNote = await _releaseNoteService.AddReleaseNote(
+                title,
+                request.Content!,
+                request.ReleaseDate,
+                userId,
+                1,
+                request.IsActive
+            );
             return Ok(_apiResourceFactory.Convert(newNote));
         }
         catch (Exception e)
@@ -101,7 +108,7 @@ public class ReleaseNotesController : ControllerBase
             );
         }
     }
-    
+
     [HttpPut("{id:required}")]
     [ProducesResponseType(typeof(ReleaseNote), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
@@ -130,7 +137,13 @@ public class ReleaseNotesController : ControllerBase
             }
             var title = request.Title?.Trim()!;
 
-            await _releaseNoteService.UpdateReleaseNote(ReleaseNoteId.Parse(id), title, request.Content!, request.ReleaseDate, portalUser.Id.ToString());
+            await _releaseNoteService.UpdateReleaseNote(
+                ReleaseNoteId.Parse(id),
+                title,
+                request.Content!,
+                request.ReleaseDate,
+                portalUser.Id.ToString()
+            );
             return NoContent();
         }
         catch (Exception e)

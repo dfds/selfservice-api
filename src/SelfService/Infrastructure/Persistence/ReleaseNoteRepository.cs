@@ -36,11 +36,23 @@ public class ReleaseNoteRepository : IReleaseNoteRepository
         {
             throw EntityNotFoundException<ReleaseNote>.UsingId(id);
         }
-        
+
         // Create ReleaseNoteHistory based on current version of ReleaseNote
-        var releaseNoteHistory = new ReleaseNoteHistory(ReleaseNoteHistoryId.New(), dbReleaseNote.Id, dbReleaseNote.Title, dbReleaseNote.ReleaseDate, dbReleaseNote.Content, dbReleaseNote.CreatedAt, dbReleaseNote.CreatedBy, dbReleaseNote.ModifiedAt, dbReleaseNote.ModifiedBy, dbReleaseNote.IsActive, dbReleaseNote.Version);
+        var releaseNoteHistory = new ReleaseNoteHistory(
+            ReleaseNoteHistoryId.New(),
+            dbReleaseNote.Id,
+            dbReleaseNote.Title,
+            dbReleaseNote.ReleaseDate,
+            dbReleaseNote.Content,
+            dbReleaseNote.CreatedAt,
+            dbReleaseNote.CreatedBy,
+            dbReleaseNote.ModifiedAt,
+            dbReleaseNote.ModifiedBy,
+            dbReleaseNote.IsActive,
+            dbReleaseNote.Version
+        );
         _dbContext.ReleaseNoteHistory.Add(releaseNoteHistory);
-        
+
         // Update ReleaseNote, bump version
         dbReleaseNote.Title = title;
         dbReleaseNote.Version += 1;
@@ -49,7 +61,7 @@ public class ReleaseNoteRepository : IReleaseNoteRepository
         dbReleaseNote.ModifiedAt = DateTime.Now;
         dbReleaseNote.ReleaseDate = releaseDate;
         _dbContext.ReleaseNotes.Update(dbReleaseNote);
-        
+
         await _dbContext.SaveChangesAsync();
     }
 

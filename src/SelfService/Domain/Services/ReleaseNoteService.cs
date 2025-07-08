@@ -54,7 +54,13 @@ public class ReleaseNoteService : IReleaseNoteService
     }
 
     [TransactionalBoundary]
-    public async Task UpdateReleaseNote(ReleaseNoteId id, string title, string content, DateTime releaseDate, string modifiedBy)
+    public async Task UpdateReleaseNote(
+        ReleaseNoteId id,
+        string title,
+        string content,
+        DateTime releaseDate,
+        string modifiedBy
+    )
     {
         await _releaseNoteRepository.Update(id, title, content, releaseDate, modifiedBy);
     }
