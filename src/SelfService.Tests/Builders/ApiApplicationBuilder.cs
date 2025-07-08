@@ -13,6 +13,7 @@ public class ApiApplicationBuilder
 {
     private IAwsAccountRepository _awsAccountRepository;
     private ICapabilityRepository _capabilityRepository;
+    private IReleaseNoteRepository _releaseNoteRepository;
     private IMembershipQuery _membershipQuery;
     private ICapabilityDeletionStatusQuery _capabilityDeletionStatusQuery;
 
@@ -20,6 +21,7 @@ public class ApiApplicationBuilder
     {
         _awsAccountRepository = new StubAwsAccountRepository();
         _capabilityRepository = new StubCapabilityRepository();
+        _releaseNoteRepository = new StubReleaseNoteRepository();
         _membershipQuery = new StubMembershipQuery();
         _capabilityDeletionStatusQuery = new StubCapabilityDeletionStatusQuery();
     }
@@ -50,11 +52,18 @@ public class ApiApplicationBuilder
         return this;
     }
 
+    public ApiApplicationBuilder WithReleaseNoteRepository(IReleaseNoteRepository releaseNoteRepository)
+    {
+        _releaseNoteRepository = releaseNoteRepository;
+        return this;
+    }
+
     public ApiApplication Build()
     {
         var application = new ApiApplication();
         application.ReplaceService<IAwsAccountRepository>(_awsAccountRepository);
         application.ReplaceService<ICapabilityRepository>(_capabilityRepository);
+        application.ReplaceService<IReleaseNoteRepository>(_releaseNoteRepository);
         application.ReplaceService<IMembershipQuery>(_membershipQuery);
         application.ReplaceService<ICapabilityDeletionStatusQuery>(_capabilityDeletionStatusQuery);
         application.ReplaceService<IMessagingService>(new StubMessagingService());

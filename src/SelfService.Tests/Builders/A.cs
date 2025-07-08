@@ -22,9 +22,11 @@ public static class A
     public static MembershipApplicationBuilder MembershipApplication => new();
     public static MembershipApprovalBuilder MembershipApproval => new();
     public static MessageContractBuilder MessageContract => new();
+    public static ReleaseNoteBuilder ReleaseNote => new();
 
     public static CapabilityRepositoryBuilder CapabilityRepository => new();
     public static MembershipApplicationRepositoryBuilder MembershipApplicationRepository => new();
+    public static ReleaseNoteRepositoryBuilder ReleaseNoteRepository => new();
 
     public static KafkaTopicApplicationServiceBuilder KafkaTopicApplicationService => new();
     public static MembershipRepositoryBuilder MembershipRepository => new();
