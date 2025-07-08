@@ -55,6 +55,7 @@ public static class Domain
         builder.Services.AddTransient<IMembershipApplicationDomainService, MembershipApplicationDomainService>();
         builder.Services.AddTransient<IAuthorizationService, AuthorizationService>();
         builder.Services.AddTransient<IECRRepositoryService, ECRRepositoryService>();
+        builder.Services.AddTransient<IReleaseNoteService, ReleaseNoteService>();
         builder.Services.AddTransient<ISelfServiceJsonSchemaService, SelfServiceJsonSchemaService>();
         builder.Services.AddTransient<MetricsService>();
 
@@ -78,6 +79,7 @@ public static class Domain
         builder.Services.AddTransient<IInvitationRepository, InvitationRepository>();
         builder.Services.AddTransient<ISelfAssessmentRepository, SelfAssessmentRepository>();
         builder.Services.AddTransient<ISelfAssessmentOptionRepository, SelfAssessmentOptionRepository>();
+        builder.Services.AddTransient<IReleaseNoteRepository, ReleaseNoteRepository>();
 
         // domain queries
         builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();
