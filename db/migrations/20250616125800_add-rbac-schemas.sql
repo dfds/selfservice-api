@@ -42,11 +42,14 @@ CREATE TABLE IF NOT EXISTS "RbacGroup"
 
 CREATE TABLE IF NOT EXISTS "RbacGroupMember"
 (
+    "Id"        uuid         not null,
     "GroupId"   uuid         not null,
     "UserId"    varchar(255) not null,
     "CreatedAt" timestamp    not null default current_timestamp,
 
-    constraint "RbacGroupMember_PK" primary key ("GroupId", "UserId"),
+    UNIQUE ("GroupId", "UserId"),
+
+    constraint "RbacGroupMember_PK" primary key ("Id"),
     constraint "RbacGroup_UserId_FK" foreign key ("UserId") references "Member" ("Id") on delete cascade,
     constraint "RbacGroup_GroupId_FK" foreign key ("GroupId") references "RbacGroup" ("Id") on delete cascade
 );

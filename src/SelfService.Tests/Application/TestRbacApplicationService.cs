@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
 using Microsoft.Extensions.DependencyInjection;
 using SelfService.Domain.Models;
@@ -367,5 +368,7 @@ public class TestRbacApplicationService
 
         var permissions = dbContext.RbacPermissionGrants.ToList();
         var roles = dbContext.RbacRoleGrants.ToList();
+        var rbacGroups = await dbContext.RbacGroups.ToListAsync();
+        
     }
 }

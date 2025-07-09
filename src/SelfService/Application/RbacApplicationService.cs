@@ -48,12 +48,36 @@ public class RbacApplicationService : IRbacApplicationService
             return policyGrantsAccess;
         });
         
+        
+        // TODO: Decide on how a role grant actually maps to permissions
+        // var accessGrantingRoleGrants = userRoles.FindAll(p =>
+        // {
+        //     var policyGrantsAccess = false;
+        //     if (!p.Resource.Equals(objectId))
+        //     {
+        //         return false;
+        //     }
+        //     
+        //     
+        //     permissions.ForEach(pm =>
+        //     {
+        //         if (pm.Namespace == p.Namespace && pm.Name == p.Permission)
+        //         {
+        //             resp.PermissionMatrix[$"{p.Namespace}-{p.Permission}"].Permitted = true;
+        //             policyGrantsAccess = true;
+        //         }
+        //     });
+        //
+        //     return policyGrantsAccess;
+        // });
+        
         return resp;
     }
 
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForUser(string user)
     {
+        
         return await _permissionGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user);
     }
 
