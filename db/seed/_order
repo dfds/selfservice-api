@@ -18,3 +18,5 @@ Invitation.csv
 SelfAssessmentOption.csv
 RbacRoleGrants.csv
 RbacPermissionGrants.csv
+RbacGroup.csv
+RbacGroupMember.csv
