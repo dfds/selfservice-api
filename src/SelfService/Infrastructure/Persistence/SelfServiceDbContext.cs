@@ -69,6 +69,8 @@ public class SelfServiceDbContext : DbContext
     public DbSet<SelfAssessmentOption> SelfAssessmentOptions => Set<SelfAssessmentOption>();
     public DbSet<RbacPermissionGrant> RbacPermissionGrants => Set<RbacPermissionGrant>();
     public DbSet<RbacRoleGrant> RbacRoleGrants => Set<RbacRoleGrant>();
+    public DbSet<RbacGroup> RbacGroups => Set<RbacGroup>();
+    public DbSet<RbacGroupMember> RbacGroupMembers => Set<RbacGroupMember>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -145,6 +147,10 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<RbacPermissionGrantId>().HaveConversion<ValueObjectGuidConverter<RbacPermissionGrantId>>();
 
         configurationBuilder.Properties<RbacRoleGrantId>().HaveConversion<ValueObjectGuidConverter<RbacRoleGrantId>>();
+        
+        configurationBuilder.Properties<RbacGroupId>().HaveConversion<ValueObjectGuidConverter<RbacGroupId>>();
+        
+        configurationBuilder.Properties<RbacGroupMemberId>().HaveConversion<ValueObjectGuidConverter<RbacGroupMemberId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -451,6 +457,33 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Name);
             cfg.Property(x => x.Type);
             cfg.Property(x => x.Resource);
+        });
+        
+        modelBuilder.Entity<RbacGroup>(cfg =>
+        {
+            cfg.ToTable("RbacGroup");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.UpdatedAt);
+            cfg.Property(x => x.Name);
+            cfg.Property(x => x.Description);
+
+            cfg.HasMany(x => x.Members)
+                .WithOne()
+                .HasForeignKey("GroupId");
+            cfg.Navigation(x => x.Members).AutoInclude();
+
+        });
+        
+        modelBuilder.Entity<RbacGroupMember>(cfg =>
+        {
+            cfg.ToTable("RbacGroupMember");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.GroupId);
+            cfg.Property(x => x.UserId);
+            cfg.Property(x => x.CreatedAt);
         });
     }
 }
