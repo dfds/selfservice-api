@@ -21,35 +21,32 @@ public class RbacApplicationService : IRbacApplicationService
     {
         var resp = new PermittedResponse();
         var userPolicies = GetApplicablePoliciesUser(user);
+        permissions.ForEach(p => resp.PermissionMatrix.Add($"{p.Namespace}-{p.Name}", new PermissionMatrix(p)));
+        
+        // new
         var userPermissions = await GetPermissionGrantsForUser(user);
         var userRoles = await GetRoleGrantsForUser(user);
         
-        permissions.ForEach(p => resp.PermissionMatrix.Add(p.Name, new PermissionMatrix(p)));
         
-        var accessGrantingPolicies = userPolicies.FindAll(ap =>
+        var accessGrantingPermissionGrants = userPermissions.FindAll(p =>
         {
             var policyGrantsAccess = false;
-            if (!ap.ObjectIds.Contains(objectId)) // If no match in policy for object, skip policy
+            if (!p.Resource.Equals(objectId))
             {
                 return false;
             }
             
-            ap.Accesses.ForEach(access =>
+            permissions.ForEach(pm =>
             {
-                permissions.ForEach(p =>
+                if (pm.Namespace == p.Namespace && pm.Name == p.Permission)
                 {
-                    if (access.Permissions.Find(pm => pm.Namespace == p.Namespace && pm.Name == p.Name) != null)
-                    {
-                        resp.PermissionMatrix[p.Name].Permitted = true;
-                        policyGrantsAccess = true;
-                    }
-                });
-
+                    resp.PermissionMatrix[$"{p.Namespace}-{p.Permission}"].Permitted = true;
+                    policyGrantsAccess = true;
+                }
             });
 
             return policyGrantsAccess;
         });
-        resp.AccessPolicies = accessGrantingPolicies;
         
         return resp;
     }
