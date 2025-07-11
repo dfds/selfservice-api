@@ -10,12 +10,6 @@ namespace SelfService.Tests.Application;
 
 public class RbacTestData
 {
-    public static Group CloudEngineeringCloudAdmin { get; set; } = new Group {
-        Id = Guid.Parse("1C053AEC-FB32-4B32-8E0B-3FFE97C2C4D2"),
-        Members = ["emcla@dfds.com"],
-        Name = "CloudEngineering - CloudAdmin"
-    };
-
     public static async Task<RbacInMemoryTestFixture> NewInMemoryFixture(bool populateDatabase = true, List<RbacPermissionGrant>? rbacPermissionGrantsSeed = null, List<RbacRoleGrant>? rbacRoleGrantsSeed = null, List<RbacGroup>? rbacGroupSeed = null)
     {
         var databaseFactory = new InMemoryDatabaseFactory();
@@ -26,7 +20,6 @@ public class RbacTestData
             TestRbacApplicationService.PopulateRbac(dbContext, rbacPermissionGrantsSeed, rbacRoleGrantsSeed, rbacGroupSeed);
         }
         
-        TestRbacApplicationService.CreateTestRbacApplicationService(dbContext, null, null);
         var application = await new ApiApplicationBuilder()
             .WithSelfServiceDbContext(dbContext)
             .ConfigureRbac()
@@ -54,56 +47,6 @@ public class RbacInMemoryTestFixture
 
 public class TestRbacApplicationService
 {
-    internal static void CreateTestRbacApplicationService(SelfServiceDbContext dbContext, List<Group>? groupsSeed, List<AccessPolicy>? accessPoliciesSeed)
-    {
-        // groups
-        Dictionary<string, Group> groups = new Dictionary<string, Group>();
-        if (groupsSeed != null)
-        {
-            groupsSeed.ForEach(group => groups.Add(group.Id.ToString(), group));
-        }
-        else
-        {
-            groups.Add(RbacTestData.CloudEngineeringCloudAdmin.Id.ToString(), RbacTestData.CloudEngineeringCloudAdmin);
-        }
-    
-        var permissions = Permission.BootstrapPermissions();
-        
-        // access policies
-        List<AccessPolicy> accessPolicies = new List<AccessPolicy>();
-        if (accessPoliciesSeed != null)
-        {
-            accessPolicies.AddRange(accessPoliciesSeed);
-        }
-        else
-        {
-            accessPolicies.Add(new AccessPolicy
-            {
-                AccessType = AccessType.Capability,
-                Entities =
-                [
-                    new()
-                    {
-                        EntityType = EntityType.Group,
-                        Id = RbacTestData.CloudEngineeringCloudAdmin.Id.ToString()
-                    },
-                    new ()
-                    {
-                        EntityType = EntityType.User,
-                        Id = "andfris@dfds.com"
-                    }
-                ],
-                ObjectIds = ["sandbox-emcla-pmyxn"],
-                Accesses = [
-                    new()
-                    {
-                        Permissions = [permissions.Find(x => x.Namespace == "topics" && x.Name == "read-private")!, permissions.Find(x => x.Namespace == "topics" && x.Name == "create")!]
-                    }
-                ]
-            });   
-        }
-    }
-
     internal async static void PopulateRbac(SelfServiceDbContext dbContext, List<RbacPermissionGrant>? rbacPermissionGrantsSeed, List<RbacRoleGrant>? rbacRoleGrantsSeed, List<RbacGroup>? rbacGroupSeed)
     {
         if (rbacPermissionGrantsSeed != null)
@@ -349,7 +292,6 @@ public class TestRbacApplicationService
     {
         await using var databaseFactory = new InMemoryDatabaseFactory();
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
-        CreateTestRbacApplicationService(dbContext, null, null);
         var application = await new ApiApplicationBuilder()
             .WithSelfServiceDbContext(dbContext)
             .ConfigureRbac()
