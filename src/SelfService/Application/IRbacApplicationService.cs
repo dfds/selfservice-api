@@ -8,4 +8,5 @@ public interface IRbacApplicationService
     List<AccessPolicy> GetApplicablePoliciesUser(string user);
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForUser(string user);
     Task<List<RbacRoleGrant>> GetRoleGrantsForUser(string user);
+    Task<List<RbacPermissionGrant>> GetPermissionGrantsForGroup(string groupId);
 }

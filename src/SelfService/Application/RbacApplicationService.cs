@@ -1,4 +1,5 @@
 using SelfService.Domain.Models;
+using SelfService.Domain.Queries;
 
 namespace SelfService.Application;
 
@@ -8,13 +9,17 @@ public class RbacApplicationService : IRbacApplicationService
     public List<AccessPolicy> AccessPolicies;
     private readonly IRbacPermissionGrantRepository _permissionGrantRepository;
     private readonly IRbacRoleGrantRepository _roleGrantRepository;
+    private readonly IRbacGroupRepository _groupRepository;
+    private readonly IPermissionQuery _permissionQuery;
 
-    public RbacApplicationService(IRbacPermissionGrantRepository permissionGrantRepository, IRbacRoleGrantRepository roleGrantRepository)
+    public RbacApplicationService(IRbacPermissionGrantRepository permissionGrantRepository, IRbacRoleGrantRepository roleGrantRepository, IRbacGroupRepository groupRepository, IPermissionQuery permissionQuery)
     {
         _permissionGrantRepository = permissionGrantRepository;
         _roleGrantRepository = roleGrantRepository;
+        _groupRepository = groupRepository;
         Groups = new Dictionary<String, Group>();
         AccessPolicies = new List<AccessPolicy>();
+        _permissionQuery = permissionQuery;
     }
 
     public async Task<PermittedResponse> IsUserPermitted(string user, List<Permission> permissions, string objectId)
@@ -24,11 +29,18 @@ public class RbacApplicationService : IRbacApplicationService
         permissions.ForEach(p => resp.PermissionMatrix.Add($"{p.Namespace}-{p.Name}", new PermissionMatrix(p)));
         
         // new
+        // user level
         var userPermissions = await GetPermissionGrantsForUser(user);
         var userRoles = await GetRoleGrantsForUser(user);
+        // group level
+        var groupPermissions = await _permissionQuery.FindUserGroupPermissionsByUserId(user);
+        var groupRoles = await _permissionQuery.FindUserGroupRolesByUserId(user);
+
+        var combinedPermissions = userPermissions.Concat(groupPermissions).ToList();
+        var combinedRoles = userRoles.Concat(groupRoles).ToList();
         
         
-        var accessGrantingPermissionGrants = userPermissions.FindAll(p =>
+        var accessGrantingPermissionGrants = combinedPermissions.FindAll(p =>
         {
             var policyGrantsAccess = false;
             if (!p.Resource.Equals(objectId))
@@ -77,13 +89,17 @@ public class RbacApplicationService : IRbacApplicationService
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForUser(string user)
     {
-        
         return await _permissionGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user);
     }
 
     public async Task<List<RbacRoleGrant>> GetRoleGrantsForUser(string user)
     {
         return await _roleGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user);
+    }
+    
+    public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForGroup(string groupId)
+    {
+        return await _permissionGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId);
     }
     
     // old

@@ -16,14 +16,14 @@ public class RbacTestData
         Name = "CloudEngineering - CloudAdmin"
     };
 
-    public static async Task<RbacInMemoryTestFixture> NewInMemoryFixture(bool populateDatabase = true, List<RbacPermissionGrant>? rbacPermissionGrantsSeed = null, List<RbacRoleGrant>? rbacRoleGrantsSeed = null)
+    public static async Task<RbacInMemoryTestFixture> NewInMemoryFixture(bool populateDatabase = true, List<RbacPermissionGrant>? rbacPermissionGrantsSeed = null, List<RbacRoleGrant>? rbacRoleGrantsSeed = null, List<RbacGroup>? rbacGroupSeed = null)
     {
         var databaseFactory = new InMemoryDatabaseFactory();
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         if (populateDatabase)
         {
-            TestRbacApplicationService.PopulateRbac(dbContext, rbacPermissionGrantsSeed, rbacRoleGrantsSeed);
+            TestRbacApplicationService.PopulateRbac(dbContext, rbacPermissionGrantsSeed, rbacRoleGrantsSeed, rbacGroupSeed);
         }
         
         TestRbacApplicationService.CreateTestRbacApplicationService(dbContext, null, null);
@@ -104,7 +104,7 @@ public class TestRbacApplicationService
         }
     }
 
-    internal async static void PopulateRbac(SelfServiceDbContext dbContext, List<RbacPermissionGrant>? rbacPermissionGrantsSeed, List<RbacRoleGrant>? rbacRoleGrantsSeed)
+    internal async static void PopulateRbac(SelfServiceDbContext dbContext, List<RbacPermissionGrant>? rbacPermissionGrantsSeed, List<RbacRoleGrant>? rbacRoleGrantsSeed, List<RbacGroup>? rbacGroupSeed)
     {
         if (rbacPermissionGrantsSeed != null)
         {
@@ -123,6 +123,17 @@ public class TestRbacApplicationService
                 type: "capability",
                 resource: "sandbox-emcla-pmyxn"
                 ));
+            
+            dbContext.RbacPermissionGrants.Add(new RbacPermissionGrant (
+                id: RbacPermissionGrantId.New(),
+                createdAt: DateTime.Now,
+                assignedEntityType: AssignedEntityType.User,
+                assignedEntityId: "test03@dfds.cloud",
+                @namespace: "topics",
+                permission: "create",
+                type: "capability",
+                resource: "sandbox-emcla-pmyxn"
+            ));
             
             await dbContext.SaveChangesAsync();
         }
@@ -143,6 +154,20 @@ public class TestRbacApplicationService
                 type: "capability",
                 resource: "sandbox-emcla-pmyxn"
             ));
+            
+            await dbContext.SaveChangesAsync();
+        }
+
+        if (rbacGroupSeed != null)
+        {
+            dbContext.RbacGroups.AddRange(rbacGroupSeed);
+            await dbContext.SaveChangesAsync();
+        }
+        else
+        {
+            var ceUsersGroup = new RbacGroup(RbacGroupId.Parse("507531CF-6740-4728-ACDB-C3B4CEF11B27"), DateTime.Now, DateTime.Now, "ce - users", "Members of Cloud Engineering");
+            ceUsersGroup.Members.Add(new RbacGroupMember(RbacGroupMemberId.New(), DateTime.Now, ceUsersGroup.Id, "test03@dfds.cloud"));
+            dbContext.RbacGroups.Add(ceUsersGroup);
             
             await dbContext.SaveChangesAsync();
         }
@@ -234,13 +259,13 @@ public class TestRbacApplicationService
             new(
                 id: RbacPermissionGrantId.New(),
                 createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "test03@dfds.cloud",
+                assignedEntityType: AssignedEntityType.Group,
+                assignedEntityId: "507531CF-6740-4728-ACDB-C3B4CEF11B27",
                 @namespace: "topics",
                 permission: "read-public",
                 type: "capability",
                 resource: "test02"
-            ),
+            )
         }, new List<RbacRoleGrant>());
         var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
 
@@ -369,6 +394,8 @@ public class TestRbacApplicationService
         var permissions = dbContext.RbacPermissionGrants.ToList();
         var roles = dbContext.RbacRoleGrants.ToList();
         var rbacGroups = await dbContext.RbacGroups.ToListAsync();
-        
+
+        (await rbacSvc.IsUserPermitted("emcla@dfds.com",
+            [new Permission { Namespace = "topics", Name = "read-private" }], "sandbox-emcla-pmyxn")).Permitted();
     }
 }
