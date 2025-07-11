@@ -5,8 +5,6 @@ namespace SelfService.Application;
 
 public class RbacApplicationService : IRbacApplicationService
 {
-    public Dictionary<String, Group> Groups;
-    public List<AccessPolicy> AccessPolicies;
     private readonly IRbacPermissionGrantRepository _permissionGrantRepository;
     private readonly IRbacRoleGrantRepository _roleGrantRepository;
     private readonly IRbacGroupRepository _groupRepository;
@@ -17,18 +15,14 @@ public class RbacApplicationService : IRbacApplicationService
         _permissionGrantRepository = permissionGrantRepository;
         _roleGrantRepository = roleGrantRepository;
         _groupRepository = groupRepository;
-        Groups = new Dictionary<String, Group>();
-        AccessPolicies = new List<AccessPolicy>();
         _permissionQuery = permissionQuery;
     }
 
     public async Task<PermittedResponse> IsUserPermitted(string user, List<Permission> permissions, string objectId)
     {
         var resp = new PermittedResponse();
-        var userPolicies = GetApplicablePoliciesUser(user);
         permissions.ForEach(p => resp.PermissionMatrix.Add($"{p.Namespace}-{p.Name}", new PermissionMatrix(p)));
         
-        // new
         // user level
         var userPermissions = await GetPermissionGrantsForUser(user);
         var userRoles = await GetRoleGrantsForUser(user);
@@ -59,6 +53,7 @@ public class RbacApplicationService : IRbacApplicationService
 
             return policyGrantsAccess;
         });
+        resp.PermissionGrants = accessGrantingPermissionGrants;
         
         
         // TODO: Decide on how a role grant actually maps to permissions
@@ -101,45 +96,6 @@ public class RbacApplicationService : IRbacApplicationService
     {
         return await _permissionGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId);
     }
-    
-    // old
-    public List<AccessPolicy> GetApplicablePoliciesUser(string user)
-    {
-        var payload = new List<AccessPolicy>();
-        foreach (var policy in AccessPolicies)
-        {
-            var isValid = false;
-            foreach (var entity in policy.Entities)
-            {
-                switch (entity.EntityType)
-                {
-                    case EntityType.Group:
-                        if (Groups.ContainsKey(entity.Id) && Groups[entity.Id].ContainsMember(user))
-                        {
-                            isValid = true;
-                        }
-                        break;
-                    case EntityType.User:
-                        if (entity.Id == user)
-                        {
-                            isValid = true;
-                        }
-                        break;
-                    default:
-                        isValid = false;
-                        break;
-                }
-            }
-
-            if (isValid)
-            {
-                payload.Add(policy);
-            }
-        }
-
-        return payload;
-    }
-    
 }
 
 public enum AccessType
@@ -148,51 +104,6 @@ public enum AccessType
     Global,
     Aws,
     Azure
-}
-
-public class Group
-{
-    public List<String> Members { get; set; } = new List<String>();
-    public String Name { get; set; } = "";
-    public Guid Id { get; set; } = Guid.NewGuid();
-
-    public bool ContainsMember(String member)
-    {
-        return Members.Contains(member);
-    }
-
-    public Group()
-    {
-    }
-}
-
-public class AccessPolicy
-{
-    public List<Entity> Entities { get; set; } = new List<Entity>();
-    public AccessType AccessType { get; set; } = AccessType.Capability;
-    public List<String> ObjectIds { get; set; } = new List<string>();
-    public List<Access> Accesses { get; set; } = new List<Access>();
-
-    public AccessPolicy()
-    {
-        
-    }
-}
-
-public class Entity
-{
-    public String Id { get; set; } = "";
-    public EntityType EntityType { get; set; } = EntityType.Group;
-
-    public Entity()
-    {
-        
-    }
-}
-
-public enum Scope
-{
-    Create,Read,Update,Delete
 }
 
 public class Permission
@@ -254,17 +165,6 @@ public class Permission
     }
 }
 
-public class Access
-{
-    public List<Permission> Permissions { get; set; } = new List<Permission>();
-}
-
-public enum EntityType
-{
-    Group,
-    User
-}
-
 public class PermissionMatrix
 {
     public PermissionMatrix(Permission requestedPermission)
@@ -279,7 +179,7 @@ public class PermissionMatrix
 public class PermittedResponse
 {
     public Dictionary<String, PermissionMatrix> PermissionMatrix { get; set; } = new();
-    public List<AccessPolicy> AccessPolicies { get; set; } = new();
+    public List<RbacPermissionGrant> PermissionGrants { get; set; } = new();
 
     public bool Permitted()
     {
