@@ -1,7 +1,10 @@
 ﻿using Dafda.Outbox;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence.Converters;
+using SelfService.Infrastructure.Persistence.Functions;
+
 
 namespace SelfService.Infrastructure.Persistence;
 
@@ -162,6 +165,35 @@ public class SelfServiceDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        var castAsTextMethodInfo = typeof(Cast).GetMethod(nameof(Cast.CastAsText));
+        
+        if (castAsTextMethodInfo != null)
+        {
+            if (Database.IsNpgsql())
+            {
+                modelBuilder.HasDbFunction(castAsTextMethodInfo)
+                    .HasTranslation(args =>
+                    {
+                        var x = args;
+                        var y = x.First();
+                        if (y is SqlUnaryExpression expression)
+                        {
+                            if (expression.Operand is ColumnExpression column)
+                            {
+                                return new SqlFragmentExpression($"CAST({column.TableAlias}.\"{column.Name}\" AS TEXT)");
+                            }
+                        }
+
+                        return args.First();
+                    });
+            }
+            else // if not postgres just use whatever ef gives us, hope it works out
+            {
+                modelBuilder.HasDbFunction(castAsTextMethodInfo)
+                    .HasTranslation(args => args.First()); // Simply pass the argument through
+            }
+        }
 
         modelBuilder.Entity<OutboxEntry>(cfg =>
         {
