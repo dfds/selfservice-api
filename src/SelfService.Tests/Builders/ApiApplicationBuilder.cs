@@ -76,6 +76,10 @@ public class ApiApplicationBuilder
         {
             svc.AddTransient<IRbacPermissionGrantRepository, RbacPermissionGrantRepository>();
             svc.AddTransient<IRbacRoleGrantRepository, RbacRoleGrantRepository>();
+            svc.AddTransient<IRbacGroupRepository, RbacGroupRepository>();
+            svc.AddTransient<IRbacGroupMemberRepository, RbacGroupMemberRepository>();
+            svc.AddTransient<IPermissionQuery, PermissionsQuery>();
+            
             svc.AddTransient<IRbacApplicationService, RbacApplicationService>();
         };
         return this;
