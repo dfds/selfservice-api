@@ -37,7 +37,7 @@ public class RbacApplicationService : IRbacApplicationService
         var accessGrantingPermissionGrants = combinedPermissions.FindAll(p =>
         {
             var policyGrantsAccess = false;
-            if (!p.Resource.Equals(objectId))
+            if (!p.Type.Equals("Global") && !p.Resource.Equals(objectId))
             {
                 return false;
             }
