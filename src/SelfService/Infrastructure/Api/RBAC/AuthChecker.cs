@@ -19,11 +19,10 @@ public class AuthChecker : IMiddleware
     {
         // add logic
         var endpoint = context.Features.Get<IEndpointFeature>()?.Endpoint;
-        var requiresPermissionAttribute = endpoint?.Metadata.GetMetadata<RequiresPermissionAttribute>();
+        var requiresPermissionAttributes = endpoint?.Metadata.GetOrderedMetadata<RequiresPermissionAttribute>();
         var controllerRbacConfigAttribute = endpoint?.Metadata.GetMetadata<RbacConfigAttribute>();
-        var controllerMetadata = endpoint?.Metadata.GetMetadata<ControllerActionDescriptor>();
         
-        if (requiresPermissionAttribute == null) // todo: Handle when attribute is not available
+        if (requiresPermissionAttributes == null) // todo: Handle when attribute is not available
         {
             await next(context);
             return;
@@ -51,23 +50,26 @@ public class AuthChecker : IMiddleware
             return;
         }
 
-        switch (controllerRbacConfigAttribute.ObjectType)
+        foreach (var requiredPermission in requiresPermissionAttributes)
         {
-            case nameof(RbacObjectType.Capability):
-                if (!(await _rbacApplicationService.IsUserPermitted(portalUser.Id.ToString(),
-                        new List<Permission>
-                            { new() { Namespace = requiresPermissionAttribute!.Ns, Name = requiresPermissionAttribute!.Name, AccessType = AccessType.Capability} },
-                        objectKey!)).Permitted())
-                {
-                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                    await context.Response.WriteAsync($"Missing permission {requiresPermissionAttribute!.Name}");
+            switch (controllerRbacConfigAttribute.ObjectType)
+            {
+                case nameof(RbacObjectType.Capability):
+                    if (!(await _rbacApplicationService.IsUserPermitted(portalUser.Id.ToString(),
+                            new List<Permission>
+                                { new() { Namespace = requiredPermission!.Ns, Name = requiredPermission!.Name, AccessType = AccessType.Capability} },
+                            objectKey!)).Permitted())
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        await context.Response.WriteAsync($"Missing permission {requiredPermission!.Name}");
+                        return;
+                    }
+                    break;
+                default:
+                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                    await context.Response.WriteAsync("Incorrectly configured type lookup");
                     return;
-                }
-                break;
-            default:
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await context.Response.WriteAsync("Incorrectly configured type lookup");
-                return;
+            }
         }
         
         await next(context);
