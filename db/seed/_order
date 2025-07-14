@@ -16,6 +16,7 @@ Team.csv
 TeamCapabilityLinking.csv
 Invitation.csv
 SelfAssessmentOption.csv
+RbacRole.csv
 RbacRoleGrants.csv
 RbacPermissionGrants.csv
 RbacGroup.csv

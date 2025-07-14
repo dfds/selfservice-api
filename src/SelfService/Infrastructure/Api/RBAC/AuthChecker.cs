@@ -21,8 +21,14 @@ public class AuthChecker : IMiddleware
         var endpoint = context.Features.Get<IEndpointFeature>()?.Endpoint;
         var requiresPermissionAttributes = endpoint?.Metadata.GetOrderedMetadata<RequiresPermissionAttribute>();
         var controllerRbacConfigAttribute = endpoint?.Metadata.GetMetadata<RbacConfigAttribute>();
-        
+
         if (requiresPermissionAttributes == null) // todo: Handle when attribute is not available
+        {
+            await next(context);
+            return;
+        }
+
+        if (requiresPermissionAttributes.Count == 0)
         {
             await next(context);
             return;

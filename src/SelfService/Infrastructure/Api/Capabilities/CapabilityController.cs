@@ -255,6 +255,9 @@ public class CapabilityController : ControllerBase
         if (!await _capabilityRepository.Exists(capabilityId))
             return NotFound();
 
+        if (!await _authorizationService.CanViewAwsAccount(userId, capabilityId))
+            return Unauthorized();
+
         var account = await _awsAccountRepository.FindBy(capabilityId);
         if (account is null)
             return NotFound();
