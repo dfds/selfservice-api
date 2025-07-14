@@ -13,6 +13,7 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 [Route("capabilities")]
 [Produces("application/json")]
+[RbacConfig(nameof(RbacObjectType.Capability) ,"id")]
 [ApiController]
 public class CapabilityController : ControllerBase
 {
@@ -87,8 +88,6 @@ public class CapabilityController : ControllerBase
 
     [HttpGet("")]
     [ProducesResponseType(typeof(CapabilityListApiResource), StatusCodes.Status200OK)]
-    [RequiresPermission("topics", "read-private")]
-    [RequiresPermission("topics", "create")]
     public async Task<IActionResult> GetAllCapabilities()
     {
         if (!User.TryGetUserId(out var userId))
@@ -244,6 +243,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [RequiresPermission("aws", "read")]
     public async Task<IActionResult> GetCapabilityAwsAccount(string id)
     {
         if (!User.TryGetUserId(out var userId))
@@ -302,6 +302,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [RequiresPermission("aws", "read")]
     public async Task<IActionResult> GetCapabilityAwsAccountInformation(string id)
     {
         if (!User.TryGetUserId(out var userId))
