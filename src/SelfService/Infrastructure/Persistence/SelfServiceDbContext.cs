@@ -157,7 +157,7 @@ public class SelfServiceDbContext : DbContext
 
         configurationBuilder.Properties<RbacRoleGrantId>().HaveConversion<ValueObjectGuidConverter<RbacRoleGrantId>>();
 
-        configurationBuilder.Properties<RbacRoleId>().HaveConversion<RbacRoleId>();
+        configurationBuilder.Properties<RbacRoleId>().HaveConversion<ValueObjectGuidConverter<RbacRoleId>>();
 
         configurationBuilder.Properties<RbacGroupId>().HaveConversion<ValueObjectGuidConverter<RbacGroupId>>();
 
