@@ -152,10 +152,12 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<ReleaseNoteId>().HaveConversion<ReleaseNoteIdConverter>();
 
         configurationBuilder.Properties<ReleaseNoteHistoryId>().HaveConversion<ReleaseNoteHistoryIdConverter>();
-        
+
         configurationBuilder.Properties<RbacPermissionGrantId>().HaveConversion<ValueObjectGuidConverter<RbacPermissionGrantId>>();
 
         configurationBuilder.Properties<RbacRoleGrantId>().HaveConversion<ValueObjectGuidConverter<RbacRoleGrantId>>();
+
+        configurationBuilder.Properties<RbacRoleId>().HaveConversion<RbacRoleId>();
 
         configurationBuilder.Properties<RbacGroupId>().HaveConversion<ValueObjectGuidConverter<RbacGroupId>>();
 
@@ -165,9 +167,9 @@ public class SelfServiceDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         var castAsTextMethodInfo = typeof(Cast).GetMethod(nameof(Cast.CastAsText));
-        
+
         if (castAsTextMethodInfo != null)
         {
             if (Database.IsNpgsql())
@@ -520,12 +522,25 @@ public class SelfServiceDbContext : DbContext
             cfg.ToTable("RbacRoleGrants");
             cfg.HasKey(x => x.Id);
             cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.RoleId);
             cfg.Property(x => x.CreatedAt);
             cfg.Property(x => x.AssignedEntityType).HasConversion<string>();;
             cfg.Property(x => x.AssignedEntityId);
-            cfg.Property(x => x.Name);
             cfg.Property(x => x.Type);
             cfg.Property(x => x.Resource);
+        });
+
+        modelBuilder.Entity<RbacRole>(cfg =>
+        {
+            cfg.ToTable("RbacRole");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.OwnerId);
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.UpdatedAt);
+            cfg.Property(x => x.Name);
+            cfg.Property(x => x.Description);
+            cfg.Property(x => x.Type);
         });
 
         modelBuilder.Entity<RbacGroup>(cfg =>

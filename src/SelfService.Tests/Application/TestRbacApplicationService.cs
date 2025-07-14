@@ -90,10 +90,10 @@ public class TestRbacApplicationService
         {
             dbContext.RbacRoleGrants.Add(new RbacRoleGrant (
                 id: RbacRoleGrantId.New(),
+                roleId: RbacRoleId.New(),
                 createdAt: DateTime.Now,
                 assignedEntityType: AssignedEntityType.User,
                 assignedEntityId: "andfris@dfds.com",
-                name: "Contributor",
                 type: "capability",
                 resource: "sandbox-emcla-pmyxn"
             ));

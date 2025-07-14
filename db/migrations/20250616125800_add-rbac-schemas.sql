@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS "RbacPermissionGrants"
 (
     "Id"                 uuid         not null,
     "CreatedAt"          timestamp    not null default current_timestamp,
-    "AssignedEntityType" varchar(255) not null, -- user,group
+    "AssignedEntityType" varchar(255) not null, -- user,group,role
     "AssignedEntityId"   varchar(255) not null,
     "Namespace"          text         not null,
     "Permission"         text         not null,
@@ -19,15 +19,30 @@ CREATE TABLE IF NOT EXISTS "RbacPermissionGrants"
 CREATE TABLE IF NOT EXISTS "RbacRoleGrants"
 (
     "Id"                 uuid         not null,
+    "RoleId"             uuid         not null,
     "CreatedAt"          timestamp    not null default current_timestamp,
     "AssignedEntityType" varchar(255) not null, -- user,group
     "AssignedEntityId"   varchar(255) not null,
-    "Name"               text         not null,
     "Type"               varchar(255) not null, -- global,capability
     "Resource"           text,
 
-    constraint "RbacRoleGrants_PK" primary key ("Id")
+    constraint "RbacRoleGrants_PK" primary key ("Id"),
+    constraint "RbacRole_GroupId_FK" foreign key ("RoleId") references "RbacRole" ("Id") on delete cascade
 );
+
+CREATE TABLE IF NOT EXISTS "RbacRole"
+(
+    "Id"          uuid      not null,
+    "OwnerId"     text      not null, -- depends on type
+    "CreatedAt"   timestamp not null default current_timestamp,
+    "UpdatedAt"   timestamp not null default current_timestamp,
+    "Name"        text      not null,
+    "Description" text      not null,
+    "Type"        text      not null, -- system,capability,group
+
+    constraint "RbacGroup_PK" primary key ("Id")
+);
+
 
 CREATE TABLE IF NOT EXISTS "RbacGroup"
 (
