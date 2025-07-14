@@ -125,6 +125,8 @@ public class Permission
             new ("capability-management", "receive-cost", "Receive cost summary reports", AccessType.Capability),
             new ("capability-management",  "request-deletion", "Request Capability deletion", AccessType.Capability),
             new ("capability-management",  "manage-permissions", "Manage Capability permissions", AccessType.Capability),
+            new ("capability-management",  "read-self-assess", "Self assessment permissions", AccessType.Capability),
+            new ("capability-management",  "create-self-assess", "Self assessment permissions", AccessType.Capability),
             new ("capability-membership-management", "create", "Invite new member", AccessType.Capability),
             new ("capability-membership-management", "delete", "Remove member", AccessType.Capability),
             new ("capability-membership-management", "read", "See member list", AccessType.Capability),

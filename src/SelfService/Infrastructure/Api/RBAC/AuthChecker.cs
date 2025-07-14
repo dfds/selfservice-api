@@ -80,7 +80,13 @@ public static class MiddlewareExtensions
 {
     public static IApplicationBuilder UseAuthCheckerMiddleware(this IApplicationBuilder app)
     {
-        return app.UseMiddleware<AuthChecker>();
+        var conf = app.ApplicationServices.GetRequiredService<IConfiguration>();
+        var disabled = conf["SS_MIDDLEWARE_AUTHCHECKER_DISABLE"];
+        if (disabled == null)
+        {
+            return app.UseMiddleware<AuthChecker>();
+        };
+        return disabled != "true" ? app.UseMiddleware<AuthChecker>() : app;
     }
 }
 
