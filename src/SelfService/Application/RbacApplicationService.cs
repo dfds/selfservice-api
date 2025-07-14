@@ -55,7 +55,6 @@ public class RbacApplicationService : IRbacApplicationService
         });
         resp.PermissionGrants = accessGrantingPermissionGrants;
         
-        
         // TODO: Decide on how a role grant actually maps to permissions
         // var accessGrantingRoleGrants = userRoles.FindAll(p =>
         // {
@@ -117,35 +116,36 @@ public class Permission
     {
         var permissions = new List<Permission>
         {
-            new Permission("topics", "create", "Create new topics", AccessType.Capability),
-            new Permission("topics", "read-private", "Read private topics", AccessType.Capability),
-            new Permission("topics", "read-public", "Read public topics", AccessType.Capability),
-            new Permission("topics", "update", "Update topics", AccessType.Capability),
-            new Permission("topics",  "delete", "Delete topics", AccessType.Capability),
-            new Permission("capability-management", "receive-alerts", "Receive Alarms", AccessType.Capability),
-            new Permission("capability-management", "receive-cost", "Receive cost summary reports", AccessType.Capability),
-            new Permission("capability-management",  "request-deletion", "Request Capability deletion", AccessType.Capability),
-            new Permission("capability-membership-management", "create", "Invite new member", AccessType.Capability),
-            new Permission("capability-membership-management", "delete", "Remove member", AccessType.Capability),
-            new Permission("capability-membership-management", "read", "See member list", AccessType.Capability),
-            new Permission("capability-membership-management", "read-requests", "Read invitation/application requests", AccessType.Capability),
-            new Permission("capability-membership-management", "manage-requests", "Approve/decline member requests", AccessType.Capability),
-            new Permission("tags-and-metadata", "create", "Create", AccessType.Capability),
-            new Permission("tags-and-metadata", "read", "Read", AccessType.Capability),
-            new Permission("tags-and-metadata", "update", "Update", AccessType.Capability),
-            new Permission("tags-and-metadata", "delete", "Delete", AccessType.Capability),
-            new Permission("aws", "create", "Create context/cloud resources", AccessType.Capability),
-            new Permission("aws", "read", "Read context/cloud resources", AccessType.Capability),
-            new Permission("aws", "manage-provider", "Read resources in AWS account", AccessType.Capability),
-            new Permission("aws", "read-provider", "Manage resources in AWS account", AccessType.Capability),
-            new Permission("finout", "read-dashboards", "See all DFDS dashboards", AccessType.Global),
-            new Permission("finout",  "manage-dashboards", "Manage dashboard with Capability prefix", AccessType.Capability),
-            new Permission("finout", "manage-alerts", "Manage anomaly alerts with capability prefix", AccessType.Capability),
-            new Permission("finout", "read-alerts", "read anomaly alerts with capability prefix", AccessType.Capability),
-            new Permission("azure", "create", "Create context/cloud resources", AccessType.Capability),
-            new Permission("azure", "read", "Read context/cloud resources", AccessType.Capability),
-            new Permission("azure", "read-provider", "Read resources in Azure resource group", AccessType.Capability),
-            new Permission("azure", "manage-provider", "Manage resources in Azure resource group", AccessType.Capability),
+            new ("topics", "create", "Create new topics", AccessType.Capability),
+            new ("topics", "read-private", "Read private topics", AccessType.Capability),
+            new ("topics", "read-public", "Read public topics", AccessType.Capability),
+            new ("topics", "update", "Update topics", AccessType.Capability),
+            new ("topics",  "delete", "Delete topics", AccessType.Capability),
+            new ("capability-management", "receive-alerts", "Receive Alarms", AccessType.Capability),
+            new ("capability-management", "receive-cost", "Receive cost summary reports", AccessType.Capability),
+            new ("capability-management",  "request-deletion", "Request Capability deletion", AccessType.Capability),
+            new ("capability-management",  "manage-permissions", "Manage Capability permissions", AccessType.Capability),
+            new ("capability-membership-management", "create", "Invite new member", AccessType.Capability),
+            new ("capability-membership-management", "delete", "Remove member", AccessType.Capability),
+            new ("capability-membership-management", "read", "See member list", AccessType.Capability),
+            new ("capability-membership-management", "read-requests", "Read invitation/application requests", AccessType.Capability),
+            new ("capability-membership-management", "manage-requests", "Approve/decline member requests", AccessType.Capability),
+            new ("tags-and-metadata", "create", "Create", AccessType.Capability),
+            new ("tags-and-metadata", "read", "Read", AccessType.Capability),
+            new ("tags-and-metadata", "update", "Update", AccessType.Capability),
+            new ("tags-and-metadata", "delete", "Delete", AccessType.Capability),
+            new ("aws", "create", "Create context/cloud resources", AccessType.Capability),
+            new ("aws", "read", "Read context/cloud resources", AccessType.Capability),
+            new ("aws", "manage-provider", "Read resources in AWS account", AccessType.Capability),
+            new ("aws", "read-provider", "Manage resources in AWS account", AccessType.Capability),
+            new ("finout", "read-dashboards", "See all DFDS dashboards", AccessType.Global),
+            new ("finout",  "manage-dashboards", "Manage dashboard with Capability prefix", AccessType.Capability),
+            new ("finout", "manage-alerts", "Manage anomaly alerts with capability prefix", AccessType.Capability),
+            new ("finout", "read-alerts", "read anomaly alerts with capability prefix", AccessType.Capability),
+            new ("azure", "create", "Create context/cloud resources", AccessType.Capability),
+            new ("azure", "read", "Read context/cloud resources", AccessType.Capability),
+            new ("azure", "read-provider", "Read resources in Azure resource group", AccessType.Capability),
+            new ("azure", "manage-provider", "Manage resources in Azure resource group", AccessType.Capability),
         };
         
         return permissions;
