@@ -1625,10 +1625,15 @@ public class ApiResourceFactory
     public ReleaseNoteApiResource Convert(ReleaseNote releaseNote)
     {
         var portalUser = HttpContext.User.ToPortalUser();
-        var allowedInteractions = Allow.None;
+        var allowedToggleInteractions = Allow.None;
         if (_authorizationService.IsAuthorizedToToggleReleaseNoteIsActive(portalUser))
         {
-            allowedInteractions += Post;
+            allowedToggleInteractions += Post;
+        }
+        var allowedRemoveInteractions = Allow.None;
+        if (_authorizationService.IsAuthorizedToRemoveReleaseNote(portalUser))
+        {
+            allowedRemoveInteractions += Delete;
         }
 
         return new ReleaseNoteApiResource(
@@ -1660,7 +1665,17 @@ public class ApiResourceFactory
                         values: new { id = releaseNote.Id }
                     ) ?? "",
                     rel: "toggleIsActive",
-                    allow: allowedInteractions
+                    allow: allowedToggleInteractions
+                ),
+                remove: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(ReleaseNotesController.RemoveReleaseNote),
+                        controller: GetNameOf<ReleaseNotesController>(),
+                        values: new { id = releaseNote.Id }
+                    ) ?? "",
+                    rel: "remove",
+                    allow: allowedRemoveInteractions
                 )
             )
         );

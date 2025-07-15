@@ -17,4 +17,5 @@ public interface IReleaseNoteService
 
     Task UpdateReleaseNote(ReleaseNoteId id, string title, string content, DateTime releaseDate, string modifiedBy);
     Task ToggleIsActive(ReleaseNoteId id);
+    Task RemoveReleaseNote(ReleaseNoteId id);
 }
