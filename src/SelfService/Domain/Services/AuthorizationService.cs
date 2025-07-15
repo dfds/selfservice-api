@@ -331,4 +331,9 @@ public class AuthorizationService : IAuthorizationService
     {
         return IsCloudEngineerEnabled(portalUser);
     }
+
+    public bool IsAuthorizedToRemoveReleaseNote(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
 }
