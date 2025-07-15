@@ -231,4 +231,41 @@ public class ReleaseNotesController : ControllerBase
             );
         }
     }
+
+    [HttpDelete("{id:required}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
+    public async Task<IActionResult> RemoveReleaseNote(string id)
+    {
+        if (!ReleaseNoteId.TryParse(id, out var parsedId))
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid Release Note Id",
+                    Detail = $"{id} is not a valid release note id.",
+                }
+            );
+        }
+
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!_authorizationService.IsAuthorizedToRemoveReleaseNote(portalUser))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _releaseNoteService.RemoveReleaseNote(parsedId);
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"RemoveReleaseNote: {e.Message}." }
+            );
+        }
+    }
 }
