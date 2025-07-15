@@ -74,4 +74,10 @@ public class ReleaseNoteService : IReleaseNoteService
     {
         return await _releaseNoteRepository.Get(id);
     }
+
+    [TransactionalBoundary]
+    public async Task RemoveReleaseNote(ReleaseNoteId id)
+    {
+        await _releaseNoteRepository.Remove(id);
+    }
 }
