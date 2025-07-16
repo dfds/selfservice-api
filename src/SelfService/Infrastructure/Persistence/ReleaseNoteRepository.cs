@@ -83,4 +83,32 @@ public class ReleaseNoteRepository : IReleaseNoteRepository
         _dbContext.ReleaseNotes.Update(found);
         await _dbContext.SaveChangesAsync();
     }
+
+    public async Task Remove(ReleaseNoteId id)
+    {
+        var dbReleaseNote = await _dbContext.ReleaseNotes.FindAsync(id);
+        if (dbReleaseNote is null)
+        {
+            throw EntityNotFoundException<ReleaseNote>.UsingId(id);
+        }
+
+        // Store the release note in history before removing it
+        var releaseNoteHistory = new ReleaseNoteHistory(
+            ReleaseNoteHistoryId.New(),
+            dbReleaseNote.Id,
+            dbReleaseNote.Title,
+            dbReleaseNote.ReleaseDate,
+            dbReleaseNote.Content,
+            dbReleaseNote.CreatedAt,
+            dbReleaseNote.CreatedBy,
+            dbReleaseNote.ModifiedAt,
+            dbReleaseNote.ModifiedBy,
+            dbReleaseNote.IsActive,
+            dbReleaseNote.Version
+        );
+        _dbContext.ReleaseNoteHistory.Add(releaseNoteHistory);
+
+        _dbContext.ReleaseNotes.Remove(dbReleaseNote);
+        await _dbContext.SaveChangesAsync();
+    }
 }

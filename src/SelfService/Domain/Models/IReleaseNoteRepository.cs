@@ -7,4 +7,5 @@ public interface IReleaseNoteRepository
     Task<ReleaseNote> Get(ReleaseNoteId id);
     Task ToggleActive(ReleaseNoteId id);
     Task<IEnumerable<ReleaseNote>> GetAll();
+    Task Remove(ReleaseNoteId id);
 }

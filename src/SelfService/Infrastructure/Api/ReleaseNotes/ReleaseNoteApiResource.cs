@@ -22,11 +22,13 @@ public class ReleaseNoteApiResource
     {
         public ResourceLink Self { get; set; }
         public ResourceLink? ToggleIsActive { get; set; }
+        public ResourceLink? Remove { get; set; }
 
-        public ReleaseNoteLinks(ResourceLink self, ResourceLink? toggleIsActive = null)
+        public ReleaseNoteLinks(ResourceLink self, ResourceLink? toggleIsActive = null, ResourceLink? remove = null)
         {
             Self = self;
             ToggleIsActive = toggleIsActive;
+            Remove = remove;
         }
     }
 

@@ -52,4 +52,9 @@ public class StubReleaseNoteRepository : IReleaseNoteRepository
     {
         throw new NotImplementedException();
     }
+
+    public Task Remove(ReleaseNoteId id)
+    {
+        throw new NotImplementedException();
+    }
 }
