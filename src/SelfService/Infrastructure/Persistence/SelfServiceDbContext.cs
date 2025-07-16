@@ -503,6 +503,8 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.ModifiedBy);
             cfg.Property(x => x.IsActive);
             cfg.Property(x => x.Version);
+        });
+        
         modelBuilder.Entity<RbacPermissionGrant>(cfg =>
         {
             cfg.ToTable("RbacPermissionGrants");
