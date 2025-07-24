@@ -37,7 +37,11 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
     public async Task<AzureResourceId> RequestAzureResource(
         CapabilityId capabilityId,
         string environment,
-        UserId requestedBy
+        UserId requestedBy,
+        string purpose,
+        string? catalogueId = null,
+        string? risk = null,
+        bool? gdpr = null
     )
     {
         if (await _azureResourceRepository.Exists(capabilityId, environment))
@@ -60,7 +64,45 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
             }
         }
 
-        var resource = AzureResource.RequestNew(capabilityId, environment, _systemTime.Now, requestedBy);
+        if (string.IsNullOrWhiteSpace(purpose))
+        {
+            throw new ArgumentException("Purpose must be provided for Azure Resource request", nameof(purpose));
+        }
+        if (purpose == "ai")
+        {
+            if (!gdpr.HasValue)
+            {
+                throw new ArgumentException(
+                    "GDPR must be provided for Azure Resource request with purpose 'ai'",
+                    nameof(gdpr)
+                );
+            }
+            if (string.IsNullOrWhiteSpace(catalogueId))
+            {
+                throw new ArgumentException(
+                    "Catalogue ID must be provided for Azure Resource request with purpose 'ai'",
+                    nameof(catalogueId)
+                );
+            }
+            if (string.IsNullOrWhiteSpace(risk))
+            {
+                throw new ArgumentException(
+                    "Risk must be provided for Azure Resource request with purpose 'ai'",
+                    nameof(risk)
+                );
+            }
+        }
+
+        var resource = AzureResource.RequestNew(
+            capabilityId,
+            environment,
+            _systemTime.Now,
+            requestedBy,
+            purpose,
+            catalogueId,
+            risk,
+            gdpr
+        );
 
         await _azureResourceRepository.Add(resource);
 
@@ -76,7 +118,15 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
         {
             var azureResourceManifestRepository = scope.ServiceProvider.GetService<IAzureResourceManifestRepository>();
             await azureResourceManifestRepository!.Add(
-                new AzureResourceManifest { AzureResource = resource, Capability = capability }
+                new AzureResourceManifest
+                {
+                    AzureResource = resource,
+                    Capability = capability,
+                    Purpose = azureResourceRequested.Purpose,
+                    CatalogueId = azureResourceRequested.CatalogueId,
+                    Risk = azureResourceRequested.Risk,
+                    Gdpr = azureResourceRequested.Gdpr,
+                }
             );
         }
     }
