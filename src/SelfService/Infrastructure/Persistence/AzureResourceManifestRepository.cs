@@ -150,6 +150,10 @@ public class AzureResourceManifest
     public String Path { get; set; }
     public AzureResource? AzureResource { get; set; }
     public Capability? Capability { get; set; }
+    public string? Purpose { get; set; }
+    public string? CatalogueId { get; set; }
+    public string? Risk { get; set; }
+    public bool? Gdpr { get; set; }
 
     public AzureResourceManifest()
     {
@@ -177,7 +181,6 @@ public class AzureResourceManifest
         var tribe = costCentre;
         var owner = jsonObject["dfds.owner"]?.ToString() ?? "";
         var availability = jsonObject["dfds.service.availability"]?.ToString() ?? "";
-        var plannedSunset = jsonObject["dfds.planned_sunset"]?.ToString() ?? "";
 
         return $$"""
             terraform {
@@ -203,7 +206,10 @@ public class AzureResourceManifest
               environment                 = "{{AzureResource?.Environment}}"
               costcentre                  = "{{costCentre}}"
               availability                = "{{availability}}"
-              planned_sunset              = "{{plannedSunset}}"
+              purpose                     = "{{Purpose}}"
+              catalogue_id                = "{{CatalogueId}}"
+              risk                        = "{{Risk}}"
+              gdpr                        = "{{Gdpr}}"
               enable_capability_access    = true
 
               subscription_id = "${get_env("CORE_SUBSCRIPTION_ID", "")}"

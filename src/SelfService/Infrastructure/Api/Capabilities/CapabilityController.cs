@@ -393,6 +393,16 @@ public class CapabilityController : ControllerBase
                 }
             );
 
+        if (request?.purpose == null)
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid metadata",
+                    Detail = "Metadata missing purpose empty",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+
         if (await _azureResourceRepository.Exists(capabilityId, request.environment))
             return Conflict();
 
@@ -404,7 +414,11 @@ public class CapabilityController : ControllerBase
             var azureResourceId = await _azureResourceApplicationService.RequestAzureResource(
                 capabilityId,
                 request.environment,
-                userId
+                userId,
+                request.purpose,
+                request.catalogueId,
+                request.risk,
+                request.gdpr
             );
 
             var resource = await _azureResourceRepository.Get(azureResourceId);
