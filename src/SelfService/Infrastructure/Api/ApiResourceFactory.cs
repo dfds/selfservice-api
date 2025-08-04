@@ -1718,7 +1718,7 @@ public class ApiResourceFactory
         );
     }
 
-    public RbacMeApiResource Convert(List<RbacPermissionGrant> permissionGrants, List<RbacRoleGrant> roleGrants)
+    public RbacMeApiResource Convert(List<RbacPermissionGrant> permissionGrants, List<RbacRoleGrant> roleGrants, List<RbacGroup> groups)
     {
         var mappedPermissionGrants = permissionGrants.Select(x => new RBAC.Dto.RbacPermissionGrant
         {
@@ -1743,20 +1743,31 @@ public class ApiResourceFactory
             Type = x.Type
         });
 
+        var mappedGroups = groups.Select(x => new RBAC.Dto.RbacGroup
+        {
+            Id = x.Id.ToString(),
+            CreatedAt = x.CreatedAt,
+            UpdatedAt = x.UpdatedAt,
+            Name = x.Name,
+            Description = x.Description,
+            Members = x.Members
+        });
+
         
-        var payload = new RbacMeApiResource(links:
-            new RbacMeApiResource.RbacMeLinks(
+        var payload = new RbacMeApiResource(
+            links: new RbacMeApiResource.RbacMeLinks(
                 new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
-                        action: nameof(RbacController.MyPermissions),
+                        action: nameof(RbacController.Me),
                         controller: GetNameOf<RbacController>()) ?? "",
                     rel: "self",
                     allow: Allow.Get
                 )
             ),
             permissionGrants: mappedPermissionGrants.ToArray(),
-            roleGrants: mappedRoleGrants.ToArray()
+            roleGrants: mappedRoleGrants.ToArray(),
+            groups: mappedGroups.ToArray()
         );
 
         return payload;

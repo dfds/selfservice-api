@@ -8,6 +8,7 @@ public class RbacMeApiResource
 {
     public RbacPermissionGrant[] PermissionGrants { get; set; }
     public RbacRoleGrant[] RoleGrants { get; set; }
+    public RbacGroup[] Groups { get; set; }
 
     [JsonPropertyName("_links")]
     public RbacMeLinks Links { get; set; }
@@ -22,10 +23,11 @@ public class RbacMeApiResource
         }
     }
 
-    public RbacMeApiResource(RbacPermissionGrant[] permissionGrants, RbacRoleGrant[] roleGrants, RbacMeLinks links)
+    public RbacMeApiResource(RbacPermissionGrant[] permissionGrants, RbacRoleGrant[] roleGrants, RbacMeLinks links, RbacGroup[] groups)
     {
         PermissionGrants = permissionGrants;
         RoleGrants = roleGrants;
         Links = links;
+        Groups = groups;
     }
 }

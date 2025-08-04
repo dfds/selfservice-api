@@ -25,7 +25,7 @@ public class RbacController : ControllerBase
 
     [HttpGet("me")]
     [ProducesResponseType(typeof(RbacMeApiResource), StatusCodes.Status200OK)]
-    public async Task<IActionResult> MyPermissions()
+    public async Task<IActionResult> Me()
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -44,6 +44,8 @@ public class RbacController : ControllerBase
         var permissionsFromRoles = await _rbacApplicationService.GetPermissionGrantsForRoleGrants(combinedRoles);
         combinedPermissions.AddRange(permissionsFromRoles);
 
-        return Ok(_apiResourceFactory.Convert(combinedPermissions, combinedRoles));
+        var groups = await _rbacApplicationService.GetGroupsForUser(userId);
+
+        return Ok(_apiResourceFactory.Convert(combinedPermissions, combinedRoles, groups));
     }
 }

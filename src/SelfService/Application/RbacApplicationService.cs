@@ -121,6 +121,13 @@ public class RbacApplicationService : IRbacApplicationService
     {
         return await _permissionGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId);
     }
+
+    public async Task<List<RbacGroup>> GetGroupsForUser(string user)
+    {
+        var groups = await _groupRepository.GetAllWithPredicate(x => x.Members.Any(m => m.UserId == user));
+
+        return groups;
+    }
 }
 
 public enum AccessType
