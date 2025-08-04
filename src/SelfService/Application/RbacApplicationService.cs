@@ -90,15 +90,18 @@ public class RbacApplicationService : IRbacApplicationService
         foreach (var rg in roleGrants)
         {
             var foundPermissions = await _permissionGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.Role && string.Equals(p.AssignedEntityId, rg.RoleId.ToString(), StringComparison.CurrentCultureIgnoreCase));
+            var modifiedPermissions = new List<RbacPermissionGrant>();
             
             // override type & resource from grant to permission
             foreach (var rbacPermissionGrant in foundPermissions)
             {
-                rbacPermissionGrant.Type = rg.Type;
-                rbacPermissionGrant.Resource = rg.Resource;
+                var modifiedPermission = new RbacPermissionGrant(rbacPermissionGrant.Id, rbacPermissionGrant.CreatedAt,
+                    rbacPermissionGrant.AssignedEntityType, rbacPermissionGrant.AssignedEntityId,
+                    rbacPermissionGrant.Namespace, rbacPermissionGrant.Permission, rg.Type, rg.Resource!);
+                modifiedPermissions.Add(modifiedPermission);
             }
             
-            payload.AddRange(foundPermissions);
+            payload.AddRange(modifiedPermissions);
         }
 
         return payload;

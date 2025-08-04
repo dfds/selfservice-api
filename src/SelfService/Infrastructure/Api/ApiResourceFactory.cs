@@ -8,6 +8,7 @@ using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
+using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Api.ReleaseNotes;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.Api.Teams;
@@ -1715,5 +1716,49 @@ public class ApiResourceFactory
                 )
             )
         );
+    }
+
+    public RbacMeApiResource Convert(List<RbacPermissionGrant> permissionGrants, List<RbacRoleGrant> roleGrants)
+    {
+        var mappedPermissionGrants = permissionGrants.Select(x => new RBAC.Dto.RbacPermissionGrant
+        {
+            Id = x.Id.ToString(),
+            AssignedEntityId = x.AssignedEntityId,
+            AssignedEntityType = x.AssignedEntityType,
+            CreatedAt = x.CreatedAt,
+            Namespace = x.Namespace,
+            Permission = x.Permission,
+            Resource = x.Resource,
+            Type = x.Type
+        });
+        
+        var mappedRoleGrants = roleGrants.Select(x => new RBAC.Dto.RbacRoleGrant
+        {
+            Id = x.Id.ToString(),
+            RoleId = x.RoleId.ToString(),
+            AssignedEntityId = x.AssignedEntityId,
+            AssignedEntityType = x.AssignedEntityType,
+            CreatedAt = x.CreatedAt,
+            Resource = x.Resource,
+            Type = x.Type
+        });
+
+        
+        var payload = new RbacMeApiResource(links:
+            new RbacMeApiResource.RbacMeLinks(
+                new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(RbacController.MyPermissions),
+                        controller: GetNameOf<RbacController>()) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                )
+            ),
+            permissionGrants: mappedPermissionGrants.ToArray(),
+            roleGrants: mappedRoleGrants.ToArray()
+        );
+
+        return payload;
     }
 }
