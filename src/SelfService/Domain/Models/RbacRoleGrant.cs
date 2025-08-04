@@ -9,7 +9,7 @@ public class RbacRoleGrant : AggregateRoot<RbacRoleGrantId>
     public AssignedEntityType AssignedEntityType { get; private set; }
     public string AssignedEntityId { get; private set; }
     public string Type { get; private set; }
-    public string Resource { get; private set; }
+    public string? Resource { get; private set; }
 
     public RbacRoleGrant(RbacRoleGrantId id, RbacRoleId roleId, DateTime createdAt, AssignedEntityType assignedEntityType, string assignedEntityId, string type, string resource) : base(id)
     {

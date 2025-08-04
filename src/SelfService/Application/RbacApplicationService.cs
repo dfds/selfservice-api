@@ -37,7 +37,7 @@ public class RbacApplicationService : IRbacApplicationService
         var accessGrantingPermissionGrants = combinedPermissions.FindAll(p =>
         {
             var policyGrantsAccess = false;
-            if (!p.Type.Equals("Global") && !p.Resource.Equals(objectId))
+            if (!p.Type.Equals("Global") && !p.Resource!.Equals(objectId))
             {
                 return false;
             }
@@ -54,32 +54,55 @@ public class RbacApplicationService : IRbacApplicationService
             return policyGrantsAccess;
         });
         resp.PermissionGrants = accessGrantingPermissionGrants;
+
+        // New - handling mapping roles to permissions
+        var permissionsFromRoles = await GetPermissionGrantsForRoleGrants(combinedRoles);
         
-        // TODO: Decide on how a role grant actually maps to permissions
-        // var accessGrantingRoleGrants = userRoles.FindAll(p =>
-        // {
-        //     var policyGrantsAccess = false;
-        //     if (!p.Resource.Equals(objectId))
-        //     {
-        //         return false;
-        //     }
-        //     
-        //     
-        //     permissions.ForEach(pm =>
-        //     {
-        //         if (pm.Namespace == p.Namespace && pm.Name == p.Permission)
-        //         {
-        //             resp.PermissionMatrix[$"{p.Namespace}-{p.Permission}"].Permitted = true;
-        //             policyGrantsAccess = true;
-        //         }
-        //     });
-        //
-        //     return policyGrantsAccess;
-        // });
+        accessGrantingPermissionGrants = permissionsFromRoles.FindAll(p =>
+        {
+            var policyGrantsAccess = false;
+            if (!p.Type.Equals("Global") && !p.Resource!.Equals(objectId))
+            {
+                return false;
+            }
+            
+            permissions.ForEach(pm =>
+            {
+                if (pm.Namespace == p.Namespace && pm.Name == p.Permission)
+                {
+                    resp.PermissionMatrix[$"{p.Namespace}-{p.Permission}"].Permitted = true;
+                    policyGrantsAccess = true;
+                }
+            });
+
+            return policyGrantsAccess;
+        });
+        resp.PermissionGrants.AddRange(accessGrantingPermissionGrants);
+
+        // weee
         
         return resp;
     }
 
+    public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleGrants(List<RbacRoleGrant> roleGrants)
+    {
+        var payload = new List<RbacPermissionGrant>();
+        foreach (var rg in roleGrants)
+        {
+            var foundPermissions = await _permissionGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.Role && string.Equals(p.AssignedEntityId, rg.RoleId.ToString(), StringComparison.CurrentCultureIgnoreCase));
+            
+            // override type & resource from grant to permission
+            foreach (var rbacPermissionGrant in foundPermissions)
+            {
+                rbacPermissionGrant.Type = rg.Type;
+                rbacPermissionGrant.Resource = rg.Resource;
+            }
+            
+            payload.AddRange(foundPermissions);
+        }
+
+        return payload;
+    }
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForUser(string user)
     {

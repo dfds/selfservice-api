@@ -9,8 +9,8 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
     public string AssignedEntityId { get; private set; }
     public string Namespace { get; private set; }
     public string Permission { get; private set; }
-    public string Type { get; private set; }
-    public string Resource { get; private set; }
+    public string Type { get; set; }
+    public string? Resource { get; set; }
 
     public RbacPermissionGrant(RbacPermissionGrantId id, DateTime createdAt, AssignedEntityType assignedEntityType, string assignedEntityId, string @namespace, string permission, string type, string resource) : base(id)
     {
