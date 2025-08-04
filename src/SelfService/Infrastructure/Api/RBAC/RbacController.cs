@@ -36,7 +36,6 @@ public class RbacController : ControllerBase
         // group level
         var groupPermissions = await _permissionQuery.FindUserGroupPermissionsByUserId(userId.ToString());
         var groupRoles = await _permissionQuery.FindUserGroupRolesByUserId(userId.ToString());
-        
 
         var combinedPermissions = userPermissions.Concat(groupPermissions).ToList();
         var combinedRoles = userRoles.Concat(groupRoles).ToList();
