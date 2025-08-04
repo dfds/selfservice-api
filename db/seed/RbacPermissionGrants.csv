@@ -7,3 +7,5 @@ A24BE835-A371-46DC-BECF-D52FFF751E16;2000-01-01;User;emcla@dfds.com;topics;delet
 4AB9553E-6EE5-4059-881D-247D420BB3FA;2000-01-01;User;emcla@dfds.com;topics;update;Capability;sandbox-emcla-pmyxn
 39BE2CBF-5641-4E9E-B42C-EDA5F756F472;2000-01-01;User;emcla@dfds.com;capability-membership-management;create;Capability;sandbox-emcla-pmyxn
 699BB863-C53B-4D1E-8B8B-B2DFDC1A5277;2000-01-01;Role;22DAB91B-C2D8-4840-A173-1416EF1B882D;topics;read-private;Global;
+5F6450B8-2EB4-4C24-ABE1-5E0B2DD3C503;2000-01-01;Role;2C561A6D-90F4-4649-80B3-76A854A64EA2;topics;read-public;Global;
+7A6DE5DB-D990-4EBE-9CFC-E9076D4C643C;2000-01-01;Role;2C561A6D-90F4-4649-80B3-76A854A64EA2;topics;read-private;Global;
