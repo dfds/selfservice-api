@@ -331,13 +331,16 @@ public class TestRbacApplicationService
             .ConfigureRbac()
             .BuildAsync();
         var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
-        var dbContext = application.Services.GetService<SelfServiceDbContext>()!;
+        // var dbContext = application.Services.GetService<SelfServiceDbContext>()!;
+        //
+        // var permissions = dbContext.RbacPermissionGrants.ToList();
+        // var roles = dbContext.RbacRoleGrants.ToList();
+        // var rbacGroups = await dbContext.RbacGroups.ToListAsync();
 
-        var permissions = dbContext.RbacPermissionGrants.ToList();
-        var roles = dbContext.RbacRoleGrants.ToList();
-        var rbacGroups = await dbContext.RbacGroups.ToListAsync();
-
-        (await rbacSvc.IsUserPermitted("emcla@dfds.com",
-            [new Permission { Namespace = "topics", Name = "read-private" }], "sandbox-emcla-pmyxn")).Permitted();
+        Assert.True((await rbacSvc.IsUserPermitted("emcla@dfds.com",
+            [new Permission { Namespace = "topics", Name = "read-private" }], "sandbox-emcla-pmyxn")).Permitted());
+        
+        Assert.True((await rbacSvc.IsUserPermitted("emcla@dfds.com",
+            [new Permission { Namespace = "topics", Name = "read-private" }], "sandbox-throwaway-01")).Permitted());
     }
 }

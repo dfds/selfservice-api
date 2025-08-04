@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS "RbacPermissionGrants"
 CREATE TABLE IF NOT EXISTS "RbacRole"
 (
     "Id"          uuid      not null,
-    "OwnerId"     text      not null, -- depends on type
+    "OwnerId"     text      not null, -- depends on type, can be uuid, rootid
     "CreatedAt"   timestamp not null default current_timestamp,
     "UpdatedAt"   timestamp not null default current_timestamp,
     "Name"        text      not null,
