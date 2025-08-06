@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS "RbacPermissionGrants"
     "Type"               varchar(255) not null, -- global,capability
     "Resource"           text,
 
-    constraint "RbacPermissionGrants_PK" primary key ("Id")
+    constraint "RbacPermissionGrants_PK" primary key ("Id"),
+    unique ("AssignedEntityType", "AssignedEntityId", "Namespace", "Permission", "Type", "Resource")
 );
 
 CREATE TABLE IF NOT EXISTS "RbacRole"
