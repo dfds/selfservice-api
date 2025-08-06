@@ -65,10 +65,13 @@ public class RbacController : ControllerBase
         return Created();
     }
     
-    [HttpDelete("permission/revoke")]
-    public Task<IActionResult> RevokePermission()
+    [HttpDelete("permission/revoke/{id:required}")]
+    public async Task<IActionResult> RevokePermission(string id)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+        await _rbacApplicationService.RevokePermission(userId.ToString(), id);
+        return Ok();
     }
     
     [HttpGet("permission/capability/{id:required}")]
@@ -90,15 +93,21 @@ public class RbacController : ControllerBase
     }
     
     [HttpPost("role/grant")]
-    public Task<IActionResult> GrantRole()
+    public async Task<IActionResult> GrantRole([FromBody] RbacRoleGrant roleGrant)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+        await _rbacApplicationService.GrantRoleGrant(userId.ToString(), roleGrant);
+        return Created();
     }
     
-    [HttpDelete("role/revoke")]
-    public Task<IActionResult> RevokeRole()
+    [HttpDelete("role/revoke/{id:required}")]
+    public async Task<IActionResult> RevokeRole(string id)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+        await _rbacApplicationService.RevokeRoleGrant(userId.ToString(), id);
+        return Ok();
     }
     
     [HttpGet("role/capability/{id:required}")]
