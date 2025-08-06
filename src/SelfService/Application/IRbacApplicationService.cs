@@ -10,4 +10,8 @@ public interface IRbacApplicationService
     Task<List<RbacRoleGrant>> GetRoleGrantsForUser(string user);
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForGroup(string groupId);
     Task<List<RbacGroup>> GetGroupsForUser(string user);
+    Task GrantPermission(string user, RbacPermissionGrant permissionGrant);
+    Task RevokePermission(string user, RbacPermissionGrant permissionGrant);
+    Task GrantRoleGrant(string user, RbacRoleGrant roleGrant);
+    Task RevokeRoleGrant(string user, RbacRoleGrant roleGrant);
 }

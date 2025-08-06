@@ -1,3 +1,4 @@
+using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 
@@ -128,6 +129,52 @@ public class RbacApplicationService : IRbacApplicationService
 
         return groups;
     }
+
+    [TransactionalBoundary]
+    public async Task GrantPermission(string user, RbacPermissionGrant permissionGrant)
+    {
+        PermittedResponse? canUserCreateGlobalRbac;
+        switch (permissionGrant.Type.ToLower())
+        {
+            case "global":
+                canUserCreateGlobalRbac = await IsUserPermitted(user, new List<Permission>{new("rbac", "create", "", AccessType.Global)}, permissionGrant.Resource ?? "");
+                if (!canUserCreateGlobalRbac.Permitted())
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                await _permissionGrantRepository.Add(RbacPermissionGrant.New(permissionGrant.AssignedEntityType, permissionGrant.AssignedEntityId, permissionGrant.Namespace, permissionGrant.Permission, permissionGrant.Type, permissionGrant.Resource ?? ""));
+                
+                break;
+            case "capability":
+                canUserCreateGlobalRbac = await IsUserPermitted(user, new List<Permission>{new("rbac", "create", "", AccessType.Global)}, permissionGrant.Resource ?? "");
+                var canUserCreateCapabilityRbac = await IsUserPermitted(user, new List<Permission>{new("capability-management", "manage-permissions", "", AccessType.Capability)}, permissionGrant.Resource ?? "");
+
+                if (!canUserCreateGlobalRbac.Permitted() && !canUserCreateCapabilityRbac.Permitted())
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                await _permissionGrantRepository.Add(RbacPermissionGrant.New(permissionGrant.AssignedEntityType, permissionGrant.AssignedEntityId, permissionGrant.Namespace, permissionGrant.Permission, permissionGrant.Type, permissionGrant.Resource ?? ""));
+                
+                break;
+            default:
+                throw new Exception("Invalid permission grant");
+        }
+    }
+
+    public Task RevokePermission(string user, RbacPermissionGrant permissionGrant)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task GrantRoleGrant(string user, RbacRoleGrant roleGrant)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task RevokeRoleGrant(string user, RbacRoleGrant roleGrant)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public enum AccessType
@@ -181,6 +228,10 @@ public class Permission
             new ("azure", "read", "Read context/cloud resources", AccessType.Capability),
             new ("azure", "read-provider", "Read resources in Azure resource group", AccessType.Capability),
             new ("azure", "manage-provider", "Manage resources in Azure resource group", AccessType.Capability),
+            new ("rbac", "read", "Manage RBAC", AccessType.Global),
+            new ("rbac", "create", "Manage RBAC", AccessType.Global),
+            new ("rbac", "update", "Manage RBAC", AccessType.Global),
+            new ("rbac", "delete", "Manage RBAC", AccessType.Global)
         };
         
         return permissions;
