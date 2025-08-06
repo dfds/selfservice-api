@@ -161,19 +161,103 @@ public class RbacApplicationService : IRbacApplicationService
         }
     }
 
-    public Task RevokePermission(string user, RbacPermissionGrant permissionGrant)
+    [TransactionalBoundary]
+    public async Task RevokePermission(string user, string id)
     {
-        throw new NotImplementedException();
+        var permissionLookup = await _permissionGrantRepository.FindById(RbacPermissionGrantId.Parse(id));
+        if (permissionLookup == null)
+            throw new Exception("Permission grant not found");
+        
+        PermittedResponse? canUserCreateGlobalRbac;
+        switch (permissionLookup.Type.ToLower())
+        {
+            case "global":
+                canUserCreateGlobalRbac = await IsUserPermitted(user, new List<Permission>{new("rbac", "create", "", AccessType.Global)}, permissionLookup.Resource ?? "");
+                if (!canUserCreateGlobalRbac.Permitted())
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                await _permissionGrantRepository.Remove(permissionLookup.Id);
+                break;
+            case "capability":
+                canUserCreateGlobalRbac = await IsUserPermitted(user, new List<Permission>{new("rbac", "create", "", AccessType.Global)}, permissionLookup.Resource ?? "");
+                var canUserCreateCapabilityRbac = await IsUserPermitted(user, new List<Permission>{new("capability-management", "manage-permissions", "", AccessType.Capability)}, permissionLookup.Resource ?? "");
+
+                if (!canUserCreateGlobalRbac.Permitted() && !canUserCreateCapabilityRbac.Permitted())
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                
+                await _permissionGrantRepository.Remove(permissionLookup.Id);
+                break;
+            default:
+                throw new Exception("Invalid permission grant");
+        }
     }
 
-    public Task GrantRoleGrant(string user, RbacRoleGrant roleGrant)
+    [TransactionalBoundary]
+    public async Task GrantRoleGrant(string user, RbacRoleGrant roleGrant)
     {
-        throw new NotImplementedException();
+        PermittedResponse? canUserCreateGlobalRbac;
+        switch (roleGrant.Type.ToLower())
+        {
+            case "global":
+                canUserCreateGlobalRbac = await IsUserPermitted(user, new List<Permission>{new("rbac", "create", "", AccessType.Global)}, roleGrant.Resource ?? "");
+                if (!canUserCreateGlobalRbac.Permitted())
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                await _roleGrantRepository.Add(RbacRoleGrant.New(roleGrant.RoleId, roleGrant.AssignedEntityType, roleGrant.AssignedEntityId, roleGrant.Type, roleGrant.Resource ?? ""));
+                
+                break;
+            case "capability":
+                canUserCreateGlobalRbac = await IsUserPermitted(user, new List<Permission>{new("rbac", "create", "", AccessType.Global)}, roleGrant.Resource ?? "");
+                var canUserCreateCapabilityRbac = await IsUserPermitted(user, new List<Permission>{new("capability-management", "manage-permissions", "", AccessType.Capability)}, roleGrant.Resource ?? "");
+
+                if (!canUserCreateGlobalRbac.Permitted() && !canUserCreateCapabilityRbac.Permitted())
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                await _roleGrantRepository.Add(RbacRoleGrant.New(roleGrant.RoleId, roleGrant.AssignedEntityType, roleGrant.AssignedEntityId, roleGrant.Type, roleGrant.Resource ?? ""));
+                
+                break;
+            default:
+                throw new Exception("Invalid role grant");
+        }
     }
 
-    public Task RevokeRoleGrant(string user, RbacRoleGrant roleGrant)
+    [TransactionalBoundary]
+    public async Task RevokeRoleGrant(string user, string id)
     {
-        throw new NotImplementedException();
+        var roleGrant = await _roleGrantRepository.FindById(RbacRoleGrantId.Parse(id));
+        if (roleGrant == null)
+            throw new Exception("Role grant not found");
+        
+        PermittedResponse? canUserCreateGlobalRbac;
+        switch (roleGrant.Type.ToLower())
+        {
+            case "global":
+                canUserCreateGlobalRbac = await IsUserPermitted(user, new List<Permission>{new("rbac", "create", "", AccessType.Global)}, roleGrant.Resource ?? "");
+                if (!canUserCreateGlobalRbac.Permitted())
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                await _roleGrantRepository.Remove(roleGrant.Id);
+                break;
+            case "capability":
+                canUserCreateGlobalRbac = await IsUserPermitted(user, new List<Permission>{new("rbac", "create", "", AccessType.Global)}, roleGrant.Resource ?? "");
+                var canUserCreateCapabilityRbac = await IsUserPermitted(user, new List<Permission>{new("capability-management", "manage-permissions", "", AccessType.Capability)}, roleGrant.Resource ?? "");
+
+                if (!canUserCreateGlobalRbac.Permitted() && !canUserCreateCapabilityRbac.Permitted())
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                
+                await _roleGrantRepository.Remove(roleGrant.Id);
+                break;
+            default:
+                throw new Exception("Invalid role grant");
+        }
     }
 }
 
