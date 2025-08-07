@@ -4,11 +4,11 @@ namespace SelfService.Domain.Models;
 
 public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
 {
-    public DateTime CreatedAt { get; private set; }
-    public AssignedEntityType AssignedEntityType { get; private set; }
-    public string AssignedEntityId { get; private set; }
-    public string Namespace { get; private set; }
-    public string Permission { get; private set; }
+    public DateTime CreatedAt { get; set; }
+    public AssignedEntityType AssignedEntityType { get; set; }
+    public string AssignedEntityId { get; set; }
+    public string Namespace { get; set; }
+    public string Permission { get; set; }
     public string Type { get; set; }
     public string? Resource { get; set; }
 

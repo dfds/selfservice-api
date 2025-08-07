@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
-using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Api.Capabilities;
+using SelfService.Infrastructure.Api.RBAC.Dto;
 using RbacRoleGrant = SelfService.Infrastructure.Api.RBAC.Dto.RbacRoleGrant;
 
 namespace SelfService.Infrastructure.Api.RBAC;
@@ -62,7 +62,7 @@ public class RbacController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
-        await _rbacApplicationService.GrantPermission(userId.ToString(), permissionGrant);
+        await _rbacApplicationService.GrantPermission(userId.ToString(), Domain.Models.RbacPermissionGrant.New(permissionGrant.AssignedEntityType, permissionGrant.AssignedEntityId, permissionGrant.Namespace, permissionGrant.Permission, permissionGrant.Type, permissionGrant.Resource ?? ""));
         return Created();
     }
     
@@ -137,15 +137,19 @@ public class RbacController : ControllerBase
     }
     
     [HttpPost("can-i")]
-    public Task<IActionResult> CanI()
+    public async Task<IActionResult> CanI([FromBody] CanRequest request)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+        var resp = await _rbacApplicationService.IsUserPermitted(userId, request.Permissions, request.Objectid);
+        return Ok(resp);
     }
     
     [HttpPost("can-they")]
     [RequiresPermission("rbac", "read")]
-    public Task<IActionResult> CanThey()
+    public async Task<IActionResult> CanThey([FromBody] CanRequest request)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        var resp = await _rbacApplicationService.IsUserPermitted(request.UserId, request.Permissions, request.Objectid);
+        return Ok(resp);
     }
 }
