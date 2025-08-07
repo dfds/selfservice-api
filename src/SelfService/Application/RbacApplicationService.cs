@@ -123,6 +123,21 @@ public class RbacApplicationService : IRbacApplicationService
         return await _permissionGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId);
     }
 
+    public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForCapability(string capabilityId)
+    {
+        return await _permissionGrantRepository.GetAllWithPredicate(p => p.Type == "Capability" && p.Resource == capabilityId);
+    }
+
+    public async Task<List<RbacRoleGrant>> GetRoleGrantsForCapability(string capabilityId)
+    {
+        return await _roleGrantRepository.GetAllWithPredicate(p => p.Type == "Capability" && p.Resource == capabilityId);
+    }
+
+    public async Task<List<RbacRoleGrant>> GetRoleGrantsForGroup(string groupId)
+    {
+        return await _roleGrantRepository.GetAllWithPredicate(p => p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId);
+    }
+
     public async Task<List<RbacGroup>> GetGroupsForUser(string user)
     {
         var groups = await _groupRepository.GetAllWithPredicate(x => x.Members.Any(m => m.UserId == user));

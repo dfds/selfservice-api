@@ -9,6 +9,9 @@ public interface IRbacApplicationService
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForUser(string user);
     Task<List<RbacRoleGrant>> GetRoleGrantsForUser(string user);
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForGroup(string groupId);
+    Task<List<RbacPermissionGrant>> GetPermissionGrantsForCapability(string capabilityId);
+    Task<List<RbacRoleGrant>> GetRoleGrantsForCapability(string capabilityId);
+    Task<List<RbacRoleGrant>> GetRoleGrantsForGroup(string groupId);
     Task<List<RbacGroup>> GetGroupsForUser(string user);
     Task GrantPermission(string user, RbacPermissionGrant permissionGrant);
     Task RevokePermission(string user, string id);
