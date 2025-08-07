@@ -7,4 +7,5 @@ namespace SelfService.Domain.Services;
 public interface IConfluentGatewayService
 {
     public Task<List<KafkaSchema>> ListSchemas(string clusterId, KafkaSchemaQueryParams queryParams);
+    public Task<List<ConfluentTopic>> ListTopics(string clusterId);
 }
