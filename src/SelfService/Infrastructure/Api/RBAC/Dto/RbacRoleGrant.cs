@@ -11,4 +11,9 @@ public class RbacRoleGrant
     public string AssignedEntityId { get; set; } = "";
     public string Type { get; set; } = "";
     public string? Resource { get; set; } = "";
+
+    public SelfService.Domain.Models.RbacRoleGrant IntoDomainModel()
+    {
+        return SelfService.Domain.Models.RbacRoleGrant.New(RbacRoleId.Parse(RoleId), AssignedEntityType, AssignedEntityId, Type, Resource ?? "");
+    }
 }

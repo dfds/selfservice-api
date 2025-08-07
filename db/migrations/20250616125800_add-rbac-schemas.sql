@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS "RbacRoleGrants"
     "Resource"           text,  
 
     constraint "RbacRoleGrants_PK" primary key ("Id"),
-    constraint "RbacRoleGrants_RoleId_FK" foreign key ("RoleId") references "RbacRole" ("Id") on delete cascade
+    constraint "RbacRoleGrants_RoleId_FK" foreign key ("RoleId") references "RbacRole" ("Id") on delete cascade,
+    unique ("RoleId", "AssignedEntityType", "AssignedEntityId", "Type", "Resource")
 );
 
 CREATE TABLE IF NOT EXISTS "RbacGroup"

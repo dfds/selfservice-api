@@ -4,12 +4,12 @@ namespace SelfService.Domain.Models;
 
 public class RbacRoleGrant : AggregateRoot<RbacRoleGrantId>
 {
-    public RbacRoleId RoleId { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public AssignedEntityType AssignedEntityType { get; private set; }
-    public string AssignedEntityId { get; private set; }
-    public string Type { get; private set; }
-    public string? Resource { get; private set; }
+    public RbacRoleId RoleId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public AssignedEntityType AssignedEntityType { get; set; }
+    public string AssignedEntityId { get; set; }
+    public string Type { get; set; }
+    public string? Resource { get; set; }
 
     public RbacRoleGrant(RbacRoleGrantId id, RbacRoleId roleId, DateTime createdAt, AssignedEntityType assignedEntityType, string assignedEntityId, string type, string resource) : base(id)
     {

@@ -3,6 +3,7 @@ using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Api.Capabilities;
+using RbacRoleGrant = SelfService.Infrastructure.Api.RBAC.Dto.RbacRoleGrant;
 
 namespace SelfService.Infrastructure.Api.RBAC;
 
@@ -75,21 +76,24 @@ public class RbacController : ControllerBase
     }
     
     [HttpGet("permission/capability/{id:required}")]
-    public Task<IActionResult> GetCapabilityPermissions()
+    public async Task<IActionResult> GetCapabilityPermissions(string id)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        var resp = await _rbacApplicationService.GetPermissionGrantsForCapability(id);
+        return Ok(resp);
     }
     
     [HttpGet("permission/user/{id:required}")]
-    public Task<IActionResult> GetUserPermissions()
+    public async Task<IActionResult> GetUserPermissions(string id)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        var resp = await _rbacApplicationService.GetPermissionGrantsForUser(id);
+        return Ok(resp);
     }
     
     [HttpGet("permission/group/{id:required}")]
-    public Task<IActionResult> GetGroupPermissions()
+    public async Task<IActionResult> GetGroupPermissions(string id)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        var resp = await _rbacApplicationService.GetPermissionGrantsForGroup(id.ToUpper());
+        return Ok(resp);
     }
     
     [HttpPost("role/grant")]
@@ -97,7 +101,7 @@ public class RbacController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
-        await _rbacApplicationService.GrantRoleGrant(userId.ToString(), roleGrant);
+        await _rbacApplicationService.GrantRoleGrant(userId.ToString(), roleGrant.IntoDomainModel());
         return Created();
     }
     
@@ -111,21 +115,25 @@ public class RbacController : ControllerBase
     }
     
     [HttpGet("role/capability/{id:required}")]
-    public Task<IActionResult> GetCapabilityRoleGrants()
+    public async Task<IActionResult> GetCapabilityRoleGrants(string id)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        var resp = await _rbacApplicationService.GetRoleGrantsForCapability(id);
+        return Ok(resp);
     }
     
     [HttpGet("role/user/{id:required}")]
-    public Task<IActionResult> GetUserRoleGrants()
+    public async Task<IActionResult> GetUserRoleGrants(string id)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        var resp = await _rbacApplicationService.GetRoleGrantsForUser(id);
+        return Ok(resp);
     }
     
     [HttpGet("role/group/{id:required}")]
-    public Task<IActionResult> GetGroupRoleGrants()
+    public async Task<IActionResult> GetGroupRoleGrants(string id)
     {
-        return Task.FromResult<IActionResult>(Ok());
+        var x = id.ToUpper();
+        var resp = await _rbacApplicationService.GetRoleGrantsForGroup(id.ToUpper());
+        return Ok(resp);
     }
     
     [HttpPost("can-i")]
