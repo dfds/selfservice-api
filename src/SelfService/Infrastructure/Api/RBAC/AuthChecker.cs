@@ -71,6 +71,17 @@ public class AuthChecker : IMiddleware
                         return;
                     }
                     break;
+                case nameof(RbacObjectType.Global):
+                    if (!(await _rbacApplicationService.IsUserPermitted(portalUser.Id.ToString(),
+                            new List<Permission>
+                                { new() { Namespace = requiredPermission!.Ns, Name = requiredPermission!.Name, AccessType = AccessType.Global} },
+                            objectKey!)).Permitted())
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        await context.Response.WriteAsync($"Missing permission {requiredPermission!.Name}");
+                        return;
+                    }
+                    break;
                 default:
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     await context.Response.WriteAsync("Incorrectly configured type lookup");
@@ -124,5 +135,6 @@ public class RbacConfigAttribute : Attribute
 
 public enum RbacObjectType
 {
-    Capability
+    Capability,
+    Global
 }
