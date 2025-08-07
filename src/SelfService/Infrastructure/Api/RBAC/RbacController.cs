@@ -9,6 +9,7 @@ namespace SelfService.Infrastructure.Api.RBAC;
 
 [Route("rbac")]
 [Produces("application/json")]
+[RbacConfig(nameof(RbacObjectType.Global) ,"id")]
 [ApiController]
 public class RbacController : ControllerBase
 {
