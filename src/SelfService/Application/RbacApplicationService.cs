@@ -274,6 +274,34 @@ public class RbacApplicationService : IRbacApplicationService
                 throw new Exception("Invalid role grant");
         }
     }
+
+    public async Task<bool> CanModifyCapabilityRbac(string user, string id)
+    {
+        var resp = await IsUserPermitted(user, new List<Permission>{new()
+        {
+            Namespace = "capability-management",
+            Name = "manage-permissions",
+            AccessType = AccessType.Global
+        },
+        new(){
+            Namespace = "rbac",
+            Name = "create",
+            AccessType = AccessType.Global
+        },
+        new(){
+            Namespace = "rbac",
+            Name = "update",
+            AccessType = AccessType.Global
+        },
+        new(){
+            Namespace = "rbac",
+            Name = "delete",
+            AccessType = AccessType.Global
+        }
+        }, id);
+        
+        return resp.PermissionMatrix.Any(x => x.Value.Permitted);
+    }
 }
 
 public enum AccessType
