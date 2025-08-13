@@ -77,27 +77,33 @@ public class RbacController : ControllerBase
     }
     
     [HttpGet("permission/capability/{id:required}")]
-    [ProducesResponseType(typeof(List<RbacPermissionGrant>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<RbacPermissionGrantApiResource>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCapabilityPermissions(string id)
     {
         var resp = await _rbacApplicationService.GetPermissionGrantsForCapability(id);
-        return Ok(resp);
+        var payload = resp.Select(x => _apiResourceFactory.Convert(x));
+        
+        return Ok(payload.ToList());
     }
     
     [HttpGet("permission/user/{id:required}")]
-    [ProducesResponseType(typeof(List<RbacPermissionGrant>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<RbacPermissionGrantApiResource>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUserPermissions(string id)
     {
         var resp = await _rbacApplicationService.GetPermissionGrantsForUser(id);
-        return Ok(resp);
+        var payload = resp.Select(x => _apiResourceFactory.Convert(x));
+        
+        return Ok(payload.ToList());
     }
     
     [HttpGet("permission/group/{id:required}")]
-    [ProducesResponseType(typeof(List<RbacPermissionGrant>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<RbacPermissionGrantApiResource>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetGroupPermissions(string id)
     {
         var resp = await _rbacApplicationService.GetPermissionGrantsForGroup(id.ToUpper());
-        return Ok(resp);
+        var payload = resp.Select(x => _apiResourceFactory.Convert(x));
+        
+        return Ok(payload.ToList());
     }
     
     [HttpPost("role/grant")]
@@ -119,46 +125,51 @@ public class RbacController : ControllerBase
     }
     
     [HttpGet("role/capability/{id:required}")]
-    [ProducesResponseType(typeof(List<RbacRoleGrant>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<RbacRoleGrantApiResource>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCapabilityRoleGrants(string id)
     {
         var resp = await _rbacApplicationService.GetRoleGrantsForCapability(id);
-        return Ok(resp);
+        var payload = resp.Select(x => _apiResourceFactory.Convert(x));
+        
+        return Ok(payload.ToList());
     }
     
     [HttpGet("role/user/{id:required}")]
-    [ProducesResponseType(typeof(List<RbacRoleGrant>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<RbacRoleGrantApiResource>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUserRoleGrants(string id)
     {
         var resp = await _rbacApplicationService.GetRoleGrantsForUser(id);
-        return Ok(resp);
+        var payload = resp.Select(x => _apiResourceFactory.Convert(x));
+        
+        return Ok(payload.ToList());
     }
     
     [HttpGet("role/group/{id:required}")]
-    [ProducesResponseType(typeof(List<RbacRoleGrant>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<RbacRoleGrantApiResource>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetGroupRoleGrants(string id)
     {
-        var x = id.ToUpper();
         var resp = await _rbacApplicationService.GetRoleGrantsForGroup(id.ToUpper());
-        return Ok(resp);
+        var payload = resp.Select(x => _apiResourceFactory.Convert(x));
+        
+        return Ok(payload.ToList());
     }
     
     [HttpPost("can-i")]
-    [ProducesResponseType(typeof(PermittedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RbacPermittedResponseApiResource), StatusCodes.Status200OK)]
     public async Task<IActionResult> CanI([FromBody] CanRequest request)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
         var resp = await _rbacApplicationService.IsUserPermitted(userId, request.Permissions, request.Objectid);
-        return Ok(resp);
+        return Ok(_apiResourceFactory.Convert(resp));
     }
     
     [HttpPost("can-they")]
-    [ProducesResponseType(typeof(PermittedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RbacPermittedResponseApiResource), StatusCodes.Status200OK)]
     [RequiresPermission("rbac", "read")]
     public async Task<IActionResult> CanThey([FromBody] CanRequest request)
     {
         var resp = await _rbacApplicationService.IsUserPermitted(request.UserId, request.Permissions, request.Objectid);
-        return Ok(resp);
+        return Ok(_apiResourceFactory.Convert(resp));
     }
 }

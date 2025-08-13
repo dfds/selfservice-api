@@ -16,6 +16,8 @@ public class RbacMeApiResource
     public class RbacMeLinks
     {
         public ResourceLink Self { get; set; }
+        public ResourceLink? GrantPermission { get; set; }
+        public ResourceLink? GrantRole { get; set; }
 
         public RbacMeLinks(ResourceLink self)
         {
