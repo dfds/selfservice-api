@@ -84,6 +84,7 @@ public static class Domain
         builder.Services.AddTransient<IRbacGroupMemberRepository, RbacGroupMemberRepository>();
         builder.Services.AddTransient<IRbacPermissionGrantRepository, RbacPermissionGrantRepository>();
         builder.Services.AddTransient<IRbacRoleGrantRepository, RbacRoleGrantRepository>();
+        builder.Services.AddTransient<IRbacRoleRepository, RbacRoleRepository>();
         builder.Services.AddTransient<IPermissionQuery, PermissionsQuery>();
 
         // domain queries

@@ -76,6 +76,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<RbacRoleGrant> RbacRoleGrants => Set<RbacRoleGrant>();
     public DbSet<RbacGroup> RbacGroups => Set<RbacGroup>();
     public DbSet<RbacGroupMember> RbacGroupMembers => Set<RbacGroupMember>();
+    public DbSet<RbacRole> RbacRoles => Set<RbacRole>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {

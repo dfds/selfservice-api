@@ -1,6 +1,7 @@
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
 
@@ -10,13 +11,15 @@ public class RbacApplicationService : IRbacApplicationService
     private readonly IRbacRoleGrantRepository _roleGrantRepository;
     private readonly IRbacGroupRepository _groupRepository;
     private readonly IPermissionQuery _permissionQuery;
+    private readonly IRbacRoleRepository _roleRepository;
 
-    public RbacApplicationService(IRbacPermissionGrantRepository permissionGrantRepository, IRbacRoleGrantRepository roleGrantRepository, IRbacGroupRepository groupRepository, IPermissionQuery permissionQuery)
+    public RbacApplicationService(IRbacPermissionGrantRepository permissionGrantRepository, IRbacRoleGrantRepository roleGrantRepository, IRbacGroupRepository groupRepository, IPermissionQuery permissionQuery, IRbacRoleRepository roleRepository)
     {
         _permissionGrantRepository = permissionGrantRepository;
         _roleGrantRepository = roleGrantRepository;
         _groupRepository = groupRepository;
         _permissionQuery = permissionQuery;
+        _roleRepository = roleRepository;
     }
 
     public async Task<PermittedResponse> IsUserPermitted(string user, List<Permission> permissions, string objectId)
@@ -143,6 +146,13 @@ public class RbacApplicationService : IRbacApplicationService
         var groups = await _groupRepository.GetAllWithPredicate(x => x.Members.Any(m => m.UserId == user));
 
         return groups;
+    }
+
+    // TODO: Implement when repo is available
+    public async Task<List<RbacRole>> GetAssignableRoles()
+    {
+        var roles = await _roleRepository.GetAll();
+        return roles;
     }
 
     [TransactionalBoundary]
