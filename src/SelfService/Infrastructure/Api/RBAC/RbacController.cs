@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
+using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.RBAC.Dto;
+using RbacPermissionGrant = SelfService.Infrastructure.Api.RBAC.Dto.RbacPermissionGrant;
 using RbacRoleGrant = SelfService.Infrastructure.Api.RBAC.Dto.RbacRoleGrant;
 
 namespace SelfService.Infrastructure.Api.RBAC;
@@ -59,7 +61,7 @@ public class RbacController : ControllerBase
     }
     
     [HttpGet("get-assignable-roles")]
-    [ProducesResponseType(typeof(List<Permission>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<RbacRole>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAssignableRoles()
     {
         var roles = await _rbacApplicationService.GetAssignableRoles();
