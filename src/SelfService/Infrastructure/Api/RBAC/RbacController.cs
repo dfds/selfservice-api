@@ -57,6 +57,14 @@ public class RbacController : ControllerBase
     {
         return Ok(Permission.BootstrapPermissions());
     }
+    
+    [HttpGet("get-assignable-roles")]
+    [ProducesResponseType(typeof(List<Permission>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAssignableRoles()
+    {
+        var roles = await _rbacApplicationService.GetAssignableRoles();
+        return Ok(roles);
+    }
 
     [HttpPost("permission/grant")]
     public async Task<IActionResult> GrantPermission([FromBody] RbacPermissionGrant permissionGrant)
