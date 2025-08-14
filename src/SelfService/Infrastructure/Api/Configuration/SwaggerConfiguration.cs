@@ -18,6 +18,7 @@ public static class SwaggerConfiguration
                     Title = "SelfService API",
                 }
             );
+            options.CustomSchemaIds(x => x.ToString());
 
             options.DocInclusionPredicate((_, description) => !description.ShouldIgnore());
         });
