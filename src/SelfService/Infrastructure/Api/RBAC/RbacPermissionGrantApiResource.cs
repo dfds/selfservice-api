@@ -15,9 +15,9 @@ public class RbacPermissionGrantApiResource
     public string Resource { get; set; } = "";
     
     [JsonPropertyName("_links")]
-    public required RLinks Links { get; set; }
+    public required RbacPermissionGrantLinks Links { get; set; }
     
-    public class RLinks
+    public class RbacPermissionGrantLinks
     {
         public ResourceLink? Self { get; set; }
         public ResourceLink? GrantPermission { get; set; }

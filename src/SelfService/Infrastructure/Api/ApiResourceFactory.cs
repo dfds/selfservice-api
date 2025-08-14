@@ -1814,7 +1814,7 @@ public class ApiResourceFactory
             Permission = permissionGrant.Permission,
             Resource = permissionGrant.Resource ?? "",
             Type = permissionGrant.Type,
-            Links = new RbacPermissionGrantApiResource.RLinks
+            Links = new RbacPermissionGrantApiResource.RbacPermissionGrantLinks
             {
                 RevokePermission = new ResourceLink(_linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -1839,7 +1839,7 @@ public class ApiResourceFactory
             AssignedEntityId = roleGrant.AssignedEntityId,
             Resource = roleGrant.Resource ?? "",
             Type = roleGrant.Type,
-            Links = new RbacRoleGrantApiResource.RLinks
+            Links = new RbacRoleGrantApiResource.RbacRoleGrantLinks
             {
                 RevokeRole = new ResourceLink(_linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
@@ -1859,7 +1859,7 @@ public class ApiResourceFactory
         {
             PermissionGrants = permittedResponse.PermissionGrants,
             PermissionMatrix = permittedResponse.PermissionMatrix,
-            Links = new RbacPermittedResponseApiResource.RLinks
+            Links = new RbacPermittedResponseApiResource.RbacPermittedResponseLinks
             {
                 CanI = new ResourceLink(_linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
