@@ -310,6 +310,13 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
+                var existingGlobalGrant = await _roleGrantRepository.FindByPredicate(rg =>
+                    rg.AssignedEntityId == roleGrant.AssignedEntityId
+                    && rg.Type.ToLower() == roleGrant.Type.ToLower());
+                if (existingGlobalGrant != null)
+                {
+                    await _roleGrantRepository.Remove(existingGlobalGrant.Id);
+                }
                 await _roleGrantRepository.Add(
                     RbacRoleGrant.New(
                         roleGrant.RoleId,
@@ -340,13 +347,27 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
+
+                if (roleGrant.Resource == null)
+                {
+                    throw new BadHttpRequestException("Capability ID is required for capability role grants");
+                }
+
+                var existingCapabilityGrant = await _roleGrantRepository.FindByPredicate(rg =>
+                    rg.AssignedEntityId == roleGrant.AssignedEntityId
+                    && rg.Resource == roleGrant.Resource
+                    && rg.Type.ToLower() == roleGrant.Type.ToLower());
+                if (existingCapabilityGrant != null)
+                {
+                    await _roleGrantRepository.Remove(existingCapabilityGrant.Id);
+                }
                 await _roleGrantRepository.Add(
                     RbacRoleGrant.New(
                         roleGrant.RoleId,
                         roleGrant.AssignedEntityType,
                         roleGrant.AssignedEntityId,
                         roleGrant.Type,
-                        roleGrant.Resource ?? ""
+                        roleGrant.Resource
                     )
                 );
 
