@@ -28,7 +28,11 @@ public class AzureResource : AggregateRoot<AzureResourceId>
         CapabilityId capabilityId,
         string environment,
         DateTime requestedAt,
-        string requestedBy
+        string requestedBy,
+        string purpose,
+        string? catalogueId = null,
+        string? risk = null,
+        bool? gdpr = null
     )
     {
         var resource = new AzureResource(
@@ -39,7 +43,16 @@ public class AzureResource : AggregateRoot<AzureResourceId>
             requestedBy: requestedBy
         );
 
-        resource.Raise(new AzureResourceRequested() { AzureResourceId = resource.Id });
+        resource.Raise(
+            new AzureResourceRequested()
+            {
+                AzureResourceId = resource.Id,
+                Purpose = purpose,
+                CatalogueId = catalogueId,
+                Risk = risk,
+                Gdpr = gdpr,
+            }
+        );
 
         return resource;
     }
