@@ -310,13 +310,7 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
-                var existingGlobalGrant = await _roleGrantRepository.FindByPredicate(rg =>
-                    rg.AssignedEntityId == roleGrant.AssignedEntityId && rg.Type.ToLower() == roleGrant.Type.ToLower()
-                );
-                if (existingGlobalGrant != null)
-                {
-                    await _roleGrantRepository.Remove(existingGlobalGrant.Id);
-                }
+
                 await _roleGrantRepository.Add(
                     RbacRoleGrant.New(
                         roleGrant.RoleId,
