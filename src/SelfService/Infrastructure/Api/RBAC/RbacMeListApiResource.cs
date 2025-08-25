@@ -25,7 +25,12 @@ public class RbacMeApiResource
         }
     }
 
-    public RbacMeApiResource(RbacPermissionGrant[] permissionGrants, RbacRoleGrant[] roleGrants, RbacMeLinks links, RbacGroup[] groups)
+    public RbacMeApiResource(
+        RbacPermissionGrant[] permissionGrants,
+        RbacRoleGrant[] roleGrants,
+        RbacMeLinks links,
+        RbacGroup[] groups
+    )
     {
         PermissionGrants = permissionGrants;
         RoleGrants = roleGrants;

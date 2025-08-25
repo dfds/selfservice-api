@@ -16,8 +16,8 @@ public class PermissionsQuery : IPermissionQuery
 
     public async Task<IList<RbacPermissionGrant>> FindUserGroupPermissionsByUserId(string userId)
     {
-        var query = _dbContext.RbacGroupMembers
-            .Where(gm => gm.UserId == userId)
+        var query = _dbContext
+            .RbacGroupMembers.Where(gm => gm.UserId == userId)
             .Join(
                 _dbContext.RbacPermissionGrants.Where(pg => pg.AssignedEntityType == AssignedEntityType.Group),
                 gm => Cast.CastAsText(gm.GroupId).ToLower(),
@@ -26,18 +26,18 @@ public class PermissionsQuery : IPermissionQuery
             );
         return await query.ToListAsync();
     }
-    
+
     public async Task<IList<RbacRoleGrant>> FindUserGroupRolesByUserId(string userId)
     {
-        var query = _dbContext.RbacGroupMembers
-            .Where(gm => gm.UserId == userId)
+        var query = _dbContext
+            .RbacGroupMembers.Where(gm => gm.UserId == userId)
             .Join(
                 _dbContext.RbacRoleGrants.Where(pg => pg.AssignedEntityType == AssignedEntityType.Group),
                 gm => Cast.CastAsText(gm.GroupId).ToLower(),
                 pg => pg.AssignedEntityId.ToLower(),
                 (gm, pg) => pg
             );
-            
+
         return await query.ToListAsync();
     }
 }

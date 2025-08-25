@@ -26,7 +26,17 @@ public class StubRbacRoleGrantRepository : IRbacRoleGrantRepository
 
     public Task<RbacRoleGrant> Remove(RbacRoleGrantId id)
     {
-        return Task.FromResult(new RbacRoleGrant(RbacRoleGrantId.New(), RbacRoleId.New(), DateTime.Now, AssignedEntityType.User, "", "", ""));
+        return Task.FromResult(
+            new RbacRoleGrant(
+                RbacRoleGrantId.New(),
+                RbacRoleId.New(),
+                DateTime.Now,
+                AssignedEntityType.User,
+                "",
+                "",
+                ""
+            )
+        );
     }
 
     public Task<List<RbacRoleGrant>> GetAll()

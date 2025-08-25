@@ -1,25 +1,34 @@
 using Microsoft.EntityFrameworkCore;
-using SelfService.Application;
 using Microsoft.Extensions.DependencyInjection;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.Infrastructure.Api;
 
 namespace SelfService.Tests.Application;
 
-
 public class RbacTestData
 {
-    public static async Task<RbacInMemoryTestFixture> NewInMemoryFixture(bool populateDatabase = true, List<RbacPermissionGrant>? rbacPermissionGrantsSeed = null, List<RbacRoleGrant>? rbacRoleGrantsSeed = null, List<RbacGroup>? rbacGroupSeed = null)
+    public static async Task<RbacInMemoryTestFixture> NewInMemoryFixture(
+        bool populateDatabase = true,
+        List<RbacPermissionGrant>? rbacPermissionGrantsSeed = null,
+        List<RbacRoleGrant>? rbacRoleGrantsSeed = null,
+        List<RbacGroup>? rbacGroupSeed = null
+    )
     {
         var databaseFactory = new InMemoryDatabaseFactory();
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         if (populateDatabase)
         {
-            TestRbacApplicationService.PopulateRbac(dbContext, rbacPermissionGrantsSeed, rbacRoleGrantsSeed, rbacGroupSeed);
+            TestRbacApplicationService.PopulateRbac(
+                dbContext,
+                rbacPermissionGrantsSeed,
+                rbacRoleGrantsSeed,
+                rbacGroupSeed
+            );
         }
-        
+
         var application = await new ApiApplicationBuilder()
             .WithSelfServiceDbContext(dbContext)
             .ConfigureRbac()
@@ -34,10 +43,14 @@ public class RbacInMemoryTestFixture
 {
     public InMemoryDatabaseFactory InMemoryDatabaseFactory { get; set; }
     public ApiApplication ApiApplication { get; set; }
-    
+
     public SelfServiceDbContext DbContext { get; set; }
 
-    public RbacInMemoryTestFixture(InMemoryDatabaseFactory inMemoryDatabaseFactory, SelfServiceDbContext selfServiceDbContext, ApiApplication apiApplication)
+    public RbacInMemoryTestFixture(
+        InMemoryDatabaseFactory inMemoryDatabaseFactory,
+        SelfServiceDbContext selfServiceDbContext,
+        ApiApplication apiApplication
+    )
     {
         InMemoryDatabaseFactory = inMemoryDatabaseFactory;
         DbContext = selfServiceDbContext;
@@ -47,7 +60,12 @@ public class RbacInMemoryTestFixture
 
 public class TestRbacApplicationService
 {
-    internal async static void PopulateRbac(SelfServiceDbContext dbContext, List<RbacPermissionGrant>? rbacPermissionGrantsSeed, List<RbacRoleGrant>? rbacRoleGrantsSeed, List<RbacGroup>? rbacGroupSeed)
+    internal static async void PopulateRbac(
+        SelfServiceDbContext dbContext,
+        List<RbacPermissionGrant>? rbacPermissionGrantsSeed,
+        List<RbacRoleGrant>? rbacRoleGrantsSeed,
+        List<RbacGroup>? rbacGroupSeed
+    )
     {
         if (rbacPermissionGrantsSeed != null)
         {
@@ -56,28 +74,32 @@ public class TestRbacApplicationService
         }
         else
         {
-            dbContext.RbacPermissionGrants.Add(new RbacPermissionGrant (
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "andfris@dfds.com",
-                @namespace: "topics",
-                permission: "create",
-                type: "capability",
-                resource: "sandbox-emcla-pmyxn"
-                ));
-            
-            dbContext.RbacPermissionGrants.Add(new RbacPermissionGrant (
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "test03@dfds.cloud",
-                @namespace: "topics",
-                permission: "create",
-                type: "capability",
-                resource: "sandbox-emcla-pmyxn"
-            ));
-            
+            dbContext.RbacPermissionGrants.Add(
+                new RbacPermissionGrant(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "andfris@dfds.com",
+                    @namespace: "topics",
+                    permission: "create",
+                    type: "capability",
+                    resource: "sandbox-emcla-pmyxn"
+                )
+            );
+
+            dbContext.RbacPermissionGrants.Add(
+                new RbacPermissionGrant(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "test03@dfds.cloud",
+                    @namespace: "topics",
+                    permission: "create",
+                    type: "capability",
+                    resource: "sandbox-emcla-pmyxn"
+                )
+            );
+
             await dbContext.SaveChangesAsync();
         }
 
@@ -88,16 +110,18 @@ public class TestRbacApplicationService
         }
         else
         {
-            dbContext.RbacRoleGrants.Add(new RbacRoleGrant (
-                id: RbacRoleGrantId.New(),
-                roleId: RbacRoleId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "andfris@dfds.com",
-                type: "capability",
-                resource: "sandbox-emcla-pmyxn"
-            ));
-            
+            dbContext.RbacRoleGrants.Add(
+                new RbacRoleGrant(
+                    id: RbacRoleGrantId.New(),
+                    roleId: RbacRoleId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "andfris@dfds.com",
+                    type: "capability",
+                    resource: "sandbox-emcla-pmyxn"
+                )
+            );
+
             await dbContext.SaveChangesAsync();
         }
 
@@ -108,10 +132,18 @@ public class TestRbacApplicationService
         }
         else
         {
-            var ceUsersGroup = new RbacGroup(RbacGroupId.Parse("507531CF-6740-4728-ACDB-C3B4CEF11B27"), DateTime.Now, DateTime.Now, "ce - users", "Members of Cloud Engineering");
-            ceUsersGroup.Members.Add(new RbacGroupMember(RbacGroupMemberId.New(), DateTime.Now, ceUsersGroup.Id, "test03@dfds.cloud"));
+            var ceUsersGroup = new RbacGroup(
+                RbacGroupId.Parse("507531CF-6740-4728-ACDB-C3B4CEF11B27"),
+                DateTime.Now,
+                DateTime.Now,
+                "ce - users",
+                "Members of Cloud Engineering"
+            );
+            ceUsersGroup.Members.Add(
+                new RbacGroupMember(RbacGroupMemberId.New(), DateTime.Now, ceUsersGroup.Id, "test03@dfds.cloud")
+            );
             dbContext.RbacGroups.Add(ceUsersGroup);
-            
+
             await dbContext.SaveChangesAsync();
         }
     }
@@ -121,16 +153,39 @@ public class TestRbacApplicationService
     {
         var fixture = await RbacTestData.NewInMemoryFixture();
         var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
-        
+
         var cases = new List<PermittedResponse>
         {
-            await rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "create"}], "sandbox-emcla-pmyxn"),
-            await rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "create"}, new Permission { Namespace = "topics", Name = "read-private"}], "sandbox-emcla-pmyxn"),
-            await rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "read-public"}], "sandbox-emcla-pmyxn"),
-            await rbacSvc.IsUserPermitted("andfris@dfds.com", [new Permission { Namespace = "topics", Name = "read-private"}], "sandbox-emcla-pmyxn"),
-            await rbacSvc.IsUserPermitted("andfris@dfds.com", [new Permission { Namespace = "topics", Name = "read-private"}], "andfris-sandbox-6-aeyex"),
+            await rbacSvc.IsUserPermitted(
+                "emcla@dfds.com",
+                [new Permission { Namespace = "topics", Name = "create" }],
+                "sandbox-emcla-pmyxn"
+            ),
+            await rbacSvc.IsUserPermitted(
+                "emcla@dfds.com",
+                [
+                    new Permission { Namespace = "topics", Name = "create" },
+                    new Permission { Namespace = "topics", Name = "read-private" },
+                ],
+                "sandbox-emcla-pmyxn"
+            ),
+            await rbacSvc.IsUserPermitted(
+                "emcla@dfds.com",
+                [new Permission { Namespace = "topics", Name = "read-public" }],
+                "sandbox-emcla-pmyxn"
+            ),
+            await rbacSvc.IsUserPermitted(
+                "andfris@dfds.com",
+                [new Permission { Namespace = "topics", Name = "read-private" }],
+                "sandbox-emcla-pmyxn"
+            ),
+            await rbacSvc.IsUserPermitted(
+                "andfris@dfds.com",
+                [new Permission { Namespace = "topics", Name = "read-private" }],
+                "andfris-sandbox-6-aeyex"
+            ),
         };
-        
+
         cases.ForEach(c => Console.WriteLine(c.Permitted()));
     }
 
@@ -166,127 +221,227 @@ public class TestRbacApplicationService
         //         ]}]
         //     }
         // ]);
-        
-        var fixture = await RbacTestData.NewInMemoryFixture(true, new List<RbacPermissionGrant>
-        {
-            new(
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "test01@dfds.cloud",
-                @namespace: "topics",
-                permission: "create",
-                type: "capability",
-                resource: "test01"
-            ),
-            new(
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "test01@dfds.cloud",
-                @namespace: "topics",
-                permission: "read-public",
-                type: "capability",
-                resource: "test02"
-            ),
-            new(
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "test01@dfds.cloud",
-                @namespace: "topics",
-                permission: "read-private",
-                type: "capability",
-                resource: "test01"
-            ),
-            new(
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.Group,
-                assignedEntityId: "507531CF-6740-4728-ACDB-C3B4CEF11B27",
-                @namespace: "topics",
-                permission: "read-public",
-                type: "capability",
-                resource: "test02"
-            )
-        }, new List<RbacRoleGrant>());
+
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant>
+            {
+                new(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "test01@dfds.cloud",
+                    @namespace: "topics",
+                    permission: "create",
+                    type: "capability",
+                    resource: "test01"
+                ),
+                new(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "test01@dfds.cloud",
+                    @namespace: "topics",
+                    permission: "read-public",
+                    type: "capability",
+                    resource: "test02"
+                ),
+                new(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "test01@dfds.cloud",
+                    @namespace: "topics",
+                    permission: "read-private",
+                    type: "capability",
+                    resource: "test01"
+                ),
+                new(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.Group,
+                    assignedEntityId: "507531CF-6740-4728-ACDB-C3B4CEF11B27",
+                    @namespace: "topics",
+                    permission: "read-public",
+                    type: "capability",
+                    resource: "test02"
+                ),
+            },
+            new List<RbacRoleGrant>()
+        );
         var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
 
-        Assert.True((await rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "create"}], "test01")).Permitted());
-        Assert.True((await rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-private"}], "test01")).Permitted());
-        Assert.True((await rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02")).Permitted());
-        Assert.True((await rbacSvc.IsUserPermitted("test03@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02")).Permitted());
-        Assert.False((await rbacSvc.IsUserPermitted("test04@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02")).Permitted());
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "test01@dfds.cloud",
+                    [new Permission { Namespace = "topics", Name = "create" }],
+                    "test01"
+                )
+            ).Permitted()
+        );
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "test01@dfds.cloud",
+                    [new Permission { Namespace = "topics", Name = "read-private" }],
+                    "test01"
+                )
+            ).Permitted()
+        );
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "test01@dfds.cloud",
+                    [new Permission { Namespace = "topics", Name = "read-public" }],
+                    "test02"
+                )
+            ).Permitted()
+        );
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "test03@dfds.cloud",
+                    [new Permission { Namespace = "topics", Name = "read-public" }],
+                    "test02"
+                )
+            ).Permitted()
+        );
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "test04@dfds.cloud",
+                    [new Permission { Namespace = "topics", Name = "read-public" }],
+                    "test02"
+                )
+            ).Permitted()
+        );
     }
-    
+
     [Fact]
     public async void UserDeny()
     {
         var test01GroupId = Guid.NewGuid();
 
-        var fixture = await RbacTestData.NewInMemoryFixture(true, new List<RbacPermissionGrant>
-        {
-            new(
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "test01@dfds.cloud",
-                @namespace: "topics",
-                permission: "create",
-                type: "capability",
-                resource: "test01"
-            ),
-            new(
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "test01@dfds.cloud",
-                @namespace: "topics",
-                permission: "read-private",
-                type: "capability",
-                resource: "test01"
-            ),
-            new(
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "test01@dfds.cloud",
-                @namespace: "topics",
-                permission: "read-public",
-                type: "capability",
-                resource: "test02"
-            )
-        }, new List<RbacRoleGrant>());
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant>
+            {
+                new(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "test01@dfds.cloud",
+                    @namespace: "topics",
+                    permission: "create",
+                    type: "capability",
+                    resource: "test01"
+                ),
+                new(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "test01@dfds.cloud",
+                    @namespace: "topics",
+                    permission: "read-private",
+                    type: "capability",
+                    resource: "test01"
+                ),
+                new(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "test01@dfds.cloud",
+                    @namespace: "topics",
+                    permission: "read-public",
+                    type: "capability",
+                    resource: "test02"
+                ),
+            },
+            new List<RbacRoleGrant>()
+        );
         var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
-        
-        Assert.False((await rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "create"}], "test01")).Permitted());
-        Assert.False((await rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-private"}], "test01")).Permitted());
-        Assert.False((await rbacSvc.IsUserPermitted("test02@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test02")).Permitted());
-        Assert.False((await rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "topics", Name = "read-public"}], "test01")).Permitted());
-        Assert.False((await rbacSvc.IsUserPermitted("test01@dfds.cloud", [new Permission { Namespace = "capability-management", Name = "request-deletion"}], "test01")).Permitted());
+
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "test02@dfds.cloud",
+                    [new Permission { Namespace = "topics", Name = "create" }],
+                    "test01"
+                )
+            ).Permitted()
+        );
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "test02@dfds.cloud",
+                    [new Permission { Namespace = "topics", Name = "read-private" }],
+                    "test01"
+                )
+            ).Permitted()
+        );
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "test02@dfds.cloud",
+                    [new Permission { Namespace = "topics", Name = "read-public" }],
+                    "test02"
+                )
+            ).Permitted()
+        );
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "test01@dfds.cloud",
+                    [new Permission { Namespace = "topics", Name = "read-public" }],
+                    "test01"
+                )
+            ).Permitted()
+        );
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "test01@dfds.cloud",
+                    [new Permission { Namespace = "capability-management", Name = "request-deletion" }],
+                    "test01"
+                )
+            ).Permitted()
+        );
     }
 
     [Fact]
     public async void UserWithTopicCreateCanCreate()
     {
-        var fixture = await RbacTestData.NewInMemoryFixture(true, new List<RbacPermissionGrant>
-        {
-            new(
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "emcla@dfds.com",
-                @namespace: "topics",
-                permission: "create",
-                type: "capability",
-                resource: "sandbox-emcla-pmyxn"
-            )
-        }, new List<RbacRoleGrant>());
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant>
+            {
+                new(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "emcla@dfds.com",
+                    @namespace: "topics",
+                    permission: "create",
+                    type: "capability",
+                    resource: "sandbox-emcla-pmyxn"
+                ),
+            },
+            new List<RbacRoleGrant>()
+        );
         var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
-        
-        Assert.True((await rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "create"}], "sandbox-emcla-pmyxn")).Permitted());
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "emcla@dfds.com",
+                    [new Permission { Namespace = "topics", Name = "create" }],
+                    "sandbox-emcla-pmyxn"
+                )
+            ).Permitted()
+        );
     }
-    
+
     [Fact]
     public async void UserWithTopicReadCanNotCreate()
     {
@@ -297,39 +452,56 @@ public class TestRbacApplicationService
             .ConfigureRbac()
             .BuildAsync();
         var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
-        
-        Assert.False((await rbacSvc.IsUserPermitted("emclaa@dfds.com", [new Permission { Namespace = "topics", Name = "create"}], "sandbox-emcla-pmyxn")).Permitted());
+
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "emclaa@dfds.com",
+                    [new Permission { Namespace = "topics", Name = "create" }],
+                    "sandbox-emcla-pmyxn"
+                )
+            ).Permitted()
+        );
     }
-    
+
     [Fact]
     public async void UserWithTopicReadPrivateCanReadPrivate()
     {
-        var fixture = await RbacTestData.NewInMemoryFixture(true, new List<RbacPermissionGrant>
-        {
-            new(
-                id: RbacPermissionGrantId.New(),
-                createdAt: DateTime.Now,
-                assignedEntityType: AssignedEntityType.User,
-                assignedEntityId: "emcla@dfds.com",
-                @namespace: "topics",
-                permission: "read-private",
-                type: "capability",
-                resource: "sandbox-emcla-pmyxn"
-            )
-        }, new List<RbacRoleGrant>());
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant>
+            {
+                new(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "emcla@dfds.com",
+                    @namespace: "topics",
+                    permission: "read-private",
+                    type: "capability",
+                    resource: "sandbox-emcla-pmyxn"
+                ),
+            },
+            new List<RbacRoleGrant>()
+        );
         var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
-        
-        Assert.True((await rbacSvc.IsUserPermitted("emcla@dfds.com", [new Permission { Namespace = "topics", Name = "read-private"}], "sandbox-emcla-pmyxn")).Permitted());
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "emcla@dfds.com",
+                    [new Permission { Namespace = "topics", Name = "read-private" }],
+                    "sandbox-emcla-pmyxn"
+                )
+            ).Permitted()
+        );
     }
 
     [Fact]
     [Trait("Category", "Integration")]
     public async void UserAllowUsingDbStore()
     {
-        var application = await new ApiApplicationBuilder()
-            .WithLocalDb()
-            .ConfigureRbac()
-            .BuildAsync();
+        var application = await new ApiApplicationBuilder().WithLocalDb().ConfigureRbac().BuildAsync();
         var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
         // var dbContext = application.Services.GetService<SelfServiceDbContext>()!;
         //
@@ -337,10 +509,24 @@ public class TestRbacApplicationService
         // var roles = dbContext.RbacRoleGrants.ToList();
         // var rbacGroups = await dbContext.RbacGroups.ToListAsync();
 
-        Assert.True((await rbacSvc.IsUserPermitted("emcla@dfds.com",
-            [new Permission { Namespace = "topics", Name = "read-private" }], "sandbox-emcla-pmyxn")).Permitted());
-        
-        Assert.True((await rbacSvc.IsUserPermitted("emcla@dfds.com",
-            [new Permission { Namespace = "topics", Name = "read-private" }], "sandbox-throwaway-01")).Permitted());
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "emcla@dfds.com",
+                    [new Permission { Namespace = "topics", Name = "read-private" }],
+                    "sandbox-emcla-pmyxn"
+                )
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "emcla@dfds.com",
+                    [new Permission { Namespace = "topics", Name = "read-private" }],
+                    "sandbox-throwaway-01"
+                )
+            ).Permitted()
+        );
     }
 }

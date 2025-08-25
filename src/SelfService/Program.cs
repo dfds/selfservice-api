@@ -27,7 +27,7 @@ try
     builder.AddDomain();
     builder.AddApi();
     builder.AddSecurity();
-    
+
     builder.Services.AddHttpContextAccessor();
     builder.AddRbac();
     builder.Services.AddTransient<Impersonation.ImpersonationMiddleware>();

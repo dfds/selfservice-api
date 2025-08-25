@@ -12,10 +12,10 @@ public class RbacRoleGrantApiResource
     public string AssignedEntityId { get; set; } = "";
     public string Type { get; set; } = "";
     public string Resource { get; set; } = "";
-    
+
     [JsonPropertyName("_links")]
     public required RbacRoleGrantLinks Links { get; set; }
-    
+
     public class RbacRoleGrantLinks
     {
         public ResourceLink? Self { get; set; }

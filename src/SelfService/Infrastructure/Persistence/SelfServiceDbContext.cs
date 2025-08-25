@@ -5,7 +5,6 @@ using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence.Converters;
 using SelfService.Infrastructure.Persistence.Functions;
 
-
 namespace SelfService.Infrastructure.Persistence;
 
 public static class DependencyInjection
@@ -154,7 +153,9 @@ public class SelfServiceDbContext : DbContext
 
         configurationBuilder.Properties<ReleaseNoteHistoryId>().HaveConversion<ReleaseNoteHistoryIdConverter>();
 
-        configurationBuilder.Properties<RbacPermissionGrantId>().HaveConversion<ValueObjectGuidConverter<RbacPermissionGrantId>>();
+        configurationBuilder
+            .Properties<RbacPermissionGrantId>()
+            .HaveConversion<ValueObjectGuidConverter<RbacPermissionGrantId>>();
 
         configurationBuilder.Properties<RbacRoleGrantId>().HaveConversion<ValueObjectGuidConverter<RbacRoleGrantId>>();
 
@@ -162,7 +163,9 @@ public class SelfServiceDbContext : DbContext
 
         configurationBuilder.Properties<RbacGroupId>().HaveConversion<ValueObjectGuidConverter<RbacGroupId>>();
 
-        configurationBuilder.Properties<RbacGroupMemberId>().HaveConversion<ValueObjectGuidConverter<RbacGroupMemberId>>();
+        configurationBuilder
+            .Properties<RbacGroupMemberId>()
+            .HaveConversion<ValueObjectGuidConverter<RbacGroupMemberId>>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -175,7 +178,8 @@ public class SelfServiceDbContext : DbContext
         {
             if (Database.IsNpgsql())
             {
-                modelBuilder.HasDbFunction(castAsTextMethodInfo)
+                modelBuilder
+                    .HasDbFunction(castAsTextMethodInfo)
                     .HasTranslation(args =>
                     {
                         var x = args;
@@ -184,7 +188,9 @@ public class SelfServiceDbContext : DbContext
                         {
                             if (expression.Operand is ColumnExpression column)
                             {
-                                return new SqlFragmentExpression($"CAST({column.TableAlias}.\"{column.Name}\" AS TEXT)");
+                                return new SqlFragmentExpression(
+                                    $"CAST({column.TableAlias}.\"{column.Name}\" AS TEXT)"
+                                );
                             }
                         }
 
@@ -193,8 +199,7 @@ public class SelfServiceDbContext : DbContext
             }
             else // if not postgres just use whatever ef gives us, hope it works out
             {
-                modelBuilder.HasDbFunction(castAsTextMethodInfo)
-                    .HasTranslation(args => args.First()); // Simply pass the argument through
+                modelBuilder.HasDbFunction(castAsTextMethodInfo).HasTranslation(args => args.First()); // Simply pass the argument through
             }
         }
 
@@ -505,7 +510,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.IsActive);
             cfg.Property(x => x.Version);
         });
-        
+
         modelBuilder.Entity<RbacPermissionGrant>(cfg =>
         {
             cfg.ToTable("RbacPermissionGrants");
@@ -527,7 +532,8 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.RoleId);
             cfg.Property(x => x.CreatedAt);
-            cfg.Property(x => x.AssignedEntityType).HasConversion<string>();;
+            cfg.Property(x => x.AssignedEntityType).HasConversion<string>();
+            ;
             cfg.Property(x => x.AssignedEntityId);
             cfg.Property(x => x.Type);
             cfg.Property(x => x.Resource);
@@ -556,11 +562,8 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Name);
             cfg.Property(x => x.Description);
 
-            cfg.HasMany(x => x.Members)
-                .WithOne()
-                .HasForeignKey("GroupId");
+            cfg.HasMany(x => x.Members).WithOne().HasForeignKey("GroupId");
             cfg.Navigation(x => x.Members).AutoInclude();
-
         });
 
         modelBuilder.Entity<RbacGroupMember>(cfg =>

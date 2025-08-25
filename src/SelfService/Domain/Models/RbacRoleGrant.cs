@@ -11,7 +11,16 @@ public class RbacRoleGrant : AggregateRoot<RbacRoleGrantId>
     public string Type { get; set; }
     public string? Resource { get; set; }
 
-    public RbacRoleGrant(RbacRoleGrantId id, RbacRoleId roleId, DateTime createdAt, AssignedEntityType assignedEntityType, string assignedEntityId, string type, string resource) : base(id)
+    public RbacRoleGrant(
+        RbacRoleGrantId id,
+        RbacRoleId roleId,
+        DateTime createdAt,
+        AssignedEntityType assignedEntityType,
+        string assignedEntityId,
+        string type,
+        string resource
+    )
+        : base(id)
     {
         RoleId = roleId;
         CreatedAt = createdAt;
@@ -21,7 +30,13 @@ public class RbacRoleGrant : AggregateRoot<RbacRoleGrantId>
         Resource = resource;
     }
 
-    public static RbacRoleGrant New(RbacRoleId roleId, AssignedEntityType assignedEntityType, string assignedEntityId, string type, string resource)
+    public static RbacRoleGrant New(
+        RbacRoleId roleId,
+        AssignedEntityType assignedEntityType,
+        string assignedEntityId,
+        string type,
+        string resource
+    )
     {
         var instance = new RbacRoleGrant(
             id: RbacRoleGrantId.New(),
@@ -41,5 +56,11 @@ public class RbacRoleGrant : AggregateRoot<RbacRoleGrantId>
     private void RaiseEvent(IDomainEvent domainEvent)
     {
         Raise(domainEvent);
+    }
+
+    // override ToString to print type and resource
+    public override string ToString()
+    {
+        return $"RbacRoleGrant: {AssignedEntityId} -- {Type}, {Resource}";
     }
 }

@@ -13,7 +13,7 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 
 [Route("capabilities")]
 [Produces("application/json")]
-[RbacConfig(nameof(RbacObjectType.Capability) ,"id")]
+[RbacConfig(nameof(RbacObjectType.Capability), "id")]
 [ApiController]
 public class CapabilityController : ControllerBase
 {

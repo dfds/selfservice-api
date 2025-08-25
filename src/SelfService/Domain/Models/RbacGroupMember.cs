@@ -8,7 +8,8 @@ public class RbacGroupMember : AggregateRoot<RbacGroupMemberId>
     public RbacGroupId GroupId { get; private set; }
     public string UserId { get; private set; }
 
-    public RbacGroupMember(RbacGroupMemberId id, DateTime createdAt, RbacGroupId groupId, string userId ) : base(id)
+    public RbacGroupMember(RbacGroupMemberId id, DateTime createdAt, RbacGroupId groupId, string userId)
+        : base(id)
     {
         CreatedAt = createdAt;
         GroupId = groupId;
@@ -22,7 +23,7 @@ public class RbacGroupMember : AggregateRoot<RbacGroupMemberId>
             createdAt: DateTime.Now,
             groupId: groupId,
             userId: userId
-            );
+        );
 
         // raise event
         instance.RaiseEvent(new RbacGroupMemberCreated());

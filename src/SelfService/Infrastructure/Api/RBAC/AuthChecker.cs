@@ -14,7 +14,7 @@ public class AuthChecker : IMiddleware
     {
         _rbacApplicationService = rbacApplicationService;
     }
-    
+
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         // add logic
@@ -33,7 +33,7 @@ public class AuthChecker : IMiddleware
             await next(context);
             return;
         }
-        
+
         if (controllerRbacConfigAttribute == null)
         {
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
@@ -42,7 +42,7 @@ public class AuthChecker : IMiddleware
         }
 
         var objectKey = context.GetRouteValue(controllerRbacConfigAttribute.ObjectKey)?.ToString();
-        
+
         PortalUser portalUser;
         try
         {
@@ -61,10 +61,23 @@ public class AuthChecker : IMiddleware
             switch (controllerRbacConfigAttribute.ObjectType)
             {
                 case nameof(RbacObjectType.Capability):
-                    if (!(await _rbacApplicationService.IsUserPermitted(portalUser.Id.ToString(),
-                            new List<Permission>
-                                { new() { Namespace = requiredPermission!.Ns, Name = requiredPermission!.Name, AccessType = AccessType.Capability} },
-                            objectKey!)).Permitted())
+                    if (
+                        !(
+                            await _rbacApplicationService.IsUserPermitted(
+                                portalUser.Id.ToString(),
+                                new List<Permission>
+                                {
+                                    new()
+                                    {
+                                        Namespace = requiredPermission!.Ns,
+                                        Name = requiredPermission!.Name,
+                                        AccessType = AccessType.Capability,
+                                    },
+                                },
+                                objectKey!
+                            )
+                        ).Permitted()
+                    )
                     {
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
                         await context.Response.WriteAsync($"Missing permission {requiredPermission!.Name}");
@@ -72,10 +85,23 @@ public class AuthChecker : IMiddleware
                     }
                     break;
                 case nameof(RbacObjectType.Global):
-                    if (!(await _rbacApplicationService.IsUserPermitted(portalUser.Id.ToString(),
-                            new List<Permission>
-                                { new() { Namespace = requiredPermission!.Ns, Name = requiredPermission!.Name, AccessType = AccessType.Global} },
-                            objectKey!)).Permitted())
+                    if (
+                        !(
+                            await _rbacApplicationService.IsUserPermitted(
+                                portalUser.Id.ToString(),
+                                new List<Permission>
+                                {
+                                    new()
+                                    {
+                                        Namespace = requiredPermission!.Ns,
+                                        Name = requiredPermission!.Name,
+                                        AccessType = AccessType.Global,
+                                    },
+                                },
+                                objectKey!
+                            )
+                        ).Permitted()
+                    )
                     {
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
                         await context.Response.WriteAsync($"Missing permission {requiredPermission!.Name}");
@@ -88,7 +114,7 @@ public class AuthChecker : IMiddleware
                     return;
             }
         }
-        
+
         await next(context);
     }
 }
@@ -102,7 +128,8 @@ public static class MiddlewareExtensions
         if (disabled == null)
         {
             return app.UseMiddleware<AuthChecker>();
-        };
+        }
+        ;
         return disabled != "true" ? app.UseMiddleware<AuthChecker>() : app;
     }
 }
@@ -136,5 +163,5 @@ public class RbacConfigAttribute : Attribute
 public enum RbacObjectType
 {
     Capability,
-    Global
+    Global,
 }
