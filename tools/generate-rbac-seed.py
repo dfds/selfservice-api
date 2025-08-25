@@ -80,7 +80,7 @@ with open("RbacRole.csv", "w", newline="") as csvfile:
     writer = csv.writer(csvfile, delimiter=";")
     writer.writerow(["Id", "OwnerId", "CreatedAt", "UpdatedAt", "Name", "Description", "Type"])
 
-    owner_id = new_uuid()
+    owner_id = "0000DFD5-0000-0000-0000-00000000000A"
 
     for role in ROLES:
         role_id = ""
