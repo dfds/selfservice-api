@@ -32,9 +32,11 @@ public class SwashbuckleSchemaHelper
 
     private string DefaultSchemaIdSelector(Type modelType)
     {
-        if (!modelType.IsConstructedGenericType) return modelType.Name.Replace("[]", "Array");
+        if (!modelType.IsConstructedGenericType)
+            return modelType.Name.Replace("[]", "Array");
 
-        var prefix = modelType.GetGenericArguments()
+        var prefix = modelType
+            .GetGenericArguments()
             .Select(genericArg => DefaultSchemaIdSelector(genericArg))
             .Aggregate((previous, current) => previous + current);
 

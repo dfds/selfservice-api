@@ -4,5 +4,5 @@ public enum AssignedEntityType
 {
     User,
     Group,
-    Role
+    Role,
 }

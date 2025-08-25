@@ -5,7 +5,6 @@ namespace SelfService.Infrastructure.Persistence;
 
 public class RbacRoleRepository : GenericRepository<RbacRole, RbacRoleId>, IRbacRoleRepository
 {
-    public RbacRoleRepository(SelfServiceDbContext dbContext) : base(dbContext.RbacRoles)
-    {
-    }
+    public RbacRoleRepository(SelfServiceDbContext dbContext)
+        : base(dbContext.RbacRoles) { }
 }

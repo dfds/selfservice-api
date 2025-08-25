@@ -26,7 +26,18 @@ public class StubRbacPermissionGrantRepository : IRbacPermissionGrantRepository
 
     public Task<RbacPermissionGrant> Remove(RbacPermissionGrantId id)
     {
-        return Task.FromResult(new RbacPermissionGrant(RbacPermissionGrantId.New(), DateTime.Now, AssignedEntityType.User, "", "", "", "", ""));
+        return Task.FromResult(
+            new RbacPermissionGrant(
+                RbacPermissionGrantId.New(),
+                DateTime.Now,
+                AssignedEntityType.User,
+                "",
+                "",
+                "",
+                "",
+                ""
+            )
+        );
     }
 
     public Task<List<RbacPermissionGrant>> GetAll()
