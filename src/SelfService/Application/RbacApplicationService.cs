@@ -311,8 +311,8 @@ public class RbacApplicationService : IRbacApplicationService
                     throw new UnauthorizedAccessException();
                 }
                 var existingGlobalGrant = await _roleGrantRepository.FindByPredicate(rg =>
-                    rg.AssignedEntityId == roleGrant.AssignedEntityId
-                    && rg.Type.ToLower() == roleGrant.Type.ToLower());
+                    rg.AssignedEntityId == roleGrant.AssignedEntityId && rg.Type.ToLower() == roleGrant.Type.ToLower()
+                );
                 if (existingGlobalGrant != null)
                 {
                     await _roleGrantRepository.Remove(existingGlobalGrant.Id);
@@ -356,7 +356,8 @@ public class RbacApplicationService : IRbacApplicationService
                 var existingCapabilityGrant = await _roleGrantRepository.FindByPredicate(rg =>
                     rg.AssignedEntityId == roleGrant.AssignedEntityId
                     && rg.Resource == roleGrant.Resource
-                    && rg.Type.ToLower() == roleGrant.Type.ToLower());
+                    && rg.Type.ToLower() == roleGrant.Type.ToLower()
+                );
                 if (existingCapabilityGrant != null)
                 {
                     await _roleGrantRepository.Remove(existingCapabilityGrant.Id);
