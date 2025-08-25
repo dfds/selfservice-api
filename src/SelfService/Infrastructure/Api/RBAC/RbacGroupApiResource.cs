@@ -11,11 +11,11 @@ public class RbacGroupApiResource
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
-    public ICollection<RbacGroupMember> Members  { get; set; } = new List<RbacGroupMember>();
-    
+    public ICollection<RbacGroupMember> Members { get; set; } = new List<RbacGroupMember>();
+
     [JsonPropertyName("_links")]
     public required RLinks Links { get; set; }
-    
+
     public class RLinks
     {
         public ResourceLink Self { get; set; }

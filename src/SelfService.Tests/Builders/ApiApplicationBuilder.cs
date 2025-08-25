@@ -12,7 +12,6 @@ using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Builders;
 
-
 public class ApiApplicationBuilder
 {
     private IAwsAccountRepository _awsAccountRepository;
@@ -79,7 +78,7 @@ public class ApiApplicationBuilder
             svc.AddTransient<IRbacGroupRepository, RbacGroupRepository>();
             svc.AddTransient<IRbacGroupMemberRepository, RbacGroupMemberRepository>();
             svc.AddTransient<IPermissionQuery, PermissionsQuery>();
-            
+
             svc.AddTransient<IRbacApplicationService, RbacApplicationService>();
         };
         return this;
@@ -138,14 +137,15 @@ public static class ApiApplicationBuilderExtensions
     }
 
     public static async Task<ApiApplicationBuilder> WithSelfServiceDbContext(
-        this Task<ApiApplicationBuilder> builderTask, SelfServiceDbContext selfServiceDbContext)
+        this Task<ApiApplicationBuilder> builderTask,
+        SelfServiceDbContext selfServiceDbContext
+    )
     {
         var builder = await builderTask;
         return await builder.WithSelfServiceDbContext(selfServiceDbContext);
     }
 
-    public static async Task<ApiApplicationBuilder> WithLocalDb(
-        this Task<ApiApplicationBuilder> builderTask)
+    public static async Task<ApiApplicationBuilder> WithLocalDb(this Task<ApiApplicationBuilder> builderTask)
     {
         var builder = await builderTask;
         return await builder.WithLocalDb();

@@ -9,9 +9,10 @@ public class RbacPermittedResponseApiResource
 {
     public Dictionary<String, PermissionMatrix> PermissionMatrix { get; set; } = new();
     public List<RbacPermissionGrant> PermissionGrants { get; set; } = new();
+
     [JsonPropertyName("_links")]
     public required RbacPermittedResponseLinks Links { get; set; }
-    
+
     public class RbacPermittedResponseLinks
     {
         public ResourceLink? CanI { get; set; }

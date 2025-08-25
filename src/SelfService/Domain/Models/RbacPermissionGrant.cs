@@ -12,7 +12,17 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
     public string Type { get; set; }
     public string? Resource { get; set; }
 
-    public RbacPermissionGrant(RbacPermissionGrantId id, DateTime createdAt, AssignedEntityType assignedEntityType, string assignedEntityId, string @namespace, string permission, string type, string resource) : base(id)
+    public RbacPermissionGrant(
+        RbacPermissionGrantId id,
+        DateTime createdAt,
+        AssignedEntityType assignedEntityType,
+        string assignedEntityId,
+        string @namespace,
+        string permission,
+        string type,
+        string resource
+    )
+        : base(id)
     {
         CreatedAt = createdAt;
         AssignedEntityType = assignedEntityType;
@@ -23,7 +33,14 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
         Resource = resource;
     }
 
-    public static RbacPermissionGrant New(AssignedEntityType assignedEntityType, string assignedEntityId, string @namespace, string permission, string type, string resource)
+    public static RbacPermissionGrant New(
+        AssignedEntityType assignedEntityType,
+        string assignedEntityId,
+        string @namespace,
+        string permission,
+        string type,
+        string resource
+    )
     {
         var instance = new RbacPermissionGrant(
             id: RbacPermissionGrantId.New(),
@@ -34,7 +51,7 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
             permission: permission,
             type: type,
             resource: resource
-            );
+        );
 
         // raise event
         instance.RaiseEvent(new RbacPermissionGrantCreated());
@@ -44,5 +61,10 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
     private void RaiseEvent(IDomainEvent domainEvent)
     {
         Raise(domainEvent);
+    }
+
+    public override string ToString()
+    {
+        return $"RbacPermissionGrant: {Namespace}, {Type}, {Permission}, {Resource}";
     }
 }

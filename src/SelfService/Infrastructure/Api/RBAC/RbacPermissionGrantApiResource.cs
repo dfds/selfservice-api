@@ -13,10 +13,10 @@ public class RbacPermissionGrantApiResource
     public string Permission { get; set; } = "";
     public string Type { get; set; } = "";
     public string Resource { get; set; } = "";
-    
+
     [JsonPropertyName("_links")]
     public required RbacPermissionGrantLinks Links { get; set; }
-    
+
     public class RbacPermissionGrantLinks
     {
         public ResourceLink? Self { get; set; }

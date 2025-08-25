@@ -128,10 +128,9 @@ public class ApiApplication : WebApplicationFactory<Program>
                 foreach (var option in services.Where(s => s.ServiceType.BaseType == typeof(DbContextOptions)).ToList())
                 {
                     services.Remove(option);
-                }                
+                }
             }
 
-            
             _serviceCollectionModifiers.ForEach(cfg => cfg(services));
 
             if (_authOptionsConfig != null)

@@ -10,7 +10,8 @@ public class RbacGroup : AggregateRoot<RbacGroupId>
     public string Description { get; private set; }
     public ICollection<RbacGroupMember> Members { get; private set; }
 
-    public RbacGroup(RbacGroupId id, DateTime createdAt, DateTime updatedAt, string name, string description) : base(id)
+    public RbacGroup(RbacGroupId id, DateTime createdAt, DateTime updatedAt, string name, string description)
+        : base(id)
     {
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
@@ -27,7 +28,7 @@ public class RbacGroup : AggregateRoot<RbacGroupId>
             updatedAt: DateTime.Now,
             name: name,
             description: description
-            );
+        );
 
         // raise event
         instance.RaiseEvent(new RbacGroupCreated());

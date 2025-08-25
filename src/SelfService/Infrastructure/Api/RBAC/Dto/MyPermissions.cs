@@ -1,4 +1,3 @@
-
 namespace SelfService.Infrastructure.Api.RBAC.Dto;
 
 public class MyPermissionsResponse

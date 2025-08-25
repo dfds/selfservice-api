@@ -5,7 +5,6 @@ namespace SelfService.Infrastructure.Persistence;
 
 public class RbacGroupRepository : GenericRepository<RbacGroup, RbacGroupId>, IRbacGroupRepository
 {
-    public RbacGroupRepository(SelfServiceDbContext dbContext) : base(dbContext.RbacGroups)
-    {
-    }
+    public RbacGroupRepository(SelfServiceDbContext dbContext)
+        : base(dbContext.RbacGroups) { }
 }

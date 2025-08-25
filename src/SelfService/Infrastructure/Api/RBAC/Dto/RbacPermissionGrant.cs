@@ -12,9 +12,18 @@ public class RbacPermissionGrant
     public string Permission { get; set; } = "";
     public string Type { get; set; } = "";
     public string? Resource { get; set; } = "";
-    
+
     public SelfService.Domain.Models.RbacPermissionGrant IntoDomainModel()
     {
-        return new SelfService.Domain.Models.RbacPermissionGrant(RbacPermissionGrantId.Parse(Id), CreatedAt, AssignedEntityType, AssignedEntityId, Namespace, Permission, Type, Resource ?? "");
+        return new SelfService.Domain.Models.RbacPermissionGrant(
+            RbacPermissionGrantId.Parse(Id),
+            CreatedAt,
+            AssignedEntityType,
+            AssignedEntityId,
+            Namespace,
+            Permission,
+            Type,
+            Resource ?? ""
+        );
     }
 }
