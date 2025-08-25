@@ -335,8 +335,13 @@ public class RbacApplicationService : IRbacApplicationService
                     },
                     roleGrant.Resource ?? ""
                 );
+                var userGrantsToSelf =
+                    user == roleGrant.AssignedEntityId && roleGrant.AssignedEntityType == AssignedEntityType.User;
 
-                if (!canUserCreateGlobalRbac.Permitted() && !canUserCreateCapabilityRbac.Permitted())
+                if (
+                    (!canUserCreateGlobalRbac.Permitted() && !canUserCreateCapabilityRbac.Permitted())
+                    || userGrantsToSelf
+                )
                 {
                     throw new UnauthorizedAccessException();
                 }
