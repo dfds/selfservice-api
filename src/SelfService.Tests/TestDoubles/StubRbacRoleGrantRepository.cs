@@ -33,7 +33,7 @@ public class StubRbacRoleGrantRepository : IRbacRoleGrantRepository
                 DateTime.Now,
                 AssignedEntityType.User,
                 "",
-                "",
+                RbacAccessType.Capability,
                 ""
             )
         );
