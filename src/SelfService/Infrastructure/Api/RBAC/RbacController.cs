@@ -85,9 +85,9 @@ public class RbacController : ControllerBase
             Domain.Models.RbacPermissionGrant.New(
                 permissionGrant.AssignedEntityType,
                 permissionGrant.AssignedEntityId,
-                permissionGrant.Namespace,
+                RbacNamespace.Parse(permissionGrant.Namespace),
                 permissionGrant.Permission,
-                permissionGrant.Type,
+                RbacAccessType.Parse(permissionGrant.Type),
                 permissionGrant.Resource ?? ""
             )
         );

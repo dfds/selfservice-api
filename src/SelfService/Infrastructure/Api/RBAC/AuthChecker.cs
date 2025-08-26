@@ -71,7 +71,7 @@ public class AuthChecker : IMiddleware
                                     {
                                         Namespace = requiredPermission!.Ns,
                                         Name = requiredPermission!.Name,
-                                        AccessType = AccessType.Capability,
+                                        AccessType = RbacAccessType.Capability,
                                     },
                                 },
                                 objectKey!
@@ -95,7 +95,7 @@ public class AuthChecker : IMiddleware
                                     {
                                         Namespace = requiredPermission!.Ns,
                                         Name = requiredPermission!.Name,
-                                        AccessType = AccessType.Global,
+                                        AccessType = RbacAccessType.Global,
                                     },
                                 },
                                 objectKey!
@@ -137,12 +137,12 @@ public static class MiddlewareExtensions
 [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
 public class RequiresPermissionAttribute : Attribute
 {
-    public String Ns { get; set; }
+    public RbacNamespace Ns { get; set; }
     public String Name { get; set; }
 
     public RequiresPermissionAttribute(string ns, string name)
     {
-        Ns = ns;
+        Ns = RbacNamespace.Parse(ns);
         Name = name;
     }
 }

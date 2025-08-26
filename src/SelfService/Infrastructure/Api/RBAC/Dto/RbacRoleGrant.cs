@@ -1,3 +1,4 @@
+using SelfService.Application;
 using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Api.RBAC.Dto;
@@ -12,13 +13,13 @@ public class RbacRoleGrant
     public string Type { get; set; } = "";
     public string? Resource { get; set; } = "";
 
-    public SelfService.Domain.Models.RbacRoleGrant IntoDomainModel()
+    public Domain.Models.RbacRoleGrant IntoDomainModel()
     {
-        return SelfService.Domain.Models.RbacRoleGrant.New(
+        return Domain.Models.RbacRoleGrant.New(
             RbacRoleId.Parse(RoleId),
             AssignedEntityType,
             AssignedEntityId,
-            Type,
+            RbacAccessType.Parse(Type),
             Resource ?? ""
         );
     }

@@ -1,3 +1,4 @@
+using SelfService.Application;
 using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Api.RBAC.Dto;
@@ -13,16 +14,16 @@ public class RbacPermissionGrant
     public string Type { get; set; } = "";
     public string? Resource { get; set; } = "";
 
-    public SelfService.Domain.Models.RbacPermissionGrant IntoDomainModel()
+    public Domain.Models.RbacPermissionGrant IntoDomainModel()
     {
-        return new SelfService.Domain.Models.RbacPermissionGrant(
+        return new Domain.Models.RbacPermissionGrant(
             RbacPermissionGrantId.Parse(Id),
             CreatedAt,
             AssignedEntityType,
             AssignedEntityId,
-            Namespace,
+            RbacNamespace.Parse(Namespace),
             Permission,
-            Type,
+            RbacAccessType.Parse(Type),
             Resource ?? ""
         );
     }

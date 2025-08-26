@@ -1,3 +1,4 @@
+using SelfService.Application;
 using SelfService.Domain.Events;
 
 namespace SelfService.Domain.Models;
@@ -7,9 +8,9 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
     public DateTime CreatedAt { get; set; }
     public AssignedEntityType AssignedEntityType { get; set; }
     public string AssignedEntityId { get; set; }
-    public string Namespace { get; set; }
+    public RbacNamespace Namespace { get; set; }
     public string Permission { get; set; }
-    public string Type { get; set; }
+    public RbacAccessType Type { get; set; }
     public string? Resource { get; set; }
 
     public RbacPermissionGrant(
@@ -17,9 +18,9 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
         DateTime createdAt,
         AssignedEntityType assignedEntityType,
         string assignedEntityId,
-        string @namespace,
+        RbacNamespace @namespace,
         string permission,
-        string type,
+        RbacAccessType type,
         string resource
     )
         : base(id)
@@ -36,9 +37,9 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
     public static RbacPermissionGrant New(
         AssignedEntityType assignedEntityType,
         string assignedEntityId,
-        string @namespace,
+        RbacNamespace @namespace,
         string permission,
-        string type,
+        RbacAccessType type,
         string resource
     )
     {

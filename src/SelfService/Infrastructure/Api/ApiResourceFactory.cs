@@ -1731,10 +1731,10 @@ public class ApiResourceFactory
             AssignedEntityId = x.AssignedEntityId,
             AssignedEntityType = x.AssignedEntityType,
             CreatedAt = x.CreatedAt,
-            Namespace = x.Namespace,
+            Namespace = x.Namespace.ToString(),
             Permission = x.Permission,
             Resource = x.Resource,
-            Type = x.Type,
+            Type = x.Type.ToString(),
         });
 
         var mappedRoleGrants = roleGrants.Select(x => new RBAC.Dto.RbacRoleGrant
@@ -1745,7 +1745,7 @@ public class ApiResourceFactory
             AssignedEntityType = x.AssignedEntityType,
             CreatedAt = x.CreatedAt,
             Resource = x.Resource,
-            Type = x.Type,
+            Type = x.Type.ToString(),
         });
 
         var mappedGroups = groups.Select(x => new RBAC.Dto.RbacGroup
@@ -1822,10 +1822,10 @@ public class ApiResourceFactory
             CreatedAt = permissionGrant.CreatedAt,
             AssignedEntityType = permissionGrant.AssignedEntityType.ToString(),
             AssignedEntityId = permissionGrant.AssignedEntityId,
-            Namespace = permissionGrant.Namespace,
+            Namespace = permissionGrant.Namespace.ToString(),
             Permission = permissionGrant.Permission,
             Resource = permissionGrant.Resource ?? "",
-            Type = permissionGrant.Type,
+            Type = permissionGrant.Type.ToString(),
             Links = new RbacPermissionGrantApiResource.RbacPermissionGrantLinks
             {
                 RevokePermission = new ResourceLink(
@@ -1854,7 +1854,7 @@ public class ApiResourceFactory
             AssignedEntityType = roleGrant.AssignedEntityType.ToString(),
             AssignedEntityId = roleGrant.AssignedEntityId,
             Resource = roleGrant.Resource ?? "",
-            Type = roleGrant.Type,
+            Type = roleGrant.Type.ToString(),
             Links = new RbacRoleGrantApiResource.RbacRoleGrantLinks
             {
                 RevokeRole = new ResourceLink(
