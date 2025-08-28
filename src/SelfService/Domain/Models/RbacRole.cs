@@ -40,7 +40,7 @@ public class RbacRoleDTO
             updatedAt: role.UpdatedAt,
             name: role.Name,
             description: role.Description,
-            type: role.Type
+            type: role.Type.ToString()
         );
     }
 }
@@ -52,7 +52,7 @@ public class RbacRole : AggregateRoot<RbacRoleId>
     public DateTime UpdatedAt { get; private set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
-    public string Type { get; private set; }
+    public RbacAccessType Type { get; private set; }
 
     public RbacRole(
         RbacRoleId id,
@@ -61,7 +61,7 @@ public class RbacRole : AggregateRoot<RbacRoleId>
         DateTime updatedAt,
         string name,
         string description,
-        string type
+        RbacAccessType type
     )
         : base(id)
     {
@@ -73,7 +73,7 @@ public class RbacRole : AggregateRoot<RbacRoleId>
         Type = type;
     }
 
-    public static RbacRole New(String ownerId, string name, string description, string type)
+    public static RbacRole New(String ownerId, string name, string description, RbacAccessType type)
     {
         var instance = new RbacRole(
             id: RbacRoleId.New(),

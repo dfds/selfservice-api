@@ -82,7 +82,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "andfris@dfds.com",
                     @namespace: "topics",
                     permission: "create",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "sandbox-emcla-pmyxn"
                 )
             );
@@ -95,7 +95,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "test03@dfds.cloud",
                     @namespace: "topics",
                     permission: "create",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "sandbox-emcla-pmyxn"
                 )
             );
@@ -117,7 +117,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "andfris@dfds.com",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "sandbox-emcla-pmyxn"
                 )
             );
@@ -233,7 +233,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "test01@dfds.cloud",
                     @namespace: "topics",
                     permission: "create",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "test01"
                 ),
                 new(
@@ -243,7 +243,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "test01@dfds.cloud",
                     @namespace: "topics",
                     permission: "read-public",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "test02"
                 ),
                 new(
@@ -253,7 +253,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "test01@dfds.cloud",
                     @namespace: "topics",
                     permission: "read-private",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "test01"
                 ),
                 new(
@@ -263,7 +263,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "507531CF-6740-4728-ACDB-C3B4CEF11B27",
                     @namespace: "topics",
                     permission: "read-public",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "test02"
                 ),
             },
@@ -334,7 +334,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "test01@dfds.cloud",
                     @namespace: "topics",
                     permission: "create",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "test01"
                 ),
                 new(
@@ -344,7 +344,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "test01@dfds.cloud",
                     @namespace: "topics",
                     permission: "read-private",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "test01"
                 ),
                 new(
@@ -354,7 +354,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "test01@dfds.cloud",
                     @namespace: "topics",
                     permission: "read-public",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "test02"
                 ),
             },
@@ -423,7 +423,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "emcla@dfds.com",
                     @namespace: "topics",
                     permission: "create",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "sandbox-emcla-pmyxn"
                 ),
             },
@@ -478,7 +478,7 @@ public class TestRbacApplicationService
                     assignedEntityId: "emcla@dfds.com",
                     @namespace: "topics",
                     permission: "read-private",
-                    type: "capability",
+                    type: RbacAccessType.Capability,
                     resource: "sandbox-emcla-pmyxn"
                 ),
             },

@@ -1,3 +1,4 @@
+using SelfService.Configuration;
 using SelfService.Domain.Models;
 
 namespace SelfService.Tests.TestDoubles;
@@ -33,7 +34,7 @@ public class StubRbacRoleGrantRepository : IRbacRoleGrantRepository
                 DateTime.Now,
                 AssignedEntityType.User,
                 "",
-                "",
+                RbacAccessType.Global,
                 ""
             )
         );

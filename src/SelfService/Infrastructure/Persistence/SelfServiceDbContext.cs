@@ -1,6 +1,7 @@
 ﻿using Dafda.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using SelfService.Configuration;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence.Converters;
 using SelfService.Infrastructure.Persistence.Functions;
@@ -166,6 +167,8 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder
             .Properties<RbacGroupMemberId>()
             .HaveConversion<ValueObjectGuidConverter<RbacGroupMemberId>>();
+
+        configurationBuilder.Properties<RbacAccessType>().HaveConversion<RbacAccessTypeConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
