@@ -11,6 +11,5 @@ public class RbacAccessTypeConverter : ValueConverter<RbacAccessType, string>
         : base(ToDatabaseType, FromDatabaseType) { }
 
     private static Expression<Func<RbacAccessType, string>> ToDatabaseType => id => id.ToString();
-    private static Expression<Func<string, RbacAccessType>> FromDatabaseType =>
-        value => RbacAccessType.Parse(value);
+    private static Expression<Func<string, RbacAccessType>> FromDatabaseType => value => RbacAccessType.Parse(value);
 }
