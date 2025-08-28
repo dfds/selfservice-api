@@ -509,6 +509,8 @@ public class TestRbacApplicationService
         // var roles = dbContext.RbacRoleGrants.ToList();
         // var rbacGroups = await dbContext.RbacGroups.ToListAsync();
 
+        Assert.NotNull(rbacSvc);
+
         Assert.True(
             (
                 await rbacSvc.IsUserPermitted(
