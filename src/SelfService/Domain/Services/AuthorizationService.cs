@@ -15,6 +15,7 @@ public class AuthorizationService : IAuthorizationService
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IMembershipApplicationRepository _membershipApplicationRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IRbacApplicationService _rbacApplicationService;
 
     public AuthorizationService(
         ILogger<AuthorizationService> logger,
@@ -25,12 +26,14 @@ public class AuthorizationService : IAuthorizationService
         IMessageContractRepository messageContractRepository,
         IKafkaTopicRepository kafkaTopicRepository,
         IMembershipApplicationRepository membershipApplicationRepository,
-        IHttpContextAccessor httpContextAccessor
+        IHttpContextAccessor httpContextAccessor,
+        IRbacApplicationService rbacApplicationService
     )
     {
         _logger = logger;
         _membershipQuery = membershipQuery;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
+        _rbacApplicationService = rbacApplicationService;
         _awsAccountRepository = awsAccountRepository;
         _azureResourceRepository = azureResourceRepository;
         _messageContractRepository = messageContractRepository;
@@ -247,7 +250,21 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanDeleteCapability(UserId userId, CapabilityId capabilityId)
     {
-        return await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        return (
+            await _rbacApplicationService.IsUserPermitted(
+                userId,
+                new List<Permission>
+                {
+                    new()
+                    {
+                        Namespace = RbacNamespace.CapabilityManagement,
+                        Name = "request-deletion",
+                        AccessType = RbacAccessType.Capability,
+                    },
+                },
+                capabilityId
+            )
+        ).Permitted();
     }
 
     public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
