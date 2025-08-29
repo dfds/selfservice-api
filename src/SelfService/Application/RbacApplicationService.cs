@@ -190,7 +190,7 @@ public class RbacApplicationService : IRbacApplicationService
             case var a when a == RbacAccessType.Global:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
-                    new List<Permission> { new("rbac", "create", "", AccessType.Global) },
+                    new List<Permission> { new("rbac", "create", "", RbacAccessType.Global) },
                     permissionGrant.Resource ?? ""
                 );
                 if (!canUserCreateGlobalRbac.Permitted())
@@ -212,14 +212,14 @@ public class RbacApplicationService : IRbacApplicationService
             case var a when a == RbacAccessType.Capability:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
-                    new List<Permission> { new("rbac", "create", "", AccessType.Global) },
+                    new List<Permission> { new("rbac", "create", "", RbacAccessType.Global) },
                     permissionGrant.Resource ?? ""
                 );
                 var canUserCreateCapabilityRbac = await IsUserPermitted(
                     user,
                     new List<Permission>
                     {
-                        new("capability-management", "manage-permissions", "", AccessType.Capability),
+                        new("capability-management", "manage-permissions", "", RbacAccessType.Capability),
                     },
                     permissionGrant.Resource ?? ""
                 );
@@ -258,7 +258,7 @@ public class RbacApplicationService : IRbacApplicationService
             case var a when a == RbacAccessType.Global:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
-                    new List<Permission> { new("rbac", "delete", "", AccessType.Global) },
+                    new List<Permission> { new("rbac", "delete", "", RbacAccessType.Global) },
                     permissionLookup.Resource ?? ""
                 );
                 if (!canUserCreateGlobalRbac.Permitted())
@@ -270,14 +270,14 @@ public class RbacApplicationService : IRbacApplicationService
             case var a when a == RbacAccessType.Capability:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
-                    new List<Permission> { new("rbac", "delete", "", AccessType.Global) },
+                    new List<Permission> { new("rbac", "delete", "", RbacAccessType.Global) },
                     permissionLookup.Resource ?? ""
                 );
                 var canUserCreateCapabilityRbac = await IsUserPermitted(
                     user,
                     new List<Permission>
                     {
-                        new("capability-management", "manage-permissions", "", AccessType.Capability),
+                        new("capability-management", "manage-permissions", "", RbacAccessType.Capability),
                     },
                     permissionLookup.Resource ?? ""
                 );
@@ -303,7 +303,7 @@ public class RbacApplicationService : IRbacApplicationService
             case var a when a == RbacAccessType.Global:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
-                    new List<Permission> { new("rbac", "create", "", AccessType.Global) },
+                    new List<Permission> { new("rbac", "create", "", RbacAccessType.Global) },
                     roleGrant.Resource ?? ""
                 );
                 if (!canUserCreateGlobalRbac.Permitted())
@@ -325,14 +325,14 @@ public class RbacApplicationService : IRbacApplicationService
             case var a when a == RbacAccessType.Capability:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
-                    new List<Permission> { new("rbac", "create", "", AccessType.Global) },
+                    new List<Permission> { new("rbac", "create", "", RbacAccessType.Global) },
                     roleGrant.Resource ?? ""
                 );
                 var canUserCreateCapabilityRbac = await IsUserPermitted(
                     user,
                     new List<Permission>
                     {
-                        new("capability-management", "manage-permissions", "", AccessType.Capability),
+                        new("capability-management", "manage-permissions", "", RbacAccessType.Capability),
                     },
                     roleGrant.Resource ?? ""
                 );
@@ -390,7 +390,7 @@ public class RbacApplicationService : IRbacApplicationService
             case var a when a == RbacAccessType.Global:
                 canUserDeleteGlobalRbac = await IsUserPermitted(
                     user,
-                    new List<Permission> { new("rbac", "delete", "", AccessType.Global) },
+                    new List<Permission> { new("rbac", "delete", "", RbacAccessType.Global) },
                     roleGrant.Resource ?? ""
                 );
                 if (!canUserDeleteGlobalRbac.Permitted())
@@ -402,14 +402,14 @@ public class RbacApplicationService : IRbacApplicationService
             case var a when a == RbacAccessType.Capability:
                 canUserDeleteGlobalRbac = await IsUserPermitted(
                     user,
-                    new List<Permission> { new("rbac", "delete", "", AccessType.Global) },
+                    new List<Permission> { new("rbac", "delete", "", RbacAccessType.Global) },
                     roleGrant.Resource ?? ""
                 );
                 var canUserDeleteCapabilityRbac = await IsUserPermitted(
                     user,
                     new List<Permission>
                     {
-                        new("capability-management", "manage-permissions", "", AccessType.Capability),
+                        new("capability-management", "manage-permissions", "", RbacAccessType.Capability),
                     },
                     roleGrant.Resource ?? ""
                 );
@@ -436,25 +436,25 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     Namespace = "capability-management",
                     Name = "manage-permissions",
-                    AccessType = AccessType.Global,
+                    AccessType = RbacAccessType.Global,
                 },
                 new()
                 {
                     Namespace = "rbac",
                     Name = "create",
-                    AccessType = AccessType.Global,
+                    AccessType = RbacAccessType.Global,
                 },
                 new()
                 {
                     Namespace = "rbac",
                     Name = "update",
-                    AccessType = AccessType.Global,
+                    AccessType = RbacAccessType.Global,
                 },
                 new()
                 {
                     Namespace = "rbac",
                     Name = "delete",
-                    AccessType = AccessType.Global,
+                    AccessType = RbacAccessType.Global,
                 },
             },
             id
@@ -464,82 +464,74 @@ public class RbacApplicationService : IRbacApplicationService
     }
 }
 
-public enum AccessType
-{
-    Capability,
-    Global,
-    Aws,
-    Azure,
-}
-
 public class Permission
 {
     public String Description { get; set; } = "";
     public String Name { get; set; } = "";
     public string Namespace { get; set; } = "";
-    public AccessType AccessType { get; set; } = AccessType.Capability;
+    public RbacAccessType AccessType { get; set; } = RbacAccessType.Capability;
 
     public static List<Permission> BootstrapPermissions()
     {
         var permissions = new List<Permission>
         {
-            new("topics", "create", "Create new topics", AccessType.Capability),
-            new("topics", "read-private", "Read private topics", AccessType.Capability),
-            new("topics", "read-public", "Read public topics", AccessType.Capability),
-            new("topics", "update", "Update topics", AccessType.Capability),
-            new("topics", "delete", "Delete topics", AccessType.Capability),
-            new("capability-management", "receive-alerts", "Receive Alarms", AccessType.Capability),
-            new("capability-management", "receive-cost", "Receive cost summary reports", AccessType.Capability),
-            new("capability-management", "request-deletion", "Request Capability deletion", AccessType.Capability),
-            new("capability-management", "manage-permissions", "Manage Capability permissions", AccessType.Capability),
-            new("capability-management", "read-self-assess", "Self assessment permissions", AccessType.Capability),
-            new("capability-management", "create-self-assess", "Self assessment permissions", AccessType.Capability),
-            new("capability-membership-management", "create", "Invite new member", AccessType.Capability),
-            new("capability-membership-management", "delete", "Remove member", AccessType.Capability),
-            new("capability-membership-management", "read", "See member list", AccessType.Capability),
+            new("topics", "create", "Create new topics", RbacAccessType.Capability),
+            new("topics", "read-private", "Read private topics", RbacAccessType.Capability),
+            new("topics", "read-public", "Read public topics", RbacAccessType.Capability),
+            new("topics", "update", "Update topics", RbacAccessType.Capability),
+            new("topics", "delete", "Delete topics", RbacAccessType.Capability),
+            new("capability-management", "receive-alerts", "Receive Alarms", RbacAccessType.Capability),
+            new("capability-management", "receive-cost", "Receive cost summary reports", RbacAccessType.Capability),
+            new("capability-management", "request-deletion", "Request Capability deletion", RbacAccessType.Capability),
+            new("capability-management", "manage-permissions", "Manage Capability permissions", RbacAccessType.Capability),
+            new("capability-management", "read-self-assess", "Self assessment permissions", RbacAccessType.Capability),
+            new("capability-management", "create-self-assess", "Self assessment permissions", RbacAccessType.Capability),
+            new("capability-membership-management", "create", "Invite new member", RbacAccessType.Capability),
+            new("capability-membership-management", "delete", "Remove member", RbacAccessType.Capability),
+            new("capability-membership-management", "read", "See member list", RbacAccessType.Capability),
             new(
                 "capability-membership-management",
                 "read-requests",
                 "Read invitation/application requests",
-                AccessType.Capability
+                RbacAccessType.Capability
             ),
             new(
                 "capability-membership-management",
                 "manage-requests",
                 "Approve/decline member requests",
-                AccessType.Capability
+                RbacAccessType.Capability
             ),
-            new("tags-and-metadata", "create", "Create", AccessType.Capability),
-            new("tags-and-metadata", "read", "Read", AccessType.Capability),
-            new("tags-and-metadata", "update", "Update", AccessType.Capability),
-            new("tags-and-metadata", "delete", "Delete", AccessType.Capability),
-            new("aws", "create", "Create context/cloud resources", AccessType.Capability),
-            new("aws", "read", "Read context/cloud resources", AccessType.Capability),
-            new("aws", "manage-provider", "Read resources in AWS account", AccessType.Capability),
-            new("aws", "read-provider", "Manage resources in AWS account", AccessType.Capability),
-            new("finout", "read-dashboards", "See all DFDS dashboards", AccessType.Global),
-            new("finout", "manage-dashboards", "Manage dashboard with Capability prefix", AccessType.Capability),
-            new("finout", "manage-alerts", "Manage anomaly alerts with capability prefix", AccessType.Capability),
-            new("finout", "read-alerts", "read anomaly alerts with capability prefix", AccessType.Capability),
-            new("azure", "create", "Create context/cloud resources", AccessType.Capability),
-            new("azure", "read", "Read context/cloud resources", AccessType.Capability),
-            new("azure", "read-provider", "Read resources in Azure resource group", AccessType.Capability),
-            new("azure", "manage-provider", "Manage resources in Azure resource group", AccessType.Capability),
-            new("rbac", "read", "Manage RBAC", AccessType.Global),
-            new("rbac", "create", "Manage RBAC", AccessType.Global),
-            new("rbac", "update", "Manage RBAC", AccessType.Global),
-            new("rbac", "delete", "Manage RBAC", AccessType.Global),
+            new("tags-and-metadata", "create", "Create", RbacAccessType.Capability),
+            new("tags-and-metadata", "read", "Read", RbacAccessType.Capability),
+            new("tags-and-metadata", "update", "Update", RbacAccessType.Capability),
+            new("tags-and-metadata", "delete", "Delete", RbacAccessType.Capability),
+            new("aws", "create", "Create context/cloud resources", RbacAccessType.Capability),
+            new("aws", "read", "Read context/cloud resources", RbacAccessType.Capability),
+            new("aws", "manage-provider", "Read resources in AWS account", RbacAccessType.Capability),
+            new("aws", "read-provider", "Manage resources in AWS account", RbacAccessType.Capability),
+            new("finout", "read-dashboards", "See all DFDS dashboards", RbacAccessType.Global),
+            new("finout", "manage-dashboards", "Manage dashboard with Capability prefix", RbacAccessType.Capability),
+            new("finout", "manage-alerts", "Manage anomaly alerts with capability prefix", RbacAccessType.Capability),
+            new("finout", "read-alerts", "read anomaly alerts with capability prefix", RbacAccessType.Capability),
+            new("azure", "create", "Create context/cloud resources", RbacAccessType.Capability),
+            new("azure", "read", "Read context/cloud resources", RbacAccessType.Capability),
+            new("azure", "read-provider", "Read resources in Azure resource group", RbacAccessType.Capability),
+            new("azure", "manage-provider", "Manage resources in Azure resource group", RbacAccessType.Capability),
+            new("rbac", "read", "Manage RBAC", RbacAccessType.Global),
+            new("rbac", "create", "Manage RBAC", RbacAccessType.Global),
+            new("rbac", "update", "Manage RBAC", RbacAccessType.Global),
+            new("rbac", "delete", "Manage RBAC", RbacAccessType.Global),
         };
 
         return permissions;
     }
 
-    public Permission(string ns, string name, string description, AccessType accessType)
+    public Permission(string ns, string name, string description, RbacAccessType RbacAccessType)
     {
         Name = name;
         Description = description;
         Namespace = ns;
-        AccessType = accessType;
+        AccessType = RbacAccessType;
     }
 
     public Permission() { }

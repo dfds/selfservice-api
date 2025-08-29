@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using SelfService.Application;
+using SelfService.Configuration;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Capabilities;
 
@@ -71,7 +72,7 @@ public class AuthChecker : IMiddleware
                                     {
                                         Namespace = requiredPermission!.Ns,
                                         Name = requiredPermission!.Name,
-                                        AccessType = AccessType.Capability,
+                                        AccessType = RbacAccessType.Capability,
                                     },
                                 },
                                 objectKey!
@@ -95,7 +96,7 @@ public class AuthChecker : IMiddleware
                                     {
                                         Namespace = requiredPermission!.Ns,
                                         Name = requiredPermission!.Name,
-                                        AccessType = AccessType.Global,
+                                        AccessType = RbacAccessType.Global,
                                     },
                                 },
                                 objectKey!
