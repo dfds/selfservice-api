@@ -18,7 +18,7 @@ public class RbacRoleGrant
             RbacRoleId.Parse(RoleId),
             AssignedEntityType,
             AssignedEntityId,
-            Type,
+            RbacAccessType.Parse(Type),
             Resource ?? ""
         );
     }

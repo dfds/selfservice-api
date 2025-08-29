@@ -47,7 +47,7 @@ public class RbacApplicationService : IRbacApplicationService
         var accessGrantingPermissionGrants = combinedPermissions.FindAll(p =>
         {
             var policyGrantsAccess = false;
-            if (!p.Type.Equals("Global") && !p.Resource!.Equals(objectId))
+            if (p.Type != RbacAccessType.Global && !p.Resource!.Equals(objectId))
             {
                 return false;
             }
@@ -71,7 +71,7 @@ public class RbacApplicationService : IRbacApplicationService
         accessGrantingPermissionGrants = permissionsFromRoles.FindAll(p =>
         {
             var policyGrantsAccess = false;
-            if (!p.Type.Equals("Global") && !p.Resource!.Equals(objectId))
+            if (p.Type != RbacAccessType.Global && !p.Resource!.Equals(objectId))
             {
                 return false;
             }
@@ -149,14 +149,14 @@ public class RbacApplicationService : IRbacApplicationService
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForCapability(string capabilityId)
     {
         return await _permissionGrantRepository.GetAllWithPredicate(p =>
-            p.Type.ToLower() == "capability" && p.Resource == capabilityId
+            p.Type == RbacAccessType.Capability && p.Resource == capabilityId
         );
     }
 
     public async Task<List<RbacRoleGrant>> GetRoleGrantsForCapability(string capabilityId)
     {
         return await _roleGrantRepository.GetAllWithPredicate(p =>
-            p.Type.ToLower() == "capability" && p.Resource == capabilityId
+            p.Type == RbacAccessType.Capability && p.Resource == capabilityId
         );
     }
 
@@ -185,9 +185,9 @@ public class RbacApplicationService : IRbacApplicationService
     public async Task GrantPermission(string user, RbacPermissionGrant permissionGrant)
     {
         PermittedResponse? canUserCreateGlobalRbac;
-        switch (permissionGrant.Type.ToLower())
+        switch (permissionGrant.Type)
         {
-            case "global":
+            case var a when a == RbacAccessType.Global:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new("rbac", "create", "", AccessType.Global) },
@@ -209,7 +209,7 @@ public class RbacApplicationService : IRbacApplicationService
                 );
 
                 break;
-            case "capability":
+            case var a when a == RbacAccessType.Capability:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new("rbac", "create", "", AccessType.Global) },
@@ -253,9 +253,9 @@ public class RbacApplicationService : IRbacApplicationService
             throw new Exception("Permission grant not found");
 
         PermittedResponse? canUserCreateGlobalRbac;
-        switch (permissionLookup.Type.ToLower())
+        switch (permissionLookup.Type)
         {
-            case "global":
+            case var a when a == RbacAccessType.Global:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new("rbac", "delete", "", AccessType.Global) },
@@ -267,7 +267,7 @@ public class RbacApplicationService : IRbacApplicationService
                 }
                 await _permissionGrantRepository.Remove(permissionLookup.Id);
                 break;
-            case "capability":
+            case var a when a == RbacAccessType.Capability:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new("rbac", "delete", "", AccessType.Global) },
@@ -298,9 +298,9 @@ public class RbacApplicationService : IRbacApplicationService
     public async Task GrantRoleGrant(string user, RbacRoleGrant roleGrant)
     {
         PermittedResponse? canUserCreateGlobalRbac;
-        switch (roleGrant.Type.ToLower())
+        switch (roleGrant.Type)
         {
-            case "global":
+            case var a when a == RbacAccessType.Global:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new("rbac", "create", "", AccessType.Global) },
@@ -322,7 +322,7 @@ public class RbacApplicationService : IRbacApplicationService
                 );
 
                 break;
-            case "capability":
+            case var a when a == RbacAccessType.Capability:
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new("rbac", "create", "", AccessType.Global) },
@@ -355,7 +355,7 @@ public class RbacApplicationService : IRbacApplicationService
                 var existingCapabilityGrant = await _roleGrantRepository.FindByPredicate(rg =>
                     rg.AssignedEntityId == roleGrant.AssignedEntityId
                     && rg.Resource == roleGrant.Resource
-                    && rg.Type.ToLower() == roleGrant.Type.ToLower()
+                    && rg.Type == roleGrant.Type
                 );
                 if (existingCapabilityGrant != null)
                 {
@@ -385,9 +385,9 @@ public class RbacApplicationService : IRbacApplicationService
             throw new Exception("Role grant not found");
 
         PermittedResponse? canUserDeleteGlobalRbac;
-        switch (roleGrant.Type.ToLower())
+        switch (roleGrant.Type)
         {
-            case "global":
+            case var a when a == RbacAccessType.Global:
                 canUserDeleteGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new("rbac", "delete", "", AccessType.Global) },
@@ -399,7 +399,7 @@ public class RbacApplicationService : IRbacApplicationService
                 }
                 await _roleGrantRepository.Remove(roleGrant.Id);
                 break;
-            case "capability":
+            case var a when a == RbacAccessType.Capability:
                 canUserDeleteGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new("rbac", "delete", "", AccessType.Global) },

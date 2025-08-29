@@ -22,7 +22,7 @@ public class RbacPermissionGrant
             AssignedEntityId,
             Namespace,
             Permission,
-            Type,
+            RbacAccessType.Parse(Type),
             Resource ?? ""
         );
     }
