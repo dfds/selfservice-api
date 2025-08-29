@@ -70,7 +70,7 @@ public class AuthChecker : IMiddleware
                                 {
                                     new()
                                     {
-                                        Namespace = requiredPermission!.Ns,
+                                        Namespace = RbacNamespace.Parse(requiredPermission!.Ns),
                                         Name = requiredPermission!.Name,
                                         AccessType = RbacAccessType.Capability,
                                     },
@@ -94,7 +94,7 @@ public class AuthChecker : IMiddleware
                                 {
                                     new()
                                     {
-                                        Namespace = requiredPermission!.Ns,
+                                        Namespace = RbacNamespace.Parse(requiredPermission!.Ns),
                                         Name = requiredPermission!.Name,
                                         AccessType = RbacAccessType.Global,
                                     },

@@ -13,6 +13,9 @@ public class RbacNamespace : ValueObject
     public static readonly RbacNamespace Azure = new("azure");
     public static readonly RbacNamespace Rbac = new("rbac");
 
+    // allow non-optional values. Cannot be created and has no permissions.
+    public static readonly RbacNamespace Default = new("default");
+
     private readonly string _value;
 
     private RbacNamespace(string requested)
