@@ -1,6 +1,5 @@
 namespace SelfService.Domain.Models;
 
-
 public class RbacNamespace : ValueObject
 {
     // topics, capability-management, capability-membership-management, tags-and-metadata, aws, finout, azure, rbac

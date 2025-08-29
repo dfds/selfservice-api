@@ -482,11 +482,36 @@ public class Permission
             new(RbacNamespace.Topics, "update", "Update topics", RbacAccessType.Capability),
             new(RbacNamespace.Topics, "delete", "Delete topics", RbacAccessType.Capability),
             new(RbacNamespace.CapabilityManagement, "receive-alerts", "Receive Alarms", RbacAccessType.Capability),
-            new(RbacNamespace.CapabilityManagement, "receive-cost", "Receive cost summary reports", RbacAccessType.Capability),
-            new(RbacNamespace.CapabilityManagement, "request-deletion", "Request Capability deletion", RbacAccessType.Capability),
-            new(RbacNamespace.CapabilityManagement, "manage-permissions", "Manage Capability permissions", RbacAccessType.Capability),
-            new(RbacNamespace.CapabilityManagement, "read-self-assess", "Self assessment permissions", RbacAccessType.Capability),
-            new(RbacNamespace.CapabilityManagement, "create-self-assess", "Self assessment permissions", RbacAccessType.Capability),
+            new(
+                RbacNamespace.CapabilityManagement,
+                "receive-cost",
+                "Receive cost summary reports",
+                RbacAccessType.Capability
+            ),
+            new(
+                RbacNamespace.CapabilityManagement,
+                "request-deletion",
+                "Request Capability deletion",
+                RbacAccessType.Capability
+            ),
+            new(
+                RbacNamespace.CapabilityManagement,
+                "manage-permissions",
+                "Manage Capability permissions",
+                RbacAccessType.Capability
+            ),
+            new(
+                RbacNamespace.CapabilityManagement,
+                "read-self-assess",
+                "Self assessment permissions",
+                RbacAccessType.Capability
+            ),
+            new(
+                RbacNamespace.CapabilityManagement,
+                "create-self-assess",
+                "Self assessment permissions",
+                RbacAccessType.Capability
+            ),
             new(RbacNamespace.CapabilityMembershipManagement, "create", "Invite new member", RbacAccessType.Capability),
             new(RbacNamespace.CapabilityMembershipManagement, "delete", "Remove member", RbacAccessType.Capability),
             new(RbacNamespace.CapabilityMembershipManagement, "read", "See member list", RbacAccessType.Capability),
@@ -511,13 +536,38 @@ public class Permission
             new(RbacNamespace.Aws, "manage-provider", "Read resources in AWS account", RbacAccessType.Capability),
             new(RbacNamespace.Aws, "read-provider", "Manage resources in AWS account", RbacAccessType.Capability),
             new(RbacNamespace.Finout, "read-dashboards", "See all DFDS dashboards", RbacAccessType.Global),
-            new(RbacNamespace.Finout, "manage-dashboards", "Manage dashboard with Capability prefix", RbacAccessType.Capability),
-            new(RbacNamespace.Finout, "manage-alerts", "Manage anomaly alerts with capability prefix", RbacAccessType.Capability),
-            new(RbacNamespace.Finout, "read-alerts", "read anomaly alerts with capability prefix", RbacAccessType.Capability),
+            new(
+                RbacNamespace.Finout,
+                "manage-dashboards",
+                "Manage dashboard with Capability prefix",
+                RbacAccessType.Capability
+            ),
+            new(
+                RbacNamespace.Finout,
+                "manage-alerts",
+                "Manage anomaly alerts with capability prefix",
+                RbacAccessType.Capability
+            ),
+            new(
+                RbacNamespace.Finout,
+                "read-alerts",
+                "read anomaly alerts with capability prefix",
+                RbacAccessType.Capability
+            ),
             new(RbacNamespace.Azure, "create", "Create context/cloud resources", RbacAccessType.Capability),
             new(RbacNamespace.Azure, "read", "Read context/cloud resources", RbacAccessType.Capability),
-            new(RbacNamespace.Azure, "read-provider", "Read resources in Azure resource group", RbacAccessType.Capability),
-            new(RbacNamespace.Azure, "manage-provider", "Manage resources in Azure resource group", RbacAccessType.Capability),
+            new(
+                RbacNamespace.Azure,
+                "read-provider",
+                "Read resources in Azure resource group",
+                RbacAccessType.Capability
+            ),
+            new(
+                RbacNamespace.Azure,
+                "manage-provider",
+                "Manage resources in Azure resource group",
+                RbacAccessType.Capability
+            ),
             new(RbacNamespace.Rbac, "read", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "create", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "update", "Manage RBAC", RbacAccessType.Global),
