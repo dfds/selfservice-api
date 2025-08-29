@@ -169,6 +169,8 @@ public class SelfServiceDbContext : DbContext
             .HaveConversion<ValueObjectGuidConverter<RbacGroupMemberId>>();
 
         configurationBuilder.Properties<RbacAccessType>().HaveConversion<RbacAccessTypeConverter>();
+
+        configurationBuilder.Properties<RbacNamespace>().HaveConversion<RbacNamespaceConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

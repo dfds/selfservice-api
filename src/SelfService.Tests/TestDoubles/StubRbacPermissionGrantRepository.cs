@@ -32,7 +32,7 @@ public class StubRbacPermissionGrantRepository : IRbacPermissionGrantRepository
                 DateTime.Now,
                 AssignedEntityType.User,
                 "",
-                "",
+                RbacNamespace.Default,
                 "",
                 RbacAccessType.Global,
                 ""

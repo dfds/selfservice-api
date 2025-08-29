@@ -8,7 +8,7 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
     public DateTime CreatedAt { get; set; }
     public AssignedEntityType AssignedEntityType { get; set; }
     public string AssignedEntityId { get; set; }
-    public string Namespace { get; set; }
+    public RbacNamespace Namespace { get; set; }
     public string Permission { get; set; }
     public RbacAccessType Type { get; set; }
     public string? Resource { get; set; }
@@ -18,7 +18,7 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
         DateTime createdAt,
         AssignedEntityType assignedEntityType,
         string assignedEntityId,
-        string @namespace,
+        RbacNamespace @namespace,
         string permission,
         RbacAccessType type,
         string resource
@@ -37,7 +37,7 @@ public class RbacPermissionGrant : AggregateRoot<RbacPermissionGrantId>
     public static RbacPermissionGrant New(
         AssignedEntityType assignedEntityType,
         string assignedEntityId,
-        string @namespace,
+        RbacNamespace @namespace,
         string permission,
         RbacAccessType type,
         string resource

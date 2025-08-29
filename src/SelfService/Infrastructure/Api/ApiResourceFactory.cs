@@ -1822,7 +1822,7 @@ public class ApiResourceFactory
             CreatedAt = permissionGrant.CreatedAt,
             AssignedEntityType = permissionGrant.AssignedEntityType.ToString(),
             AssignedEntityId = permissionGrant.AssignedEntityId,
-            Namespace = permissionGrant.Namespace,
+            Namespace = permissionGrant.Namespace.ToString(),
             Permission = permissionGrant.Permission,
             Resource = permissionGrant.Resource ?? "",
             Type = permissionGrant.Type.ToString(),

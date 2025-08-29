@@ -80,7 +80,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "andfris@dfds.com",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "create",
                     type: RbacAccessType.Capability,
                     resource: "sandbox-emcla-pmyxn"
@@ -93,7 +93,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "test03@dfds.cloud",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "create",
                     type: RbacAccessType.Capability,
                     resource: "sandbox-emcla-pmyxn"
@@ -158,30 +158,30 @@ public class TestRbacApplicationService
         {
             await rbacSvc.IsUserPermitted(
                 "emcla@dfds.com",
-                [new Permission { Namespace = "topics", Name = "create" }],
+                [new Permission { Namespace = RbacNamespace.Topics, Name = "create" }],
                 "sandbox-emcla-pmyxn"
             ),
             await rbacSvc.IsUserPermitted(
                 "emcla@dfds.com",
                 [
-                    new Permission { Namespace = "topics", Name = "create" },
-                    new Permission { Namespace = "topics", Name = "read-private" },
+                    new Permission { Namespace = RbacNamespace.Topics, Name = "create" },
+                    new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" },
                 ],
                 "sandbox-emcla-pmyxn"
             ),
             await rbacSvc.IsUserPermitted(
                 "emcla@dfds.com",
-                [new Permission { Namespace = "topics", Name = "read-public" }],
+                [new Permission { Namespace = RbacNamespace.Topics, Name = "read-public" }],
                 "sandbox-emcla-pmyxn"
             ),
             await rbacSvc.IsUserPermitted(
                 "andfris@dfds.com",
-                [new Permission { Namespace = "topics", Name = "read-private" }],
+                [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
                 "sandbox-emcla-pmyxn"
             ),
             await rbacSvc.IsUserPermitted(
                 "andfris@dfds.com",
-                [new Permission { Namespace = "topics", Name = "read-private" }],
+                [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
                 "andfris-sandbox-6-aeyex"
             ),
         };
@@ -208,8 +208,8 @@ public class TestRbacApplicationService
         //         ObjectIds = ["test01"],
         //         Entities = [new Entity {EntityType = EntityType.Group, Id = test01GroupId.ToString()}, new Entity {EntityType = EntityType.User, Id = "test01@dfds.cloud"}],
         //         Accesses = [new Access {Permissions = [
-        //             new Permission { Namespace = "topics", Name = "create"},
-        //             new Permission { Namespace = "topics", Name = "read-private"}
+        //             new Permission { Namespace = RbacNamespace.Topics, Name = "create"},
+        //             new Permission { Namespace = RbacNamespace.Topics, Name = "read-private"}
         //         ]}]
         //     },
         //     new AccessPolicy {
@@ -217,7 +217,7 @@ public class TestRbacApplicationService
         //         ObjectIds = ["test02"],
         //         Entities = [new Entity {EntityType = EntityType.Group, Id = test01GroupId.ToString()}, new Entity {EntityType = EntityType.User, Id = "test03@dfds.cloud"}, new Entity {EntityType = EntityType.User, Id = "test01@dfds.cloud"}],
         //         Accesses = [new Access {Permissions = [
-        //             new Permission { Namespace = "topics", Name = "read-public"}
+        //             new Permission { Namespace = RbacNamespace.Topics, Name = "read-public"}
         //         ]}]
         //     }
         // ]);
@@ -231,7 +231,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "test01@dfds.cloud",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "create",
                     type: RbacAccessType.Capability,
                     resource: "test01"
@@ -241,7 +241,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "test01@dfds.cloud",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "read-public",
                     type: RbacAccessType.Capability,
                     resource: "test02"
@@ -251,7 +251,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "test01@dfds.cloud",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "read-private",
                     type: RbacAccessType.Capability,
                     resource: "test01"
@@ -261,7 +261,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.Group,
                     assignedEntityId: "507531CF-6740-4728-ACDB-C3B4CEF11B27",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "read-public",
                     type: RbacAccessType.Capability,
                     resource: "test02"
@@ -275,7 +275,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "test01@dfds.cloud",
-                    [new Permission { Namespace = "topics", Name = "create" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "create" }],
                     "test01"
                 )
             ).Permitted()
@@ -284,7 +284,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "test01@dfds.cloud",
-                    [new Permission { Namespace = "topics", Name = "read-private" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
                     "test01"
                 )
             ).Permitted()
@@ -293,7 +293,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "test01@dfds.cloud",
-                    [new Permission { Namespace = "topics", Name = "read-public" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-public" }],
                     "test02"
                 )
             ).Permitted()
@@ -302,7 +302,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "test03@dfds.cloud",
-                    [new Permission { Namespace = "topics", Name = "read-public" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-public" }],
                     "test02"
                 )
             ).Permitted()
@@ -311,7 +311,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "test04@dfds.cloud",
-                    [new Permission { Namespace = "topics", Name = "read-public" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-public" }],
                     "test02"
                 )
             ).Permitted()
@@ -332,7 +332,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "test01@dfds.cloud",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "create",
                     type: RbacAccessType.Capability,
                     resource: "test01"
@@ -342,7 +342,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "test01@dfds.cloud",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "read-private",
                     type: RbacAccessType.Capability,
                     resource: "test01"
@@ -352,7 +352,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "test01@dfds.cloud",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "read-public",
                     type: RbacAccessType.Capability,
                     resource: "test02"
@@ -366,7 +366,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "test02@dfds.cloud",
-                    [new Permission { Namespace = "topics", Name = "create" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "create" }],
                     "test01"
                 )
             ).Permitted()
@@ -375,7 +375,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "test02@dfds.cloud",
-                    [new Permission { Namespace = "topics", Name = "read-private" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
                     "test01"
                 )
             ).Permitted()
@@ -384,7 +384,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "test02@dfds.cloud",
-                    [new Permission { Namespace = "topics", Name = "read-public" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-public" }],
                     "test02"
                 )
             ).Permitted()
@@ -393,7 +393,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "test01@dfds.cloud",
-                    [new Permission { Namespace = "topics", Name = "read-public" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-public" }],
                     "test01"
                 )
             ).Permitted()
@@ -402,7 +402,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "test01@dfds.cloud",
-                    [new Permission { Namespace = "capability-management", Name = "request-deletion" }],
+                    [new Permission { Namespace = RbacNamespace.CapabilityManagement, Name = "request-deletion" }],
                     "test01"
                 )
             ).Permitted()
@@ -421,7 +421,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "emcla@dfds.com",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "create",
                     type: RbacAccessType.Capability,
                     resource: "sandbox-emcla-pmyxn"
@@ -435,7 +435,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "emcla@dfds.com",
-                    [new Permission { Namespace = "topics", Name = "create" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "create" }],
                     "sandbox-emcla-pmyxn"
                 )
             ).Permitted()
@@ -457,7 +457,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "emclaa@dfds.com",
-                    [new Permission { Namespace = "topics", Name = "create" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "create" }],
                     "sandbox-emcla-pmyxn"
                 )
             ).Permitted()
@@ -476,7 +476,7 @@ public class TestRbacApplicationService
                     createdAt: DateTime.Now,
                     assignedEntityType: AssignedEntityType.User,
                     assignedEntityId: "emcla@dfds.com",
-                    @namespace: "topics",
+                    @namespace: RbacNamespace.Topics,
                     permission: "read-private",
                     type: RbacAccessType.Capability,
                     resource: "sandbox-emcla-pmyxn"
@@ -490,7 +490,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "emcla@dfds.com",
-                    [new Permission { Namespace = "topics", Name = "read-private" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
                     "sandbox-emcla-pmyxn"
                 )
             ).Permitted()
@@ -515,7 +515,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "emcla@dfds.com",
-                    [new Permission { Namespace = "topics", Name = "read-private" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
                     "sandbox-emcla-pmyxn"
                 )
             ).Permitted()
@@ -525,7 +525,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "emcla@dfds.com",
-                    [new Permission { Namespace = "topics", Name = "read-private" }],
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
                     "sandbox-throwaway-01"
                 )
             ).Permitted()
