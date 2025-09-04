@@ -19,8 +19,23 @@ public class when_changing_kafka_topic_description_as_member_of_owning_capabilit
         application.ReplaceService(Dummy.Of<IKafkaTopicApplicationService>());
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
         application.ReplaceService<IKafkaTopicRepository>(new StubKafkaTopicRepository(stubKafkaTopic));
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "update",
+                        RbacAccessType.Capability,
+                        "foo"
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
 

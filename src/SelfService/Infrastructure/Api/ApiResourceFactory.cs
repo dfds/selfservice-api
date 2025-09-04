@@ -75,7 +75,7 @@ public class ApiResourceFactory
         var portalUser = HttpContext.User.ToPortalUser();
 
         var allowOnSelf = Allow.Get;
-        if (await _authorizationService.CanDelete(portalUser, topic))
+        if (await _authorizationService.CanDeleteTopic(portalUser, topic))
         {
             allowOnSelf += Delete;
         }
@@ -139,7 +139,7 @@ public class ApiResourceFactory
                     rel: "related",
                     allow: consumerAccessLevel
                 ),
-                updateDescription: await _authorizationService.CanChange(portalUser, topic)
+                updateDescription: await _authorizationService.CanModifyTopic(portalUser, topic)
                     ? new ResourceActionLink(
                         href: _linkGenerator.GetUriByAction(
                             httpContext: HttpContext,
@@ -442,9 +442,12 @@ public class ApiResourceFactory
     {
         var allowedInteractions = Allow.None;
 
-        if (await _authorizationService.CanGetSetCapabilityJsonMetadata(PortalUser, capability.Id))
+        if (await _authorizationService.CanGetCapabilityJsonMetadata(PortalUser, capability.Id))
         {
             allowedInteractions += Get;
+        }
+        if (await _authorizationService.CanSetCapabilityJsonMetadata(PortalUser, capability.Id))
+        {
             allowedInteractions += Post;
         }
 
@@ -464,7 +467,7 @@ public class ApiResourceFactory
     {
         var allowedInteractions = Allow.None;
 
-        if (await _authorizationService.CanGetSetCapabilityJsonMetadata(PortalUser, capability.Id))
+        if (await _authorizationService.CanSetCapabilityJsonMetadata(PortalUser, capability.Id))
         {
             allowedInteractions += Post;
         }
@@ -1197,7 +1200,10 @@ public class ApiResourceFactory
         foreach (var cluster in clusters)
         {
             var isMemberOfCapability = await _membershipQuery.HasActiveMembership(CurrentUser, capabilityId);
-            var capabilityHasKafkaClusterAccess = await _authorizationService.HasAccess(capabilityId, cluster.Id);
+            var capabilityHasKafkaClusterAccess = await _authorizationService.HasKafkaClusterAccess(
+                capabilityId,
+                cluster.Id
+            );
             var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capabilityId);
             var accessAllow = Allow.None;
             var requestAccessAllow = Allow.None;

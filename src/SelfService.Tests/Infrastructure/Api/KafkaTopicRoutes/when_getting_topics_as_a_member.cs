@@ -31,8 +31,39 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
             new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo"))
         );
         application.ReplaceService<IKafkaTopicQuery>(new StubKafkaTopicQuery(_aPrivateTopic, _aPublicTopic));
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "read",
+                        RbacAccessType.Capability,
+                        _aPrivateTopic.CapabilityId.ToString()
+                    ),
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "delete",
+                        RbacAccessType.Capability,
+                        _aPrivateTopic.CapabilityId.ToString()
+                    ),
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "update",
+                        RbacAccessType.Capability,
+                        _aPrivateTopic.CapabilityId.ToString()
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/kafkatopics?capabilityId={_aCapability.Id}");
@@ -82,7 +113,7 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
 
         var values = topicItem?.SelectElements("_links/self/allow")?.Select(x => x.GetString()).ToArray();
 
-        Assert.Equal(new[] { "GET" }, values);
+        Assert.Equal(new[] { "GET", "DELETE" }, values); // [02/09-25] WARNING: THIS IS A CHANGE
     }
 
     [Fact]

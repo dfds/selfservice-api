@@ -17,7 +17,21 @@ public class TestCapabilityMembershipApplicationRoutes
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .WithMembershipQuery(new StubMembershipQuery())
             .Build();
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "read-requests",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
@@ -42,7 +56,21 @@ public class TestCapabilityMembershipApplicationRoutes
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .Build();
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "read-requests",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
@@ -68,8 +96,8 @@ public class TestCapabilityMembershipApplicationRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
-            .WithMembershipQuery(new StubMembershipQuery())
             .Build();
+        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
@@ -96,7 +124,9 @@ public class TestCapabilityMembershipApplicationRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
-            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembershipApplication: true))
+            .WithMembershipQuery(
+                new StubMembershipQuery(hasActiveMembership: false, hasActiveMembershipApplication: true)
+            )
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
@@ -123,7 +153,7 @@ public class TestCapabilityMembershipApplicationRoutes
 
         await using var application = new ApiApplication();
         application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
-        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery());
+        application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery()
         );
@@ -230,21 +260,37 @@ public class TestCapabilityMembershipApplicationRoutes
     public async Task get_membership_applications_for_a_capability_returns_expected_membership_application_details()
     {
         var stubMembershipApplication = A.MembershipApplication.Build();
+        var stubCapability = A.Capability.Build();
 
         await using var application = new ApiApplication();
-        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(A.Capability));
+        application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository(stubCapability));
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: true));
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
-            new StubCapabilityMembershipApplicationQuery(stubMembershipApplication)
+            new StubCapabilityMembershipApplicationQuery(result: stubMembershipApplication)
         );
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.CapabilityMembershipManagement,
+                        "read-requests",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
-        var response = await client.GetAsync($"/capabilities/foo/membershipapplications");
+        var response = await client.GetAsync($"/capabilities/{stubCapability.Id}/membershipapplications");
 
         var content = await response.Content.ReadAsStringAsync();
+
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var applicationJson = document!.SelectElements("/items").SingleOrDefault();
@@ -278,7 +324,21 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery(stubMembershipApplication)
         );
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.CapabilityMembershipManagement,
+                        "read-requests",
+                        RbacAccessType.Capability,
+                        "foo"
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
@@ -304,7 +364,21 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery(stubMembershipApplication)
         );
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.CapabilityMembershipManagement,
+                        "read-requests",
+                        RbacAccessType.Capability,
+                        "foo"
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
@@ -333,7 +407,21 @@ public class TestCapabilityMembershipApplicationRoutes
         application.ReplaceService<ICapabilityMembershipApplicationQuery>(
             new StubCapabilityMembershipApplicationQuery(stubMembershipApplication)
         );
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.CapabilityMembershipManagement,
+                        "read-requests",
+                        RbacAccessType.Capability,
+                        "foo"
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
@@ -341,9 +429,11 @@ public class TestCapabilityMembershipApplicationRoutes
         var response = await client.GetAsync($"/capabilities/foo/membershipapplications");
 
         var content = await response.Content.ReadAsStringAsync();
+
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var applicationJson = document!.SelectElements("/items").SingleOrDefault();
+
         var allowedVerbs = applicationJson.SelectElements("/approvals/_links/self/allow").Select(x => x.GetString());
 
         Assert.Equal(new[] { "GET", "POST", "DELETE" }, allowedVerbs);

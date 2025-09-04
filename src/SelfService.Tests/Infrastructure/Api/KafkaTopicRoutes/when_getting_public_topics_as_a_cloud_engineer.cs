@@ -30,8 +30,39 @@ public class when_getting_public_topics_as_a_cloud_engineer : IAsyncLifetime
             new StubKafkaClusterRepository(A.KafkaCluster.WithId("foo"))
         );
         application.ReplaceService<IKafkaTopicQuery>(new StubKafkaTopicQuery(_aPublicTopic));
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "read-public",
+                        RbacAccessType.Global, // cloud engineer hack?
+                        "*"
+                    ),
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "create",
+                        RbacAccessType.Global,
+                        "*"
+                    ),
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "delete",
+                        RbacAccessType.Global,
+                        "*"
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         application.ConfigureFakeAuthentication(options =>
         {
