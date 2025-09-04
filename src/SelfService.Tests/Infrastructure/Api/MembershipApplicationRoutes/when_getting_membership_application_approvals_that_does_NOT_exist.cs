@@ -16,6 +16,7 @@ public class when_getting_membership_application_approvals_that_does_NOT_exist :
         application.ReplaceService<IMembershipApplicationQuery>(new StubMembershipApplicationQuery());
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/membershipapplications/{MembershipApplicationId.New()}/approvals");

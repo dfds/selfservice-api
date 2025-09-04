@@ -687,7 +687,7 @@ public class CapabilityController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem();
 
-        if (!await _authorizationService.CanAdd(userId, capabilityId, kafkaClusterId))
+        if (!await _authorizationService.CanAddTopic(userId, capabilityId, kafkaClusterId))
             return Unauthorized();
 
         try
@@ -833,7 +833,7 @@ public class CapabilityController : ControllerBase
                 }
             );
 
-        if (!await _authorizationService.CanViewAccess(userId, capabilityId))
+        if (!await _authorizationService.CanViewKafkaClusterAccess(userId, capabilityId))
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -1088,7 +1088,7 @@ public class CapabilityController : ControllerBase
             );
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!await _authorizationService.CanGetSetCapabilityJsonMetadata(portalUser, capabilityId))
+        if (!await _authorizationService.CanSetCapabilityJsonMetadata(portalUser, capabilityId))
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -1163,7 +1163,7 @@ public class CapabilityController : ControllerBase
             );
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!await _authorizationService.CanGetSetCapabilityJsonMetadata(portalUser, capabilityId))
+        if (!await _authorizationService.CanSetCapabilityJsonMetadata(portalUser, capabilityId))
             return Unauthorized(
                 new ProblemDetails
                 {
