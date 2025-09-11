@@ -342,7 +342,6 @@ public class AwsAccountRequestedHandler : IMessageHandler<AwsAccountRequested>
             throw new InvalidOperationException($"Invalid AwsAccountId {message.AccountId}");
         }
 
-        await _awsAccountApplicationService.CreateAwsAccountRequestTicket(id);
         await _awsAccountApplicationService.PublishResourceManifestToGit(message);
     }
 }
