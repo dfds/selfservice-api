@@ -52,46 +52,6 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task CreateAwsAccountRequestTicket(AwsAccountId id)
-    {
-        using var _ = _logger.BeginScope(
-            "{Action} on {ImplementationType}",
-            nameof(CreateAwsAccountRequestTicket),
-            GetType().FullName
-        );
-
-        var account = await _awsAccountRepository.Get(id);
-        var capability = await _capabilityRepository.Get(account.CapabilityId);
-
-        var message = CreateMessage(
-            "",
-            new ContextAddedToCapabilityData(
-                capabilityId: capability.Id,
-                capabilityName: capability.Name,
-                capabilityRootId: capability.Id,
-                contextId: account.Id,
-                contextName: "default"
-            )
-        );
-
-        var headers = new Dictionary<string, string>();
-
-        if (_environment.IsDevelopment())
-        {
-            headers["TICKET_TYPE"] = TopdeskTicketType.AwsAccountRequest;
-            headers["CORRELATION_ID"] = "";
-            headers["CAPABILITY_NAME"] = capability.Name;
-            headers["CAPABILITY_ID"] = capability.Id;
-            headers["CAPABILITY_ROOT_ID"] = capability.Id;
-            headers["ACCOUNT_NAME"] = capability.Id;
-            headers["CONTEXT_NAME"] = "default";
-            headers["CONTEXT_ID"] = account.Id;
-        }
-
-        await _ticketingSystem.CreateTicket(message, headers);
-    }
-
-    [TransactionalBoundary, Outboxed]
     public async Task RegisterRealAwsAccount(AwsAccountId id, RealAwsAccountId realAwsAccountId, string? roleEmail)
     {
         var account = await _awsAccountRepository.Get(id);
@@ -105,23 +65,6 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         var account = await _awsAccountRepository.Get(id);
 
         account.LinkKubernetesNamespace(@namespace, _systemTime.Now);
-    }
-
-    private static string CreateMessage(string xCorrelationId, ContextAddedToCapabilityData payload)
-    {
-        var message =
-            "*New capability context created*\n"
-            + "\n\n>>>Please check if the manifest file for the following capability was created in github.com/dfds/aws-account-manifests<<<\n"
-            + $"CORRELATION_ID=\"{xCorrelationId}\" \\\n"
-            + $"CAPABILITY_NAME=\"{payload.CapabilityName}\" \\\n"
-            + $"CAPABILITY_ID=\"{payload.CapabilityId}\" \\\n"
-            + $"CAPABILITY_ROOT_ID=\"{payload.CapabilityRootId}\" \\\n"
-            + $"ACCOUNT_NAME=\"{payload.CapabilityRootId}\" \\\n"
-            + // NB: for now account name and capability root id is the same by design
-            $"CONTEXT_NAME=\"{payload.ContextName}\" \\\n"
-            + $"CONTEXT_ID=\"{payload.ContextId}\" \\\n";
-
-        return message;
     }
 
     private class ContextAddedToCapabilityData
