@@ -372,14 +372,6 @@ public class CapabilityController : ControllerBase
         [FromBody] NewAzureResourceRequest request
     )
     {
-        Console.WriteLine("FLUTTERSHY >> RequestCapabilityAzureResource: " + JsonSerializer.Serialize(request));
-        // write each element of RequestCapabilityAzureResource to console
-        foreach (var property in request.GetType().GetProperties())
-        {
-            var value = property.GetValue(request);
-            Console.WriteLine($"FLUTTERSHY >> {property.Name}: {value}");
-        }
-
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
