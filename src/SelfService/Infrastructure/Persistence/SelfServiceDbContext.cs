@@ -1,7 +1,10 @@
 ﻿using Dafda.Outbox;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using SelfService.Configuration;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence.Converters;
+using SelfService.Infrastructure.Persistence.Functions;
 
 namespace SelfService.Infrastructure.Persistence;
 
@@ -69,6 +72,11 @@ public class SelfServiceDbContext : DbContext
     public DbSet<SelfAssessmentOption> SelfAssessmentOptions => Set<SelfAssessmentOption>();
     public DbSet<ReleaseNote> ReleaseNotes => Set<ReleaseNote>();
     public DbSet<ReleaseNoteHistory> ReleaseNoteHistory => Set<ReleaseNoteHistory>();
+    public DbSet<RbacPermissionGrant> RbacPermissionGrants => Set<RbacPermissionGrant>();
+    public DbSet<RbacRoleGrant> RbacRoleGrants => Set<RbacRoleGrant>();
+    public DbSet<RbacGroup> RbacGroups => Set<RbacGroup>();
+    public DbSet<RbacGroupMember> RbacGroupMembers => Set<RbacGroupMember>();
+    public DbSet<RbacRole> RbacRoles => Set<RbacRole>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -145,11 +153,60 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<ReleaseNoteId>().HaveConversion<ReleaseNoteIdConverter>();
 
         configurationBuilder.Properties<ReleaseNoteHistoryId>().HaveConversion<ReleaseNoteHistoryIdConverter>();
+
+        configurationBuilder
+            .Properties<RbacPermissionGrantId>()
+            .HaveConversion<ValueObjectGuidConverter<RbacPermissionGrantId>>();
+
+        configurationBuilder.Properties<RbacRoleGrantId>().HaveConversion<ValueObjectGuidConverter<RbacRoleGrantId>>();
+
+        configurationBuilder.Properties<RbacRoleId>().HaveConversion<ValueObjectGuidConverter<RbacRoleId>>();
+
+        configurationBuilder.Properties<RbacGroupId>().HaveConversion<ValueObjectGuidConverter<RbacGroupId>>();
+
+        configurationBuilder
+            .Properties<RbacGroupMemberId>()
+            .HaveConversion<ValueObjectGuidConverter<RbacGroupMemberId>>();
+
+        configurationBuilder.Properties<RbacAccessType>().HaveConversion<RbacAccessTypeConverter>();
+
+        configurationBuilder.Properties<RbacNamespace>().HaveConversion<RbacNamespaceConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        var castAsTextMethodInfo = typeof(Cast).GetMethod(nameof(Cast.CastAsText));
+
+        if (castAsTextMethodInfo != null)
+        {
+            if (Database.IsNpgsql())
+            {
+                modelBuilder
+                    .HasDbFunction(castAsTextMethodInfo)
+                    .HasTranslation(args =>
+                    {
+                        var x = args;
+                        var y = x.First();
+                        if (y is SqlUnaryExpression expression)
+                        {
+                            if (expression.Operand is ColumnExpression column)
+                            {
+                                return new SqlFragmentExpression(
+                                    $"CAST({column.TableAlias}.\"{column.Name}\" AS TEXT)"
+                                );
+                            }
+                        }
+
+                        return args.First();
+                    });
+            }
+            else // if not postgres just use whatever ef gives us, hope it works out
+            {
+                modelBuilder.HasDbFunction(castAsTextMethodInfo).HasTranslation(args => args.First()); // Simply pass the argument through
+            }
+        }
 
         modelBuilder.Entity<OutboxEntry>(cfg =>
         {
@@ -457,6 +514,71 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.ModifiedBy);
             cfg.Property(x => x.IsActive);
             cfg.Property(x => x.Version);
+        });
+
+        modelBuilder.Entity<RbacPermissionGrant>(cfg =>
+        {
+            cfg.ToTable("RbacPermissionGrants");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.AssignedEntityType).HasConversion<string>();
+            cfg.Property(x => x.AssignedEntityId);
+            cfg.Property(x => x.Namespace);
+            cfg.Property(x => x.Permission);
+            cfg.Property(x => x.Type);
+            cfg.Property(x => x.Resource);
+        });
+
+        modelBuilder.Entity<RbacRoleGrant>(cfg =>
+        {
+            cfg.ToTable("RbacRoleGrants");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.RoleId);
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.AssignedEntityType).HasConversion<string>();
+            ;
+            cfg.Property(x => x.AssignedEntityId);
+            cfg.Property(x => x.Type);
+            cfg.Property(x => x.Resource);
+        });
+
+        modelBuilder.Entity<RbacRole>(cfg =>
+        {
+            cfg.ToTable("RbacRole");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.OwnerId);
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.UpdatedAt);
+            cfg.Property(x => x.Name);
+            cfg.Property(x => x.Description);
+            cfg.Property(x => x.Type);
+        });
+
+        modelBuilder.Entity<RbacGroup>(cfg =>
+        {
+            cfg.ToTable("RbacGroup");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.UpdatedAt);
+            cfg.Property(x => x.Name);
+            cfg.Property(x => x.Description);
+
+            cfg.HasMany(x => x.Members).WithOne().HasForeignKey("GroupId");
+            cfg.Navigation(x => x.Members).AutoInclude();
+        });
+
+        modelBuilder.Entity<RbacGroupMember>(cfg =>
+        {
+            cfg.ToTable("RbacGroupMember");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.GroupId);
+            cfg.Property(x => x.UserId);
+            cfg.Property(x => x.CreatedAt);
         });
     }
 }

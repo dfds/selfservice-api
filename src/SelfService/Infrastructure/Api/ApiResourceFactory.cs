@@ -1,5 +1,6 @@
 ﻿using Amazon.EC2;
 using Microsoft.AspNetCore.Mvc;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
@@ -8,6 +9,7 @@ using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
+using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Api.ReleaseNotes;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.Api.Teams;
@@ -1715,5 +1717,191 @@ public class ApiResourceFactory
                 )
             )
         );
+    }
+
+    public RbacMeApiResource Convert(
+        List<RbacPermissionGrant> permissionGrants,
+        List<RbacRoleGrant> roleGrants,
+        List<RbacGroup> groups
+    )
+    {
+        var mappedPermissionGrants = permissionGrants.Select(x => new RBAC.Dto.RbacPermissionGrant
+        {
+            Id = x.Id.ToString(),
+            AssignedEntityId = x.AssignedEntityId,
+            AssignedEntityType = x.AssignedEntityType,
+            CreatedAt = x.CreatedAt,
+            Namespace = x.Namespace,
+            Permission = x.Permission,
+            Resource = x.Resource,
+            Type = x.Type.ToString(),
+        });
+
+        var mappedRoleGrants = roleGrants.Select(x => new RBAC.Dto.RbacRoleGrant
+        {
+            Id = x.Id.ToString(),
+            RoleId = x.RoleId.ToString(),
+            AssignedEntityId = x.AssignedEntityId,
+            AssignedEntityType = x.AssignedEntityType,
+            CreatedAt = x.CreatedAt,
+            Resource = x.Resource,
+            Type = x.Type.ToString(),
+        });
+
+        var mappedGroups = groups.Select(x => new RBAC.Dto.RbacGroup
+        {
+            Id = x.Id.ToString(),
+            CreatedAt = x.CreatedAt,
+            UpdatedAt = x.UpdatedAt,
+            Name = x.Name,
+            Description = x.Description,
+            Members = x.Members,
+        });
+
+        var payload = new RbacMeApiResource(
+            links: new RbacMeApiResource.RbacMeLinks(
+                new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(RbacController.Me),
+                        controller: GetNameOf<RbacController>()
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                )
+            )
+            {
+                GrantPermission = new ResourceLink(
+                    _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(RbacController.GrantPermission),
+                        controller: GetNameOf<RbacController>()
+                    ) ?? "",
+                    allow: Allow.Post,
+                    rel: "create"
+                ),
+                GrantRole = new ResourceLink(
+                    _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(RbacController.GrantRole),
+                        controller: GetNameOf<RbacController>()
+                    ) ?? "",
+                    allow: Allow.Post,
+                    rel: "create"
+                ),
+            },
+            permissionGrants: mappedPermissionGrants.ToArray(),
+            roleGrants: mappedRoleGrants.ToArray(),
+            groups: mappedGroups.ToArray()
+        );
+
+        return payload;
+    }
+
+    public RbacGroupApiResource Convert(RbacGroup group)
+    {
+        var payload = new RbacGroupApiResource
+        {
+            Id = group.Id.ToString(),
+            CreatedAt = group.CreatedAt,
+            UpdatedAt = group.UpdatedAt,
+            Name = group.Name,
+            Description = group.Description,
+            Members = group.Members,
+            Links = new RbacGroupApiResource.RLinks(self: new ResourceLink("/", allow: Allow.Get, rel: "self")),
+        };
+
+        return payload;
+    }
+
+    public RbacPermissionGrantApiResource Convert(RbacPermissionGrant permissionGrant)
+    {
+        var payload = new RbacPermissionGrantApiResource
+        {
+            Id = permissionGrant.Id.ToString(),
+            CreatedAt = permissionGrant.CreatedAt,
+            AssignedEntityType = permissionGrant.AssignedEntityType.ToString(),
+            AssignedEntityId = permissionGrant.AssignedEntityId,
+            Namespace = permissionGrant.Namespace.ToString(),
+            Permission = permissionGrant.Permission,
+            Resource = permissionGrant.Resource ?? "",
+            Type = permissionGrant.Type.ToString(),
+            Links = new RbacPermissionGrantApiResource.RbacPermissionGrantLinks
+            {
+                RevokePermission = new ResourceLink(
+                    _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(RbacController.RevokePermission),
+                        values: new { id = permissionGrant.Id },
+                        controller: GetNameOf<RbacController>()
+                    ) ?? "",
+                    allow: Allow.Delete,
+                    rel: "delete"
+                ),
+            },
+        };
+
+        return payload;
+    }
+
+    public RbacRoleGrantApiResource Convert(RbacRoleGrant roleGrant)
+    {
+        var payload = new RbacRoleGrantApiResource
+        {
+            Id = roleGrant.Id.ToString(),
+            RoleId = roleGrant.RoleId.ToString(),
+            CreatedAt = roleGrant.CreatedAt,
+            AssignedEntityType = roleGrant.AssignedEntityType.ToString(),
+            AssignedEntityId = roleGrant.AssignedEntityId,
+            Resource = roleGrant.Resource ?? "",
+            Type = roleGrant.Type.ToString(),
+            Links = new RbacRoleGrantApiResource.RbacRoleGrantLinks
+            {
+                RevokeRole = new ResourceLink(
+                    _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(RbacController.RevokeRole),
+                        values: new { id = roleGrant.Id },
+                        controller: GetNameOf<RbacController>()
+                    ) ?? "",
+                    allow: Allow.Delete,
+                    rel: "delete"
+                ),
+            },
+        };
+
+        return payload;
+    }
+
+    public RbacPermittedResponseApiResource Convert(PermittedResponse permittedResponse)
+    {
+        var payload = new RbacPermittedResponseApiResource
+        {
+            PermissionGrants = permittedResponse.PermissionGrants,
+            PermissionMatrix = permittedResponse.PermissionMatrix,
+            Links = new RbacPermittedResponseApiResource.RbacPermittedResponseLinks
+            {
+                CanI = new ResourceLink(
+                    _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(RbacController.CanI),
+                        controller: GetNameOf<RbacController>()
+                    ) ?? "",
+                    allow: Allow.Get,
+                    rel: "get"
+                ),
+                CanThey = new ResourceLink(
+                    _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(RbacController.CanThey),
+                        controller: GetNameOf<RbacController>()
+                    ) ?? "",
+                    allow: Allow.Get,
+                    rel: "get"
+                ),
+            },
+        };
+
+        return payload;
     }
 }
