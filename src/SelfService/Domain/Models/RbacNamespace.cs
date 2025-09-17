@@ -1,5 +1,9 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace SelfService.Domain.Models;
 
+[JsonConverter(typeof(RbacNamespaceJsonConverter))]
 public class RbacNamespace : ValueObject
 {
     // topics, capability-management, capability-membership-management, tags-and-metadata, aws, finout, azure, rbac
@@ -76,5 +80,20 @@ public class RbacNamespace : ValueObject
         }
 
         return true;
+    }
+}
+
+public class RbacNamespaceJsonConverter : JsonConverter<RbacNamespace>
+{
+    public override RbacNamespace? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var namespaceValue = reader.GetString();
+        RbacNamespace.TryParse(namespaceValue ?? "", out var result);
+        return result;
+    }
+
+    public override void Write(Utf8JsonWriter writer, RbacNamespace value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString());
     }
 }
