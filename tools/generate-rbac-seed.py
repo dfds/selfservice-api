@@ -12,7 +12,7 @@ ROLES = [
         "description": "Full access to all resources"
         },
     {
-        "name": "Contributer",
+        "name": "Contributor",
         "existing-id": "2C561A6D-90F4-4649-80B3-76A854A64EA2",
         "description": "Can modify existing resources"
     },
@@ -39,7 +39,7 @@ ROLE_PERMISSIONS = {
         "finout": ["read-dashboards", "manage-dashboards", "manage-alerts", "read-alerts"],
         "azure": ["create", "read", "read-provider", "manage-provider"],
     },
-    "Contributer": {
+    "Contributor": {
         "topics": ["create", "read-public", "read-private", "update", "delete"],
         "capability-management": ["receive-alerts"],
         "capability-membership-management": ["create", "read", "read-requests", "manage-requests"],
