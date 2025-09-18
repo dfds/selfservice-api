@@ -78,23 +78,30 @@ func main() {
 			continue
 		}
 
-		// set members to Contributor
-		for _, m := range members {
-			// Grant Contributor to all members
-			err := assignRole(accessToken, c.ID, m.Id, "contributor", availableRoles)
-			if err != nil {
-				panic(err)
-			}
-		}
-
 		// Check if dfds.owner exists and is non-empty
 		// if so, set their role to Owner
 		ownerEmail, hasOwner := metadata["dfds.owner"].(string)
 		if hasOwner && ownerEmail != "" {
+			// Grant Contributor to all members
+			for _, m := range members {
+				err := assignRole(accessToken, c.ID, m.Id, "contributor", availableRoles)
+				if err != nil {
+					panic(err)
+				}
+			}
+
 			// Grant Owner to specified owner
-			err := assignRole(accessToken, c.ID, ownerEmail, "owner", availableRoles)
+			err = assignRole(accessToken, c.ID, ownerEmail, "owner", availableRoles)
 			if err != nil {
 				panic(err)
+			}
+		} else {
+			// No specified owner, set all members to owner
+			for _, m := range members {
+				err := assignRole(accessToken, c.ID, m.Id, "owner", availableRoles)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
