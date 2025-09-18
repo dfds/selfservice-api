@@ -39,6 +39,11 @@ public class AuthorizationService : IAuthorizationService
         _httpContextAccessor = httpContextAccessor;
     }
 
+    public bool IsCloudEngineer(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
     public async Task<bool> CanAdd(UserId userId, CapabilityId capabilityId, KafkaClusterId clusterId)
     {
         if (!await _membershipQuery.HasActiveMembership(userId, capabilityId))

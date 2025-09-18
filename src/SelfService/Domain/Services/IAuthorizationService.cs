@@ -48,4 +48,6 @@ public interface IAuthorizationService
     bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser);
     bool IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser);
     bool IsAuthorizedToRemoveReleaseNote(PortalUser portalUser);
+
+    bool IsCloudEngineer(PortalUser portalUser);
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.RBAC.Dto;
 using RbacPermissionGrant = SelfService.Infrastructure.Api.RBAC.Dto.RbacPermissionGrant;
@@ -18,16 +19,19 @@ public class RbacController : ControllerBase
     private readonly IRbacApplicationService _rbacApplicationService;
     private readonly IPermissionQuery _permissionQuery;
     private readonly ApiResourceFactory _apiResourceFactory;
+    private readonly IAuthorizationService _authorizationService;
 
     public RbacController(
         IRbacApplicationService rbacApplicationService,
         IPermissionQuery permissionQuery,
-        ApiResourceFactory apiResourceFactory
+        ApiResourceFactory apiResourceFactory,
+        IAuthorizationService authorizationService
     )
     {
         _rbacApplicationService = rbacApplicationService;
         _permissionQuery = permissionQuery;
         _apiResourceFactory = apiResourceFactory;
+        _authorizationService = authorizationService; // [180925-andfris] used only for checking temporary isCloudEngineer permissions
     }
 
     [HttpGet("me")]
@@ -80,6 +84,10 @@ public class RbacController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
+
+        if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
+            return Unauthorized();
+
         await _rbacApplicationService.GrantPermission(
             userId.ToString(),
             Domain.Models.RbacPermissionGrant.New(
@@ -99,6 +107,10 @@ public class RbacController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
+
+        if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
+            return Unauthorized();
+
         await _rbacApplicationService.RevokePermission(userId.ToString(), id);
         return Ok();
     }
@@ -138,6 +150,10 @@ public class RbacController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
+
+        if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
+            return Unauthorized();
+
         await _rbacApplicationService.GrantRoleGrant(userId.ToString(), roleGrant.IntoDomainModel());
         return Created();
     }
@@ -147,6 +163,10 @@ public class RbacController : ControllerBase
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
+
+        if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
+            return Unauthorized();
+
         await _rbacApplicationService.RevokeRoleGrant(userId.ToString(), id);
         return Ok();
     }
@@ -192,7 +212,7 @@ public class RbacController : ControllerBase
 
     [HttpPost("can-they")]
     [ProducesResponseType(typeof(RbacPermittedResponseApiResource), StatusCodes.Status200OK)]
-    [RequiresPermission("rbac", "read")]
+    //[RequiresPermission("rbac", "read")]
     public async Task<IActionResult> CanThey([FromBody] CanRequest request)
     {
         var resp = await _rbacApplicationService.IsUserPermitted(request.UserId, request.Permissions, request.Objectid);
