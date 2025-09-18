@@ -337,7 +337,9 @@ public class RbacApplicationService : IRbacApplicationService
                     },
                     roleGrant.Resource ?? ""
                 );
-                var userGrantsToSelf = canUserCreateGlobalRbac.Permitted() ? false : user == roleGrant.AssignedEntityId && roleGrant.AssignedEntityType == AssignedEntityType.User;
+                var userGrantsToSelf = canUserCreateGlobalRbac.Permitted()
+                    ? false
+                    : user == roleGrant.AssignedEntityId && roleGrant.AssignedEntityType == AssignedEntityType.User;
 
                 if (
                     (!canUserCreateGlobalRbac.Permitted() && !canUserCreateCapabilityRbac.Permitted())
