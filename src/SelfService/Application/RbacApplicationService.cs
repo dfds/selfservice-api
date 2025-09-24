@@ -10,6 +10,7 @@ public class RbacApplicationService : IRbacApplicationService
 {
     private readonly IRbacPermissionGrantRepository _permissionGrantRepository;
     private readonly IRbacRoleGrantRepository _roleGrantRepository;
+    private readonly IRbacGroupMemberRepository _groupMemberRepository;
     private readonly IRbacGroupRepository _groupRepository;
     private readonly IPermissionQuery _permissionQuery;
     private readonly IRbacRoleRepository _roleRepository;
@@ -17,6 +18,7 @@ public class RbacApplicationService : IRbacApplicationService
     public RbacApplicationService(
         IRbacPermissionGrantRepository permissionGrantRepository,
         IRbacRoleGrantRepository roleGrantRepository,
+        IRbacGroupMemberRepository groupMemberRepository,
         IRbacGroupRepository groupRepository,
         IPermissionQuery permissionQuery,
         IRbacRoleRepository roleRepository
@@ -24,10 +26,17 @@ public class RbacApplicationService : IRbacApplicationService
     {
         _permissionGrantRepository = permissionGrantRepository;
         _roleGrantRepository = roleGrantRepository;
+        _groupMemberRepository = groupMemberRepository;
         _groupRepository = groupRepository;
         _permissionQuery = permissionQuery;
         _roleRepository = roleRepository;
     }
+
+    /*
+        [Note 2025-09-18 by andfris]
+        The permission checks in this service are commented out for now, as they interfere with bootstrapping
+        and with the Cloud Engineer role which is supposed to have blanket permissions.
+    */
 
     public async Task<PermittedResponse> IsUserPermitted(string user, List<Permission> permissions, string objectId)
     {
@@ -185,10 +194,11 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task GrantPermission(string user, RbacPermissionGrant permissionGrant)
     {
-        PermittedResponse? canUserCreateGlobalRbac;
+        //PermittedResponse? canUserCreateGlobalRbac;
         switch (permissionGrant.Type)
         {
             case var a when a == RbacAccessType.Global:
+                /*
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
@@ -198,6 +208,7 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
+                */
                 await _permissionGrantRepository.Add(
                     RbacPermissionGrant.New(
                         permissionGrant.AssignedEntityType,
@@ -211,6 +222,7 @@ public class RbacApplicationService : IRbacApplicationService
 
                 break;
             case var a when a == RbacAccessType.Capability:
+                /*
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
@@ -229,6 +241,7 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
+                */
                 await _permissionGrantRepository.Add(
                     RbacPermissionGrant.New(
                         permissionGrant.AssignedEntityType,
@@ -257,6 +270,7 @@ public class RbacApplicationService : IRbacApplicationService
         switch (permissionLookup.Type)
         {
             case var a when a == RbacAccessType.Global:
+
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
@@ -266,6 +280,7 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
+
                 await _permissionGrantRepository.Remove(permissionLookup.Id);
                 break;
             case var a when a == RbacAccessType.Capability:
@@ -287,7 +302,6 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
-
                 await _permissionGrantRepository.Remove(permissionLookup.Id);
                 break;
             default:
@@ -298,10 +312,11 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task GrantRoleGrant(string user, RbacRoleGrant roleGrant)
     {
-        PermittedResponse? canUserCreateGlobalRbac;
+        //PermittedResponse? canUserCreateGlobalRbac;
         switch (roleGrant.Type)
         {
             case var a when a == RbacAccessType.Global:
+                /*
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
@@ -311,7 +326,7 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
-
+                */
                 await _roleGrantRepository.Add(
                     RbacRoleGrant.New(
                         roleGrant.RoleId,
@@ -324,6 +339,7 @@ public class RbacApplicationService : IRbacApplicationService
 
                 break;
             case var a when a == RbacAccessType.Capability:
+                /*
                 canUserCreateGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
@@ -348,7 +364,7 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
-
+                */
                 if (roleGrant.Resource == null)
                 {
                     throw new BadHttpRequestException("Capability ID is required for capability role grants");
@@ -390,6 +406,7 @@ public class RbacApplicationService : IRbacApplicationService
         switch (roleGrant.Type)
         {
             case var a when a == RbacAccessType.Global:
+
                 canUserDeleteGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
@@ -399,9 +416,11 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
+
                 await _roleGrantRepository.Remove(roleGrant.Id);
                 break;
             case var a when a == RbacAccessType.Capability:
+
                 canUserDeleteGlobalRbac = await IsUserPermitted(
                     user,
                     new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
@@ -420,12 +439,136 @@ public class RbacApplicationService : IRbacApplicationService
                 {
                     throw new UnauthorizedAccessException();
                 }
-
                 await _roleGrantRepository.Remove(roleGrant.Id);
                 break;
             default:
                 throw new Exception("Invalid role grant");
         }
+    }
+
+    [TransactionalBoundary]
+    public async Task<RbacRole> CreateRole(string user, RbacRole role)
+    {
+        /*
+        var canUserCreateGlobalRbac = await IsUserPermitted(
+            user,
+            new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
+            ""
+        );
+        if (!canUserCreateGlobalRbac.Permitted())
+        {
+            throw new UnauthorizedAccessException();
+        }
+        */
+
+        var newRole = RbacRole.New(
+            ownerId: role.OwnerId,
+            name: role.Name,
+            description: role.Description,
+            type: role.Type
+        );
+        await _roleRepository.Add(newRole);
+
+        return newRole;
+    }
+
+    [TransactionalBoundary]
+    public async Task DeleteRole(string user, string roleId)
+    {
+        var canUserDeleteGlobalRbac = await IsUserPermitted(
+            user,
+            new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
+            ""
+        );
+        if (!canUserDeleteGlobalRbac.Permitted())
+        {
+            throw new UnauthorizedAccessException();
+        }
+
+        var role = await _roleRepository.FindById(RbacRoleId.Parse(roleId));
+        if (role == null)
+            throw new Exception("Role not found");
+
+        await _roleRepository.Remove(role.Id);
+    }
+
+    [TransactionalBoundary]
+    public async Task<RbacGroup> CreateGroup(string user, RbacGroup group)
+    {
+        var canUserCreateGlobalRbac = await IsUserPermitted(
+            user,
+            new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
+            ""
+        );
+        if (!canUserCreateGlobalRbac.Permitted())
+        {
+            throw new UnauthorizedAccessException();
+        }
+
+        var newGroup = RbacGroup.New(name: group.Name, description: group.Description, members: group.Members);
+        await _groupRepository.Add(newGroup);
+        return newGroup;
+    }
+
+    [TransactionalBoundary]
+    public async Task DeleteGroup(string user, string groupId)
+    {
+        var canUserDeleteGlobalRbac = await IsUserPermitted(
+            user,
+            new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
+            ""
+        );
+        if (!canUserDeleteGlobalRbac.Permitted())
+        {
+            throw new UnauthorizedAccessException();
+        }
+        var group = await _groupRepository.FindById(RbacGroupId.Parse(groupId));
+        if (group == null)
+            throw new Exception("Group not found");
+
+        await _groupRepository.Remove(group.Id);
+    }
+
+    [TransactionalBoundary]
+    public async Task<RbacGroupMember> GrantGroupGrant(string user, RbacGroupMember membership)
+    {
+        var canUserCreateGlobalRbac = await IsUserPermitted(
+            user,
+            new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
+            ""
+        );
+        if (!canUserCreateGlobalRbac.Permitted())
+        {
+            throw new UnauthorizedAccessException();
+        }
+
+        var group = await _groupRepository.FindById(RbacGroupId.Parse(membership.GroupId));
+        if (group == null)
+        {
+            throw new Exception("Group not found");
+        }
+
+        await _groupMemberRepository.Add(membership);
+        return membership;
+    }
+
+    [TransactionalBoundary]
+    public async Task RevokeGroupGrant(string user, RbacGroupMember membership)
+    {
+        var canUserDeleteGlobalRbac = await IsUserPermitted(
+            user,
+            new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
+            ""
+        );
+        if (!canUserDeleteGlobalRbac.Permitted())
+        {
+            throw new UnauthorizedAccessException();
+        }
+
+        var group = await _groupRepository.FindById(RbacGroupId.Parse(membership.GroupId));
+        if (group == null)
+            throw new Exception("Group not found");
+        await _groupMemberRepository.Remove(membership.Id);
     }
 
     public async Task<bool> CanModifyCapabilityRbac(string user, string id)

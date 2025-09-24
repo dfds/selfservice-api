@@ -16,7 +16,7 @@ public class RbacGroupMember : AggregateRoot<RbacGroupMemberId>
         UserId = userId;
     }
 
-    public static RbacGroupMember New(string name, string description, RbacGroupId groupId, string userId)
+    public static RbacGroupMember New(RbacGroupId groupId, string userId)
     {
         var instance = new RbacGroupMember(
             id: RbacGroupMemberId.New(),
