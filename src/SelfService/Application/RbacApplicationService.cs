@@ -156,6 +156,13 @@ public class RbacApplicationService : IRbacApplicationService
         );
     }
 
+    public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRole(string roleId)
+    {
+        return await _permissionGrantRepository.GetAllWithPredicate(p =>
+            p.AssignedEntityType == AssignedEntityType.Role && p.AssignedEntityId == roleId
+        );
+    }
+
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForCapability(string capabilityId)
     {
         return await _permissionGrantRepository.GetAllWithPredicate(p =>
@@ -473,6 +480,13 @@ public class RbacApplicationService : IRbacApplicationService
     }
 
     [TransactionalBoundary]
+    public async Task<List<RbacGroup>> GetSystemGroups()
+    {
+        var groups = await _groupRepository.GetAll();
+        return groups;
+    }
+
+    [TransactionalBoundary]
     public async Task DeleteRole(string user, string roleId)
     {
         var canUserDeleteGlobalRbac = await IsUserPermitted(
@@ -495,6 +509,7 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task<RbacGroup> CreateGroup(string user, RbacGroup group)
     {
+        /*
         var canUserCreateGlobalRbac = await IsUserPermitted(
             user,
             new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
@@ -504,6 +519,7 @@ public class RbacApplicationService : IRbacApplicationService
         {
             throw new UnauthorizedAccessException();
         }
+        */
 
         var newGroup = RbacGroup.New(name: group.Name, description: group.Description, members: group.Members);
         await _groupRepository.Add(newGroup);
@@ -532,6 +548,7 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task<RbacGroupMember> GrantGroupGrant(string user, RbacGroupMember membership)
     {
+        /*
         var canUserCreateGlobalRbac = await IsUserPermitted(
             user,
             new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
@@ -541,6 +558,7 @@ public class RbacApplicationService : IRbacApplicationService
         {
             throw new UnauthorizedAccessException();
         }
+        */
 
         var group = await _groupRepository.FindById(RbacGroupId.Parse(membership.GroupId));
         if (group == null)

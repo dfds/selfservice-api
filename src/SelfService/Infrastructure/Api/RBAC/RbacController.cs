@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
+using SelfService.Configuration;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
@@ -154,10 +155,20 @@ public class RbacController : ControllerBase
         return Ok(payload.ToList());
     }
 
+    [HttpGet("permission/role/{id:required}")]
+    [ProducesResponseType(typeof(List<RbacPermissionGrantApiResource>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetRolePermissions(string id)
+    {
+        var resp = await _rbacApplicationService.GetPermissionGrantsForRole(id);
+        var payload = resp.Select(x => _apiResourceFactory.Convert(x));
+        
+        return Ok(payload.ToList());
+    }
+
     [HttpPost("role")]
     [ProducesResponseType(typeof(RbacRoleDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> CreateRole([FromBody] RbacRoleDTO roleDto)
+    public async Task<IActionResult> CreateRole([FromBody] RbacRoleCreationDTO roleDto)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -243,7 +254,7 @@ public class RbacController : ControllerBase
         return Ok(payload.ToList());
     }
 
-    [HttpGet("role/group/{id:required}")]
+    [HttpGet("role/groups/{id:required}")]
     [ProducesResponseType(typeof(List<RbacRoleGrantApiResource>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetGroupRoleGrants(string id)
     {
@@ -253,11 +264,20 @@ public class RbacController : ControllerBase
         return Ok(payload.ToList());
     }
 
-    [HttpPost("group")]
+    [HttpGet("groups")]
+    [ProducesResponseType(typeof(List<RbacGroupApiResource>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllGroups()
+    {
+        var groups = await _rbacApplicationService.GetSystemGroups();
+        var payload = groups.Select(g => _apiResourceFactory.Convert(g));
+        return Ok(payload.ToList());
+    }
+
+    [HttpPost("groups")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(RbacGroupApiResource), StatusCodes.Status201Created)]
-    public async Task<IActionResult> CreateGroup([FromBody] Dto.RbacGroup request)
+    public async Task<IActionResult> CreateGroup([FromBody] Dto.RbacGroupCreationDTO request)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -275,7 +295,7 @@ public class RbacController : ControllerBase
         return Created(string.Empty, _apiResourceFactory.Convert(group));
     }
 
-    [HttpDelete("group/{id:required}")]
+    [HttpDelete("groups/{id:required}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [RequiresPermission("rbac", "delete")]
@@ -288,11 +308,11 @@ public class RbacController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("group/{id:required}/members")]
+    [HttpPost("groups/{id:required}/members")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> AddGroupMember(string id, [FromBody] RbacGroupMember request)
+    public async Task<IActionResult> AddGroupMember(string id, [FromBody] RbacGroupMemberCreationDTO request)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -306,14 +326,17 @@ public class RbacController : ControllerBase
         if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
             return Unauthorized();
 
+
+        var newGroup = RbacGroupMember.New(groupId: groupId, userId: request.UserId);
+
         var membership = await _rbacApplicationService.GrantGroupGrant(
             userId.ToString(),
-            RbacGroupMember.New(groupId: groupId, userId: request.UserId)
+            newGroup
         );
         return Created(string.Empty, membership);
     }
 
-    [HttpDelete("group/{id:required}/members/{memberId:required}")]
+    [HttpDelete("groups/{id:required}/members/{memberId:required}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

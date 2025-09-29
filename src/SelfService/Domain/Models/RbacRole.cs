@@ -2,6 +2,24 @@ using SelfService.Domain.Events;
 
 namespace SelfService.Domain.Models;
 
+public class RbacRoleCreationDTO
+{
+    public string Name { get; private set; }
+    public string Description { get; private set; }
+    public string Type { get; private set; }
+
+    public RbacRoleCreationDTO(
+        string name,
+        string description,
+        string type
+    )
+    {
+        Name = name;
+        Description = description;
+        Type = type;
+    }
+}
+
 public class RbacRoleDTO
 {
     public string Id { get; private set; }
