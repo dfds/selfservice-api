@@ -161,7 +161,7 @@ public class RbacController : ControllerBase
     {
         var resp = await _rbacApplicationService.GetPermissionGrantsForRole(id);
         var payload = resp.Select(x => _apiResourceFactory.Convert(x));
-        
+
         return Ok(payload.ToList());
     }
 
@@ -326,13 +326,9 @@ public class RbacController : ControllerBase
         if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
             return Unauthorized();
 
-
         var newGroup = RbacGroupMember.New(groupId: groupId, userId: request.UserId);
 
-        var membership = await _rbacApplicationService.GrantGroupGrant(
-            userId.ToString(),
-            newGroup
-        );
+        var membership = await _rbacApplicationService.GrantGroupGrant(userId.ToString(), newGroup);
         return Created(string.Empty, membership);
     }
 

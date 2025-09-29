@@ -8,11 +8,7 @@ public class RbacRoleCreationDTO
     public string Description { get; private set; }
     public string Type { get; private set; }
 
-    public RbacRoleCreationDTO(
-        string name,
-        string description,
-        string type
-    )
+    public RbacRoleCreationDTO(string name, string description, string type)
     {
         Name = name;
         Description = description;
