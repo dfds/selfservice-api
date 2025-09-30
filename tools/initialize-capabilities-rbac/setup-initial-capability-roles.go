@@ -59,7 +59,7 @@ func main() {
 
 	// Assert that required roles exist
 	for _, role := range config.RequiredRoles {
-		if _, exists := availableRoles[role]; !exists {
+		if _, exists := availableRoles[strings.ToLower(role)]; !exists {
 			log.Fatalf("required role %s not found in available roles", role)
 		}
 	}
