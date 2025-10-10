@@ -2,7 +2,8 @@
 
 public class Member : AggregateRoot<UserId>
 {
-    private Member() : base(default!)
+    private Member()
+        : base(default!)
     {
         Email = string.Empty;
         DisplayName = string.Empty;

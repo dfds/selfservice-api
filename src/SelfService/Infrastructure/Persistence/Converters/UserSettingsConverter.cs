@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SelfService.Domain.Models;
-using System.Text.Json;
 
 namespace SelfService.Infrastructure.Persistence.Converters;
 
@@ -12,9 +12,9 @@ public class UserSettingsConverter : ValueConverter<UserSettings, string>
 
     private static readonly JsonSerializerOptions _jsonOptions = new();
 
-    private static readonly Expression<Func<UserSettings, string>> ToDatabaseType =
-        value => JsonSerializer.Serialize(value, _jsonOptions);
+    private static readonly Expression<Func<UserSettings, string>> ToDatabaseType = value =>
+        JsonSerializer.Serialize(value, _jsonOptions);
 
-    private static readonly Expression<Func<string, UserSettings>> FromDatabaseType =
-        value => JsonSerializer.Deserialize<UserSettings>(value, _jsonOptions) ?? new UserSettings();
+    private static readonly Expression<Func<string, UserSettings>> FromDatabaseType = value =>
+        JsonSerializer.Deserialize<UserSettings>(value, _jsonOptions) ?? new UserSettings();
 }

@@ -89,7 +89,6 @@ public class MeController : ControllerBase
         return NoContent();
     }
 
-    
     [HttpPost("settings")]
     public async Task<IActionResult> UpdateUserSettings([FromBody] UserSettings request)
     {
@@ -114,7 +113,7 @@ public class MeController : ControllerBase
             member.UpdateUserSettings(request);
             await _memberRepository.Update(member);
         }
-        
+
         return NoContent();
     }
 
@@ -168,7 +167,6 @@ public class MyProfileApiResource
         public ResourceLink TopVisitors { get; set; }
         public ResourceLink UpdateUserSettings { get; set; }
         public InvitationsLinks InvitationsLinks { get; set; }
-        
 
         public MyProfileLinks(
             ResourceLink self,

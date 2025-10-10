@@ -245,9 +245,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.DisplayName);
             cfg.Property(x => x.Email);
-            cfg.Property(x => x.UserSettings)
-              .HasColumnType("jsonb")
-              .HasConversion<UserSettingsConverter>();
+            cfg.Property(x => x.UserSettings).HasColumnType("jsonb").HasConversion<UserSettingsConverter>();
             cfg.Ignore(x => x.LastSeen);
         });
 

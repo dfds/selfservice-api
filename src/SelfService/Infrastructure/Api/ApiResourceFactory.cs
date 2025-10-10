@@ -1417,9 +1417,7 @@ public class ApiResourceFactory
 
     public MyUserSettingsApiResource Convert(UserSettings userSettings)
     {
-        return new MyUserSettingsApiResource(
-            userSettings: userSettings
-        );
+        return new MyUserSettingsApiResource(userSettings: userSettings);
     }
 
     public MyProfileApiResource Convert(
@@ -1434,7 +1432,12 @@ public class ApiResourceFactory
             capabilities: capabilities.Select(ConvertToListItem),
             autoReloadTopics: !isDevelopment,
             personalInformation: member != null
-                ? new PersonalInformationApiResource { Name = member.DisplayName ?? "", Email = member.Email, UserSettings = Convert(member.UserSettings) }
+                ? new PersonalInformationApiResource
+                {
+                    Name = member.DisplayName ?? "",
+                    Email = member.Email,
+                    UserSettings = Convert(member.UserSettings),
+                }
                 : PersonalInformationApiResource.Empty,
             links: new MyProfileApiResource.MyProfileLinks(
                 self: new ResourceLink(
