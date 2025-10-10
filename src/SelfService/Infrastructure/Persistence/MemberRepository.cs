@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
@@ -33,6 +34,21 @@ public class MemberRepository : IMemberRepository
         }
 
         _dbContext.Members.Remove(member);
+
+        return member;
+    }
+
+    [TransactionalBoundary]
+    public async Task<Member> Update(Member member)
+    {
+        var existingMember = await _dbContext.Members.FindAsync(member.Id);
+
+        if (existingMember is null)
+        {
+            throw EntityNotFoundException<Member>.UsingId(member.Id);
+        }
+
+        _dbContext.Members.Update(member);
 
         return member;
     }

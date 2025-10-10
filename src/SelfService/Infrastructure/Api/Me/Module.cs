@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Application;
@@ -88,6 +89,35 @@ public class MeController : ControllerBase
         return NoContent();
     }
 
+    
+    [HttpPost("settings")]
+    public async Task<IActionResult> UpdateUserSettings([FromBody] UserSettings request)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Access Denied!",
+                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
+                }
+            );
+        }
+
+        var member = await _memberRepository.FindBy(userId);
+        if (member == null)
+        {
+            Member.Register(userId, "unknown", "unknown", request);
+        }
+        else
+        {
+            member.UpdateUserSettings(request);
+            await _memberRepository.Update(member);
+        }
+        
+        return NoContent();
+    }
+
     private async Task<Stat[]> ComposeStats()
     {
         return new Stat[]
@@ -136,13 +166,16 @@ public class MyProfileApiResource
         public ResourceLink PersonalInformation { get; set; }
         public ResourceLink PortalVisits { get; set; }
         public ResourceLink TopVisitors { get; set; }
+        public ResourceLink UpdateUserSettings { get; set; }
         public InvitationsLinks InvitationsLinks { get; set; }
+        
 
         public MyProfileLinks(
             ResourceLink self,
             ResourceLink personalInformation,
             ResourceLink portalVisits,
             ResourceLink topVisitors,
+            ResourceLink updateUserSettings,
             InvitationsLinks invitationsLinks
         )
         {
@@ -150,6 +183,7 @@ public class MyProfileApiResource
             PersonalInformation = personalInformation;
             PortalVisits = portalVisits;
             TopVisitors = topVisitors;
+            UpdateUserSettings = updateUserSettings;
             InvitationsLinks = invitationsLinks;
         }
     }
@@ -183,9 +217,19 @@ public class MyProfileApiResource
 public class PersonalInformationApiResource
 {
     public static PersonalInformationApiResource Empty = new();
-
     public string Name { get; set; } = "";
     public string Email { get; set; } = "";
+    public MyUserSettingsApiResource? UserSettings { get; set; }
+}
+
+public class MyUserSettingsApiResource
+{
+    public bool SignedUpForDemos { get; set; }
+
+    public MyUserSettingsApiResource(UserSettings userSettings)
+    {
+        SignedUpForDemos = userSettings.SignedUpForDemos;
+    }
 }
 
 public record Stat(string Title, int Value); // TODO [jandr@2023-04-20]: make this a domain concept maybe?!
