@@ -1,4 +1,5 @@
-﻿using Dafda.Outbox;
+﻿using System.Text.Json;
+using Dafda.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using SelfService.Configuration;
@@ -126,6 +127,8 @@ public class SelfServiceDbContext : DbContext
 
         configurationBuilder.Properties<MessageContractSchema>().HaveConversion<MessageContractSchemaConverter>();
 
+        configurationBuilder.Properties<UserSettings>().HaveConversion<UserSettingsConverter>();
+
         configurationBuilder.Properties<MessageContractStatus>().HaveConversion<MessageContractStatusConverter>();
 
         configurationBuilder.Properties<ECRRepositoryId>().HaveConversion<ECRRepositoryIdConverter>();
@@ -242,6 +245,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.DisplayName);
             cfg.Property(x => x.Email);
+            cfg.Property(x => x.UserSettings).HasColumnType("jsonb").HasConversion<UserSettingsConverter>();
             cfg.Ignore(x => x.LastSeen);
         });
 
