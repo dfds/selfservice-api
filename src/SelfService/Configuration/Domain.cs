@@ -57,6 +57,7 @@ public static class Domain
         builder.Services.AddTransient<IECRRepositoryService, ECRRepositoryService>();
         builder.Services.AddTransient<IReleaseNoteService, ReleaseNoteService>();
         builder.Services.AddTransient<ISelfServiceJsonSchemaService, SelfServiceJsonSchemaService>();
+        builder.Services.AddTransient<IDemoApplicationService, DemoApplicationService>();
         builder.Services.AddTransient<MetricsService>();
 
         // domain repositories

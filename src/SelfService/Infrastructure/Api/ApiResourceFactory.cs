@@ -13,6 +13,7 @@ using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Api.ReleaseNotes;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.Api.Teams;
+using SelfService.Infrastructure.Api.Demos;
 using static SelfService.Infrastructure.Api.Method;
 
 namespace SelfService.Infrastructure.Api;
@@ -1919,6 +1920,32 @@ public class ApiResourceFactory
                     rel: "get"
                 ),
             },
+        };
+
+        return payload;
+    }
+
+    public DemoSignupsApiResponse Convert(IEnumerable<DemoSignup> signups)
+    {
+        var payload = new DemoSignupsApiResponse
+        {
+            Items = signups.Select(x => new DemoSignupApiResource
+            {
+                Email = x.Email,
+                Name = x.Name
+            }).ToList(),
+            Links = new DemoSignupsApiResponse.DemoSignupsApiResponseLinks
+            {
+                Self = new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(DemoController.GetActiveSignups),
+                        controller: GetNameOf<DemoController>()
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                )
+            }
         };
 
         return payload;
