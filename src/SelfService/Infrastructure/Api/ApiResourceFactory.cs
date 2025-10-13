@@ -1415,6 +1415,11 @@ public class ApiResourceFactory
         );
     }
 
+    public MyUserSettingsApiResource Convert(UserSettings userSettings)
+    {
+        return new MyUserSettingsApiResource(userSettings: userSettings);
+    }
+
     public MyProfileApiResource Convert(
         UserId userId,
         IEnumerable<Capability> capabilities,
@@ -1427,7 +1432,12 @@ public class ApiResourceFactory
             capabilities: capabilities.Select(ConvertToListItem),
             autoReloadTopics: !isDevelopment,
             personalInformation: member != null
-                ? new PersonalInformationApiResource { Name = member.DisplayName ?? "", Email = member.Email }
+                ? new PersonalInformationApiResource
+                {
+                    Name = member.DisplayName ?? "",
+                    Email = member.Email,
+                    UserSettings = Convert(member.UserSettings),
+                }
                 : PersonalInformationApiResource.Empty,
             links: new MyProfileApiResource.MyProfileLinks(
                 self: new ResourceLink(
@@ -1465,6 +1475,15 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "related",
                     allow: Allow.Get
+                ),
+                updateUserSettings: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<MeController>(),
+                        action: nameof(MeController.UpdateUserSettings)
+                    ) ?? "",
+                    rel: "related",
+                    allow: Allow.Post
                 ),
                 invitationsLinks: new MyProfileApiResource.InvitationsLinks(
                     capalityInvitations: new ResourceLink(
