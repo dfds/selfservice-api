@@ -37,13 +37,9 @@ public class DemoController : ControllerBase
         }
 
         var isCloudEngineer = _authorizationService.CanSynchronizeAwsECRAndDatabaseECR(User.ToPortalUser());
-            if (!isCloudEngineer)
-                return Unauthorized();
+        if (!isCloudEngineer)
+            return Unauthorized();
 
-        return Ok(
-            _apiResourceFactory.Convert(
-                await _demoApplicationService.GetActiveSignups()
-            )
-        );
+        return Ok(_apiResourceFactory.Convert(await _demoApplicationService.GetActiveSignups()));
     }
 }
