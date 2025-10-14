@@ -5,6 +5,7 @@ using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
+using SelfService.Infrastructure.Api.Demos;
 using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
@@ -13,7 +14,6 @@ using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Api.ReleaseNotes;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.Api.Teams;
-using SelfService.Infrastructure.Api.Demos;
 using static SelfService.Infrastructure.Api.Method;
 
 namespace SelfService.Infrastructure.Api;
@@ -1935,11 +1935,7 @@ public class ApiResourceFactory
     {
         var payload = new DemoSignupsApiResponse
         {
-            Items = signups.Select(x => new DemoSignupApiResource
-            {
-                Email = x.Email,
-                Name = x.Name
-            }).ToList(),
+            Items = signups.Select(x => new DemoSignupApiResource { Email = x.Email, Name = x.Name }).ToList(),
             Links = new DemoSignupsApiResponse.DemoSignupsApiResponseLinks
             {
                 Self = new ResourceLink(
@@ -1950,8 +1946,8 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "self",
                     allow: Allow.Get
-                )
-            }
+                ),
+            },
         };
 
         return payload;

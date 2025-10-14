@@ -4,10 +4,7 @@ namespace SelfService.Domain.Models;
 
 public class DemoSignup
 {
-    public DemoSignup(
-        string email,
-        string name
-    )
+    public DemoSignup(string email, string name)
     {
         Email = email;
         Name = name;
