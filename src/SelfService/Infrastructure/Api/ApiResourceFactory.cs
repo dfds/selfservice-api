@@ -1,4 +1,5 @@
 ﻿using Amazon.EC2;
+using Amazon.EC2.Model;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
 using SelfService.Domain.Models;
@@ -1941,8 +1942,8 @@ public class ApiResourceFactory
                 Self = new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
-                        action: nameof(DemoController.GetActiveSignups),
-                        controller: GetNameOf<DemoController>()
+                        action: nameof(DemosController.GetActiveSignups),
+                        controller: GetNameOf<DemosController>()
                     ) ?? "",
                     rel: "self",
                     allow: Allow.Get
@@ -1951,5 +1952,73 @@ public class ApiResourceFactory
         };
 
         return payload;
+    }
+    public DemoApiResource Convert(Demo demo)
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowOnSelf = Allow.Get;
+        if (_authorizationService.CanDeleteDemo(portalUser))
+        {
+            allowOnSelf += Delete;
+        }
+        if (_authorizationService.CanUpdateDemo(portalUser))
+        {
+            allowOnSelf += Post;
+        }
+
+        var result = new DemoApiResource(
+            id: demo.Id,
+            recordingDate: demo.RecordingDate,
+            title: demo.Title,
+            description: demo.Description,
+            uri: demo.Uri,
+            tags: demo.Tags,
+            createdBy: demo.CreatedBy,
+            createdAt: demo.CreatedAt,
+            isActive: demo.IsActive,
+            links: new DemoApiResource.DemoLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(DemosController.GetDemo),
+                        controller: GetNameOf<DemosController>(),
+                        values: new { id = demo.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowOnSelf
+                )
+            )
+        );
+
+        return result;
+    }
+
+    public DemosApiResource Convert(IEnumerable<Demo> demos)
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowOnSelf = Allow.Get;
+        if (_authorizationService.CanCreateDemo(portalUser))
+        {
+            allowOnSelf += Post;
+        }
+
+        var result = new DemosApiResource(
+            demos: demos.Select(Convert).ToArray(),
+            links: new DemosApiResource.DemosLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(DemosController.GetDemos),
+                        controller: GetNameOf<DemosController>()
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowOnSelf
+                )
+            )
+        );
+
+        return result;
     }
 }

@@ -58,6 +58,7 @@ public static class Domain
         builder.Services.AddTransient<IReleaseNoteService, ReleaseNoteService>();
         builder.Services.AddTransient<ISelfServiceJsonSchemaService, SelfServiceJsonSchemaService>();
         builder.Services.AddTransient<IDemoApplicationService, DemoApplicationService>();
+        builder.Services.AddTransient<IDemosService, DemosService>();
         builder.Services.AddTransient<MetricsService>();
 
         // domain repositories
@@ -87,6 +88,7 @@ public static class Domain
         builder.Services.AddTransient<IRbacRoleGrantRepository, RbacRoleGrantRepository>();
         builder.Services.AddTransient<IRbacRoleRepository, RbacRoleRepository>();
         builder.Services.AddTransient<IPermissionQuery, PermissionsQuery>();
+        builder.Services.AddTransient<IDemosRepository, DemosRepository>();
 
         // domain queries
         builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();

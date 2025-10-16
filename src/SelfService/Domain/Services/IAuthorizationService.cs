@@ -44,6 +44,10 @@ public interface IAuthorizationService
     Task<bool> CanSelfAssess(UserId userId, CapabilityId capabilityId);
     bool CanManageSelfAssessmentOptions(PortalUser portalUser);
 
+    bool CanCreateDemo(PortalUser portalUser);
+    bool CanUpdateDemo(PortalUser portalUser);
+    bool CanDeleteDemo(PortalUser portalUser);
+
     bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser);
     bool IsAuthorizedToUpdateReleaseNote(PortalUser portalUser);
     bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser);
