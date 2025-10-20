@@ -1,0 +1,59 @@
+{
+    "debug": true,
+    "apiUrl": "http://localhost:8080",
+    "cloudengineers": [
+    	"admin1@mailinator.com",
+	"someoneelse@dfds.com"
+    ],
+    "cloudengineerRoles": [{
+        "roleName": "Owner",
+        "scope": "Global"
+    }],
+    "roles": [
+        {
+            "name": "Owner",
+            "permissions": {
+                "topics": ["create", "read-public", "read-private", "update", "delete"],
+                "capability-management": ["receive-alerts", "receive-cost", "request-deletion", "manage-permissions", "read-self-assess", "create-self-assess"],
+                "capability-membership-management": ["create", "delete", "read", "read-requests", "manage-requests"],
+                "tags-and-metadata": ["create", "read", "update", "delete"],
+                "aws": ["create", "read", "manage-provider", "read-provider"],
+                "finout": ["read-dashboards", "manage-dashboards", "manage-alerts", "read-alerts"],
+                "azure": ["create", "read", "read-provider", "manage-provider"],
+                "rbac": ["create", "read", "update", "delete"]
+            }
+        },
+        {
+            "name": "Contributor",
+            "permissions": {
+                "topics": ["create", "read-public", "read-private", "update", "delete"],
+                "capability-management": ["receive-alerts"],
+                "capability-membership-management": ["create", "read", "read-requests", "manage-requests"],
+                "tags-and-metadata": ["create", "read", "update", "delete"],
+                "aws": ["create", "read", "manage-provider", "read-provider"],
+                "finout": ["read-dashboards", "manage-dashboards", "manage-alerts", "read-alerts"],
+                "azure": ["create", "read", "read-provider", "manage-provider"]
+            }
+        },
+        {
+            "name": "Reader",
+            "permissions": {
+                "topics": ["read-public", "read-private"],
+                "capability-membership-management": ["read", "read-requests"],
+                "tags-and-metadata": ["read"],
+                "aws": ["read", "read-provider"],
+                "finout": ["read-dashboards", "read-alerts"],
+                "azure": ["read", "read-provider"]
+            }
+        },
+        {
+            "name": "Guest",
+            "permissions": {
+                "topics": ["read-public"],
+                "capability-membership-management": ["read"],
+                "tags-and-metadata": ["read"],
+                "finout": ["read-dashboards"]
+            }
+        }
+    ]
+}

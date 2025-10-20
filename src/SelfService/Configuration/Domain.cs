@@ -80,6 +80,12 @@ public static class Domain
         builder.Services.AddTransient<ISelfAssessmentRepository, SelfAssessmentRepository>();
         builder.Services.AddTransient<ISelfAssessmentOptionRepository, SelfAssessmentOptionRepository>();
         builder.Services.AddTransient<IReleaseNoteRepository, ReleaseNoteRepository>();
+        builder.Services.AddTransient<IRbacGroupRepository, RbacGroupRepository>();
+        builder.Services.AddTransient<IRbacGroupMemberRepository, RbacGroupMemberRepository>();
+        builder.Services.AddTransient<IRbacPermissionGrantRepository, RbacPermissionGrantRepository>();
+        builder.Services.AddTransient<IRbacRoleGrantRepository, RbacRoleGrantRepository>();
+        builder.Services.AddTransient<IRbacRoleRepository, RbacRoleRepository>();
+        builder.Services.AddTransient<IPermissionQuery, PermissionsQuery>();
 
         // domain queries
         builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();

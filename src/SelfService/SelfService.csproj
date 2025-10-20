@@ -10,7 +10,7 @@
       <PackageReference Include="AWSSDK.EC2" Version="3.7.401.2" />
       <PackageReference Include="AWSSDK.ECR" Version="3.7.200.34" />
       <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.201.39" />
-      <PackageReference Include="Dafda" Version="0.11.4" />
+      <PackageReference Include="Dafda" Version="0.12.6" />
       <PackageReference Include="JsonSchema.Net" Version="5.2.5" />
       <PackageReference Include="JsonSchema.Net.DataGeneration" Version="1.1.0" />
       <PackageReference Include="LibGit2Sharp" Version="0.30.0" />
@@ -28,7 +28,6 @@
 
     <ItemGroup>
       <Folder Include="Domain\Policies\" />
-      <Folder Include="Configuration\" />
     </ItemGroup>
 
 </Project>

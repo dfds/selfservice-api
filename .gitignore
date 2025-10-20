@@ -2,6 +2,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/node,visualstudio,visualstudiocode,rider
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,visualstudio,visualstudiocode,rider
 
+tools/config.json
+
 ### Node ###
 # Logs
 logs

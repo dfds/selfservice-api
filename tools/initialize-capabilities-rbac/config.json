@@ -1,0 +1,5 @@
+{
+    "debug": true,
+    "apiUrl": "http://localhost:8080",
+    "requiredRoles": ["Owner", "Contributor"]
+}

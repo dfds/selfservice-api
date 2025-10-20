@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -9,7 +10,9 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SelfService.Application;
 using SelfService.Infrastructure.Messaging;
+using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Api;
@@ -19,12 +22,14 @@ public class ApiApplication : WebApplicationFactory<Program>
     private readonly List<Action<IServiceCollection>> _serviceCollectionModifiers = new();
     private readonly Dictionary<string, string?> _customConfiguration = new();
     private readonly string _environment;
+    private readonly bool _overrideDb;
 
     private Action<FakeAuthenticationSchemeOptions>? _authOptionsConfig;
 
-    public ApiApplication(bool configureForProduction = true)
+    public ApiApplication(bool configureForProduction = true, bool overrideDb = false)
     {
         _environment = configureForProduction ? Environments.Production : Environments.Development;
+        _overrideDb = overrideDb;
         this.ReplaceService<IMessagingService>(new StubMessagingService());
     }
 
@@ -96,6 +101,7 @@ public class ApiApplication : WebApplicationFactory<Program>
         builder.UseSetting("SS_PLATFORM_DATA_ENDPOINT", "http://localhost:8070");
         builder.UseSetting("SS_PLATFORM_DATA_API_KEY", "dummykey");
         builder.UseSetting("SS_CONFLUENT_GATEWAY_API_ENDPOINT", "http://localhost:8080");
+        builder.UseSetting("SS_MIDDLEWARE_AUTHCHECKER_DISABLE", "true");
 
         builder.ConfigureAppConfiguration(x =>
         {
@@ -116,6 +122,15 @@ public class ApiApplication : WebApplicationFactory<Program>
 
         builder.ConfigureTestServices(services =>
         {
+            // todo: WHHYYYYYYYY https://github.com/dotnet/efcore/blob/34d1953667427d870e768a99116112522953fd0c/src/EFCore/Extensions/EntityFrameworkServiceCollectionExtensions.cs#L881-L898
+            if (_overrideDb)
+            {
+                foreach (var option in services.Where(s => s.ServiceType.BaseType == typeof(DbContextOptions)).ToList())
+                {
+                    services.Remove(option);
+                }
+            }
+
             _serviceCollectionModifiers.ForEach(cfg => cfg(services));
 
             if (_authOptionsConfig != null)
