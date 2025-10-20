@@ -16,7 +16,7 @@ public class RbacGroupMember : AggregateRoot<RbacGroupMemberId>
         UserId = userId;
     }
 
-    public static RbacGroupMember New(string name, string description, RbacGroupId groupId, string userId)
+    public static RbacGroupMember New(RbacGroupId groupId, string userId)
     {
         var instance = new RbacGroupMember(
             id: RbacGroupMemberId.New(),
@@ -33,5 +33,17 @@ public class RbacGroupMember : AggregateRoot<RbacGroupMemberId>
     private void RaiseEvent(IDomainEvent domainEvent)
     {
         Raise(domainEvent);
+    }
+}
+
+public class RbacGroupMemberCreationDTO
+{
+    public string GroupId { get; set; }
+    public string UserId { get; set; }
+
+    public RbacGroupMemberCreationDTO(string groupId, string userId)
+    {
+        GroupId = groupId;
+        UserId = userId;
     }
 }

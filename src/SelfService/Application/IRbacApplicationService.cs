@@ -1,3 +1,4 @@
+using SelfService.Configuration;
 using SelfService.Domain.Models;
 
 namespace SelfService.Application;
@@ -9,13 +10,21 @@ public interface IRbacApplicationService
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForUser(string user);
     Task<List<RbacRoleGrant>> GetRoleGrantsForUser(string user);
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForGroup(string groupId);
+    Task<List<RbacPermissionGrant>> GetPermissionGrantsForRole(string roleId);
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForCapability(string capabilityId);
     Task<List<RbacRoleGrant>> GetRoleGrantsForCapability(string capabilityId);
     Task<List<RbacRoleGrant>> GetRoleGrantsForGroup(string groupId);
     Task<List<RbacGroup>> GetGroupsForUser(string user);
+    Task<List<RbacGroup>> GetSystemGroups();
     Task<List<RbacRole>> GetAssignableRoles();
     Task GrantPermission(string user, RbacPermissionGrant permissionGrant);
     Task RevokePermission(string user, string id);
     Task GrantRoleGrant(string user, RbacRoleGrant roleGrant);
     Task RevokeRoleGrant(string user, string id);
+    Task<RbacRole> CreateRole(string user, RbacRole role);
+    Task DeleteRole(string user, string roleId);
+    Task<RbacGroup> CreateGroup(string user, RbacGroup group);
+    Task DeleteGroup(string user, string groupId);
+    Task<RbacGroupMember> GrantGroupGrant(string user, RbacGroupMember membership);
+    Task RevokeGroupGrant(string user, RbacGroupMember membership);
 }
