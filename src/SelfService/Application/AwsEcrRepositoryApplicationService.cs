@@ -28,8 +28,8 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
                         {
                             StringEquals = new Dictionary<string, string>
                             {
-                                ["aws:PrincipalOrgID"] = awsOrganizationId.Trim()
-                            }
+                                ["aws:PrincipalOrgID"] = awsOrganizationId.Trim(),
+                            },
                         },
                         Principal = new { AWS = new[] { "*" } },
                         Action = new[]
