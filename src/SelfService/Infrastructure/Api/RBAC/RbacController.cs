@@ -20,7 +20,6 @@ public class RbacController : ControllerBase
     private readonly IRbacApplicationService _rbacApplicationService;
     private readonly IPermissionQuery _permissionQuery;
     private readonly ApiResourceFactory _apiResourceFactory;
-    private readonly IAuthorizationService _authorizationService;
 
     public RbacController(
         IRbacApplicationService rbacApplicationService,
@@ -32,7 +31,6 @@ public class RbacController : ControllerBase
         _rbacApplicationService = rbacApplicationService;
         _permissionQuery = permissionQuery;
         _apiResourceFactory = apiResourceFactory;
-        _authorizationService = authorizationService; // [180925-andfris] used only for checking temporary isCloudEngineer permissions
     }
 
     [HttpGet("me")]
@@ -84,15 +82,10 @@ public class RbacController : ControllerBase
     [HttpPost("permission/grant")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [RequiresPermission("rbac", "create")]
     public async Task<IActionResult> GrantPermission([FromBody] RbacPermissionGrant permissionGrant)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
-        /* [24-09-2024-andfris] temporary: only cloud engineers can grant permissions
-            Should be removed when we have a proper RBAC setup for managing RBAC itself
-        */
-        if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
             return Unauthorized();
 
         await _rbacApplicationService.GrantPermission(
@@ -116,9 +109,6 @@ public class RbacController : ControllerBase
     public async Task<IActionResult> RevokePermission(string id)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
-        if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
             return Unauthorized();
 
         await _rbacApplicationService.RevokePermission(userId.ToString(), id);
@@ -168,15 +158,10 @@ public class RbacController : ControllerBase
     [HttpPost("role")]
     [ProducesResponseType(typeof(RbacRoleDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [RequiresPermission("rbac", "create")]
     public async Task<IActionResult> CreateRole([FromBody] RbacRoleCreationDTO roleDto)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
-        /* [24-09-2024-andfris] temporary: only cloud engineers can create roles
-            Should be removed when we have a proper RBAC setup for managing RBAC itself
-        */
-        if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
             return Unauthorized();
 
         var role = await _rbacApplicationService.CreateRole(
@@ -207,15 +192,10 @@ public class RbacController : ControllerBase
     [HttpPost("role/grant")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [RequiresPermission("rbac", "create")]
     public async Task<IActionResult> GrantRole([FromBody] RbacRoleGrant roleGrant)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
-        /* [24-09-2024-andfris] temporary: only cloud engineers can grant roles
-            Should be removed when we have a proper RBAC setup for managing RBAC itself
-        */
-        if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
             return Unauthorized();
 
         await _rbacApplicationService.GrantRoleGrant(userId.ToString(), roleGrant.IntoDomainModel());
@@ -277,15 +257,10 @@ public class RbacController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(RbacGroupApiResource), StatusCodes.Status201Created)]
+    [RequiresPermission("rbac", "create")]
     public async Task<IActionResult> CreateGroup([FromBody] Dto.RbacGroupCreationDTO request)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
-        /* [24-09-2024-andfris] temporary: only cloud engineers can create groups
-            Should be removed when we have a proper RBAC setup for managing RBAC itself
-        */
-        if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
             return Unauthorized();
 
         var group = await _rbacApplicationService.CreateGroup(
@@ -312,6 +287,7 @@ public class RbacController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [RequiresPermission("rbac", "create")]
     public async Task<IActionResult> AddGroupMember(string id, [FromBody] RbacGroupMemberCreationDTO request)
     {
         if (!User.TryGetUserId(out var userId))
@@ -319,12 +295,6 @@ public class RbacController : ControllerBase
 
         if (!RbacGroupId.TryParse(id, out var groupId))
             return BadRequest("Invalid rbac group id");
-
-        /* [24-09-2024-andfris] temporary: only cloud engineers can add group members
-            Should be removed when we have a proper RBAC setup for managing RBAC itself
-        */
-        if (!_authorizationService.IsCloudEngineer(User.ToPortalUser()))
-            return Unauthorized();
 
         var newGroup = RbacGroupMember.New(groupId: groupId, userId: request.UserId);
 
