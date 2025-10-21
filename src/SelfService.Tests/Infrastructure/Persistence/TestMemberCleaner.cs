@@ -106,7 +106,7 @@ public class TestMemberCleaner
         var applicationId = application.Id;
 
         var authService = new Mock<IAuthorizationService>();
-        authService.Setup(x => x.CanApprove(approverMember.Id, application)).ReturnsAsync(true);
+        authService.Setup(x => x.CanApproveMembershipApplications(approverMember.Id, application)).ReturnsAsync(true);
 
         // We need to also check if we can approve the application
         var membershipApplicationServiceWithAuth = A

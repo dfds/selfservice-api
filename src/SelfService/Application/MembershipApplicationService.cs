@@ -239,7 +239,7 @@ public class MembershipApplicationService : IMembershipApplicationService
 
         var application = await _membershipApplicationRepository.Get(applicationId);
 
-        if (!await _authorizationService.CanApprove(approvedBy, application))
+        if (!await _authorizationService.CanApproveMembershipApplications(approvedBy, application))
         {
             _logger.LogError(
                 "User \"{UserId}\" is not authorized to approve membership application \"{MembershipApplicationId}\" for capability \"{CapabilityId}\".",

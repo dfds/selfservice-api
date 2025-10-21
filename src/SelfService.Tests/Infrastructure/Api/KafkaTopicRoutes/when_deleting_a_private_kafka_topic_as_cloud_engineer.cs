@@ -20,6 +20,7 @@ public class when_deleting_a_private_kafka_topic_as_cloud_engineer : IAsyncLifet
         application.ReplaceService<IKafkaTopicRepository>(new StubKafkaTopicRepository(stubKafkaTopic));
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         application.ConfigureFakeAuthentication(options =>
         {

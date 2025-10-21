@@ -62,7 +62,7 @@ public class MembershipApplicationController : ControllerBase
             );
         }
 
-        if (!await _authorizationService.CanRead(userId, application))
+        if (!await _authorizationService.CanReadMembershipApplications(userId, application))
         {
             // user is not member of capability and the membership application does not belong to THIS user
             return Unauthorized();
@@ -111,7 +111,7 @@ public class MembershipApplicationController : ControllerBase
             );
         }
 
-        if (!await _authorizationService.CanRead(userId, application))
+        if (!await _authorizationService.CanReadMembershipApplications(userId, application))
         {
             // user is not member of capability and the membership application does not belong to THIS user
             return Unauthorized(

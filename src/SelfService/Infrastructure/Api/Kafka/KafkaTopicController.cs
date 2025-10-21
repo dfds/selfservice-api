@@ -94,7 +94,7 @@ public class KafkaTopicController : ControllerBase
             );
         }
 
-        if (await _authorizationService.CanRead(User.ToPortalUser(), topic))
+        if (await _authorizationService.CanReadTopic(User.ToPortalUser(), topic))
         {
             return Ok(await _apiResourceFactory.Convert(topic));
         }
@@ -152,7 +152,7 @@ public class KafkaTopicController : ControllerBase
             );
         }
 
-        if (!await _authorizationService.CanChange(User.ToPortalUser(), topic))
+        if (!await _authorizationService.CanModifyTopic(User.ToPortalUser(), topic))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -195,8 +195,7 @@ public class KafkaTopicController : ControllerBase
                 new ProblemDetails { Title = "Topic not found", Detail = $"Topic with id \"{id}\" could not be found." }
             );
         }
-
-        if (!await _authorizationService.CanDelete(User.ToPortalUser(), topic))
+        if (!await _authorizationService.CanDeleteTopic(User.ToPortalUser(), topic))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -207,7 +206,7 @@ public class KafkaTopicController : ControllerBase
                 }
             );
         }
-
+        //string userId = "testUser";
         await _kafkaTopicApplicationService.DeleteKafkaTopic(kafkaTopicId, userId);
         return NoContent();
     }

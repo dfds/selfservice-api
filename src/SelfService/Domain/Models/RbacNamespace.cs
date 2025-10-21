@@ -8,6 +8,7 @@ public class RbacNamespace : ValueObject
 {
     // topics, capability-management, capability-membership-management, tags-and-metadata, aws, finout, azure, rbac
     public static readonly RbacNamespace Topics = new("topics");
+    public static readonly RbacNamespace TopicsPublic = new("topics-public");
     public static readonly RbacNamespace CapabilityManagement = new("capability-management");
     public static readonly RbacNamespace CapabilityMembershipManagement = new("capability-membership-management");
     public static readonly RbacNamespace TagsAndMetadata = new("tags-and-metadata");
@@ -52,6 +53,9 @@ public class RbacNamespace : ValueObject
         {
             case "topics":
                 rbacNamespace = Topics;
+                break;
+            case "topics-public":
+                rbacNamespace = TopicsPublic;
                 break;
             case "capability-management":
                 rbacNamespace = CapabilityManagement;
