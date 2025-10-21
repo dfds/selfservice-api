@@ -58,6 +58,14 @@ public class when_getting_public_topics_as_a_cloud_engineer : IAsyncLifetime
                         RbacAccessType.Global,
                         "*"
                     ),
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.TopicsPublic,
+                        "delete",
+                        RbacAccessType.Global,
+                        "*"
+                    ),
                 ]
             )
         );

@@ -30,6 +30,14 @@ public class when_deleting_a_public_kafka_topic_as_cloud_engineer : IAsyncLifeti
                         RbacAccessType.Capability,
                         "foo"
                     ),
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.TopicsPublic,
+                        "delete",
+                        RbacAccessType.Capability,
+                        "foo"
+                    ),
                 ]
             )
         );
