@@ -33,7 +33,7 @@ stages:
             displayName: "Push Docker Images"
             condition: succeeded()
           - bash: |
-              make manifests BUILD_NUMBER="$(Build.BuildNumber)" ECR_AWS_ACCOUNT_ID="$(ECR_AWS_ACCOUNT_ID)" ECR_PULL_PERMISSION_AWS_ACCOUNT_ID="$(ECR_PULL_PERMISSION_AWS_ACCOUNT_ID)" ECR_PULL_PERMISSION_AWS_BACKUP_ACCOUNT_ID="$(ECR_PULL_PERMISSION_AWS_BACKUP_ACCOUNT_ID)" SS_ARM_REMOTE_REPO_URI="$(SS_ARM_REMOTE_REPO_URI)" SS_AWS_ACCOUNT_REMOTE_REPO_URI="$(SS_AWS_ACCOUNT_REMOTE_REPO_URI)"
+              make manifests BUILD_NUMBER="$(Build.BuildNumber)" ECR_AWS_ACCOUNT_ID="$(ECR_AWS_ACCOUNT_ID)" ECR_PULL_PERMISSION_AWS_ORGANIZATION_ID="$(ECR_PULL_PERMISSION_AWS_ORGANIZATION_ID)" SS_ARM_REMOTE_REPO_URI="$(SS_ARM_REMOTE_REPO_URI)" SS_AWS_ACCOUNT_REMOTE_REPO_URI="$(SS_AWS_ACCOUNT_REMOTE_REPO_URI)"
             displayName: 'Create k8s manifests'
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: manifests"

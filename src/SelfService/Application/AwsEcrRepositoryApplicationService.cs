@@ -11,7 +11,7 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
 {
     private IAwsRoleManger awsRoleManager => new AwsRoleManager();
 
-    private string GetPermissionJson(string awsAccountId, string awsBackupAccountId)
+    private string GetPermissionJson(string awsOrganizationId)
     {
         return System.Text.Json.JsonSerializer.Serialize(
             new
@@ -23,12 +23,18 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
                     {
                         Sid = "Allow pull from all",
                         Effect = "Allow",
+                        Condition = new
+                        {
+                            StringEquals = new
+                            {
+                                "aws:PrincipalOrgID" = $"{awsOrganizationId.Trim()}",
+                            },
+                        },
                         Principal = new
                         {
                             AWS = new[]
                             {
-                                $"arn:aws:iam::{awsAccountId.Trim()}:root",
-                                $"arn:aws:iam::{awsBackupAccountId.Trim()}:root",
+                                "*",
                             },
                         },
                         Action = new[]
@@ -61,13 +67,9 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
         var credentials = await awsRoleManager.AssumeRoleAsync(roleArn, RegionEndpoint.EUCentral1);
         var client = NewAwsECRClient(credentials);
 
-        var accountId = Environment.GetEnvironmentVariable("ECR_PULL_PERMISSION_AWS_ACCOUNT_ID");
-        if (accountId == null)
-            throw new Exception("ECR_PULL_PERMISSION_AWS_ACCOUNT_ID environment variable is not set");
-
-        var backupAccountId = Environment.GetEnvironmentVariable("ECR_PULL_PERMISSION_AWS_BACKUP_ACCOUNT_ID");
-        if (backupAccountId == null)
-            throw new Exception("ECR_PULL_PERMISSION_AWS_BACKUP_ACCOUNT_ID environment variable is not set");
+        var organizationId = Environment.GetEnvironmentVariable("ECR_PULL_PERMISSION_AWS_ORGANIZATION_ID");
+        if (organizationId == null)
+            throw new Exception("ECR_PULL_PERMISSION_AWS_ORGANIZATION_ID environment variable is not set");
 
         await client.CreateRepositoryAsync(
             new CreateRepositoryRequest
@@ -78,7 +80,7 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
         );
         try
         {
-            var policyJson = GetPermissionJson(accountId, backupAccountId);
+            var policyJson = GetPermissionJson(organizationId);
             await client.SetRepositoryPolicyAsync(
                 new SetRepositoryPolicyRequest { RepositoryName = name, PolicyText = policyJson }
             );
