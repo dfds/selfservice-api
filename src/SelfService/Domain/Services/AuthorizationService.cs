@@ -53,7 +53,7 @@ public class AuthorizationService : IAuthorizationService
                     {
                         Namespace = RbacNamespace.Topics,
                         Name = "create",
-                        AccessType = RbacAccessType.Capability, // ?? should be Global ?? should be Cluster level ??
+                        AccessType = RbacAccessType.Capability,
                     },
                 },
                 capabilityId
@@ -78,7 +78,7 @@ public class AuthorizationService : IAuthorizationService
                         {
                             Namespace = RbacNamespace.Topics,
                             Name = "read-public",
-                            AccessType = RbacAccessType.Capability, // ?? should be Global ?? should be Cluster level ??
+                            AccessType = RbacAccessType.Capability,
                         },
                     },
                     kafkaTopic.CapabilityId
@@ -95,7 +95,7 @@ public class AuthorizationService : IAuthorizationService
                     {
                         Namespace = RbacNamespace.Topics,
                         Name = "read-private",
-                        AccessType = RbacAccessType.Capability, // ?? should be Global ?? should be Cluster level ??
+                        AccessType = RbacAccessType.Capability,
                     },
                 },
                 kafkaTopic.CapabilityId
@@ -124,6 +124,24 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanDeleteTopic(PortalUser portalUser, KafkaTopic kafkaTopic)
     {
+        if (kafkaTopic.IsPublic)
+        {
+            return (
+                await _rbacApplicationService.IsUserPermitted(
+                    portalUser.Id,
+                    new List<Permission>
+                    {
+                        new()
+                        {
+                            Namespace = RbacNamespace.TopicsPublic,
+                            Name = "delete",
+                            AccessType = RbacAccessType.Capability,
+                        },
+                    },
+                    kafkaTopic.CapabilityId
+                )
+            ).Permitted();
+        }
         return (
             await _rbacApplicationService.IsUserPermitted(
                 portalUser.Id,
@@ -175,7 +193,7 @@ public class AuthorizationService : IAuthorizationService
                         {
                             Namespace = RbacNamespace.Topics,
                             Name = "read-public",
-                            AccessType = RbacAccessType.Capability, // ?? should be Global ?? should be Cluster level ??
+                            AccessType = RbacAccessType.Capability,
                         },
                     },
                     kafkaTopic.CapabilityId
@@ -192,7 +210,7 @@ public class AuthorizationService : IAuthorizationService
                     {
                         Namespace = RbacNamespace.Topics,
                         Name = "read-private",
-                        AccessType = RbacAccessType.Capability, // ?? should be Global ?? should be Cluster level ??
+                        AccessType = RbacAccessType.Capability,
                     },
                 },
                 kafkaTopic.CapabilityId
@@ -213,7 +231,7 @@ public class AuthorizationService : IAuthorizationService
                         {
                             Namespace = RbacNamespace.Topics,
                             Name = "read-public",
-                            AccessType = RbacAccessType.Capability, // ?? should be Global ?? should be Cluster level ??
+                            AccessType = RbacAccessType.Capability,
                         },
                     },
                     kafkaTopic.CapabilityId
@@ -230,7 +248,7 @@ public class AuthorizationService : IAuthorizationService
                     {
                         Namespace = RbacNamespace.Topics,
                         Name = "read-private",
-                        AccessType = RbacAccessType.Capability, // ?? should be Global ?? should be Cluster level ??
+                        AccessType = RbacAccessType.Capability,
                     },
                 },
                 kafkaTopic.CapabilityId
@@ -249,7 +267,7 @@ public class AuthorizationService : IAuthorizationService
                     {
                         Namespace = RbacNamespace.Topics,
                         Name = "update",
-                        AccessType = RbacAccessType.Capability, // ?? should be Global ?? should be Cluster level ??
+                        AccessType = RbacAccessType.Capability,
                     },
                 },
                 kafkaTopic.CapabilityId
@@ -423,7 +441,6 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanRequestAzureResource(UserId userId, CapabilityId capabilityId, string environment)
     {
-        // ???
         // should we use the environment for anything? It is already checked for before calling this function
         // as is we could consolidate the two 'identical' CanRequestAzureResource(s) methods
         return (
