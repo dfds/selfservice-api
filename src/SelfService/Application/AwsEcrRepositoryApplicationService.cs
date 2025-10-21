@@ -26,7 +26,10 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
                         Effect = "Allow",
                         Condition = new
                         {
-                            StringEquals = new Dictionary<string, string> { ["aws:PrincipalOrgID"] = awsOrganizationId.Trim() }
+                            StringEquals = new Dictionary<string, string>
+                            {
+                                ["aws:PrincipalOrgID"] = awsOrganizationId.Trim()
+                            }
                         },
                         Principal = new { AWS = new[] { "*" } },
                         Action = new[]
