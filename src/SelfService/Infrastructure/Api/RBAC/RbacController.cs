@@ -117,7 +117,7 @@ public class RbacController : ControllerBase
 
     [HttpGet("permission/capability/{id:required}")]
     [ProducesResponseType(typeof(List<RbacPermissionGrantApiResource>), StatusCodes.Status200OK)]
-    //[RequiresPermission("rbac", "read")]
+    [RequiresPermission("rbac", "read")]
     public async Task<IActionResult> GetCapabilityPermissions(string id)
     {
         var resp = await _rbacApplicationService.GetPermissionGrantsForCapability(id);
@@ -128,7 +128,7 @@ public class RbacController : ControllerBase
 
     [HttpGet("permission/user/{id:required}")]
     [ProducesResponseType(typeof(List<RbacPermissionGrantApiResource>), StatusCodes.Status200OK)]
-    //[RequiresPermission("rbac", "read")]
+    [RequiresPermission("rbac", "read")]
     public async Task<IActionResult> GetUserPermissions(string id)
     {
         var resp = await _rbacApplicationService.GetPermissionGrantsForUser(id);
@@ -139,7 +139,7 @@ public class RbacController : ControllerBase
 
     [HttpGet("permission/group/{id:required}")]
     [ProducesResponseType(typeof(List<RbacPermissionGrantApiResource>), StatusCodes.Status200OK)]
-    //[RequiresPermission("rbac", "read")]
+    [RequiresPermission("rbac", "read")]
     public async Task<IActionResult> GetGroupPermissions(string id)
     {
         var resp = await _rbacApplicationService.GetPermissionGrantsForGroup(id);
@@ -220,7 +220,7 @@ public class RbacController : ControllerBase
 
     [HttpGet("role/capability/{id:required}")]
     [ProducesResponseType(typeof(List<RbacRoleGrantApiResource>), StatusCodes.Status200OK)]
-    //[RequiresPermission("rbac", "read")]
+    [RequiresPermission("rbac", "read")]
     public async Task<IActionResult> GetCapabilityRoleGrants(string id)
     {
         var resp = await _rbacApplicationService.GetRoleGrantsForCapability(id);
@@ -230,7 +230,7 @@ public class RbacController : ControllerBase
 
     [HttpGet("role/user/{id:required}")]
     [ProducesResponseType(typeof(List<RbacRoleGrantApiResource>), StatusCodes.Status200OK)]
-    //[RequiresPermission("rbac", "read")]
+    [RequiresPermission("rbac", "read")]
     public async Task<IActionResult> GetUserRoleGrants(string id)
     {
         var resp = await _rbacApplicationService.GetRoleGrantsForUser(id);
@@ -241,7 +241,7 @@ public class RbacController : ControllerBase
 
     [HttpGet("role/groups/{id:required}")]
     [ProducesResponseType(typeof(List<RbacRoleGrantApiResource>), StatusCodes.Status200OK)]
-    //[RequiresPermission("rbac", "read")]
+    [RequiresPermission("rbac", "read")]
     public async Task<IActionResult> GetGroupRoleGrants(string id)
     {
         var resp = await _rbacApplicationService.GetRoleGrantsForGroup(id);

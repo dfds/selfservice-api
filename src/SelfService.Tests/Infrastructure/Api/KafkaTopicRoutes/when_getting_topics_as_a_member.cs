@@ -113,7 +113,7 @@ public class when_getting_topics_as_a_member : IAsyncLifetime
 
         var values = topicItem?.SelectElements("_links/self/allow")?.Select(x => x.GetString()).ToArray();
 
-        Assert.Equal(new[] { "GET", "DELETE" }, values); // [02/09-25] WARNING: THIS IS A CHANGE
+        Assert.Equal(new[] { "GET", "DELETE" }, values);
     }
 
     [Fact]
