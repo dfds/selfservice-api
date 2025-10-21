@@ -52,8 +52,6 @@ spec:
               name: selfservice-git
           {{- with .Values.app.environment }}
           env:
-            - name: ECR_PULL_PERMISSION_AWS_ACCOUNT_ID
-              value: "{{ $.Values.app.config.ecrPullPermissionAwsAccountId }}"
             - name: ECR_PULL_PERMISSION_AWS_ORGANIZATION_ID
               value: "{{ $.Values.app.config.ecrPullPermissionAwsBackupAccountId }}"
             {{- toYaml . | nindent 12}}
