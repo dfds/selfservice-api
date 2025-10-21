@@ -33,7 +33,6 @@ public class StubRbacPermissionGrantRepository : IRbacPermissionGrantRepository
 
     public Task<RbacPermissionGrant> Remove(RbacPermissionGrantId id)
     {
-        // Fluttershy: should we maintain some state for this stub?
         return Task.FromResult(_permissions.First(x => x.Id == id));
     }
 

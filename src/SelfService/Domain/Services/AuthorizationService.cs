@@ -680,7 +680,6 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanSelfAssess(UserId userId, CapabilityId capabilityId)
     {
-        // Fluttershy; How does sending a list of permissions actually work?
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
