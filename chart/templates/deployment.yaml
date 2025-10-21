@@ -53,7 +53,7 @@ spec:
           {{- with .Values.app.environment }}
           env:
             - name: ECR_PULL_PERMISSION_AWS_ORGANIZATION_ID
-              value: "{{ $.Values.app.config.ecrPullPermissionAwsBackupAccountId }}"
+              value: "{{ $.Values.app.config.ecrPullPermissionAwsOrganizationId }}"
             {{- toYaml . | nindent 12}}
           {{- end }}
           envFrom:
