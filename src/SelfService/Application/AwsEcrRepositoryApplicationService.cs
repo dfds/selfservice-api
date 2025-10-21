@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Amazon;
 using Amazon.ECR;
 using Amazon.ECR.Model;
@@ -23,7 +24,7 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
                     {
                         Sid = "Allow pull from all",
                         Effect = "Allow",
-                        Condition = new { StringEquals = new { new string("aws:PrincipalOrgID") = $"{awsOrganizationId.Trim()}" } },
+                        Condition = new { StringEquals = new Dictionary<string, string> { ["aws:PrincipalOrgID"] = awsOrganizationId.Trim() } },
                         Principal = new { AWS = new[] { "*" } },
                         Action = new[]
                         {
