@@ -23,20 +23,8 @@ public class AwsEcrRepositoryApplicationService : IAwsECRRepositoryApplicationSe
                     {
                         Sid = "Allow pull from all",
                         Effect = "Allow",
-                        Condition = new
-                        {
-                            StringEquals = new
-                            {
-                                "aws:PrincipalOrgID" = $"{awsOrganizationId.Trim()}",
-                            },
-                        },
-                        Principal = new
-                        {
-                            AWS = new[]
-                            {
-                                "*",
-                            },
-                        },
+                        Condition = new { StringEquals = new { "aws:PrincipalOrgID" = $"{awsOrganizationId.Trim()}" } },
+                        Principal = new { AWS = new[] { "*" } },
                         Action = new[]
                         {
                             "ecr:BatchCheckLayerAvailability",
