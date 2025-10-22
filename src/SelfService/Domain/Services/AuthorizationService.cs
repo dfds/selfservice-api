@@ -496,7 +496,7 @@ public class AuthorizationService : IAuthorizationService
         {
             return false;
         }
-        
+
         var hasActiveMembership = await _membershipQuery.HasActiveMembership(userId, capabilityId);
         var hasMultipleMembers = await _membershipQuery.HasMultipleMembers(capabilityId);
 
