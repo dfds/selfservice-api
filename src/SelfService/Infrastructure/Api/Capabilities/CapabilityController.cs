@@ -746,6 +746,16 @@ public class CapabilityController : ControllerBase
                 }
             );
 
+        // is the owner allowed to leave the capability?
+        if (! await _authorizationService.CanLeave(userId, capabilityId))
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Not allowed to leave capability",
+                    Detail = "The last owner of a capability is not allowed to leave it.",
+                }
+            );
+
         // Leave capability
         try
         {
