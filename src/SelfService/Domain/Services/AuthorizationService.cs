@@ -481,8 +481,25 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanLeave(UserId userId, CapabilityId capabilityId)
     {
-        return await _membershipQuery.HasActiveMembership(userId, capabilityId)
-            && await _membershipQuery.HasMultipleMembers(capabilityId);
+        var ownerRoleId = _rbacApplicationService.GetAssignableRoles().Result
+            .Where(r => r.Name == "Owner")
+            .Select(r => r.Id)
+            .ToList().FirstOrDefault();
+
+        var capabilityRoleGrants = await _rbacApplicationService.GetRoleGrantsForCapability(capabilityId);
+        var numberOfOwners = capabilityRoleGrants.Count(rg => rg.RoleId == ownerRoleId);
+        var userIsOwner = capabilityRoleGrants
+            .Any(rg => rg.AssignedEntityId == userId && rg.RoleId == ownerRoleId);
+
+        if (userIsOwner && numberOfOwners <= 1)
+        {
+            return false;
+        }
+
+        var hasActiveMembership = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        var hasMultipleMembers = await _membershipQuery.HasMultipleMembers(capabilityId);
+
+        return hasActiveMembership && hasMultipleMembers;
     }
 
     // not covered by current RBAC rules

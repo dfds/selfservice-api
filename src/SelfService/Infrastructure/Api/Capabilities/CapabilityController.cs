@@ -38,6 +38,7 @@ public class CapabilityController : ControllerBase
     private readonly ISelfAssessmentRepository _selfAssessmentRepository;
     private readonly ISelfAssessmentOptionRepository _selfAssessmentOptionRepository;
     private readonly IAwsEC2QueriesApplicationService _awsEC2QueriesApplicationService;
+    private readonly IRbacApplicationService _rbacApplicationService;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -60,7 +61,8 @@ public class CapabilityController : ControllerBase
         IInvitationApplicationService invitationApplicationService,
         ISelfAssessmentRepository selfAssessmentRepository,
         ISelfAssessmentOptionRepository selfAssessmentOptionRepository,
-        IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService
+        IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService,
+        IRbacApplicationService rbacApplicationService
     )
     {
         _membersQuery = membersQuery;
@@ -84,6 +86,7 @@ public class CapabilityController : ControllerBase
         _selfAssessmentRepository = selfAssessmentRepository;
         _selfAssessmentOptionRepository = selfAssessmentOptionRepository;
         _awsEC2QueriesApplicationService = awsEC2QueriesApplicationService;
+        _rbacApplicationService = rbacApplicationService;
     }
 
     [HttpGet("")]
@@ -747,6 +750,7 @@ public class CapabilityController : ControllerBase
         try
         {
             await _membershipApplicationService.LeaveCapability(capabilityId, userId);
+            await _rbacApplicationService.RevokeCapabilityRoleGrant(userId, capabilityId);
             return NoContent();
         }
         catch (EntityNotFoundException<Membership>)

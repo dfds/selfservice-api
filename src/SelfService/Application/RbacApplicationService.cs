@@ -454,6 +454,19 @@ public class RbacApplicationService : IRbacApplicationService
     }
 
     [TransactionalBoundary]
+    public async Task RevokeCapabilityRoleGrant(UserId userId, CapabilityId capabilityId)
+    {
+        var existingCapabilityGrant = await _roleGrantRepository.FindByPredicate(rg =>
+            rg.AssignedEntityId == userId.ToString()
+            && rg.Resource == capabilityId.ToString()
+        );
+        if (existingCapabilityGrant != null)
+        {
+            await _roleGrantRepository.Remove(existingCapabilityGrant.Id);
+        }
+    }
+
+    [TransactionalBoundary]
     public async Task<RbacRole> CreateRole(string user, RbacRole role)
     {
         /*
