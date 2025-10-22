@@ -747,7 +747,7 @@ public class CapabilityController : ControllerBase
             );
 
         // is the owner allowed to leave the capability?
-        if (! await _authorizationService.CanLeave(userId, capabilityId))
+        if (!await _authorizationService.CanLeave(userId, capabilityId))
             return Unauthorized(
                 new ProblemDetails
                 {

@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Api;
@@ -21,6 +23,7 @@ public class TestCapabilityAwsAccountRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
@@ -45,6 +48,7 @@ public class TestCapabilityAwsAccountRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: false));
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
@@ -88,6 +92,7 @@ public class TestCapabilityAwsAccountRoutes
             )
         );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
@@ -138,6 +143,7 @@ public class TestCapabilityAwsAccountRoutes
             )
         );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
@@ -165,8 +171,23 @@ public class TestCapabilityAwsAccountRoutes
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .Build();
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: false));
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "read-requests",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
@@ -210,6 +231,7 @@ public class TestCapabilityAwsAccountRoutes
             )
         );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
@@ -253,6 +275,7 @@ public class TestCapabilityAwsAccountRoutes
             )
         );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
@@ -282,6 +305,7 @@ public class TestCapabilityAwsAccountRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: false));
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();

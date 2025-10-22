@@ -457,8 +457,7 @@ public class RbacApplicationService : IRbacApplicationService
     public async Task RevokeCapabilityRoleGrant(UserId userId, CapabilityId capabilityId)
     {
         var existingCapabilityGrant = await _roleGrantRepository.FindByPredicate(rg =>
-            rg.AssignedEntityId == userId.ToString()
-            && rg.Resource == capabilityId.ToString()
+            rg.AssignedEntityId == userId.ToString() && rg.Resource == capabilityId.ToString()
         );
         if (existingCapabilityGrant != null)
         {
