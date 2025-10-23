@@ -170,6 +170,21 @@ public class CapabilityController : ControllerBase
 
         var capability = await _capabilityRepository.Get(capabilityId);
 
+        var ownerRoleId = _rbacApplicationService
+            .GetAssignableRoles()
+            .Result.Where(r => r.Name == "Owner")
+            .Select(r => r.Id)
+            .ToList()
+            .FirstOrDefault();
+        RbacRoleGrant ownerRoleGrant = RbacRoleGrant.New(
+            ownerRoleId!,
+            AssignedEntityType.User,
+            userId,
+            RbacAccessType.Capability,
+            capability.Id.ToString()
+        );
+        await _rbacApplicationService.GrantRoleGrant(userId, ownerRoleGrant);
+
         if (request.Invitees != null)
         {
             await _invitationApplicationService.CreateCapabilityInvitations(
