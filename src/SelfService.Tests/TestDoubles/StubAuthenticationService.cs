@@ -218,4 +218,19 @@ public class StubAuthorizationService : IAuthorizationService
     {
         return _authorized;
     }
+
+    public bool CanCreateDemo(PortalUser portalUser)
+    {
+        return _authorized;
+    }
+
+    public bool CanUpdateDemo(PortalUser portalUser)
+    {
+        return _authorized;
+    }
+    public bool CanDeleteDemo(PortalUser portalUser)
+    {
+        return _authorized;
+    }
+
 }

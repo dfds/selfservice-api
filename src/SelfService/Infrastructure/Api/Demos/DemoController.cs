@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Domain.Models;
-using SelfService.Domain.Services;
-using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Infrastructure.Api.Demos;
