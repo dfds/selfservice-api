@@ -110,7 +110,7 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task PublishResourceManifestToGit(AzureResourceRequested azureResourceRequested, UserId requestedBy)
+    public async Task PublishResourceManifestToGit(AzureResourceRequested azureResourceRequested)
     {
         var resource = await _azureResourceRepository.Get(azureResourceRequested.AzureResourceId!);
         var capability = await _capabilityRepository.Get(resource.CapabilityId);
@@ -122,7 +122,7 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
                 {
                     AzureResource = resource,
                     Capability = capability,
-                    Owner = requestedBy,
+                    Owner = azureResourceRequested.Owner,
                     Purpose = azureResourceRequested.Purpose,
                     CatalogueId = azureResourceRequested.CatalogueId,
                     Risk = azureResourceRequested.Risk,
