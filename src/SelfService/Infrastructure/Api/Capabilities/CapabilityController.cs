@@ -38,6 +38,7 @@ public class CapabilityController : ControllerBase
     private readonly ISelfAssessmentRepository _selfAssessmentRepository;
     private readonly ISelfAssessmentOptionRepository _selfAssessmentOptionRepository;
     private readonly IAwsEC2QueriesApplicationService _awsEC2QueriesApplicationService;
+    private readonly IRbacApplicationService _rbacApplicationService;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -60,7 +61,8 @@ public class CapabilityController : ControllerBase
         IInvitationApplicationService invitationApplicationService,
         ISelfAssessmentRepository selfAssessmentRepository,
         ISelfAssessmentOptionRepository selfAssessmentOptionRepository,
-        IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService
+        IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService,
+        IRbacApplicationService rbacApplicationService
     )
     {
         _membersQuery = membersQuery;
@@ -84,6 +86,7 @@ public class CapabilityController : ControllerBase
         _selfAssessmentRepository = selfAssessmentRepository;
         _selfAssessmentOptionRepository = selfAssessmentOptionRepository;
         _awsEC2QueriesApplicationService = awsEC2QueriesApplicationService;
+        _rbacApplicationService = rbacApplicationService;
     }
 
     [HttpGet("")]
@@ -243,7 +246,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // // [RequiresPermission("aws", "read")]
+    [RequiresPermission("aws", "read")]
     public async Task<IActionResult> GetCapabilityAwsAccount(string id)
     {
         if (!User.TryGetUserId(out var userId))
@@ -270,7 +273,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
-    // [RequiresPermission("aws", "create")]
+    [RequiresPermission("aws", "create")]
     public async Task<IActionResult> RequestAwsAccount(string id)
     {
         if (!User.TryGetUserId(out var userId))
@@ -303,7 +306,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("aws", "read")]
+    [RequiresPermission("aws", "read")]
     public async Task<IActionResult> GetCapabilityAwsAccountInformation(string id)
     {
         if (!User.TryGetUserId(out var userId))
@@ -350,7 +353,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("azure", "read")]
+    [RequiresPermission("azure", "read")]
     public async Task<IActionResult> GetCapabilityAzureResources(string id)
     {
         if (!User.TryGetUserId(out var userId))
@@ -373,7 +376,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
-    // [RequiresPermission("azure", "create")]
+    [RequiresPermission("azure", "create")]
     public async Task<IActionResult> RequestCapabilityAzureResource(
         string id,
         [FromBody] NewAzureResourceRequest request
@@ -446,7 +449,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("capability-management", "read-self-assess")]
+    [RequiresPermission("capability-management", "read-self-assess")]
     public async Task<IActionResult> GetSelfAssessments(string id)
     {
         if (!User.TryGetUserId(out var userId))
@@ -471,7 +474,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("capability-management", "create-self-assess")]
+    [RequiresPermission("capability-management", "create-self-assess")]
     public async Task<IActionResult> UpdateSelfAssessment(
         string id,
         [FromBody] SelfAssessmentRequest selfAssessmentRequest
@@ -517,7 +520,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("azure", "read")]
+    [RequiresPermission("azure", "read")]
     public async Task<IActionResult> GetCapabilityAzureResource(string id, string rid)
     {
         if (!User.TryGetUserId(out var userId))
@@ -642,7 +645,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
-    // [RequiresPermission("topics", "create")]
+    [RequiresPermission("topics", "create")]
     public async Task<IActionResult> AddCapabilityTopic(string id, [FromBody] NewKafkaTopicRequest topicRequest)
     {
         if (!User.TryGetUserId(out var userId))
@@ -687,7 +690,7 @@ public class CapabilityController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem();
 
-        if (!await _authorizationService.CanAdd(userId, capabilityId, kafkaClusterId))
+        if (!await _authorizationService.CanAddTopic(userId, capabilityId, kafkaClusterId))
             return Unauthorized();
 
         try
@@ -743,10 +746,21 @@ public class CapabilityController : ControllerBase
                 }
             );
 
+        // is the owner allowed to leave the capability?
+        if (!await _authorizationService.CanLeave(userId, capabilityId))
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Not allowed to leave capability",
+                    Detail = "The last owner of a capability is not allowed to leave it.",
+                }
+            );
+
         // Leave capability
         try
         {
             await _membershipApplicationService.LeaveCapability(capabilityId, userId);
+            await _rbacApplicationService.RevokeCapabilityRoleGrant(userId, capabilityId);
             return NoContent();
         }
         catch (EntityNotFoundException<Membership>)
@@ -833,7 +847,7 @@ public class CapabilityController : ControllerBase
                 }
             );
 
-        if (!await _authorizationService.CanViewAccess(userId, capabilityId))
+        if (!await _authorizationService.CanViewKafkaClusterAccess(userId, capabilityId))
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -880,7 +894,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("topics", "create")]
+    [RequiresPermission("topics", "create")]
     public async Task<IActionResult> RequestKafkaClusterAccess(string id, string clusterId)
     {
         if (!User.TryGetUserId(out var userId))
@@ -924,7 +938,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("capability-management", "request-deletion")]
+    [RequiresPermission("capability-management", "request-deletion")]
     public async Task<IActionResult> RequestCapabilityDeletion(string id, UserId user)
     {
         // Verify user and fetch userId
@@ -982,7 +996,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("capability-management", "request-deletion")]
+    [RequiresPermission("capability-management", "request-deletion")]
     public async Task<IActionResult> CancelCapabilityDeletionRequest(string id)
     {
         // Verify user and fetch userId
@@ -1061,8 +1075,8 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("tags-and-metadata", "create")]
-    // [RequiresPermission("tags-and-metadata", "update")]
+    [RequiresPermission("tags-and-metadata", "create")]
+    [RequiresPermission("tags-and-metadata", "update")]
     public async Task<IActionResult> SetCapabilityRequiredMetadata(
         string id,
         [FromBody] SetCapabilityMetadataRequest request
@@ -1088,7 +1102,7 @@ public class CapabilityController : ControllerBase
             );
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!await _authorizationService.CanGetSetCapabilityJsonMetadata(portalUser, capabilityId))
+        if (!await _authorizationService.CanSetCapabilityJsonMetadata(portalUser, capabilityId))
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -1139,8 +1153,8 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("tags-and-metadata", "create")]
-    // [RequiresPermission("tags-and-metadata", "update")]
+    [RequiresPermission("tags-and-metadata", "create")]
+    [RequiresPermission("tags-and-metadata", "update")]
     public async Task<IActionResult> SetCapabilityMetadata(string id, [FromBody] SetCapabilityMetadataRequest request)
     {
         // Verify user and fetch userId
@@ -1163,7 +1177,7 @@ public class CapabilityController : ControllerBase
             );
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!await _authorizationService.CanGetSetCapabilityJsonMetadata(portalUser, capabilityId))
+        if (!await _authorizationService.CanSetCapabilityJsonMetadata(portalUser, capabilityId))
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -1291,7 +1305,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("capability-membership-management", "create")]
+    [RequiresPermission("capability-membership-management", "create")]
     public async Task<IActionResult> CreateInvitations([FromRoute] string id, [FromBody] InvitationsRequest request)
     {
         if (!User.TryGetUserId(out var userId))
@@ -1367,7 +1381,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("capability-management", "read-self-assess")]
+    [RequiresPermission("capability-management", "read-self-assess")]
     public async Task<IActionResult> GetSelfAssessmentOptions()
     {
         if (!User.TryGetUserId(out var userId))
@@ -1414,7 +1428,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    // [RequiresPermission("capability-management", "create-self-assess")]
+    [RequiresPermission("capability-management", "create-self-assess")]
     public async Task<IActionResult> UpdateSelfAssessmentOption(
         [FromRoute] string id,
         [FromBody] UpdateSelfAssessmentOptionRequest request

@@ -23,6 +23,7 @@ public class when_getting_membership_application_approvals_as_NON_member : IAsyn
         );
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         _response = await client.GetAsync($"/membershipapplications/{_aMembershipApplication.Id}/approvals");

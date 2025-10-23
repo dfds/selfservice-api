@@ -21,6 +21,7 @@ public interface IRbacApplicationService
     Task RevokePermission(string user, string id);
     Task GrantRoleGrant(string user, RbacRoleGrant roleGrant);
     Task RevokeRoleGrant(string user, string id);
+    Task RevokeCapabilityRoleGrant(UserId userId, CapabilityId capabilityId);
     Task<RbacRole> CreateRole(string user, RbacRole role);
     Task DeleteRole(string user, string roleId);
     Task<RbacGroup> CreateGroup(string user, RbacGroup group);

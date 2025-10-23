@@ -26,6 +26,7 @@ public class when_getting_private_topics_as_a_cloud_engineer : IAsyncLifetime
         application.ReplaceService<IKafkaTopicQuery>(new StubKafkaTopicQuery(_aPrivateTopic));
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         application.ConfigureFakeAuthentication(options =>
         {

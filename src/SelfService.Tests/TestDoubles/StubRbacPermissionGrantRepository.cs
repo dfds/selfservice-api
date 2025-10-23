@@ -4,6 +4,13 @@ namespace SelfService.Tests.TestDoubles;
 
 public class StubRbacPermissionGrantRepository : IRbacPermissionGrantRepository
 {
+    private readonly RbacPermissionGrant[] _permissions;
+
+    public StubRbacPermissionGrantRepository(params RbacPermissionGrant[] permissions)
+    {
+        _permissions = permissions;
+    }
+
     public Task Add(RbacPermissionGrant model)
     {
         return Task.CompletedTask;
@@ -11,42 +18,31 @@ public class StubRbacPermissionGrantRepository : IRbacPermissionGrantRepository
 
     public Task<bool> Exists(RbacPermissionGrantId id)
     {
-        return Task.FromResult(true);
+        return Task.FromResult(_permissions.Any(x => x.Id == id));
     }
 
     public Task<RbacPermissionGrant?> FindById(RbacPermissionGrantId id)
     {
-        return Task.FromResult<RbacPermissionGrant?>(null);
+        return Task.FromResult<RbacPermissionGrant?>(_permissions.FirstOrDefault(x => x.Id == id));
     }
 
     public Task<RbacPermissionGrant?> FindByPredicate(Func<RbacPermissionGrant, bool> predicate)
     {
-        return Task.FromResult<RbacPermissionGrant?>(null);
+        return Task.FromResult<RbacPermissionGrant?>(_permissions.FirstOrDefault(predicate));
     }
 
     public Task<RbacPermissionGrant> Remove(RbacPermissionGrantId id)
     {
-        return Task.FromResult(
-            new RbacPermissionGrant(
-                RbacPermissionGrantId.New(),
-                DateTime.Now,
-                AssignedEntityType.User,
-                "",
-                RbacNamespace.Default,
-                "",
-                RbacAccessType.Global,
-                ""
-            )
-        );
+        return Task.FromResult(_permissions.First(x => x.Id == id));
     }
 
     public Task<List<RbacPermissionGrant>> GetAll()
     {
-        return Task.FromResult(new List<RbacPermissionGrant>());
+        return Task.FromResult(new List<RbacPermissionGrant>(_permissions));
     }
 
     public Task<List<RbacPermissionGrant>> GetAllWithPredicate(Func<RbacPermissionGrant, bool> predicate)
     {
-        return Task.FromResult(new List<RbacPermissionGrant>());
+        return Task.FromResult(new List<RbacPermissionGrant>(_permissions.Where(predicate)));
     }
 }

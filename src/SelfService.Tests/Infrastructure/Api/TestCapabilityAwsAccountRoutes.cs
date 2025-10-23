@@ -1,7 +1,10 @@
 ﻿using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Infrastructure.Api;
@@ -20,6 +23,8 @@ public class TestCapabilityAwsAccountRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -40,10 +45,11 @@ public class TestCapabilityAwsAccountRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
-            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: false))
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: false));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -69,12 +75,25 @@ public class TestCapabilityAwsAccountRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository(stubAwsAccount))
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
-            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .Build();
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Aws,
+                        "read",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
-        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -99,15 +118,39 @@ public class TestCapabilityAwsAccountRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
-            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .Build();
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.CapabilityManagement,
+                        "read",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Aws,
+                        "create",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
 
         var content = await response.Content.ReadAsStringAsync();
+
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
 
         var allowValues = document
@@ -127,10 +170,25 @@ public class TestCapabilityAwsAccountRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
-            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembershipApplication: true))
             .Build();
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: false));
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Topics,
+                        "read-requests",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                ]
+            )
+        );
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -156,10 +214,25 @@ public class TestCapabilityAwsAccountRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository(stubAwsAccount))
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
-            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .Build();
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Aws,
+                        "read",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -185,10 +258,25 @@ public class TestCapabilityAwsAccountRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository(stubAwsAccount))
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
-            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .Build();
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.Aws,
+                        "read",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -214,10 +302,11 @@ public class TestCapabilityAwsAccountRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository(stubAwsAccount))
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
-            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: false))
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: false));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");

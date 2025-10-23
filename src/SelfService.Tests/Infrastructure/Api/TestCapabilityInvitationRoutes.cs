@@ -1,4 +1,5 @@
 using System.Text.Json;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Tests.TestDoubles;
@@ -19,6 +20,8 @@ public class TestCapabilityInvitationRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: false));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -43,6 +46,8 @@ public class TestCapabilityInvitationRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: false));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -68,10 +73,25 @@ public class TestCapabilityInvitationRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
-            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .Build();
-        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacPermissionGrantRepository>(
+            new StubRbacPermissionGrantRepository(
+                permissions:
+                [
+                    RbacPermissionGrant.New(
+                        AssignedEntityType.User,
+                        "foo@bar.com",
+                        RbacNamespace.CapabilityMembershipManagement,
+                        "create",
+                        RbacAccessType.Capability,
+                        stubCapability.Id.ToString()
+                    ),
+                ]
+            )
+        );
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");

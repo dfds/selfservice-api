@@ -72,5 +72,10 @@ finally
 }
 
 #pragma warning disable CA1050 // Declare types in namespaces
+/*
+    Note: Program is defined here in order to enable its type use in testing.
+    When running this code, the C#-compiler will generate the `Program` class from the contents of this file.
+    As this definition of `Program` is partial, it is thus extended when built.
+*/
 public partial class Program { }
 #pragma warning disable CA1050 // Declare types in namespaces

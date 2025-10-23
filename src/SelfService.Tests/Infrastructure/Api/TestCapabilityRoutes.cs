@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
 using Moq;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Persistence.Queries;
@@ -17,6 +18,8 @@ public class TestCapabilityRoutes
         application.ReplaceService<ICapabilityRepository>(new StubCapabilityRepository());
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
 
@@ -34,6 +37,8 @@ public class TestCapabilityRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
 
@@ -54,6 +59,8 @@ public class TestCapabilityRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -83,6 +90,8 @@ public class TestCapabilityRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
@@ -108,6 +117,8 @@ public class TestCapabilityRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
