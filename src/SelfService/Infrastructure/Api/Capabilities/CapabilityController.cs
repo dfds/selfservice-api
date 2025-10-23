@@ -170,7 +170,6 @@ public class CapabilityController : ControllerBase
 
         var capability = await _capabilityRepository.Get(capabilityId);
 
-        
         var ownerRoleId = _rbacApplicationService
             .GetAssignableRoles()
             .Result.Where(r => r.Name == "Owner")
