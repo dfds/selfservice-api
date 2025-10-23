@@ -228,9 +228,9 @@ public class StubAuthorizationService : IAuthorizationService
     {
         return _authorized;
     }
+
     public bool CanDeleteDemo(PortalUser portalUser)
     {
         return _authorized;
     }
-
 }

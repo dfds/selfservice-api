@@ -1953,6 +1953,7 @@ public class ApiResourceFactory
 
         return payload;
     }
+
     public DemoApiResource Convert(Demo demo)
     {
         var portalUser = HttpContext.User.ToPortalUser();
