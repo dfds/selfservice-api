@@ -122,6 +122,7 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
                 {
                     AzureResource = resource,
                     Capability = capability,
+                    Owner = azureResourceRequested.Owner,
                     Purpose = azureResourceRequested.Purpose,
                     CatalogueId = azureResourceRequested.CatalogueId,
                     Risk = azureResourceRequested.Risk,
