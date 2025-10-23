@@ -14,5 +14,5 @@ public interface IAzureResourceApplicationService
         string? risk = null,
         bool? gdpr = null
     );
-    public Task PublishResourceManifestToGit(AzureResourceRequested azureResourceRequested);
+    public Task PublishResourceManifestToGit(AzureResourceRequested azureResourceRequested, UserId requestedBy);
 }
