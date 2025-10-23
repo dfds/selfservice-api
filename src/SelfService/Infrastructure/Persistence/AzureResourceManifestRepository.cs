@@ -150,6 +150,7 @@ public class AzureResourceManifest
     public String Path { get; set; }
     public AzureResource? AzureResource { get; set; }
     public Capability? Capability { get; set; }
+    public UserId? Owner { get; set; }
     public string? Purpose { get; set; }
     public string? CatalogueId { get; set; }
     public string? Risk { get; set; }
@@ -179,7 +180,6 @@ public class AzureResourceManifest
         var team = jsonObject["dfds.team"]?.ToString() ?? "";
         var costCentre = jsonObject["dfds.cost.centre"]?.ToString() ?? "";
         var tribe = costCentre;
-        var owner = jsonObject["dfds.owner"]?.ToString() ?? "";
         var availability = jsonObject["dfds.service.availability"]?.ToString() ?? "";
 
         return $$"""
@@ -202,7 +202,7 @@ public class AzureResourceManifest
               capability_root_id          = "{{Capability?.Id}}"
               context_name                = "{{AzureResource?.Environment}}"
               capability_id               = "{{Capability?.Id}}"
-              owner                       = "{{owner}}"
+              owner                       = "{{Owner!.ToString()}}"
               environment                 = "{{AzureResource?.Environment}}"
               costcentre                  = "{{costCentre}}"
               availability                = "{{availability}}"
