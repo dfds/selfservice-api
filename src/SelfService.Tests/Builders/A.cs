@@ -23,6 +23,7 @@ public static class A
     public static MembershipApprovalBuilder MembershipApproval => new();
     public static MessageContractBuilder MessageContract => new();
     public static ReleaseNoteBuilder ReleaseNote => new();
+    public static DemoBuilder Demo => new();
 
     public static CapabilityRepositoryBuilder CapabilityRepository => new();
     public static MembershipApplicationRepositoryBuilder MembershipApplicationRepository => new();
@@ -44,4 +45,7 @@ public static class A
     public static InvitationRepositoryBuilder InvitationRepository => new();
     public static InvitationApplicationServiceBuilder InvitationApplicationService => new();
     public static ConfigurationLevelServiceBuilder ConfigurationLevelService => new();
+
+    public static DemosRepositoryBuilder DemosRepository => new();
+    public static DemosServiceBuilder DemosService => new();
 }
