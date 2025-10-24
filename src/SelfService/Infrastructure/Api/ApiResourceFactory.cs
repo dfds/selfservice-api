@@ -1,10 +1,12 @@
 ﻿using Amazon.EC2;
+using Amazon.EC2.Model;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
+using SelfService.Infrastructure.Api.Demos;
 using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
@@ -1421,6 +1423,11 @@ public class ApiResourceFactory
         );
     }
 
+    public MyUserSettingsApiResource Convert(UserSettings userSettings)
+    {
+        return new MyUserSettingsApiResource(userSettings: userSettings);
+    }
+
     public MyProfileApiResource Convert(
         UserId userId,
         IEnumerable<Capability> capabilities,
@@ -1433,7 +1440,12 @@ public class ApiResourceFactory
             capabilities: capabilities.Select(ConvertToListItem),
             autoReloadTopics: !isDevelopment,
             personalInformation: member != null
-                ? new PersonalInformationApiResource { Name = member.DisplayName ?? "", Email = member.Email }
+                ? new PersonalInformationApiResource
+                {
+                    Name = member.DisplayName ?? "",
+                    Email = member.Email,
+                    UserSettings = Convert(member.UserSettings),
+                }
                 : PersonalInformationApiResource.Empty,
             links: new MyProfileApiResource.MyProfileLinks(
                 self: new ResourceLink(
@@ -1471,6 +1483,15 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "related",
                     allow: Allow.Get
+                ),
+                updateUserSettings: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        controller: GetNameOf<MeController>(),
+                        action: nameof(MeController.UpdateUserSettings)
+                    ) ?? "",
+                    rel: "related",
+                    allow: Allow.Post
                 ),
                 invitationsLinks: new MyProfileApiResource.InvitationsLinks(
                     capalityInvitations: new ResourceLink(
@@ -1909,5 +1930,96 @@ public class ApiResourceFactory
         };
 
         return payload;
+    }
+
+    public DemoSignupsApiResponse Convert(IEnumerable<DemoSignup> signups)
+    {
+        var payload = new DemoSignupsApiResponse
+        {
+            Items = signups.Select(x => new DemoSignupApiResource { Email = x.Email, Name = x.Name }).ToList(),
+            Links = new DemoSignupsApiResponse.DemoSignupsApiResponseLinks
+            {
+                Self = new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(DemosController.GetActiveSignups),
+                        controller: GetNameOf<DemosController>()
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                ),
+            },
+        };
+
+        return payload;
+    }
+
+    public DemoApiResource Convert(Demo demo)
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowOnSelf = Allow.Get;
+        if (_authorizationService.CanDeleteDemo(portalUser))
+        {
+            allowOnSelf += Delete;
+        }
+        if (_authorizationService.CanUpdateDemo(portalUser))
+        {
+            allowOnSelf += Post;
+        }
+
+        var result = new DemoApiResource(
+            id: demo.Id,
+            recordingDate: demo.RecordingDate,
+            title: demo.Title,
+            description: demo.Description,
+            uri: demo.Uri,
+            tags: demo.Tags,
+            createdBy: demo.CreatedBy,
+            createdAt: demo.CreatedAt,
+            isActive: demo.IsActive,
+            links: new DemoApiResource.DemoLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(DemosController.GetDemo),
+                        controller: GetNameOf<DemosController>(),
+                        values: new { id = demo.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowOnSelf
+                )
+            )
+        );
+
+        return result;
+    }
+
+    public DemosApiResource Convert(IEnumerable<Demo> demos)
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowOnSelf = Allow.Get;
+        if (_authorizationService.CanCreateDemo(portalUser))
+        {
+            allowOnSelf += Post;
+        }
+
+        var result = new DemosApiResource(
+            demos: demos.Select(Convert).ToArray(),
+            links: new DemosApiResource.DemosLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(DemosController.GetDemos),
+                        controller: GetNameOf<DemosController>()
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowOnSelf
+                )
+            )
+        );
+
+        return result;
     }
 }

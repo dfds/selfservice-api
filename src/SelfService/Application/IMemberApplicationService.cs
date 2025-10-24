@@ -39,7 +39,7 @@ public class MemberApplicationService : IMemberApplicationService
         var user = await _memberRepository.FindBy(userId);
         if (user == null)
         {
-            user = Member.Register(userId, name, email);
+            user = Member.Register(userId, name, email, new UserSettings());
             await _memberRepository.Add(user);
 
             _logger.LogInformation("User {UserId} has been registered", userId);

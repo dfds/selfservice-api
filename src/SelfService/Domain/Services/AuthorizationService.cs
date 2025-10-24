@@ -767,4 +767,19 @@ public class AuthorizationService : IAuthorizationService
     {
         return IsCloudEngineerEnabled(portalUser);
     }
+
+    public bool CanCreateDemo(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
+    public bool CanUpdateDemo(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
+    public bool CanDeleteDemo(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
 }
