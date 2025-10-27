@@ -426,7 +426,7 @@ public class AuthorizationService : IAuthorizationService
         ).Permitted();
         */
         var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
-        
+
         return isMemberOfOwningCapability;
     }
 
