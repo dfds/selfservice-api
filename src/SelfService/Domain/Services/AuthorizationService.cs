@@ -302,6 +302,7 @@ public class AuthorizationService : IAuthorizationService
     public async Task<bool> CanReadMembershipApplications(UserId userId, MembershipApplication application)
     {
         var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, application.CapabilityId);
+        var ownsApplication = application.Applicant == userId;
         /*
         return (
             await _rbacApplicationService.IsUserPermitted(
@@ -319,7 +320,7 @@ public class AuthorizationService : IAuthorizationService
             )
         ).Permitted();
         */
-        return isMemberOfOwningCapability;
+        return isMemberOfOwningCapability || ownsApplication;
     }
 
     public async Task<bool> CanApproveMembershipApplications(UserId userId, MembershipApplication application)
@@ -398,7 +399,6 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanViewAwsAccountInformation(UserId userId, CapabilityId capabilityId)
     {
-        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
         var account = await _awsAccountRepository.FindBy(capabilityId);
         if (account is null)
             return false;
@@ -425,6 +425,8 @@ public class AuthorizationService : IAuthorizationService
             )
         ).Permitted();
         */
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        
         return isMemberOfOwningCapability;
     }
 
@@ -525,6 +527,7 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanLeave(UserId userId, CapabilityId capabilityId)
     {
+        /*
         var ownerRoleId = _rbacApplicationService
             .GetAssignableRoles()
             .Result.Where(r => r.Name == "Owner")
@@ -540,12 +543,13 @@ public class AuthorizationService : IAuthorizationService
         {
             return false;
         }
+        */
 
         var hasActiveMembership = await _membershipQuery.HasActiveMembership(userId, capabilityId);
         var hasMultipleMembers = await _membershipQuery.HasMultipleMembers(capabilityId);
 
-        // return hasActiveMembership && hasMultipleMembers;
-        return false;
+        return hasActiveMembership && hasMultipleMembers;
+        //return false;
     }
 
     // not covered by current RBAC rules

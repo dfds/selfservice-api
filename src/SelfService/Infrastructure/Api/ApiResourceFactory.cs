@@ -665,7 +665,6 @@ public class ApiResourceFactory
     {
         var allowedInteractions = Allow.None;
         var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capability.Id);
-
         if (
             await _authorizationService.CanViewAzureResources(CurrentUser, capability.Id)
             && !capabilityMarkedForDeletion
