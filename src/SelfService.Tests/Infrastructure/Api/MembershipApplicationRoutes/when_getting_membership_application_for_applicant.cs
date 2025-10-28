@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Microsoft.AspNetCore.Builder;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Tests.TestDoubles;
@@ -16,11 +17,14 @@ public class when_getting_membership_application_for_applicant : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await using var application = new ApiApplication();
+        await using var application = new ApiApplicationBuilder()
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: false))
+            .Build();
         application.ReplaceService<IMembershipQuery>(new StubMembershipQuery(hasActiveMembership: false));
         application.ReplaceService<IMembershipApplicationQuery>(
             new StubMembershipApplicationQuery(_aMembershipApplication)
         );
+        /*
         application.ReplaceService<IRbacPermissionGrantRepository>(
             new StubRbacPermissionGrantRepository(
                 permissions: new[]
@@ -36,6 +40,7 @@ public class when_getting_membership_application_for_applicant : IAsyncLifetime
                 }
             )
         );
+        */
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 

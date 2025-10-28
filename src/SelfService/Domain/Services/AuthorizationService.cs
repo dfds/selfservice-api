@@ -44,6 +44,9 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanAddTopic(UserId userId, CapabilityId capabilityId, KafkaClusterId clusterId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+
+        /*
         var canCreateTopics = (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -59,14 +62,16 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
+        */
 
         var hasClusterAccess =
             (await _kafkaClusterAccessRepository.FindBy(capabilityId, clusterId))?.IsAccessGranted ?? false;
-        return hasClusterAccess && canCreateTopics;
+        return hasClusterAccess && isMemberOfOwningCapability; // canCreateTopics;
     }
 
     public async Task<bool> CanReadTopic(PortalUser portalUser, KafkaTopic kafkaTopic)
     {
+        /*
         if (kafkaTopic.IsPublic)
         {
             return (
@@ -101,6 +106,12 @@ public class AuthorizationService : IAuthorizationService
                 kafkaTopic.CapabilityId
             )
         ).Permitted();
+        */
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(
+            portalUser.Id,
+            kafkaTopic.CapabilityId
+        );
+        return (isMemberOfOwningCapability && kafkaTopic.IsPrivate) || kafkaTopic.IsPublic;
     }
 
     public async Task<bool> CanModifyTopic(PortalUser portalUser, KafkaTopic kafkaTopic)
@@ -290,6 +301,9 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanReadMembershipApplications(UserId userId, MembershipApplication application)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, application.CapabilityId);
+        var ownsApplication = application.Applicant == userId;
+        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -305,10 +319,14 @@ public class AuthorizationService : IAuthorizationService
                 application.CapabilityId
             )
         ).Permitted();
+        */
+        return isMemberOfOwningCapability || ownsApplication;
     }
 
     public async Task<bool> CanApproveMembershipApplications(UserId userId, MembershipApplication application)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, application.CapabilityId);
+        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -324,10 +342,14 @@ public class AuthorizationService : IAuthorizationService
                 application.CapabilityId
             )
         ).Permitted();
+        */
+        return isMemberOfOwningCapability;
     }
 
     public async Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        /*
         var canReadAwsAccount = (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -343,8 +365,8 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
-
-        return (await _awsAccountRepository.Exists(capabilityId)) && canReadAwsAccount;
+        */
+        return (await _awsAccountRepository.Exists(capabilityId)) && isMemberOfOwningCapability; //canReadAwsAccount;
     }
 
     public async Task<bool> CanViewAwsAccount(UserId userId, AwsAccountId accountId)
@@ -354,7 +376,8 @@ public class AuthorizationService : IAuthorizationService
         {
             return false;
         }
-
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, account.CapabilityId);
+        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -370,6 +393,8 @@ public class AuthorizationService : IAuthorizationService
                 account.CapabilityId
             )
         ).Permitted();
+        */
+        return isMemberOfOwningCapability;
     }
 
     public async Task<bool> CanViewAwsAccountInformation(UserId userId, CapabilityId capabilityId)
@@ -383,6 +408,7 @@ public class AuthorizationService : IAuthorizationService
             return false;
         }
 
+        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -398,10 +424,17 @@ public class AuthorizationService : IAuthorizationService
                 account.CapabilityId
             )
         ).Permitted();
+        */
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+
+        return isMemberOfOwningCapability;
     }
 
     public async Task<bool> CanRequestAwsAccount(UserId userId, CapabilityId capabilityId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        var canCreateAwsAccount = isMemberOfOwningCapability;
+        /*
         var canCreateAwsAccount = (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -417,11 +450,15 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
+        */
         return (!await _awsAccountRepository.Exists(capabilityId)) && canCreateAwsAccount;
     }
 
     public async Task<bool> CanViewAzureResources(UserId userId, CapabilityId capabilityId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        return isMemberOfOwningCapability;
+        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -437,12 +474,16 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
+        */
     }
 
     public async Task<bool> CanRequestAzureResource(UserId userId, CapabilityId capabilityId, string environment)
     {
         // should we use the environment for anything? It is already checked for before calling this function
         // as is we could consolidate the two 'identical' CanRequestAzureResource(s) methods
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        return isMemberOfOwningCapability;
+        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -458,10 +499,14 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
+        */
     }
 
     public async Task<bool> CanRequestAzureResources(UserId userId, CapabilityId capabilityId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        return isMemberOfOwningCapability;
+        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -477,10 +522,12 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
+        */
     }
 
     public async Task<bool> CanLeave(UserId userId, CapabilityId capabilityId)
     {
+        /*
         var ownerRoleId = _rbacApplicationService
             .GetAssignableRoles()
             .Result.Where(r => r.Name == "Owner")
@@ -496,11 +543,13 @@ public class AuthorizationService : IAuthorizationService
         {
             return false;
         }
+        */
 
         var hasActiveMembership = await _membershipQuery.HasActiveMembership(userId, capabilityId);
         var hasMultipleMembers = await _membershipQuery.HasMultipleMembers(capabilityId);
 
         return hasActiveMembership && hasMultipleMembers;
+        //return false;
     }
 
     // not covered by current RBAC rules
@@ -512,6 +561,8 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanViewAllApplications(UserId userId, CapabilityId capabilityId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -527,10 +578,14 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
+        */
+        return isMemberOfOwningCapability;
     }
 
     public async Task<bool> CanDeleteCapability(UserId userId, CapabilityId capabilityId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -546,6 +601,8 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
+        */
+        return isMemberOfOwningCapability;
     }
 
     public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
@@ -555,7 +612,9 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanGetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId);
         var cloudEngineer = IsCloudEngineerEnabled(portalUser);
+        /*
         var hasPermission = (
             await _rbacApplicationService.IsUserPermitted(
                 portalUser.Id,
@@ -571,13 +630,16 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
+        */
 
-        return hasPermission || cloudEngineer;
+        return isMemberOfOwningCapability || cloudEngineer;
     }
 
     public async Task<bool> CanSetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId);
         var cloudEngineer = IsCloudEngineerEnabled(portalUser);
+        /*
         var hasCreatePermission = (
             await _rbacApplicationService.IsUserPermitted(
                 portalUser.Id,
@@ -608,8 +670,8 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
-
-        return hasCreatePermission || hasUpdatePermission || cloudEngineer;
+        */
+        return isMemberOfOwningCapability || cloudEngineer; //hasCreatePermission || hasUpdatePermission || cloudEngineer;
     }
 
     public bool CanBypassMembershipApprovals(PortalUser portalUser)
@@ -646,6 +708,8 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -661,10 +725,15 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
+        */
+        return isMemberOfOwningCapability;
     }
 
     public async Task<bool> CanSeeAwsAccountId(PortalUser portalUser, CapabilityId capabilityId)
     {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId);
+        var isCloudEngineer = IsCloudEngineerEnabled(portalUser);
+        /*
         var canReadAwsAccount = (
             await _rbacApplicationService.IsUserPermitted(
                 portalUser.Id,
@@ -680,9 +749,10 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
-        bool isCloudEngineer = IsCloudEngineerEnabled(portalUser);
+        */
+        //bool isCloudEngineer = IsCloudEngineerEnabled(portalUser);
 
-        return canReadAwsAccount || isCloudEngineer;
+        return isMemberOfOwningCapability || isCloudEngineer;
     }
 
     public async Task<bool> CanRetryCreatingMessageContract(PortalUser portalUser, MessageContractId messageContractId)

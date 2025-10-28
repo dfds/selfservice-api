@@ -73,7 +73,9 @@ public class TestCapabilityInvitationRoutes
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .Build();
+        /*
         application.ReplaceService<IRbacPermissionGrantRepository>(
             new StubRbacPermissionGrantRepository(
                 permissions:
@@ -89,6 +91,7 @@ public class TestCapabilityInvitationRoutes
                 ]
             )
         );
+        */
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
         application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(isPermitted: true));
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
