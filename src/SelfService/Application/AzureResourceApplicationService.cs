@@ -53,7 +53,7 @@ public class AzureResourceApplicationService : IAzureResourceApplicationService
 
         var capability = await _capabilityRepository.Get(capabilityId);
         var jsonObject = JsonNode.Parse(capability!.JsonMetadata)?.AsObject()!;
-        var mandatoryTags = new List<String> { "dfds.owner", "dfds.cost.centre", "dfds.service.availability" };
+        var mandatoryTags = new List<String> {"dfds.cost.centre", "dfds.service.availability" };
         foreach (var tag in mandatoryTags)
         {
             if (!jsonObject.ContainsKey(tag))
