@@ -150,7 +150,7 @@ public class AzureResourceManifest
     public String Path { get; set; }
     public AzureResource? AzureResource { get; set; }
     public Capability? Capability { get; set; }
-    public UserId? Owner { get; set; }
+    public string? Owner { get; set; }
     public string? Purpose { get; set; }
     public string? CatalogueId { get; set; }
     public string? Risk { get; set; }
