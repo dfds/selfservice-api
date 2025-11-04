@@ -38,6 +38,7 @@ ROLE_PERMISSIONS = {
         "aws": ["create", "read", "manage-provider", "read-provider"],
         "finout": ["read-dashboards", "manage-dashboards", "manage-alerts", "read-alerts"],
         "azure": ["create", "read", "read-provider", "manage-provider"],
+        "rbac": ["create", "read", "delete"],
     },
     "Contributor": {
         "topics": ["create", "read-public", "read-private", "update", "delete"],
@@ -47,6 +48,7 @@ ROLE_PERMISSIONS = {
         "aws": ["create", "read", "manage-provider", "read-provider"],
         "finout": ["read-dashboards", "manage-dashboards", "manage-alerts", "read-alerts"],
         "azure": ["create", "read", "read-provider", "manage-provider"],
+        "rbac": ["read"],
     },
     "Reader": {
         "topics": ["read-public", "read-private"],
@@ -55,12 +57,14 @@ ROLE_PERMISSIONS = {
         "aws": ["read", "read-provider"],
         "finout": ["read-dashboards", "read-alerts"],
         "azure": ["read", "read-provider"],
+        "rbac": ["read"],
     },
     "Guest": {
         "topics": ["read-public"],
         "capability-membership-management": ["read"],
         "tags-and-metadata": ["read"],
         "finout": ["read-dashboards"],
+        "rbac": ["read"],
     },
 }
 
@@ -96,7 +100,7 @@ with open("RbacRole.csv", "w", newline="") as csvfile:
             now_iso(),
             role["name"],
             role["description"],
-            "System",
+            "Global",
         ])
 
 # --- Generate RbacPermissionGrants.csv ---
