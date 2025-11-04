@@ -48,4 +48,7 @@ public static class A
 
     public static DemosRepositoryBuilder DemosRepository => new();
     public static DemosServiceBuilder DemosService => new();
+
+    public static RbacRoleBuilder RbacRole => new();
+    public static RbacRoleGrantBuilder RbacRoleGrant => new();
 }

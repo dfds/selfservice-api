@@ -1,3 +1,4 @@
+using Castle.Components.DictionaryAdapter;
 using Microsoft.VisualBasic;
 using SelfService.Application;
 using SelfService.Domain.Models;
@@ -8,10 +9,17 @@ namespace SelfService.Tests.TestDoubles;
 public class StubRbacApplicationService : IRbacApplicationService
 {
     private readonly bool _isPermitted;
+    private readonly List<RbacRole>? _assignableRoles;
+    private readonly List<RbacRoleGrant>? _roleGrants;
 
-    public StubRbacApplicationService(bool isPermitted)
+    public StubRbacApplicationService(
+        bool isPermitted,
+        List<RbacRole>? assignableRoles = null,
+        List<RbacRoleGrant>? roleGrants = null)
     {
         _isPermitted = isPermitted;
+        _assignableRoles = assignableRoles;
+        _roleGrants = roleGrants;
     }
 
     public Task<RbacGroup> CreateGroup(string user, RbacGroup group)
@@ -71,22 +79,22 @@ public class StubRbacApplicationService : IRbacApplicationService
 
     public Task<List<RbacRoleGrant>> GetRoleGrantsForCapability(string capabilityId)
     {
-        return Task.FromResult(new List<RbacRoleGrant>());
+        return Task.FromResult(_roleGrants ?? new List<RbacRoleGrant>());
     }
 
     public Task<List<RbacRoleGrant>> GetRoleGrantsForGroup(string groupId)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(_roleGrants ?? new List<RbacRoleGrant>());
     }
 
     public Task<List<RbacRoleGrant>> GetRoleGrantsForUser(string user)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(_roleGrants ?? new List<RbacRoleGrant>());
     }
 
     public Task<List<RbacRole>> GetAssignableRoles()
     {
-        return Task.FromResult(new List<RbacRole>());
+        return Task.FromResult(_assignableRoles ?? new List<RbacRole>());
     }
 
     public Task GrantPermission(string user, RbacPermissionGrant permissionGrant)
