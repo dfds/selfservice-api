@@ -13,7 +13,7 @@ public class TestCapabilityMembershipsRoutes
     public async Task get_capability_by_id_returns_expected_non_owner_leave_always()
     {
         var stubCapability = A.Capability.Build();
-        
+
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
@@ -53,20 +53,20 @@ public class TestCapabilityMembershipsRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
-        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(
-            assignableRoles: [
-                ownerRole
-            ],
-            roleGrants:
-            [
-                A.RbacRoleGrant
-                    .WithRoleId(ownerRole.Id)
-                    .AssignToUser("foo@bar.com")
-                    .AssignedForCapability(stubCapability.Id)
-                    .Build()
-            ],
-            isPermitted: false // doesn't matter in this case
-        ));
+        application.ReplaceService<IRbacApplicationService>(
+            new StubRbacApplicationService(
+                assignableRoles: [ownerRole],
+                roleGrants:
+                [
+                    A
+                        .RbacRoleGrant.WithRoleId(ownerRole.Id)
+                        .AssignToUser("foo@bar.com")
+                        .AssignedForCapability(stubCapability.Id)
+                        .Build(),
+                ],
+                isPermitted: false // doesn't matter in this case
+            )
+        );
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();
@@ -84,7 +84,7 @@ public class TestCapabilityMembershipsRoutes
         Assert.Equal(new[] { "GET" }, allowValues);
     }
 
-[Fact]
+    [Fact]
     public async Task get_capability_by_id_allows_owner_leave_with_multiple_owners()
     {
         var stubCapability = A.Capability.Build();
@@ -97,25 +97,25 @@ public class TestCapabilityMembershipsRoutes
             .Build();
         application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
-        application.ReplaceService<IRbacApplicationService>(new StubRbacApplicationService(
-            assignableRoles: [
-                ownerRole
-            ],
-            roleGrants:
-            [
-                A.RbacRoleGrant
-                    .WithRoleId(ownerRole.Id)
-                    .AssignToUser("foo@bar.com")
-                    .AssignedForCapability(stubCapability.Id)
-                    .Build(),
-                A.RbacRoleGrant
-                    .WithRoleId(ownerRole.Id)
-                    .AssignToUser("bar@foo.com")
-                    .AssignedForCapability(stubCapability.Id)
-                    .Build()
-            ],
-            isPermitted: false // doesn't matter in this case
-        ));
+        application.ReplaceService<IRbacApplicationService>(
+            new StubRbacApplicationService(
+                assignableRoles: [ownerRole],
+                roleGrants:
+                [
+                    A
+                        .RbacRoleGrant.WithRoleId(ownerRole.Id)
+                        .AssignToUser("foo@bar.com")
+                        .AssignedForCapability(stubCapability.Id)
+                        .Build(),
+                    A
+                        .RbacRoleGrant.WithRoleId(ownerRole.Id)
+                        .AssignToUser("bar@foo.com")
+                        .AssignedForCapability(stubCapability.Id)
+                        .Build(),
+                ],
+                isPermitted: false // doesn't matter in this case
+            )
+        );
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 
         using var client = application.CreateClient();

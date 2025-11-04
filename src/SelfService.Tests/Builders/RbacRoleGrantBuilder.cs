@@ -12,8 +12,6 @@ public class RbacRoleGrantBuilder
     private RbacAccessType _type;
     private string _resource;
 
-
-
     public RbacRoleGrantBuilder()
     {
         _roleId = RbacRoleId.New();

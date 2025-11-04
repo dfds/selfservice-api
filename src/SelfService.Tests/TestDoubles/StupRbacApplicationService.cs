@@ -15,7 +15,8 @@ public class StubRbacApplicationService : IRbacApplicationService
     public StubRbacApplicationService(
         bool isPermitted,
         List<RbacRole>? assignableRoles = null,
-        List<RbacRoleGrant>? roleGrants = null)
+        List<RbacRoleGrant>? roleGrants = null
+    )
     {
         _isPermitted = isPermitted;
         _assignableRoles = assignableRoles;

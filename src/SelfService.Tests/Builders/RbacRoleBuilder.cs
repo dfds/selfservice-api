@@ -8,8 +8,6 @@ public class RbacRoleBuilder
     private string _name;
     private RbacAccessType _accessType;
 
-
-
     public RbacRoleBuilder()
     {
         _name = "Role Test";
@@ -21,6 +19,7 @@ public class RbacRoleBuilder
         _name = name;
         return this;
     }
+
     public RbacRoleBuilder WithAccessType(RbacAccessType accessType)
     {
         _accessType = accessType;

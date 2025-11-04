@@ -5,9 +5,9 @@ using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
-using SelfService.Infrastructure.Api.RBAC.Dto;
 using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Api.RBAC;
+using SelfService.Infrastructure.Api.RBAC.Dto;
 using SelfService.Infrastructure.Persistence;
 using RbacRoleGrant = SelfService.Infrastructure.Api.RBAC.Dto.RbacRoleGrant;
 
@@ -179,7 +179,7 @@ public class CapabilityController : ControllerBase
             .ToList()
             .FirstOrDefault();
 
-            Domain.Models.RbacRoleGrant ownerRoleGrant = Domain.Models.RbacRoleGrant.New(
+        Domain.Models.RbacRoleGrant ownerRoleGrant = Domain.Models.RbacRoleGrant.New(
             ownerRoleId!,
             AssignedEntityType.User,
             userId,
@@ -1542,7 +1542,6 @@ public class CapabilityController : ControllerBase
 
         return Ok();
     }
-
 
     [HttpPost("{id:required}/roles/grant")]
     [ProducesResponseType(StatusCodes.Status201Created)]

@@ -716,7 +716,7 @@ public class TestRbacApplicationService
             ).Permitted()
         );
     }
-    
+
     [Fact]
     [Trait("Category", "Integration")]
     public async void CapabilityOtherAccessUsingDbStore()
