@@ -5,9 +5,11 @@ using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.RBAC.Dto;
 using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Persistence;
+using RbacRoleGrant = SelfService.Infrastructure.Api.RBAC.Dto.RbacRoleGrant;
 
 namespace SelfService.Infrastructure.Api.Capabilities;
 
@@ -176,7 +178,8 @@ public class CapabilityController : ControllerBase
             .Select(r => r.Id)
             .ToList()
             .FirstOrDefault();
-        RbacRoleGrant ownerRoleGrant = RbacRoleGrant.New(
+
+            Domain.Models.RbacRoleGrant ownerRoleGrant = Domain.Models.RbacRoleGrant.New(
             ownerRoleId!,
             AssignedEntityType.User,
             userId,
@@ -1538,5 +1541,41 @@ public class CapabilityController : ControllerBase
         await _selfAssessmentOptionRepository.DeactivateSelfAssessmentOption(selfAssessmentOptionId);
 
         return Ok();
+    }
+
+
+    [HttpPost("{id:required}/roles/grant")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [RequiresPermission("rbac", "create")]
+    public async Task<IActionResult> GrantRole([FromBody] RbacRoleGrant roleGrant)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        await _rbacApplicationService.GrantRoleGrant(userId.ToString(), roleGrant.IntoDomainModel());
+        return Created();
+    }
+
+    [HttpDelete("{id:required}/roles/revoke/{roleId:required}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [RequiresPermission("rbac", "delete")]
+    public async Task<IActionResult> RevokeRole(string id, string roleId)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        await _rbacApplicationService.RevokeRoleGrant(userId.ToString(), roleId);
+        return Ok();
+    }
+
+    [HttpGet("{id:required}/rolegrants")]
+    [ProducesResponseType(typeof(List<RbacRoleGrantApiResource>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetCapabilityRoleGrants(string id)
+    {
+        var resp = await _rbacApplicationService.GetRoleGrantsForCapability(id);
+        var payload = resp.Select(x => _apiResourceFactory.Convert(x));
+        return Ok(payload.ToList());
     }
 }
