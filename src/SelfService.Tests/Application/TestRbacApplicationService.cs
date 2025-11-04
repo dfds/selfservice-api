@@ -531,4 +531,231 @@ public class TestRbacApplicationService
             ).Permitted()
         );
     }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async void CapabilityOwnerAccessUsingDbStore()
+    {
+        var application = await new ApiApplicationBuilder().WithLocalDb().ConfigureRbac().BuildAsync();
+        var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
+        // var dbContext = application.Services.GetService<SelfServiceDbContext>()!;
+        //
+        // var permissions = dbContext.RbacPermissionGrants.ToList();
+        // var roles = dbContext.RbacRoleGrants.ToList();
+        // var rbacGroups = await dbContext.RbacGroups.ToListAsync();
+
+        Assert.NotNull(rbacSvc);
+
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "owner@bar.com",
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
+                    "sandbox-emcla-pmyxn"
+                )
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "owner@bar.com",
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "owner@bar.com",
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "create" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "owner@bar.com",
+                    [new Permission { Namespace = RbacNamespace.Rbac, Name = "create" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "owner@bar.com",
+                    [new Permission { Namespace = RbacNamespace.CapabilityMembershipManagement, Name = "create" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "owner@bar.com",
+                    [new Permission { Namespace = RbacNamespace.CapabilityMembershipManagement, Name = "delete" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async void CapabilityContributorAccessUsingDbStore()
+    {
+        var application = await new ApiApplicationBuilder().WithLocalDb().ConfigureRbac().BuildAsync();
+        var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
+        // var dbContext = application.Services.GetService<SelfServiceDbContext>()!;
+        //
+        // var permissions = dbContext.RbacPermissionGrants.ToList();
+        // var roles = dbContext.RbacRoleGrants.ToList();
+        // var rbacGroups = await dbContext.RbacGroups.ToListAsync();
+
+        Assert.NotNull(rbacSvc);
+
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "contributor@bar.com",
+                    [new Permission { Namespace = RbacNamespace.CapabilityManagement, Name = "delete" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "contributor@bar.com",
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "contributor@bar.com",
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "create" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "contributor@bar.com",
+                    [new Permission { Namespace = RbacNamespace.Rbac, Name = "create" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "contributor@bar.com",
+                    [new Permission { Namespace = RbacNamespace.CapabilityMembershipManagement, Name = "create" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async void CapabilityReaderAccessUsingDbStore()
+    {
+        var application = await new ApiApplicationBuilder().WithLocalDb().ConfigureRbac().BuildAsync();
+        var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
+        // var dbContext = application.Services.GetService<SelfServiceDbContext>()!;
+        //
+        // var permissions = dbContext.RbacPermissionGrants.ToList();
+        // var roles = dbContext.RbacRoleGrants.ToList();
+        // var rbacGroups = await dbContext.RbacGroups.ToListAsync();
+
+        Assert.NotNull(rbacSvc);
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "reader@bar.com",
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "reader@bar.com",
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
+                    "some-other-capability"
+                )
+            ).Permitted()
+        );
+
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "reader@bar.com",
+                    [new Permission { Namespace = RbacNamespace.CapabilityManagement, Name = "delete" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+    }
+    
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async void CapabilityOtherAccessUsingDbStore()
+    {
+        var application = await new ApiApplicationBuilder().WithLocalDb().ConfigureRbac().BuildAsync();
+        var rbacSvc = application.Services.GetService<IRbacApplicationService>()!;
+        // var dbContext = application.Services.GetService<SelfServiceDbContext>()!;
+        //
+        // var permissions = dbContext.RbacPermissionGrants.ToList();
+        // var roles = dbContext.RbacRoleGrants.ToList();
+        // var rbacGroups = await dbContext.RbacGroups.ToListAsync();
+
+        Assert.NotNull(rbacSvc);
+
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "other@foo.com",
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-private" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        /*
+            Reading public topics is allowed for everyone
+            This is currently handled outside of RBAC in the application logic
+            [04-11-2025, andfris] Leaving this test here as a reminder
+        */
+        /*
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "other@foo.com",
+                    [new Permission { Namespace = RbacNamespace.Topics, Name = "read-public" }],
+                    "bar"
+                )
+            ).Permitted()
+        );
+        */
+    }
 }
