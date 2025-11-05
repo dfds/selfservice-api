@@ -74,21 +74,7 @@ public class AuthorizationService : IAuthorizationService
         /*
         if (kafkaTopic.IsPublic)
         {
-            return (
-                await _rbacApplicationService.IsUserPermitted(
-                    portalUser.Id,
-                    new List<Permission>
-                    {
-                        new()
-                        {
-                            Namespace = RbacNamespace.Topics,
-                            Name = "read-public",
-                            AccessType = RbacAccessType.Capability,
-                        },
-                    },
-                    kafkaTopic.CapabilityId
-                )
-            ).Permitted();
+            return true;
         }
 
         return (
@@ -195,21 +181,7 @@ public class AuthorizationService : IAuthorizationService
     {
         if (kafkaTopic.IsPublic)
         {
-            return (
-                await _rbacApplicationService.IsUserPermitted(
-                    portalUser.Id,
-                    new List<Permission>
-                    {
-                        new()
-                        {
-                            Namespace = RbacNamespace.Topics,
-                            Name = "read-public",
-                            AccessType = RbacAccessType.Capability,
-                        },
-                    },
-                    kafkaTopic.CapabilityId
-                )
-            ).Permitted();
+            return true;
         }
 
         return (
@@ -233,21 +205,7 @@ public class AuthorizationService : IAuthorizationService
     {
         if (kafkaTopic.IsPublic)
         {
-            return (
-                await _rbacApplicationService.IsUserPermitted(
-                    portalUser.Id,
-                    new List<Permission>
-                    {
-                        new()
-                        {
-                            Namespace = RbacNamespace.Topics,
-                            Name = "read-public",
-                            AccessType = RbacAccessType.Capability,
-                        },
-                    },
-                    kafkaTopic.CapabilityId
-                )
-            ).Permitted();
+            return true;
         }
 
         return (
@@ -527,7 +485,6 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanLeave(UserId userId, CapabilityId capabilityId)
     {
-        /*
         var ownerRoleId = _rbacApplicationService
             .GetAssignableRoles()
             .Result.Where(r => r.Name == "Owner")
@@ -536,6 +493,7 @@ public class AuthorizationService : IAuthorizationService
             .FirstOrDefault();
 
         var capabilityRoleGrants = await _rbacApplicationService.GetRoleGrantsForCapability(capabilityId);
+
         var numberOfOwners = capabilityRoleGrants.Count(rg => rg.RoleId == ownerRoleId);
         var userIsOwner = capabilityRoleGrants.Any(rg => rg.AssignedEntityId == userId && rg.RoleId == ownerRoleId);
 
@@ -543,13 +501,8 @@ public class AuthorizationService : IAuthorizationService
         {
             return false;
         }
-        */
 
-        var hasActiveMembership = await _membershipQuery.HasActiveMembership(userId, capabilityId);
-        var hasMultipleMembers = await _membershipQuery.HasMultipleMembers(capabilityId);
-
-        return hasActiveMembership && hasMultipleMembers;
-        //return false;
+        return true;
     }
 
     // not covered by current RBAC rules
@@ -584,8 +537,6 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanDeleteCapability(UserId userId, CapabilityId capabilityId)
     {
-        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
-        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -601,8 +552,6 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
-        */
-        return isMemberOfOwningCapability;
     }
 
     public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
