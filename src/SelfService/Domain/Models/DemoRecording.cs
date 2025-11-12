@@ -10,7 +10,7 @@ public class DemoRecording : Entity<DemoRecordingId>
     public string Url { get; private set; }
     public string CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
-    
+
     public DemoRecording(
         DemoRecordingId id,
         DateTime recordingDate,

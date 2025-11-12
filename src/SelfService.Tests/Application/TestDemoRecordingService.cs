@@ -30,7 +30,9 @@ public class TestDemoRecordingService
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
         var demoRecordingsRepository = A.DemoRecordingRepository.WithDbContext(dbContext).Build();
-        var demoRecordingsService = A.DemoRecordingService.WithDemoRecordingRepository(demoRecordingsRepository).Build();
+        var demoRecordingsService = A
+            .DemoRecordingService.WithDemoRecordingRepository(demoRecordingsRepository)
+            .Build();
 
         var demo = A.DemoRecording.Build();
         await demoRecordingsRepository.Add(demo);

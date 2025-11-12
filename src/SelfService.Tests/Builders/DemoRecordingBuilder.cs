@@ -11,7 +11,7 @@ public class DemoRecordingBuilder
     private string _url;
     private DateTime _createdAt;
     private string _createdBy;
-    
+
     public DemoRecordingBuilder()
     {
         _id = new DemoRecordingId();

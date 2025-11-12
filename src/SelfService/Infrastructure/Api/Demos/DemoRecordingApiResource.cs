@@ -12,7 +12,7 @@ public class DemoRecordingApiResource
     public string Url { get; private set; }
     public string CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
-    
+
     [JsonPropertyName("_links")]
     public DemoRecordingLinks Links { get; set; }
 
