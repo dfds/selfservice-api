@@ -78,7 +78,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<RbacGroup> RbacGroups => Set<RbacGroup>();
     public DbSet<RbacGroupMember> RbacGroupMembers => Set<RbacGroupMember>();
     public DbSet<RbacRole> RbacRoles => Set<RbacRole>();
-    public DbSet<Demo> Demos => Set<Demo>();
+    public DbSet<DemoRecording> DemoRecording => Set<DemoRecording>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -158,7 +158,7 @@ public class SelfServiceDbContext : DbContext
 
         configurationBuilder.Properties<ReleaseNoteHistoryId>().HaveConversion<ReleaseNoteHistoryIdConverter>();
 
-        configurationBuilder.Properties<DemoId>().HaveConversion<DemoIdConverter>();
+        configurationBuilder.Properties<DemoRecordingId>().HaveConversion<DemoRecordingIdConverter>();
 
         configurationBuilder
             .Properties<RbacPermissionGrantId>()

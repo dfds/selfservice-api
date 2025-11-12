@@ -2,41 +2,35 @@ using SelfService.Infrastructure.Api.Demos;
 
 namespace SelfService.Domain.Models;
 
-public class Demo : Entity<DemoId>
+public class DemoRecording : Entity<DemoRecordingId>
 {
     public DateTime RecordingDate { get; private set; }
     public string Title { get; private set; }
     public string Description { get; private set; }
-    public string Uri { get; private set; }
-    public string Tags { get; private set; }
+    public string Url { get; private set; }
     public string CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
-    public bool IsActive { get; private set; }
 
-    public Demo(
-        DemoId id,
+    public DemoRecording(
+        DemoRecordingId id,
         DateTime recordingDate,
         string title,
         string description,
-        string uri,
-        string tags,
+        string url,
         string createdBy,
-        DateTime createdAt,
-        bool isActive = true
+        DateTime createdAt
     )
         : base(id)
     {
         RecordingDate = recordingDate;
         Title = title;
         Description = description;
-        Uri = uri;
-        Tags = tags;
+        Url = url;
         CreatedBy = createdBy;
         CreatedAt = createdAt;
-        IsActive = isActive;
     }
 
-    public void Update(DemoUpdateRequest demoDataRequest)
+    public void Update(DemoRecordingUpdateRequest demoDataRequest)
     {
         if (demoDataRequest == null)
         {
@@ -45,9 +39,7 @@ public class Demo : Entity<DemoId>
 
         Title = demoDataRequest.Title ?? Title;
         Description = demoDataRequest.Description ?? Description;
-        Uri = demoDataRequest.Uri ?? Uri;
-        Tags = demoDataRequest.Tags ?? Tags;
+        Url = demoDataRequest.Url ?? Url;
         RecordingDate = demoDataRequest.RecordingDate;
-        IsActive = demoDataRequest.IsActive;
     }
 }

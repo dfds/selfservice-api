@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SelfService.Infrastructure.Api.Demos;
 
-public class DemoCreateRequest
+public class DemoRecordingCreateRequest
 {
     [Required]
     public string? Title { get; set; }
@@ -11,14 +11,8 @@ public class DemoCreateRequest
     public string? Description { get; set; }
 
     [Required]
-    public string? Uri { get; set; }
-
-    [Required]
-    public string? Tags { get; set; }
+    public string? Url { get; set; }
 
     [Required]
     public DateTime RecordingDate { get; set; }
-
-    [Required]
-    public bool IsActive { get; set; }
 }

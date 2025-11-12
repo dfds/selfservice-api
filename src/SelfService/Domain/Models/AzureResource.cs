@@ -51,7 +51,7 @@ public class AzureResource : AggregateRoot<AzureResourceId>
                 CatalogueId = catalogueId,
                 Risk = risk,
                 Gdpr = gdpr,
-                Owner = requestedBy
+                Owner = requestedBy,
             }
         );
 

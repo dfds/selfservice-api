@@ -1941,8 +1941,8 @@ public class ApiResourceFactory
                 Self = new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
-                        action: nameof(DemosController.GetActiveSignups),
-                        controller: GetNameOf<DemosController>()
+                        action: nameof(DemoRecordingController.GetActiveSignups),
+                        controller: GetNameOf<DemoRecordingController>()
                     ) ?? "",
                     rel: "self",
                     allow: Allow.Get
@@ -1953,7 +1953,7 @@ public class ApiResourceFactory
         return payload;
     }
 
-    public DemoApiResource Convert(Demo demo)
+    public DemoRecordingApiResource Convert(DemoRecording demo)
     {
         var portalUser = HttpContext.User.ToPortalUser();
 
@@ -1967,22 +1967,20 @@ public class ApiResourceFactory
             allowOnSelf += Post;
         }
 
-        var result = new DemoApiResource(
+        var result = new DemoRecordingApiResource(
             id: demo.Id,
             recordingDate: demo.RecordingDate,
             title: demo.Title,
             description: demo.Description,
-            uri: demo.Uri,
-            tags: demo.Tags,
+            url: demo.Url,
             createdBy: demo.CreatedBy,
             createdAt: demo.CreatedAt,
-            isActive: demo.IsActive,
-            links: new DemoApiResource.DemoLinks(
+            links: new DemoRecordingApiResource.DemoRecordingLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
-                        action: nameof(DemosController.GetDemo),
-                        controller: GetNameOf<DemosController>(),
+                        action: nameof(DemoRecordingController.GetDemo),
+                        controller: GetNameOf<DemoRecordingController>(),
                         values: new { id = demo.Id }
                     ) ?? "",
                     rel: "self",
@@ -1994,7 +1992,7 @@ public class ApiResourceFactory
         return result;
     }
 
-    public DemosApiResource Convert(IEnumerable<Demo> demos)
+    public DemoRecordingsApiResource Convert(IEnumerable<DemoRecording> demos)
     {
         var portalUser = HttpContext.User.ToPortalUser();
 
@@ -2004,14 +2002,14 @@ public class ApiResourceFactory
             allowOnSelf += Post;
         }
 
-        var result = new DemosApiResource(
+        var result = new DemoRecordingsApiResource(
             demos: demos.Select(Convert).ToArray(),
-            links: new DemosApiResource.DemosLinks(
+            links: new DemoRecordingsApiResource.DemoRecordingsLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
-                        action: nameof(DemosController.GetDemos),
-                        controller: GetNameOf<DemosController>()
+                        action: nameof(DemoRecordingController.GetDemos),
+                        controller: GetNameOf<DemoRecordingController>()
                     ) ?? "",
                     rel: "self",
                     allow: allowOnSelf
