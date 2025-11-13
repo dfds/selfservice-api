@@ -9,28 +9,28 @@ namespace SelfService.Infrastructure.Api.Demos;
 [Route("demos")]
 [Produces("application/json")]
 [ApiController]
-public class DemosController : ControllerBase
+public class DemoRecordingController : ControllerBase
 {
     private readonly ApiResourceFactory _apiResourceFactory;
-    private readonly IDemosService _demosService;
+    private readonly IDemoRecordingService _demoRecordingService;
     private readonly IDemoApplicationService _demoApplicationService;
     private readonly IAuthorizationService _authorizationService;
 
-    public DemosController(
+    public DemoRecordingController(
         ApiResourceFactory apiResourceFactory,
-        IDemosService demosService,
+        IDemoRecordingService demoRecordingService,
         IDemoApplicationService demoApplicationService,
         IAuthorizationService authorizationService
     )
     {
         _apiResourceFactory = apiResourceFactory;
-        _demosService = demosService;
+        _demoRecordingService = demoRecordingService;
         _demoApplicationService = demoApplicationService;
         _authorizationService = authorizationService;
     }
 
     [HttpGet("")]
-    [ProducesResponseType(typeof(IEnumerable<Demo>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<DemoRecording>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
@@ -47,18 +47,18 @@ public class DemosController : ControllerBase
             );
         }
 
-        var demos = await _demosService.GetAllDemos();
+        var demos = await _demoRecordingService.GetAllDemoRecordings();
 
         return Ok(_apiResourceFactory.Convert(demos));
     }
 
     [HttpPost("")]
-    [ProducesResponseType(typeof(Demo), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(DemoRecording), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> CreateDemo([FromBody] DemoCreateRequest request)
+    public async Task<IActionResult> CreateDemo([FromBody] DemoRecordingCreateRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -76,29 +76,27 @@ public class DemosController : ControllerBase
             );
         }
 
-        var demo = new Demo(
-            id: new DemoId(),
+        var demo = new DemoRecording(
+            id: new DemoRecordingId(),
             recordingDate: request.RecordingDate,
             title: request.Title!,
             description: request.Description!,
-            uri: request.Uri!,
-            tags: request.Tags!,
+            url: request.Url!,
             createdBy: userId,
-            createdAt: DateTime.UtcNow,
-            isActive: request.IsActive
+            createdAt: DateTime.UtcNow
         );
 
-        var createdDemo = await _demosService.AddDemo(demo);
+        var createdDemo = await _demoRecordingService.AddDemoRecording(demo);
 
         return Ok(_apiResourceFactory.Convert(createdDemo));
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(Demo), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(DemoRecording), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> GetDemo(DemoId id)
+    public async Task<IActionResult> GetDemo(DemoRecordingId id)
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -111,18 +109,18 @@ public class DemosController : ControllerBase
             );
         }
 
-        var demo = await _demosService.GetDemoById(id);
+        var demo = await _demoRecordingService.GetDemoRecordingById(id);
 
         return Ok(_apiResourceFactory.Convert(demo));
     }
 
     [HttpPost("{id}")]
-    [ProducesResponseType(typeof(Demo), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(DemoRecording), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> UpdateDemo(DemoId id, [FromBody] DemoUpdateRequest request)
+    public async Task<IActionResult> UpdateDemo(DemoRecordingId id, [FromBody] DemoRecordingUpdateRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -140,19 +138,19 @@ public class DemosController : ControllerBase
             );
         }
 
-        await _demosService.UpdateDemo(id, request);
+        await _demoRecordingService.UpdateDemoRecording(id, request);
 
-        var updatedDemo = await _demosService.GetDemoById(id);
+        var updatedDemo = await _demoRecordingService.GetDemoRecordingById(id);
 
         return Ok(_apiResourceFactory.Convert(updatedDemo));
     }
 
     [HttpDelete("{id}")]
-    [ProducesResponseType(typeof(Demo), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(DemoRecording), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> DeleteDemo(DemoId id)
+    public async Task<IActionResult> DeleteDemo(DemoRecordingId id)
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -165,7 +163,7 @@ public class DemosController : ControllerBase
             );
         }
 
-        await _demosService.DeleteDemo(id);
+        await _demoRecordingService.DeleteDemoRecording(id);
 
         return NoContent();
     }
