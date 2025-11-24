@@ -611,6 +611,36 @@ public class CapabilityController : ControllerBase
         if (!await _capabilityRepository.Exists(capabilityId))
             return NotFound();
 
+        /*
+         * Check for existing members.
+         * If there are no other members, the user should be added directly as a member with Owner role without an application process.
+         */
+        Console.WriteLine("Checking for existing members...");
+        var existingMembers = await _membershipRepository.FindBy(capabilityId);
+        if (existingMembers.Count() == 0)
+        {
+            Console.WriteLine("FLUTTERSHY >> No existing members found. Adding user as Owner...");
+            var ownerRoleId = _rbacApplicationService
+                .GetAssignableRoles()
+                .Result.Where(r => r.Name == "Owner")
+                .Select(r => r.Id)
+                .ToList()
+                .First();
+            Console.WriteLine($"FLUTTERSHY >> Owner role id: {ownerRoleId}");
+            Domain.Models.RbacRoleGrant ownerRoleGrant = Domain.Models.RbacRoleGrant.New(
+                ownerRoleId!,
+                AssignedEntityType.User,
+                userId,
+                RbacAccessType.Capability,
+                capabilityId.ToString()
+            );
+            await _rbacApplicationService.GrantRoleGrant(userId, ownerRoleGrant);
+            Console.WriteLine("FLUTTERSHY >> Adding user as member in membership service...");
+            await _membershipApplicationService.JoinCapability(id, userId);
+
+            return Ok();
+        }
+
         try
         {
             var applicationId = await membershipApplicationService.SubmitMembershipApplication(capabilityId, userId);
