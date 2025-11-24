@@ -1297,6 +1297,20 @@ public class CapabilityController : ControllerBase
         }
         try
         {
+            var ownerRoleId = _rbacApplicationService
+                .GetAssignableRoles()
+                .Result.Where(r => r.Name == "Owner")
+                .Select(r => r.Id)
+                .ToList()
+                .First();
+            Domain.Models.RbacRoleGrant ownerRoleGrant = Domain.Models.RbacRoleGrant.New(
+                ownerRoleId!,
+                AssignedEntityType.User,
+                userId,
+                RbacAccessType.Capability,
+                capabilityId.ToString()
+            );
+            await _rbacApplicationService.GrantRoleGrant(userId, ownerRoleGrant);
             await _membershipApplicationService.JoinCapability(id, portalUser.Id);
         }
         catch (AlreadyHasActiveMembershipException e)
