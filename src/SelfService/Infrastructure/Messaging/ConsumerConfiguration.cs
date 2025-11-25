@@ -119,6 +119,13 @@ public static class ConsumerConfiguration
                     messageType: "membership-invitation-cancelled",
                     keySelector: x => x.MembershipInvitationId!
                 );
+
+            options
+                .ForTopic($"{ConfluentGatewayPrefix}.rbac")
+                .Register<RbacRoleGrantCreated>(
+                    messageType: RbacRoleGrantCreated.EventType,
+                    keySelector: x => x.RbacRoleGrantId!
+                );
             // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs
         });
 
