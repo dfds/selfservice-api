@@ -49,7 +49,7 @@ public class RbacRoleGrant : AggregateRoot<RbacRoleGrantId>
         );
 
         // raise event
-        instance.RaiseEvent(new RbacRoleGrantCreated{ RbacRoleGrantId = instance.Id });
+        instance.RaiseEvent(new RbacRoleGrantCreated { RbacRoleGrantId = instance.Id });
         return instance;
     }
 

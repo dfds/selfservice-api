@@ -291,11 +291,6 @@ public class TestDafdaSerializationDeserialization
     public async Task dafda_serialize_deserialize_rbac_role_grant_created()
     {
         await dafda_serialize_deserialize(new RbacRoleGrantCreated());
-        await dafda_serialize_deserialize(
-            new RbacRoleGrantCreated
-            {
-                RbacRoleGrantId = RbacRoleGrantId.New(),
-            }
-        );
+        await dafda_serialize_deserialize(new RbacRoleGrantCreated { RbacRoleGrantId = RbacRoleGrantId.New() });
     }
 }
