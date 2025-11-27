@@ -348,16 +348,24 @@ public class MembershipApplicationService : IMembershipApplicationService
     public async Task<IEnumerable<MembershipApplication>> GetMembershipsApplicationsThatUserCanApprove(UserId userId)
     {
         var capabilities = await _myCapabilitiesQuery.FindBy(userId);
-        var memberships = await _membershipApplicationRepository.GetAll();
-        var membershipsThatUserCanApprove = memberships
+        var allApplications = await _membershipApplicationRepository.GetAll();
+        var filteredApplications = allApplications
             .ToList()
             .Where(x =>
-                capabilities.Any(cap =>
-                    cap.Id == x.CapabilityId && x.Status == MembershipApplicationStatusOptions.PendingApprovals
-                )
+                capabilities.Any(c => c.Id == x.CapabilityId) &&
+                x.Status == MembershipApplicationStatusOptions.PendingApprovals
             );
 
-        return membershipsThatUserCanApprove.ToList();
+        var applicationsThatUserCanApprove = new List<MembershipApplication>();
+        foreach (var x in filteredApplications)
+        {
+            if (await _authorizationService.CanApproveMembershipApplications(userId, x))
+            {
+                applicationsThatUserCanApprove.Add(x);
+            }
+        }
+
+        return applicationsThatUserCanApprove;
     }
 
     public async Task<IEnumerable<MembershipApplication>> GetOutstandingMembershipsApplicationsForUser(UserId userId)

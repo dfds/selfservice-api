@@ -283,8 +283,6 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanApproveMembershipApplications(UserId userId, MembershipApplication application)
     {
-        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, application.CapabilityId);
-        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -300,8 +298,6 @@ public class AuthorizationService : IAuthorizationService
                 application.CapabilityId
             )
         ).Permitted();
-        */
-        return isMemberOfOwningCapability;
     }
 
     public async Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId)
