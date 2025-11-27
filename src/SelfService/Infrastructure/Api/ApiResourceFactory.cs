@@ -386,7 +386,12 @@ public class ApiResourceFactory
 
     private async Task<ResourceLink> CreateMembershipApplicationsLinkFor(Capability capability)
     {
-        var allowedInteractions = Allow.Get;
+        var allowedInteractions = Allow.None;
+
+        if (await _authorizationService.CanViewMembershipApplications(CurrentUser, capability.Id))
+        {
+            allowedInteractions += Get;
+        }
 
         if (await _authorizationService.CanApply(CurrentUser, capability.Id))
         {
