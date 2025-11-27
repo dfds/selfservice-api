@@ -352,8 +352,8 @@ public class MembershipApplicationService : IMembershipApplicationService
         var filteredApplications = allApplications
             .ToList()
             .Where(x =>
-                capabilities.Any(c => c.Id == x.CapabilityId) &&
-                x.Status == MembershipApplicationStatusOptions.PendingApprovals
+                capabilities.Any(c => c.Id == x.CapabilityId)
+                && x.Status == MembershipApplicationStatusOptions.PendingApprovals
             );
 
         var applicationsThatUserCanApprove = new List<MembershipApplication>();

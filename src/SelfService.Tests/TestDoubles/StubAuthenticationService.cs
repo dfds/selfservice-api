@@ -233,4 +233,9 @@ public class StubAuthorizationService : IAuthorizationService
     {
         return _authorized;
     }
+
+    public async Task<bool> CanViewMembershipApplications(UserId userId, CapabilityId capabilityId)
+    {
+        return await Task.FromResult(_authorized);
+    }
 }
