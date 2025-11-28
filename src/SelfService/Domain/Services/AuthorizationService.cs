@@ -283,8 +283,6 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanApproveMembershipApplications(UserId userId, MembershipApplication application)
     {
-        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, application.CapabilityId);
-        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -300,8 +298,6 @@ public class AuthorizationService : IAuthorizationService
                 application.CapabilityId
             )
         ).Permitted();
-        */
-        return isMemberOfOwningCapability;
     }
 
     public async Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId)
@@ -657,8 +653,6 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId)
     {
-        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
-        /*
         return (
             await _rbacApplicationService.IsUserPermitted(
                 userId,
@@ -674,8 +668,25 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
-        */
-        return isMemberOfOwningCapability;
+    }
+
+    public async Task<bool> CanViewMembershipApplications(UserId userId, CapabilityId capabilityId)
+    {
+        return (
+            await _rbacApplicationService.IsUserPermitted(
+                userId,
+                new List<Permission>
+                {
+                    new()
+                    {
+                        Namespace = RbacNamespace.CapabilityMembershipManagement,
+                        Name = "read",
+                        AccessType = RbacAccessType.Capability,
+                    },
+                },
+                capabilityId
+            )
+        ).Permitted();
     }
 
     public async Task<bool> CanSeeAwsAccountId(PortalUser portalUser, CapabilityId capabilityId)
