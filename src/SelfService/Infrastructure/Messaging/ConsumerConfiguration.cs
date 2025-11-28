@@ -42,13 +42,6 @@ public static class ConsumerConfiguration
                 );
 
             options
-                .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
-                .Register<AzureResourceRequested>(
-                    messageType: AzureResourceRequested.EventType,
-                    keySelector: x => x.AzureResourceId!
-                );
-
-            options
                 .ForTopic($"{SelfServicePrefix}.membership")
                 .Register<UserHasJoinedCapability>(
                     messageType: "user-has-joined-capability",
@@ -121,7 +114,7 @@ public static class ConsumerConfiguration
                 );
 
             options
-                .ForTopic($"{ConfluentGatewayPrefix}.rbac")
+                .ForTopic($"{SelfServicePrefix}.rbac")
                 .Register<RbacRoleGrantCreated>(
                     messageType: RbacRoleGrantCreated.EventType,
                     keySelector: x => x.RbacRoleGrantId!
