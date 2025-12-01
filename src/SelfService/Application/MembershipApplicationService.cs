@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Azure;
+﻿using Bogus.DataSets;
+using Microsoft.Extensions.Azure;
 using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
@@ -175,7 +176,17 @@ public class MembershipApplicationService : IMembershipApplicationService
         }
 
         var membersOfCapability = await _membershipRepository.GetAllWithPredicate(x => x.CapabilityId == capabilityId);
-        var membersOfCapabilityUserIds = membersOfCapability.Select(x => x.UserId.ToString()).ToList();
+
+        // filter membersOfCapabilityUserIds to only include those who can approve membership applications
+        var membersWhoCanApprove = new List<UserId>();
+        foreach (var member in membersOfCapability)
+        {
+            if (await _authorizationService.CanApproveMembershipApplications(member.UserId, capabilityId))
+            {
+                membersWhoCanApprove.Add(member.UserId);
+            }
+        }
+        var approverIdStrings = membersWhoCanApprove.Select(x => x.ToString()).ToList();
 
         var existingApplication = await _membershipApplicationRepository.FindPendingBy(capabilityId, userId);
         if (existingApplication != null)
@@ -186,7 +197,7 @@ public class MembershipApplicationService : IMembershipApplicationService
             );
         }
 
-        var application = MembershipApplication.New(capabilityId, userId, _systemTime.Now, membersOfCapabilityUserIds);
+        var application = MembershipApplication.New(capabilityId, userId, _systemTime.Now, approverIdStrings);
         await _membershipApplicationRepository.Add(application);
 
         return application.Id;
@@ -253,8 +264,19 @@ public class MembershipApplicationService : IMembershipApplicationService
             );
         }
 
-        application.Approve(approvedBy, _systemTime.Now);
+        var membersOfCapability = await _membershipRepository.GetAllWithPredicate(x =>
+            x.CapabilityId == application.CapabilityId
+        );
+        var membersWhoCanApprove = new List<UserId>();
+        foreach (var member in membersOfCapability)
+        {
+            if (await _authorizationService.CanApproveMembershipApplications(member.UserId, application))
+            {
+                membersWhoCanApprove.Add(member.UserId);
+            }
+        }
 
+        application.Approve(approvedBy, _systemTime.Now, membersWhoCanApprove.ToArray());
         _logger.LogDebug(
             "Membership application {MembershipApplicationId} has received approval by {UserId} for capability {CapabilityId}",
             applicationId,
