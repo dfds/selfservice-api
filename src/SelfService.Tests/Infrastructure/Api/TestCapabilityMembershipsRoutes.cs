@@ -10,13 +10,60 @@ namespace SelfService.Tests.Infrastructure.Api;
 public class TestCapabilityMembershipsRoutes
 {
     [Fact]
-    public async Task get_capability_by_id_returns_expected_non_owner_leave_always()
+    public async Task get_capability_by_id_returns_expected_member_non_owner_leave()
+    {
+        var stubCapability = A.Capability.Build();
+        var readerRole = A.RbacRole.WithName("Reader").WithAccessType(RbacAccessType.Capability).Build();
+
+        await using var application = new ApiApplicationBuilder()
+            .WithAwsAccountRepository(new StubAwsAccountRepository())
+            .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
+            .ConfigureRbac()
+            .Build();
+
+        application.ReplaceService<IRbacPermissionGrantRepository>(new StubRbacPermissionGrantRepository());
+        application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
+        application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
+        application.ReplaceService<IRbacApplicationService>(
+            new StubRbacApplicationService(
+                assignableRoles: [readerRole],
+                roleGrants:
+                [
+                    A
+                        .RbacRoleGrant.WithRoleId(readerRole.Id)
+                        .AssignToUser("foo@bar.com")
+                        .AssignedForCapability(stubCapability.Id)
+                        .Build(),
+                ],
+                isPermitted: false // doesn't matter in this case
+            )
+        );
+
+        using var client = application.CreateClient();
+        var response = await client.GetAsync($"/capabilities/{stubCapability.Id}");
+
+        var content = await response.Content.ReadAsStringAsync();
+        var document = JsonSerializer.Deserialize<JsonDocument>(content);
+
+        var allowValues = document
+            ?.SelectElement("/_links/leaveCapability/allow")
+            ?.EnumerateArray()
+            .Select(x => x.GetString() ?? "")
+            .ToArray();
+
+        Assert.Equal(["GET", "POST"], allowValues);
+    }
+
+    [Fact]
+    public async Task get_capability_by_id_returns_expectedn_non_member_non_leave()
     {
         var stubCapability = A.Capability.Build();
 
         await using var application = new ApiApplicationBuilder()
             .WithAwsAccountRepository(new StubAwsAccountRepository())
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
+            .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
             .ConfigureRbac()
             .Build();
 
@@ -37,7 +84,7 @@ public class TestCapabilityMembershipsRoutes
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
-        Assert.Equal(["GET", "POST"], allowValues);
+        Assert.Equal(["GET"], allowValues);
     }
 
     [Fact]
