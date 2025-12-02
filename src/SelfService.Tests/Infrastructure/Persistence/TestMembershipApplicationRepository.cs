@@ -19,8 +19,8 @@ public class TestMembershipApplicationRepository
         //.WithApprovals(stubApprovals)
         .Build();
 
-        stub.Approve(UserId.Parse("foo1"), DateTime.MinValue);
-        stub.Approve(UserId.Parse("foo2"), DateTime.MinValue);
+        stub.Approve(UserId.Parse("foo1"), DateTime.MinValue, new[] { UserId.Parse("foo1"), UserId.Parse("foo2") });
+        stub.Approve(UserId.Parse("foo2"), DateTime.MinValue, new[] { UserId.Parse("foo1"), UserId.Parse("foo2") });
 
         var sut = A.MembershipApplicationRepository.WithDbContext(dbContext).Build();
 

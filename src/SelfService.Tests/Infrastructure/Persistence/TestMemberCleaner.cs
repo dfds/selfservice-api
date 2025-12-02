@@ -111,6 +111,7 @@ public class TestMemberCleaner
         // We need to also check if we can approve the application
         var membershipApplicationServiceWithAuth = A
             .MembershipApplicationService.WithMembershipApplicationRepository(membershipApplicationRepo)
+            .WithMembershipRepository(membershipRepo)
             .WithAuthorizationService(authService.Object)
             .Build();
 

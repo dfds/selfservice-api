@@ -300,6 +300,29 @@ public class AuthorizationService : IAuthorizationService
         ).Permitted();
     }
 
+    public async Task<bool> CanApproveMembershipApplications(UserId userId, CapabilityId capabilityId)
+    {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        /*
+        return (
+            await _rbacApplicationService.IsUserPermitted(
+                userId,
+                new List<Permission>
+                {
+                    new()
+                    {
+                        Namespace = RbacNamespace.CapabilityMembershipManagement,
+                        Name = "manage-requests",
+                        AccessType = RbacAccessType.Capability,
+                    },
+                },
+                capabilityId
+            )
+        ).Permitted();
+        */
+        return isMemberOfOwningCapability;
+    }
+
     public async Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId)
     {
         var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
@@ -481,14 +504,20 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanLeave(UserId userId, CapabilityId capabilityId)
     {
+        var capabilityRoleGrants = await _rbacApplicationService.GetRoleGrantsForCapability(capabilityId);
+
+        var userIsMember = capabilityRoleGrants.Any(rg => rg.AssignedEntityId == userId);
+        if (!userIsMember)
+        {
+            return false;
+        }
+
         var ownerRoleId = _rbacApplicationService
             .GetAssignableRoles()
             .Result.Where(r => r.Name == "Owner")
             .Select(r => r.Id)
             .ToList()
             .FirstOrDefault();
-
-        var capabilityRoleGrants = await _rbacApplicationService.GetRoleGrantsForCapability(capabilityId);
 
         var numberOfOwners = capabilityRoleGrants.Count(rg => rg.RoleId == ownerRoleId);
         var userIsOwner = capabilityRoleGrants.Any(rg => rg.AssignedEntityId == userId && rg.RoleId == ownerRoleId);
@@ -557,9 +586,6 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanGetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
     {
-        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId);
-        var cloudEngineer = IsCloudEngineerEnabled(portalUser);
-        /*
         var hasPermission = (
             await _rbacApplicationService.IsUserPermitted(
                 portalUser.Id,
@@ -575,16 +601,12 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
-        */
 
-        return isMemberOfOwningCapability || cloudEngineer;
+        return hasPermission;
     }
 
     public async Task<bool> CanSetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
     {
-        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(portalUser.Id, capabilityId);
-        var cloudEngineer = IsCloudEngineerEnabled(portalUser);
-        /*
         var hasCreatePermission = (
             await _rbacApplicationService.IsUserPermitted(
                 portalUser.Id,
@@ -600,6 +622,7 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
+
         var hasUpdatePermission = (
             await _rbacApplicationService.IsUserPermitted(
                 portalUser.Id,
@@ -615,8 +638,8 @@ public class AuthorizationService : IAuthorizationService
                 capabilityId
             )
         ).Permitted();
-        */
-        return isMemberOfOwningCapability || cloudEngineer; //hasCreatePermission || hasUpdatePermission || cloudEngineer;
+
+        return hasCreatePermission || hasUpdatePermission;
     }
 
     public bool CanBypassMembershipApprovals(PortalUser portalUser)
