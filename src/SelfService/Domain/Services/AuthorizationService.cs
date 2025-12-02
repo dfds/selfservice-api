@@ -300,6 +300,29 @@ public class AuthorizationService : IAuthorizationService
         ).Permitted();
     }
 
+    public async Task<bool> CanApproveMembershipApplications(UserId userId, CapabilityId capabilityId)
+    {
+        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
+        /*
+        return (
+            await _rbacApplicationService.IsUserPermitted(
+                userId,
+                new List<Permission>
+                {
+                    new()
+                    {
+                        Namespace = RbacNamespace.CapabilityMembershipManagement,
+                        Name = "manage-requests",
+                        AccessType = RbacAccessType.Capability,
+                    },
+                },
+                capabilityId
+            )
+        ).Permitted();
+        */
+        return isMemberOfOwningCapability;
+    }
+
     public async Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId)
     {
         var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);

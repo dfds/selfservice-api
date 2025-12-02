@@ -46,7 +46,7 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
 
     public bool HasApproved(UserId userId) => _approvals.Any(x => x.ApprovedBy == userId);
 
-    public void Approve(UserId approvedBy, DateTime approvedAt)
+    public void Approve(UserId approvedBy, DateTime approvedAt, UserId[] capabilityApprovers)
     {
         if (approvedBy == Applicant)
         {
@@ -73,7 +73,17 @@ public class MembershipApplication : AggregateRoot<MembershipApplicationId>
         var approval = MembershipApproval.Register(approvedBy, approvedAt);
         _approvals.Add(approval);
 
-        Raise(new MembershipApplicationHasReceivedAnApproval { MembershipApplicationId = Id.ToString() });
+        Raise(
+            new MembershipApplicationHasReceivedAnApproval
+            {
+                MembershipApplicationId = Id.ToString(),
+                ApprovedAt = approvedAt,
+                ApprovedBy = approvedBy.ToString(),
+                ApprovedFor = Applicant.ToString(),
+                CapabilityId = CapabilityId.ToString(),
+                CapabilityApprovers = capabilityApprovers.Select(x => x.ToString()).ToArray(),
+            }
+        );
     }
 
     public void FinalizeApprovals()

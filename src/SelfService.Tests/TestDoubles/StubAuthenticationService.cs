@@ -84,6 +84,11 @@ public class StubAuthorizationService : IAuthorizationService
         return await Task.FromResult(_authorized);
     }
 
+    public async Task<bool> CanApproveMembershipApplications(UserId userId, CapabilityId capabilityId)
+    {
+        return await Task.FromResult(_authorized);
+    }
+
     public async Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId)
     {
         return await Task.FromResult(_authorized);
