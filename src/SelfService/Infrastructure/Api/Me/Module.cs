@@ -224,10 +224,14 @@ public class PersonalInformationApiResource
 public class MyUserSettingsApiResource
 {
     public bool SignedUpForDemos { get; set; }
+    public bool ShowOnlyMyCapabilities { get; set; }
+    public bool ShowDeletedCapabilities { get; set; }
 
     public MyUserSettingsApiResource(UserSettings userSettings)
     {
         SignedUpForDemos = userSettings.SignedUpForDemos;
+        ShowOnlyMyCapabilities = userSettings.ShowOnlyMyCapabilities;
+        ShowDeletedCapabilities = userSettings.ShowDeletedCapabilities;
     }
 }
 
