@@ -241,7 +241,7 @@ public class AuthorizationService : IAuthorizationService
     // so for now we allow all users to view Kafka cluster access
     public async Task<bool> CanViewKafkaClusterAccess(UserId userId, CapabilityId capabilityId)
     {
-        return true;
+        return await Task.FromResult(true);
     }
 
     // we don't have a lot of information about Kafka clusters in the RBAC system
