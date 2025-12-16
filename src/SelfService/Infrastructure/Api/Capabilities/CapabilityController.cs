@@ -5,7 +5,6 @@ using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
-using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Api.RBAC.Dto;
 using SelfService.Infrastructure.Persistence;
@@ -36,7 +35,6 @@ public class CapabilityController : ControllerBase
     private readonly IMembershipRepository _membershipRepository;
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
-    private readonly IInvitationApplicationService _invitationApplicationService;
     private readonly ISelfAssessmentRepository _selfAssessmentRepository;
     private readonly ISelfAssessmentOptionRepository _selfAssessmentOptionRepository;
     private readonly IAwsEC2QueriesApplicationService _awsEC2QueriesApplicationService;
@@ -60,7 +58,6 @@ public class CapabilityController : ControllerBase
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
         ILogger<CapabilityController> logger,
         ITeamApplicationService teamApplicationService,
-        IInvitationApplicationService invitationApplicationService,
         ISelfAssessmentRepository selfAssessmentRepository,
         ISelfAssessmentOptionRepository selfAssessmentOptionRepository,
         IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService,
@@ -84,7 +81,6 @@ public class CapabilityController : ControllerBase
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
         _logger = logger;
         _teamApplicationService = teamApplicationService;
-        _invitationApplicationService = invitationApplicationService;
         _selfAssessmentRepository = selfAssessmentRepository;
         _selfAssessmentOptionRepository = selfAssessmentOptionRepository;
         _awsEC2QueriesApplicationService = awsEC2QueriesApplicationService;
@@ -188,14 +184,6 @@ public class CapabilityController : ControllerBase
         );
         await _rbacApplicationService.GrantRoleGrant(userId, ownerRoleGrant);
 
-        if (request.Invitees != null)
-        {
-            await _invitationApplicationService.CreateCapabilityInvitations(
-                invitees: request.Invitees,
-                inviter: userId,
-                capability: capability
-            );
-        }
         return CreatedAtAction(
             nameof(GetCapabilityById),
             "Capability",
@@ -1330,62 +1318,6 @@ public class CapabilityController : ControllerBase
             );
         }
         return Ok();
-    }
-
-    [HttpPost("{id}/invitations")]
-    [ProducesResponseType(typeof(CapabilityDetailsApiResource), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [RequiresPermission("capability-membership-management", "create")]
-    public async Task<IActionResult> CreateInvitations([FromRoute] string id, [FromBody] InvitationsRequest request)
-    {
-        if (!User.TryGetUserId(out var userId))
-        {
-            return Unauthorized();
-        }
-
-        if (!CapabilityId.TryParse(id, out var capabilityId))
-        {
-            return BadRequest(
-                new ProblemDetails { Title = "Invalid CapabilityId provided", Status = StatusCodes.Status400BadRequest }
-            );
-        }
-
-        if (!await _authorizationService.CanInviteToCapability(userId, capabilityId))
-        {
-            return Unauthorized();
-        }
-
-        var capability = await _capabilityRepository.Get(capabilityId);
-        if (capability is null)
-        {
-            return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Capability not found.",
-                    Detail = $"A capability with id \"{id}\" could not be found.",
-                }
-            );
-        }
-        if (request.Invitees == null)
-        {
-            return BadRequest(
-                new ProblemDetails
-                {
-                    Title = "Invalid request",
-                    Detail = "Request body Invitees is not provided",
-                    Status = StatusCodes.Status400BadRequest,
-                }
-            );
-        }
-        return Ok(
-            await _invitationApplicationService.CreateCapabilityInvitations(
-                invitees: request.Invitees,
-                inviter: userId,
-                capability: capability
-            )
-        );
     }
 
     [HttpGet("{id}/configurationlevel")]

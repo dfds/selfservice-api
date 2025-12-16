@@ -40,32 +40,8 @@ public class CheckMembershipDiscrepancies : BackgroundService
         var membershipRepository = scope.ServiceProvider.GetRequiredService<IMembershipRepository>();
         var applicationRepository = scope.ServiceProvider.GetRequiredService<IMembershipApplicationRepository>();
         var applicationService = scope.ServiceProvider.GetRequiredService<IMembershipApplicationService>();
-        var invitationRepository = scope.ServiceProvider.GetRequiredService<IInvitationRepository>();
-        var invitationService = scope.ServiceProvider.GetRequiredService<IInvitationApplicationService>();
 
-        logger.LogDebug("Checking for invitation and membership discrepancies...");
-        // find all outstanding invitations and check if a membership already exists
-        var invitations = await invitationRepository.GetAllWithPredicate(x =>
-            x.Status == InvitationStatusOptions.Active
-        );
-        foreach (var invitation in invitations)
-        {
-            var relevantMemberships = await membershipRepository.GetAllWithPredicate(x =>
-                x.UserId == invitation.Invitee && x.CapabilityId == invitation.TargetId
-            );
-            if (relevantMemberships.Count > 0)
-            {
-                await invitationService.DeclineInvitation(invitation.Id);
-                logger.LogInformation(
-                    "Invitation {InvitationId} for user {UserId} to capability {CapabilityId} was already satisfied",
-                    invitation.Id,
-                    invitation.Invitee,
-                    invitation.TargetId
-                );
-            }
-        }
-
-        logger.LogDebug("Checking for invitation and membership discrepancies...");
+        logger.LogDebug("Checking for application and membership discrepancies...");
         var applications = await applicationRepository.FindAllPending();
         foreach (var application in applications)
         {

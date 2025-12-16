@@ -32,7 +32,6 @@ public static class Domain
         builder.Services.AddTransient<IMemberApplicationService, MemberApplicationService>();
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
         builder.Services.AddTransient<ITeamApplicationService, TeamApplicationService>();
-        builder.Services.AddTransient<IInvitationApplicationService, InvitationApplicationService>();
         builder.Services.AddTransient<IKafkaSchemaService, KafkaSchemaService>();
 
         if (aws_type == "mock")
@@ -78,7 +77,6 @@ public static class Domain
         builder.Services.AddTransient<ITeamRepository, TeamRepository>();
         builder.Services.AddTransient<ITeamCapabilityLinkingRepository, TeamCapabilityLinkingRepository>();
         builder.Services.AddTransient<TopVisitorsRepository>();
-        builder.Services.AddTransient<IInvitationRepository, InvitationRepository>();
         builder.Services.AddTransient<ISelfAssessmentRepository, SelfAssessmentRepository>();
         builder.Services.AddTransient<ISelfAssessmentOptionRepository, SelfAssessmentOptionRepository>();
         builder.Services.AddTransient<IReleaseNoteRepository, ReleaseNoteRepository>();

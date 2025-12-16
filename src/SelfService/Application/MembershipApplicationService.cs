@@ -18,7 +18,6 @@ public class MembershipApplicationService : IMembershipApplicationService
     private readonly SystemTime _systemTime;
     private readonly IMembershipQuery _membershipQuery;
     private readonly IMembershipApplicationDomainService _membershipApplicationDomainService;
-    private readonly IInvitationRepository _invitationRepository;
     private readonly IMyCapabilitiesQuery _myCapabilitiesQuery;
 
     public MembershipApplicationService(
@@ -30,7 +29,6 @@ public class MembershipApplicationService : IMembershipApplicationService
         SystemTime systemTime,
         IMembershipQuery membershipQuery,
         IMembershipApplicationDomainService membershipApplicationDomainService,
-        IInvitationRepository invitationRepository,
         IMyCapabilitiesQuery myCapabilitiesQuery
     )
     {
@@ -42,7 +40,6 @@ public class MembershipApplicationService : IMembershipApplicationService
         _systemTime = systemTime;
         _membershipQuery = membershipQuery;
         _membershipApplicationDomainService = membershipApplicationDomainService;
-        _invitationRepository = invitationRepository;
         _myCapabilitiesQuery = myCapabilitiesQuery;
     }
 
@@ -61,13 +58,6 @@ public class MembershipApplicationService : IMembershipApplicationService
         );
 
         await _membershipRepository.Add(newMembership);
-
-        // Note: requires [TransactionalBoundary], which should be wrapped elsewhere
-        var existingInvitations = await _invitationRepository.GetActiveInvitations(userId, capabilityId);
-        foreach (var invitation in existingInvitations)
-        {
-            invitation.Cancel();
-        }
 
         var existingApplications = await _membershipApplicationRepository.GetAllForUserAndCapability(
             userId,
