@@ -20,7 +20,6 @@ public class TestMembershipApplicationService
         UserId userId = "chungus@dfds.com";
         CapabilityId capabilityId = "reflect2improve-GPU-cluster-mgmt-qxyz";
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
-        var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
         var membershipApplicationService = A
             .MembershipApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .Build();
@@ -46,7 +45,6 @@ public class TestMembershipApplicationService
         UserId userId = "chungus@dfds.com";
         CapabilityId capabilityId = "reflect2improve-GPU-cluster-mgmt-qxyz";
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
-        var invitationRepo = A.InvitationRepository.WithDbContext(dbContext).Build();
         var membershipApplicationService = A
             .MembershipApplicationService.WithDbContextAndDefaultRepositories(dbContext)
             .Build();
