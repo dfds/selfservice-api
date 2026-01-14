@@ -28,6 +28,7 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
                 Name = capability.Name,
                 RootId = capability.Id,
                 Description = capability.Description,
+                JsonMetadata = capability.JsonMetadata,
                 Members = memberships
                     .Select<Membership, MemberDto>(member => new MemberDto { Email = member.UserId })
                     .ToArray(),
