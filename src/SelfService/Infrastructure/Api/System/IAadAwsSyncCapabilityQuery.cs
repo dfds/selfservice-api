@@ -13,6 +13,7 @@ public class CapabilityDto
     public required string Description { get; set; }
     public required MemberDto[] Members { get; set; }
     public required ContextDto[] Contexts { get; set; }
+    public required string JsonMetadata { get; set; }
 }
 
 public class MemberDto
