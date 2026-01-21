@@ -11,6 +11,7 @@
       <PackageReference Include="AWSSDK.ECR" Version="4.0.9.4" />
       <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.8" />
       <PackageReference Include="Dafda" Version="0.12.6" />
+      <PackageReference Include="Grafana.OpenTelemetry" Version="1.4.1" />
       <PackageReference Include="JsonSchema.Net" Version="5.2.5" />
       <PackageReference Include="JsonSchema.Net.DataGeneration" Version="1.1.0" />
       <PackageReference Include="LibGit2Sharp" Version="0.30.0" />
