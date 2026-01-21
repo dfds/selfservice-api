@@ -102,6 +102,8 @@ spec:
                 name: selfservice-api-msgraph
             - secretRef:
                 name: selfservice-api-platformdata
+            - secretRef:
+                name: selfservice-api-otel
           resources:
             requests:
               memory: "150Mi"
