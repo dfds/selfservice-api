@@ -17,6 +17,7 @@ app:
     topdeskSecretRef: selfservice-api-topdesk
     msgraphSecretRef: selfservice-api-msgraph
     platformdataSecretRef: selfservice-api-platformdata
+    selfserviceApiOtelRef: selfservice-api-otel
     ecrPullPermissionAwsAccountId: "123456789"
     ecrPullPermissionAwsBackupAccountId: "987654321"
 

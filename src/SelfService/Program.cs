@@ -20,6 +20,7 @@ try
     builder.AddLogging();
     builder.AddHealthCheck();
     builder.AddMetrics();
+    builder.AddTracing();
     builder.AddSwagger();
     builder.AddDatabase();
     builder.AddMessaging();
