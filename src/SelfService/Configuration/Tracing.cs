@@ -8,7 +8,8 @@ public static class DependencyInjection
 {
     public static void AddTracing(this WebApplicationBuilder builder)
     {
-        builder.Services.AddOpenTelemetry()
+        builder
+            .Services.AddOpenTelemetry()
             .ConfigureResource(conf =>
             {
                 conf.AddService(serviceName: Tracing.ServiceName, serviceNamespace: "ssu");
