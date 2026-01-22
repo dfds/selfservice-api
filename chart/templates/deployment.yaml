@@ -65,6 +65,8 @@ spec:
                 name: {{ .Values.app.config.msgraphSecretRef }}
             - secretRef:
                 name: {{ .Values.app.config.platformdataSecretRef }}
+            - secretRef:
+                name : {{ .Values.app.config.selfserviceApiOtelRef }}
           ports:
             - name: web
               protocol: TCP
