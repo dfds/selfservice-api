@@ -108,6 +108,7 @@ public class RbacApplicationService : IRbacApplicationService
         if (cacheGroupPermissions == null)
         {
             groupPermissions = await _permissionQuery.FindUserGroupPermissionsByUserId(user);
+            _cache.Set(CacheConst.UserGroupPermissions, user, groupPermissions);
         }
         else
         {
@@ -119,6 +120,7 @@ public class RbacApplicationService : IRbacApplicationService
         if (cacheGroupRoles == null)
         {
             groupRoles = await _permissionQuery.FindUserGroupRolesByUserId(user);
+            _cache.Set(CacheConst.UserGroupRoles, user, groupRoles);
         }
         else
         {
