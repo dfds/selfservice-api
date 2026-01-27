@@ -183,10 +183,7 @@ public class RbacApplicationService : IRbacApplicationService
         var payload = new List<RbacPermissionGrant>();
         foreach (var rg in roleGrants)
         {
-            var foundPermissions = await _permissionGrantRepository.GetAllWithPredicate(p =>
-                p.AssignedEntityType == AssignedEntityType.Role
-                && string.Equals(p.AssignedEntityId, rg.RoleId.ToString(), StringComparison.CurrentCultureIgnoreCase)
-            );
+            var foundPermissions = await GetPermissionGrantsForRoleIgnoreCasing(rg.RoleId.ToString());
             var modifiedPermissions = new List<RbacPermissionGrant>();
 
             // override type & resource from grant to permission
@@ -254,6 +251,18 @@ public class RbacApplicationService : IRbacApplicationService
         
         var resp = await _permissionGrantRepository.GetAllWithPredicate(p =>
             p.AssignedEntityType == AssignedEntityType.Role && p.AssignedEntityId == roleId
+        );
+        _cache.Set(CacheConst.PermissionGrantsForRole, roleId, resp);
+        return resp;
+    }
+
+    private async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCasing(string roleId)
+    {
+        var cacheResp = _cache.Get<List<RbacPermissionGrant>>(CacheConst.PermissionGrantsForRole, roleId);
+        if (cacheResp != null) return cacheResp;
+        
+        var resp = await _permissionGrantRepository.GetAllWithPredicate(p =>
+            p.AssignedEntityType == AssignedEntityType.Role && string.Equals(p.AssignedEntityId, roleId, StringComparison.CurrentCultureIgnoreCase)
         );
         _cache.Set(CacheConst.PermissionGrantsForRole, roleId, resp);
         return resp;
