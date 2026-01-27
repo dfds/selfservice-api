@@ -15,6 +15,7 @@ class CacheConst
     public const string UserGroupPermissions = "UserGroupPermissions";
     public const string UserGroupRoles = "UserGroupRoles";
     public const string PermissionGrantsForRole = "PermissionGrantsForRole";
+    public const string PermissionGrantsForRoleIgnoreCase = "PermissionGrantsForRoleIgnoreCase";
     public const string PermissionGrantsForGroup = "PermissionGrantsForGroup";
     public const string PermissionGrantsForCapability = "PermissionGrantsForCapability";
     public const string RoleGrantsForCapability = "RoleGrantsForCapability";
@@ -33,24 +34,18 @@ class Cache
     {
         _cache = new MemoryCache(new MemoryCacheOptions());
     }
+    
+    public async Task<T> GetOrAddAsync<T>(string prefix, string key, Func<Task<T>> dataFetch)
+    {
+        var formattedKey = $"{prefix}-{key}";
+        if (_cache.TryGetValue(formattedKey, out var value))
+        {
+            return (T)value!;
+        }
 
-    public void Set(string prefix, string key, object value)
-    {
-        var formattedKey = $"{prefix}-{key}";
-        _cache.Set(formattedKey, value);
-    }
-
-    public object? Get(string prefix, string key)
-    {
-        var formattedKey = $"{prefix}-{key}";
-        _cache.TryGetValue(formattedKey, out var value);
-        return value;
-    }
-    public T? Get<T>(string prefix, string key)
-    {
-        var formattedKey = $"{prefix}-{key}";
-        _cache.TryGetValue(formattedKey, out var value);
-        return (T?)value;
+        var result = await dataFetch();
+        _cache.Set(formattedKey, result);
+        return result;
     }
 
     public void Reset()
@@ -103,29 +98,8 @@ public class RbacApplicationService : IRbacApplicationService
         var userRoles = await GetRoleGrantsForUser(user);
 
         // group level
-        IList<RbacPermissionGrant> groupPermissions;
-        var cacheGroupPermissions = _cache.Get<List<RbacPermissionGrant>>(CacheConst.UserGroupPermissions, user);
-        if (cacheGroupPermissions == null)
-        {
-            groupPermissions = await _permissionQuery.FindUserGroupPermissionsByUserId(user);
-            _cache.Set(CacheConst.UserGroupPermissions, user, groupPermissions);
-        }
-        else
-        {
-            groupPermissions = cacheGroupPermissions;
-        }
-        
-        IList<RbacRoleGrant> groupRoles;
-        var cacheGroupRoles = _cache.Get<List<RbacRoleGrant>>(CacheConst.UserGroupRoles, user);
-        if (cacheGroupRoles == null)
-        {
-            groupRoles = await _permissionQuery.FindUserGroupRolesByUserId(user);
-            _cache.Set(CacheConst.UserGroupRoles, user, groupRoles);
-        }
-        else
-        {
-            groupRoles = cacheGroupRoles;
-        }
+        var groupPermissions = await _cache.GetOrAddAsync(CacheConst.UserGroupPermissions, user, () => _permissionQuery.FindUserGroupPermissionsByUserId(user));
+        var groupRoles = await _cache.GetOrAddAsync(CacheConst.UserGroupRoles, user, () => _permissionQuery.FindUserGroupRolesByUserId(user));
 
         var combinedPermissions = userPermissions.Concat(groupPermissions).ToList();
         var combinedRoles = userRoles.Concat(groupRoles).ToList();
@@ -183,7 +157,7 @@ public class RbacApplicationService : IRbacApplicationService
         var payload = new List<RbacPermissionGrant>();
         foreach (var rg in roleGrants)
         {
-            var foundPermissions = await GetPermissionGrantsForRoleIgnoreCasing(rg.RoleId.ToString());
+            var foundPermissions = await GetPermissionGrantsForRoleIgnoreCase(rg.RoleId.ToString());
             var modifiedPermissions = new List<RbacPermissionGrant>();
 
             // override type & resource from grant to permission
@@ -210,119 +184,78 @@ public class RbacApplicationService : IRbacApplicationService
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForUser(string user)
     {
-        var cacheResp = _cache.Get<List<RbacPermissionGrant>>(CacheConst.PermissionGrantsForUser, user);
-        if (cacheResp != null) return cacheResp;
-        
-        var resp = await _permissionGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
-        );
-        _cache.Set(CacheConst.PermissionGrantsForUser, user, resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.PermissionGrantsForUser, user, () => 
+            _permissionGrantRepository.GetAllWithPredicate(p =>
+                p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
+            ));
     }
 
     public async Task<List<RbacRoleGrant>> GetRoleGrantsForUser(string user)
     {
-        var cacheResp = _cache.Get<List<RbacRoleGrant>>(CacheConst.RoleGrantsForUser, user);
-        if (cacheResp != null) return cacheResp;
-
-        var resp =  await _roleGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
-        );
-        _cache.Set(CacheConst.RoleGrantsForUser, user, resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.RoleGrantsForUser, user, () => 
+            _roleGrantRepository.GetAllWithPredicate(p =>
+                p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
+            ));
     }
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForGroup(string groupId)
     {
-        var cacheResp = _cache.Get<List<RbacPermissionGrant>>(CacheConst.PermissionGrantsForGroup, groupId);
-        if (cacheResp != null) return cacheResp;
-
-        var resp =  await _permissionGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
-        );
-        _cache.Set(CacheConst.PermissionGrantsForGroup, groupId, resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.PermissionGrantsForGroup, groupId, () => 
+            _permissionGrantRepository.GetAllWithPredicate(p =>
+                p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
+            ));
     }
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRole(string roleId)
     {
-        var cacheResp = _cache.Get<List<RbacPermissionGrant>>(CacheConst.PermissionGrantsForRole, roleId);
-        if (cacheResp != null) return cacheResp;
-        
-        var resp = await _permissionGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.Role && p.AssignedEntityId == roleId
-        );
-        _cache.Set(CacheConst.PermissionGrantsForRole, roleId, resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.PermissionGrantsForRole, roleId, () => 
+            _permissionGrantRepository.GetAllWithPredicate(p =>
+                p.AssignedEntityType == AssignedEntityType.Role && p.AssignedEntityId == roleId
+            ));
     }
 
-    private async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCasing(string roleId)
+    private async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCase(string roleId)
     {
-        var cacheResp = _cache.Get<List<RbacPermissionGrant>>(CacheConst.PermissionGrantsForRole, roleId);
-        if (cacheResp != null) return cacheResp;
-        
-        var resp = await _permissionGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.Role && string.Equals(p.AssignedEntityId, roleId, StringComparison.CurrentCultureIgnoreCase)
-        );
-        _cache.Set(CacheConst.PermissionGrantsForRole, roleId, resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.PermissionGrantsForRoleIgnoreCase, roleId, () => 
+            _permissionGrantRepository.GetAllWithPredicate(p =>
+                p.AssignedEntityType == AssignedEntityType.Role && string.Equals(p.AssignedEntityId, roleId, StringComparison.CurrentCultureIgnoreCase)
+            ));
     }
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForCapability(string capabilityId)
     {
-        var cacheResp = _cache.Get<List<RbacPermissionGrant>>(CacheConst.PermissionGrantsForCapability, capabilityId);
-        if (cacheResp != null) return cacheResp;
-
-        var resp = await _permissionGrantRepository.GetAllWithPredicate(p =>
-            p.Type == RbacAccessType.Capability && p.Resource == capabilityId
-        );
-        _cache.Set(CacheConst.PermissionGrantsForCapability, capabilityId, resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.PermissionGrantsForCapability, capabilityId, () => 
+            _permissionGrantRepository.GetAllWithPredicate(p =>
+                p.Type == RbacAccessType.Capability && p.Resource == capabilityId
+            ));
     }
 
     public async Task<List<RbacRoleGrant>> GetRoleGrantsForCapability(string capabilityId)
     {
-        var cacheResp = _cache.Get<List<RbacRoleGrant>>(CacheConst.RoleGrantsForCapability, capabilityId);
-        if (cacheResp != null) return cacheResp;
-        
-        var resp =  await _roleGrantRepository.GetAllWithPredicate(p =>
-            p.Type == RbacAccessType.Capability && p.Resource == capabilityId
-        );
-        _cache.Set(CacheConst.RoleGrantsForCapability, capabilityId, resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.RoleGrantsForCapability, capabilityId, () => 
+            _roleGrantRepository.GetAllWithPredicate(p =>
+                p.Type == RbacAccessType.Capability && p.Resource == capabilityId
+            ));
     }
 
     public async Task<List<RbacRoleGrant>> GetRoleGrantsForGroup(string groupId)
     {
-        var cacheResp = _cache.Get<List<RbacRoleGrant>>(CacheConst.RoleGrantsForGroup, groupId);
-        if (cacheResp != null) return cacheResp;
-        
-        var resp =  await _roleGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
-        );
-        _cache.Set(CacheConst.RoleGrantsForGroup, groupId, resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.RoleGrantsForGroup, groupId, () => 
+            _roleGrantRepository.GetAllWithPredicate(p =>
+                p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
+            ));
     }
 
     public async Task<List<RbacGroup>> GetGroupsForUser(string user)
     {
-        var cacheResp = _cache.Get<List<RbacGroup>>(CacheConst.GroupsForUser, user);
-        if (cacheResp != null) return cacheResp;
-        
-        var resp = await _groupRepository.GetAllWithPredicate(x => x.Members.Any(m => m.UserId == user));
-        _cache.Set(CacheConst.GroupsForUser, user, resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.GroupsForUser, user, () => 
+            _groupRepository.GetAllWithPredicate(x => x.Members.Any(m => m.UserId == user)));
     }
 
     // TODO: Implement when repo is available
     public async Task<List<RbacRole>> GetAssignableRoles()
     {
-        var cacheResp = _cache.Get<List<RbacRole>>(CacheConst.AssignableRoles, "all");
-        if (cacheResp != null) return cacheResp;
-        
-        var resp = await _roleRepository.GetAll();
-        _cache.Set(CacheConst.AssignableRoles,"all", resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.AssignableRoles, "all", () => _roleRepository.GetAll());
     }
 
     [TransactionalBoundary]
@@ -630,12 +563,7 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task<List<RbacGroup>> GetSystemGroups()
     {
-        var cacheResp = _cache.Get<List<RbacGroup>>(CacheConst.SystemGroups, "all");
-        if (cacheResp != null) return cacheResp;
-        
-        var resp = await _groupRepository.GetAll();
-        _cache.Set(CacheConst.SystemGroups, "all",  resp);
-        return resp;
+        return await _cache.GetOrAddAsync(CacheConst.SystemGroups, "all", () => _groupRepository.GetAll());
     }
 
     [TransactionalBoundary]
