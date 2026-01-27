@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Caching.Memory;
 using SelfService.Configuration;
 using SelfService.Domain;
 using SelfService.Domain.Models;
@@ -6,52 +5,6 @@ using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
-
-class CacheConst
-{
-    public const string RbacPermissionGrantCacheKey = "RbacPermissionGrantCacheKey";
-    public const string PermissionGrantsForUser = "PermissionGrantsForUser";
-    public const string RoleGrantsForUser = "RoleGrantsForUser";
-    public const string UserGroupPermissions = "UserGroupPermissions";
-    public const string UserGroupRoles = "UserGroupRoles";
-    public const string PermissionGrantsForRole = "PermissionGrantsForRole";
-    public const string PermissionGrantsForRoleIgnoreCase = "PermissionGrantsForRoleIgnoreCase";
-    public const string PermissionGrantsForGroup = "PermissionGrantsForGroup";
-    public const string PermissionGrantsForCapability = "PermissionGrantsForCapability";
-    public const string RoleGrantsForCapability = "RoleGrantsForCapability";
-    public const string RoleGrantsForGroup = "RoleGrantsForGroup";
-    public const string GroupsForUser = "GroupsForUser";
-    public const string AssignableRoles = "AssignableRoles";
-    public const string SystemGroups = "SystemGroups";
-}
-
-class Cache
-{
-    private IMemoryCache _cache;
-
-    public Cache()
-    {
-        _cache = new MemoryCache(new MemoryCacheOptions());
-    }
-
-    public async Task<T> GetOrAddAsync<T>(string prefix, string key, Func<Task<T>> dataFetch)
-    {
-        var formattedKey = $"{prefix}-{key}";
-        if (_cache.TryGetValue(formattedKey, out var value))
-        {
-            return (T)value!;
-        }
-
-        var result = await dataFetch();
-        _cache.Set(formattedKey, result);
-        return result;
-    }
-
-    public void Reset()
-    {
-        _cache = new MemoryCache(new MemoryCacheOptions());
-    }
-}
 
 public class RbacApplicationService : IRbacApplicationService
 {
@@ -61,7 +14,7 @@ public class RbacApplicationService : IRbacApplicationService
     private readonly IRbacGroupRepository _groupRepository;
     private readonly IPermissionQuery _permissionQuery;
     private readonly IRbacRoleRepository _roleRepository;
-    private readonly Cache _cache;
+    private readonly RbacCache _cache;
 
     public RbacApplicationService(
         IRbacPermissionGrantRepository permissionGrantRepository,
@@ -78,7 +31,7 @@ public class RbacApplicationService : IRbacApplicationService
         _groupRepository = groupRepository;
         _permissionQuery = permissionQuery;
         _roleRepository = roleRepository;
-        _cache = new Cache();
+        _cache = new RbacCache();
     }
 
     /*
