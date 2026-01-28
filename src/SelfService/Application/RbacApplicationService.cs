@@ -14,6 +14,7 @@ public class RbacApplicationService : IRbacApplicationService
     private readonly IRbacGroupRepository _groupRepository;
     private readonly IPermissionQuery _permissionQuery;
     private readonly IRbacRoleRepository _roleRepository;
+    private readonly RbacCache _cache;
 
     public RbacApplicationService(
         IRbacPermissionGrantRepository permissionGrantRepository,
@@ -30,6 +31,7 @@ public class RbacApplicationService : IRbacApplicationService
         _groupRepository = groupRepository;
         _permissionQuery = permissionQuery;
         _roleRepository = roleRepository;
+        _cache = new RbacCache();
     }
 
     /*
@@ -48,8 +50,16 @@ public class RbacApplicationService : IRbacApplicationService
         var userRoles = await GetRoleGrantsForUser(user);
 
         // group level
-        var groupPermissions = await _permissionQuery.FindUserGroupPermissionsByUserId(user);
-        var groupRoles = await _permissionQuery.FindUserGroupRolesByUserId(user);
+        var groupPermissions = await _cache.GetOrAddAsync(
+            CacheConst.UserGroupPermissions,
+            user,
+            () => _permissionQuery.FindUserGroupPermissionsByUserId(user)
+        );
+        var groupRoles = await _cache.GetOrAddAsync(
+            CacheConst.UserGroupRoles,
+            user,
+            () => _permissionQuery.FindUserGroupRolesByUserId(user)
+        );
 
         var combinedPermissions = userPermissions.Concat(groupPermissions).ToList();
         var combinedRoles = userRoles.Concat(groupRoles).ToList();
@@ -107,10 +117,7 @@ public class RbacApplicationService : IRbacApplicationService
         var payload = new List<RbacPermissionGrant>();
         foreach (var rg in roleGrants)
         {
-            var foundPermissions = await _permissionGrantRepository.GetAllWithPredicate(p =>
-                p.AssignedEntityType == AssignedEntityType.Role
-                && string.Equals(p.AssignedEntityId, rg.RoleId.ToString(), StringComparison.CurrentCultureIgnoreCase)
-            );
+            var foundPermissions = await GetPermissionGrantsForRoleIgnoreCase(rg.RoleId.ToString());
             var modifiedPermissions = new List<RbacPermissionGrant>();
 
             // override type & resource from grant to permission
@@ -137,65 +144,114 @@ public class RbacApplicationService : IRbacApplicationService
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForUser(string user)
     {
-        return await _permissionGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
+        return await _cache.GetOrAddAsync(
+            CacheConst.PermissionGrantsForUser,
+            user,
+            () =>
+                _permissionGrantRepository.GetAllWithPredicate(p =>
+                    p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
+                )
         );
     }
 
     public async Task<List<RbacRoleGrant>> GetRoleGrantsForUser(string user)
     {
-        return await _roleGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
+        return await _cache.GetOrAddAsync(
+            CacheConst.RoleGrantsForUser,
+            user,
+            () =>
+                _roleGrantRepository.GetAllWithPredicate(p =>
+                    p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
+                )
         );
     }
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForGroup(string groupId)
     {
-        return await _permissionGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
+        return await _cache.GetOrAddAsync(
+            CacheConst.PermissionGrantsForGroup,
+            groupId,
+            () =>
+                _permissionGrantRepository.GetAllWithPredicate(p =>
+                    p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
+                )
         );
     }
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRole(string roleId)
     {
-        return await _permissionGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.Role && p.AssignedEntityId == roleId
+        return await _cache.GetOrAddAsync(
+            CacheConst.PermissionGrantsForRole,
+            roleId,
+            () =>
+                _permissionGrantRepository.GetAllWithPredicate(p =>
+                    p.AssignedEntityType == AssignedEntityType.Role && p.AssignedEntityId == roleId
+                )
+        );
+    }
+
+    private async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCase(string roleId)
+    {
+        return await _cache.GetOrAddAsync(
+            CacheConst.PermissionGrantsForRoleIgnoreCase,
+            roleId,
+            () =>
+                _permissionGrantRepository.GetAllWithPredicate(p =>
+                    p.AssignedEntityType == AssignedEntityType.Role
+                    && string.Equals(p.AssignedEntityId, roleId, StringComparison.CurrentCultureIgnoreCase)
+                )
         );
     }
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForCapability(string capabilityId)
     {
-        return await _permissionGrantRepository.GetAllWithPredicate(p =>
-            p.Type == RbacAccessType.Capability && p.Resource == capabilityId
+        return await _cache.GetOrAddAsync(
+            CacheConst.PermissionGrantsForCapability,
+            capabilityId,
+            () =>
+                _permissionGrantRepository.GetAllWithPredicate(p =>
+                    p.Type == RbacAccessType.Capability && p.Resource == capabilityId
+                )
         );
     }
 
     public async Task<List<RbacRoleGrant>> GetRoleGrantsForCapability(string capabilityId)
     {
-        return await _roleGrantRepository.GetAllWithPredicate(p =>
-            p.Type == RbacAccessType.Capability && p.Resource == capabilityId
+        return await _cache.GetOrAddAsync(
+            CacheConst.RoleGrantsForCapability,
+            capabilityId,
+            () =>
+                _roleGrantRepository.GetAllWithPredicate(p =>
+                    p.Type == RbacAccessType.Capability && p.Resource == capabilityId
+                )
         );
     }
 
     public async Task<List<RbacRoleGrant>> GetRoleGrantsForGroup(string groupId)
     {
-        return await _roleGrantRepository.GetAllWithPredicate(p =>
-            p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
+        return await _cache.GetOrAddAsync(
+            CacheConst.RoleGrantsForGroup,
+            groupId,
+            () =>
+                _roleGrantRepository.GetAllWithPredicate(p =>
+                    p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
+                )
         );
     }
 
     public async Task<List<RbacGroup>> GetGroupsForUser(string user)
     {
-        var groups = await _groupRepository.GetAllWithPredicate(x => x.Members.Any(m => m.UserId == user));
-
-        return groups;
+        return await _cache.GetOrAddAsync(
+            CacheConst.GroupsForUser,
+            user,
+            () => _groupRepository.GetAllWithPredicate(x => x.Members.Any(m => m.UserId == user))
+        );
     }
 
     // TODO: Implement when repo is available
     public async Task<List<RbacRole>> GetAssignableRoles()
     {
-        var roles = await _roleRepository.GetAll();
-        return roles;
+        return await _cache.GetOrAddAsync(CacheConst.AssignableRoles, "all", () => _roleRepository.GetAll());
     }
 
     [TransactionalBoundary]
@@ -264,11 +320,13 @@ public class RbacApplicationService : IRbacApplicationService
             default:
                 throw new Exception("Invalid permission grant");
         }
+        _cache.Reset();
     }
 
     [TransactionalBoundary]
     public async Task RevokePermission(string user, string id)
     {
+        _cache.Reset();
         var permissionLookup = await _permissionGrantRepository.FindById(RbacPermissionGrantId.Parse(id));
         if (permissionLookup == null)
             throw new Exception("Permission grant not found");
@@ -314,6 +372,7 @@ public class RbacApplicationService : IRbacApplicationService
             default:
                 throw new Exception("Invalid permission grant");
         }
+        _cache.Reset();
     }
 
     [TransactionalBoundary]
@@ -400,11 +459,13 @@ public class RbacApplicationService : IRbacApplicationService
             default:
                 throw new Exception("Invalid role grant");
         }
+        _cache.Reset();
     }
 
     [TransactionalBoundary]
     public async Task RevokeRoleGrant(string user, string id)
     {
+        _cache.Reset();
         var roleGrant = await _roleGrantRepository.FindById(RbacRoleGrantId.Parse(id));
         if (roleGrant == null)
             throw new Exception("Role grant not found");
@@ -451,17 +512,20 @@ public class RbacApplicationService : IRbacApplicationService
             default:
                 throw new Exception("Invalid role grant");
         }
+        _cache.Reset();
     }
 
     [TransactionalBoundary]
     public async Task RevokeCapabilityRoleGrant(UserId userId, CapabilityId capabilityId)
     {
+        _cache.Reset();
         var existingCapabilityGrant = await _roleGrantRepository.FindByPredicate(rg =>
             rg.AssignedEntityId == userId.ToString() && rg.Resource == capabilityId.ToString()
         );
         if (existingCapabilityGrant != null)
         {
             await _roleGrantRepository.Remove(existingCapabilityGrant.Id);
+            _cache.Reset();
         }
     }
 
@@ -487,6 +551,7 @@ public class RbacApplicationService : IRbacApplicationService
             type: role.Type
         );
         await _roleRepository.Add(newRole);
+        _cache.Reset();
 
         return newRole;
     }
@@ -494,13 +559,13 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task<List<RbacGroup>> GetSystemGroups()
     {
-        var groups = await _groupRepository.GetAll();
-        return groups;
+        return await _cache.GetOrAddAsync(CacheConst.SystemGroups, "all", () => _groupRepository.GetAll());
     }
 
     [TransactionalBoundary]
     public async Task DeleteRole(string user, string roleId)
     {
+        _cache.Reset();
         var canUserDeleteGlobalRbac = await IsUserPermitted(
             user,
             new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
@@ -516,6 +581,7 @@ public class RbacApplicationService : IRbacApplicationService
             throw new Exception("Role not found");
 
         await _roleRepository.Remove(role.Id);
+        _cache.Reset();
     }
 
     [TransactionalBoundary]
@@ -535,12 +601,14 @@ public class RbacApplicationService : IRbacApplicationService
 
         var newGroup = RbacGroup.New(name: group.Name, description: group.Description, members: group.Members);
         await _groupRepository.Add(newGroup);
+        _cache.Reset();
         return newGroup;
     }
 
     [TransactionalBoundary]
     public async Task DeleteGroup(string user, string groupId)
     {
+        _cache.Reset();
         var canUserDeleteGlobalRbac = await IsUserPermitted(
             user,
             new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
@@ -555,6 +623,7 @@ public class RbacApplicationService : IRbacApplicationService
             throw new Exception("Group not found");
 
         await _groupRepository.Remove(group.Id);
+        _cache.Reset();
     }
 
     [TransactionalBoundary]
@@ -579,12 +648,14 @@ public class RbacApplicationService : IRbacApplicationService
         }
 
         await _groupMemberRepository.Add(membership);
+        _cache.Reset();
         return membership;
     }
 
     [TransactionalBoundary]
     public async Task RevokeGroupGrant(string user, RbacGroupMember membership)
     {
+        _cache.Reset();
         var canUserDeleteGlobalRbac = await IsUserPermitted(
             user,
             new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
@@ -599,6 +670,7 @@ public class RbacApplicationService : IRbacApplicationService
         if (group == null)
             throw new Exception("Group not found");
         await _groupMemberRepository.Remove(membership.Id);
+        _cache.Reset();
     }
 
     public async Task<bool> CanModifyCapabilityRbac(string user, string id)
