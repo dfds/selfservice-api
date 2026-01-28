@@ -7,7 +7,7 @@ public static class Rbac
 {
     public static void AddRbac(this WebApplicationBuilder builder)
     {
-        builder.Services.AddTransient<IRbacApplicationService, RbacApplicationService>();
+        builder.Services.AddScoped<IRbacApplicationService, RbacApplicationService>();
         builder.Services.AddTransient<AuthChecker>();
     }
 }
