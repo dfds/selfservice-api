@@ -2,7 +2,6 @@
 using JetBrains.Annotations;
 using SelfService.Application;
 using SelfService.Domain.Models;
-using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.Application.KafkaTopicApplicationService;
 
@@ -42,8 +41,6 @@ public static class A
     public static TeamApplicationServiceBuilder TeamApplicationService = new();
     public static MembershipApplicationServiceBuilder MembershipApplicationService => new();
 
-    public static InvitationRepositoryBuilder InvitationRepository => new();
-    public static InvitationApplicationServiceBuilder InvitationApplicationService => new();
     public static ConfigurationLevelServiceBuilder ConfigurationLevelService => new();
 
     public static DemoRecordingRepositoryBuilder DemoRecordingRepository => new();

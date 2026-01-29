@@ -95,25 +95,6 @@ public static class ConsumerConfiguration
                 );
 
             options
-                .ForTopic($"{SelfServicePrefix}.membershipinvitation")
-                .Register<NewMembershipInvitationHasBeenSubmitted>(
-                    messageType: "membership-invitation-submitted",
-                    keySelector: x => x.MembershipInvitationId!
-                )
-                .Register<NewMembershipInvitationHasBeenAccepted>(
-                    messageType: "membership-invitation-accepted",
-                    keySelector: x => x.MembershipInvitationId!
-                )
-                .Register<NewMembershipInvitationHasBeenDeclined>(
-                    messageType: "membership-invitation-declined",
-                    keySelector: x => x.MembershipInvitationId!
-                )
-                .Register<NewMembershipInvitationHasBeenCancelled>(
-                    messageType: "membership-invitation-cancelled",
-                    keySelector: x => x.MembershipInvitationId!
-                );
-
-            options
                 .ForTopic($"{SelfServicePrefix}.rbac")
                 .Register<RbacRoleGrantCreated>(
                     messageType: RbacRoleGrantCreated.EventType,

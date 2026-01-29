@@ -237,42 +237,6 @@ public class TestDafdaSerializationDeserialization
     }
 
     [Fact]
-    public async Task dafda_serialize_deserialize_membership_invitation_has_been_submitted()
-    {
-        await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenSubmitted());
-        await dafda_serialize_deserialize(
-            new NewMembershipInvitationHasBeenSubmitted { MembershipInvitationId = TestMembershipId }
-        );
-    }
-
-    [Fact]
-    public async Task dafda_serialize_deserialize_membership_invitation_has_been_declined()
-    {
-        await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenDeclined());
-        await dafda_serialize_deserialize(
-            new NewMembershipInvitationHasBeenDeclined { MembershipInvitationId = TestMembershipId }
-        );
-    }
-
-    [Fact]
-    public async Task dafda_serialize_deserialize_membership_invitation_has_been_accepted()
-    {
-        await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenAccepted());
-        await dafda_serialize_deserialize(
-            new NewMembershipInvitationHasBeenAccepted { MembershipInvitationId = TestMembershipId }
-        );
-    }
-
-    [Fact]
-    public async Task dafda_serialize_deserialize_membership_invitation_has_been_cancelled()
-    {
-        await dafda_serialize_deserialize(new NewMembershipInvitationHasBeenCancelled());
-        await dafda_serialize_deserialize(
-            new NewMembershipInvitationHasBeenCancelled { MembershipInvitationId = TestMembershipId }
-        );
-    }
-
-    [Fact]
     public async Task dafda_serialize_deserialize_capability_deletion_request_submitted()
     {
         await dafda_serialize_deserialize(new CapabilityDeletionRequestSubmitted());
