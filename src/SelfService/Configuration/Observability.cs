@@ -9,6 +9,11 @@ public static class DependencyInjection
 {
     public static void AddObservability(this WebApplicationBuilder builder)
     {
+        if (builder.Configuration["Observability:Enabled"] == "false")
+        {
+            return;
+        }
+
         builder
             .Services.AddOpenTelemetry()
             .ConfigureResource(conf =>
