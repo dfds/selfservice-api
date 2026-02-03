@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Metrics;
@@ -10,6 +11,7 @@ public class MetricsService
     private readonly ILogger<MetricsService> _logger;
     private readonly IAadAwsSyncCapabilityQuery _aadAwsSyncCapabilityQuery;
     private readonly ICapabilityRepository _capabilityRepository;
+    
     private const string CostCentreKey = "dfds.cost.centre";
     private const string OwnerKey = "dfds.owner";
     private const string PlannedSunsetKey = "dfds.planned_sunset";
@@ -50,7 +52,7 @@ public class MetricsService
             var costCentre = GetJsonMetadataValue(jsonMetadataDeserialised, CostCentreKey);
             var owner = GetJsonMetadataValue(jsonMetadataDeserialised, OwnerKey);
             var plannedSunset = GetJsonMetadataValue(jsonMetadataDeserialised, PlannedSunsetKey);
-            var dataClassificatoin = GetJsonMetadataValue(jsonMetadataDeserialised, DataClassificationKey);
+            var dataClassification = GetJsonMetadataValue(jsonMetadataDeserialised, DataClassificationKey);
             var serviceCriticality = GetJsonMetadataValue(jsonMetadataDeserialised, ServiceCriticalityKey);
             var serviceAvailability = GetJsonMetadataValue(jsonMetadataDeserialised, ServiceAvailabilityKey);
 
@@ -62,11 +64,27 @@ public class MetricsService
                     costCentre,
                     owner,
                     plannedSunset,
-                    dataClassificatoin,
+                    dataClassification,
                     serviceCriticality,
                     serviceAvailability
                 )
                 .Set(1);
+            
+            var tags = new TagList
+            {
+                { "name", capability.Name },
+                { "id", capability.Id }
+            };
+            
+            tags.AddIfPresent("aws_account_id", context?.AWSAccountId);
+            tags.AddIfPresent("cost_centre", costCentre);
+            tags.AddIfPresent("owner", owner);
+            tags.AddIfPresent("planned_sunset", plannedSunset);
+            tags.AddIfPresent("data_classification", dataClassification);
+            tags.AddIfPresent("service_criticality", serviceCriticality);
+            tags.AddIfPresent("service_availability", serviceAvailability);
+
+            // CapabilityMetrics.CapabilityMetricOtel.Record(1, tags);
         }
     }
 }
