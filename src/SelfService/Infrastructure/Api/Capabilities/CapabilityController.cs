@@ -172,11 +172,9 @@ public class CapabilityController : ControllerBase
 
         var capability = await _capabilityRepository.Get(capabilityId);
 
-        var ownerRoleId = _rbacApplicationService
-            .GetAssignableRoles()
-            .Result.Where(r => r.Name == "Owner")
+        var ownerRoleId = (await _rbacApplicationService.GetAssignableRoles())
+            .Where(r => r.Name == "Owner")
             .Select(r => r.Id)
-            .ToList()
             .FirstOrDefault();
 
         Domain.Models.RbacRoleGrant ownerRoleGrant = Domain.Models.RbacRoleGrant.New(
@@ -1297,9 +1295,7 @@ public class CapabilityController : ControllerBase
         }
         try
         {
-            var ownerRoleId = _rbacApplicationService
-                .GetAssignableRoles()
-                .Result.Where(r => r.Name == "Owner")
+            var ownerRoleId = (await _rbacApplicationService.GetAssignableRoles()).Where(r => r.Name == "Owner")
                 .Select(r => r.Id)
                 .ToList()
                 .First();
