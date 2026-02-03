@@ -1,4 +1,3 @@
-
 using System.Diagnostics.Metrics;
 
 namespace SelfService.Infrastructure.Api.Metrics;

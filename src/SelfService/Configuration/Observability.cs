@@ -19,10 +19,7 @@ public static class DependencyInjection
             .ConfigureResource(conf =>
             {
                 conf.AddService(serviceName: ObservabilityConsts.ServiceName, serviceNamespace: "ssu");
-                conf.AddAttributes(new Dictionary<string, object>
-                {
-                    ["app"] = ObservabilityConsts.ServiceName
-                });
+                conf.AddAttributes(new Dictionary<string, object> { ["app"] = ObservabilityConsts.ServiceName });
             })
             .WithTracing(conf =>
             {
@@ -40,7 +37,7 @@ public static class DependencyInjection
                 conf.AddHttpClientInstrumentation();
                 conf.AddRuntimeInstrumentation();
                 conf.AddMeter("Npgsql");
-                
+
                 conf.AddOtlpExporter();
                 conf.AddPrometheusHttpListener(conf =>
                 {
