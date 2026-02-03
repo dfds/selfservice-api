@@ -1,4 +1,3 @@
-using Prometheus;
 using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Metrics;
@@ -101,7 +100,7 @@ public class ECRRepositoryService : IECRRepositoryService
     {
         var outOfSyncEcrInfo = await GetOutofSyncECRCount();
         _outOfSyncEcrInfo.SetValuesFromInstance(outOfSyncEcrInfo);
-        EcrMetrics.OutOfSyncEcrMetric.Set(
+        EcrMetrics.OutOfSyncEcrMetric.Record(
             _outOfSyncEcrInfo.RepositoriesNotInAwsCount + _outOfSyncEcrInfo.RepositoriesNotInDbCount
         );
     }
