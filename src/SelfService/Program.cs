@@ -1,4 +1,3 @@
-using Prometheus;
 using SelfService;
 using SelfService.Configuration;
 using SelfService.Infrastructure.Api;
@@ -52,8 +51,6 @@ try
     app.MapControllers().RequireAuthorization();
 
     app.MapEndpoints();
-
-    app.UseHttpMetrics();
 
     app.UseUserActionMiddleware();
     app.UseUserImpersonationMiddleware();

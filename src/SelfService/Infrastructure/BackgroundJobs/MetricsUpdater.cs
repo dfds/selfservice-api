@@ -43,17 +43,15 @@ public class MetricsUpdater : BackgroundService
         using var scope = _serviceProvider.CreateScope();
 
         using var _ = _logger.BeginScope("{BackgroundJob} {CorrelationId}", nameof(MetricsUpdater), Guid.NewGuid());
-        var metricsService = scope.ServiceProvider.GetRequiredService<MetricsService>();
 
         try
         {
-            await metricsService.UpdateMetrics();
             await _capabilityMetrics.UpdateCapabilityCache();
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Error updating metrics");
-            _logger.LogCritical(e, "Metrics update failed. Will retry in 10 minutes.");
+            _logger.LogCritical(e, "Metrics update failed. Will retry in 10 minutes");
         }
         UpdateNeededAt = DateTime.Now.AddMinutes(10);
     }

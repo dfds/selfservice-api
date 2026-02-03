@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Text.Json;
-using Prometheus;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.System;
 
@@ -29,32 +28,6 @@ public class CapabilityMetrics
         
         _capabilityMetricOtelObservable = SelfServiceMeter.CreateObservableGauge<long>("selfservice_capability_observable", () => { return ObserveCapability(); }, description: "Capability data");
     }
-
-    #region DeprecatedMetrics
-    public static Gauge CapabilityMetric = global::Prometheus.Metrics.CreateGauge(
-        "selfservice_capability",
-        "Capability data",
-        new GaugeConfiguration
-        {
-            LabelNames = new[]
-            {
-                "name",
-                "id",
-                "aws_acccount_id",
-                "cost_centre",
-                "owner",
-                "planned_sunset",
-                "data_classification",
-                "service_criticality",
-                "service_availability",
-            },
-        }
-    );
-    
-    // public static readonly Gauge<long> CapabilityMetric =
-    //     SelfServiceMeter.CreateGauge<long>("selfservice_capability", description: "Capability data");
-
-    #endregion
     
     private string GetJsonMetadataValue(Dictionary<string, JsonElement>? jsonMetadataDeserialised, string key)
     {
