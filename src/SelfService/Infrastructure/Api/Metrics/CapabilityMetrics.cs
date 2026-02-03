@@ -26,7 +26,7 @@ public class CapabilityMetrics
         _scopeFactory = scopeFactory;
 
         _capabilityMetricOtelObservable = SelfServiceMeter.CreateObservableGauge<long>(
-            "selfservice_capability_observable",
+            "selfservice_capability",
             () =>
             {
                 return ObserveCapability();
