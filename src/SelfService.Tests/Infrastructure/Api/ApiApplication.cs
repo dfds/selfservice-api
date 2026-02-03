@@ -92,6 +92,7 @@ public class ApiApplication : WebApplicationFactory<Program>
             cfg.Services.AddTransient<ILoggerFactory, NullLoggerFactory>();
         });
 
+        builder.UseSetting("Observability:Enabled", "false");
         builder.UseSetting("DEFAULT_KAFKA_BOOTSTRAP_SERVERS", "dummy value");
         builder.UseSetting("DEFAULT_KAFKA_GROUP_ID", "dummy value");
         builder.UseSetting("SS_APISPECS_TOPIC", "dummy");

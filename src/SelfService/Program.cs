@@ -1,4 +1,3 @@
-using Prometheus;
 using SelfService;
 using SelfService.Configuration;
 using SelfService.Infrastructure.Api;
@@ -6,7 +5,6 @@ using SelfService.Infrastructure.Api.Configuration;
 using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Messaging;
 using SelfService.Infrastructure.Messaging.Legacy;
-using SelfService.Infrastructure.Metrics;
 using SelfService.Infrastructure.Persistence;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -19,8 +17,7 @@ try
 
     builder.AddLogging();
     builder.AddHealthCheck();
-    builder.AddMetrics();
-    builder.AddTracing();
+    builder.AddObservability();
     builder.AddSwagger();
     builder.AddDatabase();
     builder.AddMessaging();
@@ -54,8 +51,6 @@ try
     app.MapControllers().RequireAuthorization();
 
     app.MapEndpoints();
-
-    app.UseHttpMetrics();
 
     app.UseUserActionMiddleware();
     app.UseUserImpersonationMiddleware();
