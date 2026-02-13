@@ -762,8 +762,29 @@ public class ApiResourceFactory
                 joinCapability: CreateJoinLinkFor(capability),
                 sendInvitations: await CreateSendInvitationsLinkFor(capability),
                 configurationLevel: CreateConfigurationLevelLinkFor(capability),
-                selfAssessments: await CreateSelfAssessmentsLinkFor(capability)
+                selfAssessments: await CreateSelfAssessmentsLinkFor(capability),
+                requirementScore: await CreateRequirementScoreLinkFor(capability)
             )
+        );
+    }
+
+    private async Task<ResourceLink> CreateRequirementScoreLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanViewRequirementScore(CurrentUser, capability.Id))
+        {
+            allowedInteractions += Get;
+        }
+
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: "GetRequirementScore", // method name in controller
+                controller: GetNameOf<Capabilities.CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? string.Empty,
+            rel: "requirementScore",
+            allow: allowedInteractions
         );
     }
 

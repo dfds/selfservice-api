@@ -38,6 +38,7 @@ public class CapabilityDetailsApiResource
         public ResourceLink SendInvitations { get; set; }
         public ResourceLink ConfigurationLevel { get; set; }
         public ResourceLink SelfAssessments { get; set; }
+        public ResourceLink RequirementScore { get; set; }
 
         public CapabilityDetailsLinks(
             ResourceLink self,
@@ -56,7 +57,8 @@ public class CapabilityDetailsApiResource
             ResourceLink joinCapability,
             ResourceLink sendInvitations,
             ResourceLink configurationLevel,
-            ResourceLink selfAssessments
+            ResourceLink selfAssessments,
+            ResourceLink requirementScore
         )
         {
             Self = self;
@@ -76,6 +78,7 @@ public class CapabilityDetailsApiResource
             SendInvitations = sendInvitations;
             ConfigurationLevel = configurationLevel;
             SelfAssessments = selfAssessments;
+            RequirementScore = requirementScore;
         }
     }
 
