@@ -35,7 +35,6 @@ public class CapabilityDetailsApiResource
         public ResourceLink SetRequiredMetadata { get; set; }
         public ResourceLink GetLinkedTeams { get; set; }
         public ResourceLink JoinCapability { get; set; }
-        public ResourceLink SendInvitations { get; set; }
         public ResourceLink ConfigurationLevel { get; set; }
         public ResourceLink SelfAssessments { get; set; }
 
@@ -54,7 +53,6 @@ public class CapabilityDetailsApiResource
             ResourceLink setRequiredMetadata,
             ResourceLink getLinkedTeams,
             ResourceLink joinCapability,
-            ResourceLink sendInvitations,
             ResourceLink configurationLevel,
             ResourceLink selfAssessments
         )
@@ -73,7 +71,6 @@ public class CapabilityDetailsApiResource
             SetRequiredMetadata = setRequiredMetadata;
             GetLinkedTeams = getLinkedTeams;
             JoinCapability = joinCapability;
-            SendInvitations = sendInvitations;
             ConfigurationLevel = configurationLevel;
             SelfAssessments = selfAssessments;
         }
