@@ -1,3 +1,4 @@
--- Migration to rename 'url' column to 'recordingUrl' in DemoRecording table
+-- Migration to support several urls in DemoRecording table
 ALTER TABLE "DemoRecording" RENAME COLUMN "Url" TO "RecordingUrl";
-ALTER TABLE "DemoRecording" ADD COLUMN "SlidesUrl" varchar(511);
+ALTER TABLE "DemoRecording" ADD COLUMN "SlidesUrl" TEXT;
+ALTER TABLE "DemoRecording" ALTER COLUMN "RecordingUrl" TYPE TEXT;
