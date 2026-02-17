@@ -9,7 +9,8 @@ public class DemoRecordingApiResource
     public DateTime RecordingDate { get; private set; }
     public string Title { get; private set; }
     public string Description { get; private set; }
-    public string Url { get; private set; }
+    public string RecordingUrl { get; private set; }
+    public string SlidesUrl { get; private set; }
     public string CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
@@ -31,7 +32,8 @@ public class DemoRecordingApiResource
         DateTime recordingDate,
         string title,
         string description,
-        string url,
+        string recordingUrl,
+        string slidesUrl,
         string createdBy,
         DateTime createdAt,
         DemoRecordingLinks links
@@ -41,7 +43,8 @@ public class DemoRecordingApiResource
         RecordingDate = recordingDate;
         Title = title;
         Description = description;
-        Url = url;
+        RecordingUrl = recordingUrl;
+        SlidesUrl = slidesUrl;
         CreatedBy = createdBy;
         CreatedAt = createdAt;
         Links = links;

@@ -1861,7 +1861,8 @@ public class ApiResourceFactory
             recordingDate: demo.RecordingDate,
             title: demo.Title,
             description: demo.Description,
-            url: demo.Url,
+            recordingUrl: demo.RecordingUrl,
+            slidesUrl: demo.SlidesUrl,
             createdBy: demo.CreatedBy,
             createdAt: demo.CreatedAt,
             links: new DemoRecordingApiResource.DemoRecordingLinks(
