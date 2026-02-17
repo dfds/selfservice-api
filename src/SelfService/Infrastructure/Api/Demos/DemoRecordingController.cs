@@ -81,7 +81,8 @@ public class DemoRecordingController : ControllerBase
             recordingDate: request.RecordingDate,
             title: request.Title!,
             description: request.Description!,
-            url: request.Url!,
+            recordingUrl: request.RecordingUrl!,
+            slidesUrl: request.SlidesUrl!,
             createdBy: userId,
             createdAt: DateTime.UtcNow
         );

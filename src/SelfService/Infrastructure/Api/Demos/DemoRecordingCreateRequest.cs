@@ -11,7 +11,10 @@ public class DemoRecordingCreateRequest
     public string? Description { get; set; }
 
     [Required]
-    public string? Url { get; set; }
+    public string? RecordingUrl { get; set; }
+
+    [Required]
+    public string? SlidesUrl { get; set; }
 
     [Required]
     public DateTime RecordingDate { get; set; }
