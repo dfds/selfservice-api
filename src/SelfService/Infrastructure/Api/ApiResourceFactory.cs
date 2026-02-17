@@ -1862,7 +1862,7 @@ public class ApiResourceFactory
             title: demo.Title,
             description: demo.Description,
             recordingUrl: demo.RecordingUrl,
-            slidesUrl: demo.SlidesUrl,
+            slidesUrl: demo.SlidesUrl ?? string.Empty,
             createdBy: demo.CreatedBy,
             createdAt: demo.CreatedAt,
             links: new DemoRecordingApiResource.DemoRecordingLinks(

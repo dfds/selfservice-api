@@ -8,7 +8,7 @@ public class DemoRecording : Entity<DemoRecordingId>
     public string Title { get; private set; }
     public string Description { get; private set; }
     public string RecordingUrl { get; private set; }
-    public string SlidesUrl { get; private set; }
+    public string? SlidesUrl { get; private set; }
     public string CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
@@ -18,7 +18,7 @@ public class DemoRecording : Entity<DemoRecordingId>
         string title,
         string description,
         string recordingUrl,
-        string slidesUrl,
+        string? slidesUrl,
         string createdBy,
         DateTime createdAt
     )
@@ -28,7 +28,7 @@ public class DemoRecording : Entity<DemoRecordingId>
         Title = title;
         Description = description;
         RecordingUrl = recordingUrl;
-        SlidesUrl = slidesUrl;
+        SlidesUrl = slidesUrl ?? string.Empty;
         CreatedBy = createdBy;
         CreatedAt = createdAt;
     }
@@ -44,6 +44,10 @@ public class DemoRecording : Entity<DemoRecordingId>
         Description = demoDataRequest.Description ?? Description;
         RecordingUrl = demoDataRequest.RecordingUrl ?? RecordingUrl;
         SlidesUrl = demoDataRequest.SlidesUrl ?? SlidesUrl;
+        if (SlidesUrl == null)
+        {
+            SlidesUrl = string.Empty;
+        }
         RecordingDate = demoDataRequest.RecordingDate;
     }
 }
