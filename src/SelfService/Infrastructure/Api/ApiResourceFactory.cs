@@ -7,7 +7,6 @@ using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.Demos;
-using SelfService.Infrastructure.Api.Invitations;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
@@ -491,27 +490,6 @@ public class ApiResourceFactory
         );
     }
 
-    private async Task<ResourceLink> CreateSendInvitationsLinkFor(Capability capability)
-    {
-        var allowedInteractions = Allow.None;
-
-        if (await _authorizationService.CanInviteToCapability(CurrentUser, capability.Id))
-        {
-            allowedInteractions += Post;
-        }
-
-        return new ResourceLink(
-            href: _linkGenerator.GetUriByAction(
-                httpContext: HttpContext,
-                action: nameof(CapabilityController.CreateInvitations),
-                controller: GetNameOf<CapabilityController>(),
-                values: new { id = capability.Id }
-            ) ?? "",
-            rel: "self",
-            allow: allowedInteractions
-        );
-    }
-
     private ResourceLink GetLinkedTeams(Capability capability)
     {
         return new ResourceLink(
@@ -760,7 +738,6 @@ public class ApiResourceFactory
                 setRequiredMetadata: await CreateSetRequiredMetadataLinkFor(capability),
                 getLinkedTeams: GetLinkedTeams(capability),
                 joinCapability: CreateJoinLinkFor(capability),
-                sendInvitations: await CreateSendInvitationsLinkFor(capability),
                 configurationLevel: CreateConfigurationLevelLinkFor(capability),
                 selfAssessments: await CreateSelfAssessmentsLinkFor(capability)
             )
@@ -1496,18 +1473,6 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "related",
                     allow: Allow.Post
-                ),
-                invitationsLinks: new MyProfileApiResource.InvitationsLinks(
-                    capalityInvitations: new ResourceLink(
-                        href: _linkGenerator.GetUriByAction(
-                            httpContext: HttpContext,
-                            controller: GetNameOf<InvitationController>(),
-                            action: nameof(InvitationController.GetActiveInvitations),
-                            values: new { targetType = "Capability" }
-                        ) ?? "",
-                        rel: "related",
-                        allow: Allow.Get
-                    )
                 )
             )
         );
@@ -1569,87 +1534,6 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "self",
                     allow: Allow.Get
-                )
-            )
-        );
-    }
-
-    public InvitationListApiResource Convert(IEnumerable<Invitation> invitations, string userId)
-    {
-        return new InvitationListApiResource(
-            items: invitations.Select(Convert).ToArray(),
-            links: new InvitationListApiResource.InvitationListLinks(
-                self: new ResourceLink(
-                    href: _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        controller: GetNameOf<InvitationController>(),
-                        action: nameof(InvitationController.GetActiveInvitations),
-                        values: new { userId }
-                    ) ?? "",
-                    rel: "self",
-                    allow: Allow.Get
-                )
-            )
-        );
-    }
-
-    public InvitationListApiResource Convert(IEnumerable<Invitation> invitations, string userId, string targetType)
-    {
-        return new InvitationListApiResource(
-            items: invitations.Select(Convert).ToArray(),
-            links: new InvitationListApiResource.InvitationListLinks(
-                self: new ResourceLink(
-                    href: _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        controller: GetNameOf<InvitationController>(),
-                        action: nameof(InvitationController.GetActiveInvitations),
-                        values: new { userId, targetType }
-                    ) ?? "",
-                    rel: "self",
-                    allow: Allow.Get
-                )
-            )
-        );
-    }
-
-    public InvitationApiResource Convert(Invitation invitation)
-    {
-        return new InvitationApiResource(
-            invitation.Id,
-            invitation.Invitee,
-            invitation.Description,
-            invitation.CreatedBy,
-            invitation.CreatedAt.ToUniversalTime().ToString("O"),
-            new InvitationApiResource.InvitationLinks(
-                self: new ResourceLink(
-                    href: _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        action: nameof(InvitationController.GetInvitation),
-                        controller: GetNameOf<InvitationController>(),
-                        values: new { id = invitation.Id }
-                    ) ?? "",
-                    rel: "self",
-                    allow: Allow.Get
-                ),
-                accept: new ResourceLink(
-                    href: _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        action: nameof(InvitationController.AcceptInvitation),
-                        controller: GetNameOf<InvitationController>(),
-                        values: new { id = invitation.Id }
-                    ) ?? "",
-                    rel: "related",
-                    allow: Allow.Post
-                ),
-                decline: new ResourceLink(
-                    href: _linkGenerator.GetUriByAction(
-                        httpContext: HttpContext,
-                        action: nameof(InvitationController.DeclineInvitation),
-                        controller: GetNameOf<InvitationController>(),
-                        values: new { id = invitation.Id }
-                    ) ?? "",
-                    rel: "related",
-                    allow: Allow.Post
                 )
             )
         );
@@ -1977,7 +1861,8 @@ public class ApiResourceFactory
             recordingDate: demo.RecordingDate,
             title: demo.Title,
             description: demo.Description,
-            url: demo.Url,
+            recordingUrl: demo.RecordingUrl,
+            slidesUrl: demo.SlidesUrl,
             createdBy: demo.CreatedBy,
             createdAt: demo.CreatedAt,
             links: new DemoRecordingApiResource.DemoRecordingLinks(

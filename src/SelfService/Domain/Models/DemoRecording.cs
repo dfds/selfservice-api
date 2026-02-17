@@ -7,7 +7,8 @@ public class DemoRecording : Entity<DemoRecordingId>
     public DateTime RecordingDate { get; private set; }
     public string Title { get; private set; }
     public string Description { get; private set; }
-    public string Url { get; private set; }
+    public string RecordingUrl { get; private set; }
+    public string SlidesUrl { get; private set; }
     public string CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
@@ -16,7 +17,8 @@ public class DemoRecording : Entity<DemoRecordingId>
         DateTime recordingDate,
         string title,
         string description,
-        string url,
+        string recordingUrl,
+        string slidesUrl,
         string createdBy,
         DateTime createdAt
     )
@@ -25,7 +27,8 @@ public class DemoRecording : Entity<DemoRecordingId>
         RecordingDate = recordingDate;
         Title = title;
         Description = description;
-        Url = url;
+        RecordingUrl = recordingUrl;
+        SlidesUrl = slidesUrl;
         CreatedBy = createdBy;
         CreatedAt = createdAt;
     }
@@ -39,7 +42,8 @@ public class DemoRecording : Entity<DemoRecordingId>
 
         Title = demoDataRequest.Title ?? Title;
         Description = demoDataRequest.Description ?? Description;
-        Url = demoDataRequest.Url ?? Url;
+        RecordingUrl = demoDataRequest.RecordingUrl ?? RecordingUrl;
+        SlidesUrl = demoDataRequest.SlidesUrl ?? SlidesUrl;
         RecordingDate = demoDataRequest.RecordingDate;
     }
 }
