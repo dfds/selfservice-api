@@ -8,7 +8,8 @@ public class DemoRecordingBuilder
     private DateTime _recordingDate;
     private string _title;
     private string _description;
-    private string _url;
+    private string _recordingUrl;
+    private string _slidesUrl;
     private DateTime _createdAt;
     private string _createdBy;
 
@@ -17,7 +18,8 @@ public class DemoRecordingBuilder
         _id = new DemoRecordingId();
         _title = "Default Title";
         _description = "Default Description";
-        _url = "http://default.uri";
+        _recordingUrl = "http://default.uri";
+        _slidesUrl = "http://default.slides.uri";
         _recordingDate = DateTime.Now;
         _createdAt = DateTime.Now;
         _createdBy = "DefaultUser";
@@ -41,9 +43,15 @@ public class DemoRecordingBuilder
         return this;
     }
 
-    public DemoRecordingBuilder WithUrl(string url)
+    public DemoRecordingBuilder WithRecordingUrl(string recordingUrl)
     {
-        _url = url;
+        _recordingUrl = recordingUrl;
+        return this;
+    }
+
+    public DemoRecordingBuilder WithSlidesUrl(string slidesUrl)
+    {
+        _slidesUrl = slidesUrl;
         return this;
     }
 
@@ -60,7 +68,8 @@ public class DemoRecordingBuilder
             title: _title,
             recordingDate: _recordingDate,
             description: _description,
-            url: _url,
+            recordingUrl: _recordingUrl,
+            slidesUrl: _slidesUrl,
             createdAt: _createdAt,
             createdBy: _createdBy
         );
