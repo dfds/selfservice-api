@@ -82,7 +82,7 @@ public class DemoRecordingController : ControllerBase
             title: request.Title!,
             description: request.Description!,
             recordingUrl: request.RecordingUrl!,
-            slidesUrl: request.SlidesUrl!,
+            slidesUrl: request.SlidesUrl ?? string.Empty,
             createdBy: userId,
             createdAt: DateTime.UtcNow
         );
