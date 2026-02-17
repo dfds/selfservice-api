@@ -33,7 +33,7 @@ public class DemoRecordingApiResource
         string title,
         string description,
         string recordingUrl,
-        string slidesUrl,
+        string? slidesUrl,
         string createdBy,
         DateTime createdAt,
         DemoRecordingLinks links
@@ -44,7 +44,7 @@ public class DemoRecordingApiResource
         Title = title;
         Description = description;
         RecordingUrl = recordingUrl;
-        SlidesUrl = slidesUrl;
+        SlidesUrl = slidesUrl ?? string.Empty;
         CreatedBy = createdBy;
         CreatedAt = createdAt;
         Links = links;
