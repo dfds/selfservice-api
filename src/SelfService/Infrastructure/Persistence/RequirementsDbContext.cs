@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SelfService.Application;
 using SelfService.Infrastructure.Persistence.Models;
 
 namespace SelfService.Infrastructure.Persistence;
@@ -8,9 +9,17 @@ public static class RequirementsDependencyInjection
 {
     public static void AddRequirementsDatabase(this WebApplicationBuilder builder)
     {
-        var dataSourceBuilder = new Npgsql.NpgsqlDataSourceBuilder(
-            builder.Configuration["SS_REQUIREMENTS_CONNECTION_STRING"]
-        );
+        var connectionString = builder.Configuration["SS_REQUIREMENTS_CONNECTION_STRING"];
+        
+        // Only add the requirements database if a connection string is configured
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            // Register stub service when database is not configured
+            builder.Services.AddTransient<IRequirementsMetricService, StubRequirementsMetricService>();
+            return;
+        }
+
+        var dataSourceBuilder = new Npgsql.NpgsqlDataSourceBuilder(connectionString);
         dataSourceBuilder.EnableDynamicJson();
         var dataSource = dataSourceBuilder.Build();
 
@@ -32,6 +41,9 @@ public static class RequirementsDependencyInjection
                     .EnableSensitiveDataLogging();
             }
         });
+        
+        // Register real service when database is configured
+        builder.Services.AddTransient<IRequirementsMetricService, RequirementsMetricService>();
     }
 }
 

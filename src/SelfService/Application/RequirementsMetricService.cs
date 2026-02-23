@@ -33,4 +33,17 @@ namespace SelfService.Application
             return (totalScore, scores);
         }
     }
+
+    // Stub implementation for when RequirementsDbContext is not available
+    public class StubRequirementsMetricService : IRequirementsMetricService
+    {
+        public Task<(
+            double totalScore,
+            List<Infrastructure.Persistence.Models.RequirementsMetric> scores
+        )> GetRequirementScoreAsync(string capabilityId)
+        {
+            // Return default values: perfect score with no metrics
+            return Task.FromResult((100.0, new List<Infrastructure.Persistence.Models.RequirementsMetric>()));
+        }
+    }
 }
