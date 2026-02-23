@@ -243,9 +243,4 @@ public class StubAuthorizationService : IAuthorizationService
     {
         return await Task.FromResult(_authorized);
     }
-
-    public async Task<bool> CanViewRequirementScore(UserId userId, CapabilityId capabilityId)
-    {
-        return await Task.FromResult(_authorized);
-    }
 }

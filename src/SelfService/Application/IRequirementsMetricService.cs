@@ -5,6 +5,9 @@ namespace SelfService.Application
 {
     public interface IRequirementsMetricService
     {
-        Task<(double totalScore, List<Infrastructure.Persistence.Models.RequirementsMetric> scores)> GetRequirementScoreAsync(string capabilityId);
+        Task<(
+            double totalScore,
+            List<Infrastructure.Persistence.Models.RequirementsMetric> scores
+        )> GetRequirementScoreAsync(string capabilityId);
     }
 }

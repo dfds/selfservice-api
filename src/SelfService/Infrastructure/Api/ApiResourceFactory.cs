@@ -363,12 +363,14 @@ public class ApiResourceFactory
             id: capability.Id,
             name: capability.Name,
             createdAt: capability.CreatedAt,
+            modifiedAt: capability.ModifiedAt,
             createdBy: capability.CreatedBy,
             status: capability.Status.ToString(),
             description: capability.Description,
             jsonMetadata: capability.JsonMetadata,
             awsAccountId: "",
             userIsMember: false, // this will be updated in the calling method
+            requirementScore: capability.RequirementScore,
             links: new CapabilityListItemApiResource.CapabilityListItemLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -745,6 +747,7 @@ public class ApiResourceFactory
             description: capability.Description,
             jsonMetadata: capability.JsonMetadata,
             jsonMetadataSchemaVersion: capability.JsonMetadataSchemaVersion,
+            requirementScore: capability.RequirementScore,
             links: new CapabilityDetailsApiResource.CapabilityDetailsLinks(
                 self: CreateSelfLinkFor(capability),
                 members: CreateMembersLinkFor(capability),
@@ -763,18 +766,14 @@ public class ApiResourceFactory
                 sendInvitations: await CreateSendInvitationsLinkFor(capability),
                 configurationLevel: CreateConfigurationLevelLinkFor(capability),
                 selfAssessments: await CreateSelfAssessmentsLinkFor(capability),
-                requirementScore: await CreateRequirementScoreLinkFor(capability)
+                requirementScore: CreateRequirementScoreLinkFor(capability)
             )
         );
     }
 
-    private async Task<ResourceLink> CreateRequirementScoreLinkFor(Capability capability)
+    private ResourceLink CreateRequirementScoreLinkFor(Capability capability)
     {
-        var allowedInteractions = Allow.None;
-        if (await _authorizationService.CanViewRequirementScore(CurrentUser, capability.Id))
-        {
-            allowedInteractions += Get;
-        }
+        var allowedInteractions = Allow.Get;
 
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(

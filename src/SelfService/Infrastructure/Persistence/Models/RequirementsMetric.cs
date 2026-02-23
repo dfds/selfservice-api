@@ -55,7 +55,7 @@ namespace SelfService.Infrastructure.Persistence.Models
         public long Date { get; set; }
 
         [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         [Column("labels")]
         public JsonObject? Labels { get; set; }

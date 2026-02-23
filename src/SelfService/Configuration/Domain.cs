@@ -59,7 +59,7 @@ public static class Domain
         builder.Services.AddTransient<ISelfServiceJsonSchemaService, SelfServiceJsonSchemaService>();
         builder.Services.AddTransient<IDemoApplicationService, DemoApplicationService>();
         builder.Services.AddTransient<IDemoRecordingService, DemoRecordingService>();
-        builder.Services.AddTransient<IRequirementScoreService, RequirementScoreService>();
+        builder.Services.AddTransient<IRequirementsMetricService, RequirementsMetricService>();
 
         // domain repositories
         builder.Services.AddTransient<ICapabilityRepository, CapabilityRepository>();

@@ -5,32 +5,61 @@ using SelfService.Infrastructure.Api.Capabilities;
 
 namespace SelfService.Infrastructure.Api.Capabilities
 {
-    public static class RequirementScoreConverter
+    public static class RequirementsMetricConverter
     {
-        public static RequirementScoreApiResource Convert(
+        public static RequirementsMetricApiResource Convert(
             string capabilityId,
             double totalScore,
-            List<RequirementScore> scores
+            List<Infrastructure.Persistence.Models.RequirementsMetric> metrics
         )
         {
-            var requirementScores = new List<RequirementScoreDetail>();
-            foreach (var score in scores)
+            var requirementsMetrics = new List<RequirementsMetricDetail>();
+            foreach (var metric in metrics)
             {
-                requirementScores.Add(
-                    new RequirementScoreDetail
+                // Handle invalid Unix timestamps - valid range is -62135596800 to 253402300799
+                DateTime dateValue;
+                try
+                {
+                    if (metric.Date >= -62135596800 && metric.Date <= 253402300799)
                     {
-                        RequirementId = score.RequirementId,
-                        Title = score.Title,
-                        Score = score.Score,
-                        Description = score.Description,
+                        dateValue = DateTimeOffset.FromUnixTimeSeconds(metric.Date).DateTime;
+                    }
+                    else
+                    {
+                        dateValue = DateTime.UtcNow;
+                    }
+                }
+                catch
+                {
+                    dateValue = DateTime.UtcNow;
+                }
+
+                requirementsMetrics.Add(
+                    new RequirementsMetricDetail
+                    {
+                        Id = metric.Id,
+                        Name = metric.Name,
+                        CapabilityRootId = metric.CapabilityRootId,
+                        RequirementId = metric.RequirementId,
+                        Measurement = metric.Measurement,
+                        HelpUrl = metric.HelpUrl,
+                        Owner = metric.Owner,
+                        Description = metric.Description,
+                        ClusterName = metric.ClusterName,
+                        Value = metric.Value,
+                        Help = metric.Help,
+                        Type = metric.Type,
+                        Date = dateValue,
+                        UpdatedAt = metric.UpdatedAt,
+                        Labels = metric.Labels,
                     }
                 );
             }
-            return new RequirementScoreApiResource
+            return new RequirementsMetricApiResource
             {
                 CapabilityId = capabilityId,
                 TotalScore = totalScore,
-                RequirementScores = requirementScores,
+                RequirementsMetrics = requirementsMetrics,
             };
         }
     }

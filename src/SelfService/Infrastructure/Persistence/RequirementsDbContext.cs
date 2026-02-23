@@ -8,7 +8,9 @@ public static class RequirementsDependencyInjection
 {
     public static void AddRequirementsDatabase(this WebApplicationBuilder builder)
     {
-        var dataSourceBuilder = new Npgsql.NpgsqlDataSourceBuilder(builder.Configuration["SS_REQUIREMENTS_CONNECTION_STRING"]);
+        var dataSourceBuilder = new Npgsql.NpgsqlDataSourceBuilder(
+            builder.Configuration["SS_REQUIREMENTS_CONNECTION_STRING"]
+        );
         dataSourceBuilder.EnableDynamicJson();
         var dataSource = dataSourceBuilder.Build();
 

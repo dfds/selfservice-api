@@ -41,7 +41,7 @@ public class CapabilityController : ControllerBase
     private readonly ISelfAssessmentOptionRepository _selfAssessmentOptionRepository;
     private readonly IAwsEC2QueriesApplicationService _awsEC2QueriesApplicationService;
     private readonly IRbacApplicationService _rbacApplicationService;
-    private readonly IRequirementScoreService _requirementScoreService;
+    private readonly IRequirementsMetricService _requirementsMetricService;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -66,7 +66,7 @@ public class CapabilityController : ControllerBase
         ISelfAssessmentOptionRepository selfAssessmentOptionRepository,
         IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService,
         IRbacApplicationService rbacApplicationService,
-        IRequirementScoreService requirementScoreService
+        IRequirementsMetricService requirementsMetricService
     )
     {
         _membersQuery = membersQuery;
@@ -91,7 +91,7 @@ public class CapabilityController : ControllerBase
         _selfAssessmentOptionRepository = selfAssessmentOptionRepository;
         _awsEC2QueriesApplicationService = awsEC2QueriesApplicationService;
         _rbacApplicationService = rbacApplicationService;
-        _requirementScoreService = requirementScoreService;
+        _requirementsMetricService = requirementsMetricService;
     }
 
     [HttpGet("")]
@@ -1596,7 +1596,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpGet("{id:required}/requirement-score")]
-    [ProducesResponseType(typeof(RequirementScoreApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RequirementsMetricApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetRequirementScore(string id)
@@ -1611,11 +1611,12 @@ public class CapabilityController : ControllerBase
         if (capability is null)
             return NotFound();
 
-        if (!await _authorizationService.CanViewRequirementScore(userId, capabilityId))
-            return Unauthorized();
+        var (totalScore, scores) = await _requirementsMetricService.GetRequirementScoreAsync(id);
 
-        var (totalScore, scores) = await _requirementScoreService.GetRequirementScoreAsync(id);
-        var resource = RequirementScoreConverter.Convert(id, totalScore, scores);
+        // Update the cached score in the capability table
+        await _capabilityRepository.UpdateRequirementScore(capabilityId, totalScore);
+
+        var resource = RequirementsMetricConverter.Convert(id, totalScore, scores);
         return Ok(resource);
     }
 }

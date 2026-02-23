@@ -239,6 +239,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.JsonMetadata);
             cfg.Property(x => x.JsonMetadataSchemaVersion);
+            cfg.Property(x => x.RequirementScore);
         });
 
         modelBuilder.Entity<Member>(cfg =>

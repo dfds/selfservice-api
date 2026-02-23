@@ -763,12 +763,6 @@ public class AuthorizationService : IAuthorizationService
         ).Permitted();
     }
 
-    public async Task<bool> CanViewRequirementScore(UserId userId, CapabilityId capabilityId)
-    {
-        var isMemberOfOwningCapability = await _membershipQuery.HasActiveMembership(userId, capabilityId);
-        return isMemberOfOwningCapability;
-    }
-
     public bool CanManageSelfAssessmentOptions(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser);
