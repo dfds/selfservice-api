@@ -10,7 +10,7 @@ public static class RequirementsDependencyInjection
     public static void AddRequirementsDatabase(this WebApplicationBuilder builder)
     {
         var connectionString = builder.Configuration["SS_REQUIREMENTS_CONNECTION_STRING"];
-        
+
         // Only add the requirements database if a connection string is configured
         if (string.IsNullOrWhiteSpace(connectionString))
         {
@@ -41,7 +41,7 @@ public static class RequirementsDependencyInjection
                     .EnableSensitiveDataLogging();
             }
         });
-        
+
         // Register real service when database is configured
         builder.Services.AddTransient<IRequirementsMetricService, RequirementsMetricService>();
     }

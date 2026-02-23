@@ -141,7 +141,10 @@ public class ApiApplication : WebApplicationFactory<Program>
 
             // Replace Requirements service with stub to avoid database dependency in tests
             services.RemoveAll<SelfService.Application.IRequirementsMetricService>();
-            services.AddTransient<SelfService.Application.IRequirementsMetricService, SelfService.Application.StubRequirementsMetricService>();
+            services.AddTransient<
+                SelfService.Application.IRequirementsMetricService,
+                SelfService.Application.StubRequirementsMetricService
+            >();
 
             services
                 .AddAuthentication(FakeAuthenticationSchemeDefaults.AuthenticationScheme)
