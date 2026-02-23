@@ -50,4 +50,9 @@ public class StubCapabilityRepository : ICapabilityRepository
     {
         throw new NotImplementedException();
     }
+
+    public Task UpdateRequirementScore(CapabilityId id, double score)
+    {
+        return Task.CompletedTask;
+    }
 }
