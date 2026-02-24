@@ -1613,8 +1613,16 @@ public class CapabilityController : ControllerBase
 
         var (totalScore, scores) = await _requirementsMetricService.GetRequirementScoreAsync(id);
 
-        // Update the cached score in the capability table
-        await _capabilityRepository.UpdateRequirementScore(capabilityId, totalScore);
+        // Update the cached score in the capability table only if:
+        // - the capability is not pending deletion
+        // - the capability has not been updated within the last 5 minutes
+        var shouldUpdate = capability.Status != CapabilityStatusOptions.PendingDeletion
+            && (DateTime.UtcNow - capability.ModifiedAt).TotalMinutes >= 5;
+
+        if (shouldUpdate)
+        {
+            await _capabilityRepository.UpdateRequirementScore(capabilityId, totalScore);
+        }
 
         var resource = RequirementsMetricConverter.Convert(id, totalScore, scores);
         return Ok(resource);
