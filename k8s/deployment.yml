@@ -61,7 +61,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: selfservice-api-requirements-postgres
-                  key: PGCONNSTRING
+                  key: DATA_COLLECTOR_POSTGRESURL
             - name: DEFAULT_KAFKA_GROUP_ID
               value: build.selfservice.selfservice-api
             - name: SS_APISPECS_TOPIC
