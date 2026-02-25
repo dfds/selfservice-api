@@ -77,4 +77,18 @@ public class CapabilityRepository : ICapabilityRepository
 
         return found.JsonMetadata;
     }
+
+    public async Task UpdateRequirementScore(CapabilityId id, double score)
+    {
+        var found = await _dbContext.Capabilities.FindAsync(id);
+        if (found is null)
+        {
+            throw EntityNotFoundException<Capability>.UsingId(id);
+        }
+
+        found.UpdateRequirementScore(score);
+
+        _dbContext.Capabilities.Update(found);
+        await _dbContext.SaveChangesAsync();
+    }
 }

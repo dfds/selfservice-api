@@ -39,6 +39,7 @@ public class CapabilityController : ControllerBase
     private readonly ISelfAssessmentOptionRepository _selfAssessmentOptionRepository;
     private readonly IAwsEC2QueriesApplicationService _awsEC2QueriesApplicationService;
     private readonly IRbacApplicationService _rbacApplicationService;
+    private readonly IRequirementsMetricService _requirementsMetricService;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -61,7 +62,8 @@ public class CapabilityController : ControllerBase
         ISelfAssessmentRepository selfAssessmentRepository,
         ISelfAssessmentOptionRepository selfAssessmentOptionRepository,
         IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService,
-        IRbacApplicationService rbacApplicationService
+        IRbacApplicationService rbacApplicationService,
+        IRequirementsMetricService requirementsMetricService
     )
     {
         _membersQuery = membersQuery;
@@ -85,6 +87,7 @@ public class CapabilityController : ControllerBase
         _selfAssessmentOptionRepository = selfAssessmentOptionRepository;
         _awsEC2QueriesApplicationService = awsEC2QueriesApplicationService;
         _rbacApplicationService = rbacApplicationService;
+        _requirementsMetricService = requirementsMetricService;
     }
 
     [HttpGet("")]
@@ -1522,5 +1525,39 @@ public class CapabilityController : ControllerBase
         var resp = await _rbacApplicationService.GetRoleGrantsForCapability(id);
         var payload = resp.Select(x => _apiResourceFactory.Convert(x));
         return Ok(payload.ToList());
+    }
+
+    [HttpGet("{id:required}/requirement-score")]
+    [ProducesResponseType(typeof(RequirementsMetricApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> GetRequirementScore(string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        var capability = await _capabilityRepository.FindBy(capabilityId);
+        if (capability is null)
+            return NotFound();
+
+        var (totalScore, scores) = await _requirementsMetricService.GetRequirementScoreAsync(id);
+
+        // Update the cached score in the capability table only if:
+        // - the capability is not pending deletion
+        // - the capability has not been updated within the last 5 minutes
+        var shouldUpdate =
+            capability.Status != CapabilityStatusOptions.PendingDeletion
+            && (DateTime.UtcNow - capability.ModifiedAt).TotalMinutes >= 5;
+
+        if (shouldUpdate)
+        {
+            await _capabilityRepository.UpdateRequirementScore(capabilityId, totalScore);
+        }
+
+        var resource = RequirementsMetricConverter.Convert(id, totalScore, scores);
+        return Ok(resource);
     }
 }

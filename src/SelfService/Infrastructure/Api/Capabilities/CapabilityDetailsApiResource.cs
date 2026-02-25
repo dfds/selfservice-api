@@ -14,6 +14,7 @@ public class CapabilityDetailsApiResource
 
     public string JsonMetadata { get; set; }
     public int JsonMetadataSchemaVersion { get; set; }
+    public double? RequirementScore { get; set; }
 
     [JsonPropertyName("_links")]
     public CapabilityDetailsLinks Links { get; set; }
@@ -37,6 +38,7 @@ public class CapabilityDetailsApiResource
         public ResourceLink JoinCapability { get; set; }
         public ResourceLink ConfigurationLevel { get; set; }
         public ResourceLink SelfAssessments { get; set; }
+        public ResourceLink RequirementScore { get; set; }
 
         public CapabilityDetailsLinks(
             ResourceLink self,
@@ -54,7 +56,8 @@ public class CapabilityDetailsApiResource
             ResourceLink getLinkedTeams,
             ResourceLink joinCapability,
             ResourceLink configurationLevel,
-            ResourceLink selfAssessments
+            ResourceLink selfAssessments,
+            ResourceLink requirementScore
         )
         {
             Self = self;
@@ -73,6 +76,7 @@ public class CapabilityDetailsApiResource
             JoinCapability = joinCapability;
             ConfigurationLevel = configurationLevel;
             SelfAssessments = selfAssessments;
+            RequirementScore = requirementScore;
         }
     }
 
@@ -85,6 +89,7 @@ public class CapabilityDetailsApiResource
         string description,
         string jsonMetadata,
         int jsonMetadataSchemaVersion,
+        double? requirementScore,
         CapabilityDetailsLinks links
     )
     {
@@ -97,6 +102,7 @@ public class CapabilityDetailsApiResource
         Links = links;
         JsonMetadata = jsonMetadata;
         JsonMetadataSchemaVersion = jsonMetadataSchemaVersion;
+        RequirementScore = requirementScore;
     }
 }
 
@@ -105,12 +111,14 @@ public class CapabilityListItemApiResource
     public string Id { get; set; }
     public string Name { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime ModifiedAt { get; set; }
     public string CreatedBy { get; set; }
     public string Status { get; set; }
     public string Description { get; set; }
     public string JsonMetadata { get; set; }
     public string AwsAccountId { get; set; }
     public bool UserIsMember { get; set; }
+    public double? RequirementScore { get; set; }
 
     [JsonPropertyName("_links")]
     public CapabilityListItemLinks Links { get; set; }
@@ -129,18 +137,21 @@ public class CapabilityListItemApiResource
         string id,
         string name,
         DateTime createdAt,
+        DateTime modifiedAt,
         string createdBy,
         string status,
         string description,
         string jsonMetadata,
         string awsAccountId,
         CapabilityListItemLinks links,
-        bool userIsMember
+        bool userIsMember,
+        double? requirementScore
     )
     {
         Id = id;
         Name = name;
         CreatedAt = createdAt;
+        ModifiedAt = modifiedAt;
         CreatedBy = createdBy;
         Status = status;
         Description = description;
@@ -148,5 +159,6 @@ public class CapabilityListItemApiResource
         AwsAccountId = awsAccountId;
         Links = links;
         UserIsMember = userIsMember;
+        RequirementScore = requirementScore;
     }
 }

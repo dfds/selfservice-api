@@ -9,6 +9,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "SS_LEGACY_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db",
         "SS_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=db",
+        "SS_REQUIREMENTS_CONNECTION_STRING": "User ID=postgres;Password=p;Host=localhost;Port=5432;Database=requirements",
         "DEFAULT_KAFKA_ENABLE_AUTO_COMMIT": "true",
         "DEFAULT_KAFKA_BOOTSTRAP_SERVERS": "localhost:9092",
         "DEFAULT_KAFKA_GROUP_ID": "selfservice.consumer",

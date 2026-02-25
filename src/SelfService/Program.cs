@@ -20,6 +20,7 @@ try
     builder.AddObservability();
     builder.AddSwagger();
     builder.AddDatabase();
+    builder.AddRequirementsDatabase();
     builder.AddMessaging();
     builder.AddLegacyMessaging();
     builder.AddDomain();

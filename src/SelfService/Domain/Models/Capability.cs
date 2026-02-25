@@ -63,6 +63,8 @@ public class Capability : AggregateRoot<CapabilityId>
 
     public int JsonMetadataSchemaVersion { get; private set; }
 
+    public double? RequirementScore { get; private set; }
+
     public override string ToString()
     {
         return Id.ToString();
@@ -128,6 +130,12 @@ public class Capability : AggregateRoot<CapabilityId>
         }
 
         Status = CapabilityStatusOptions.Deleted;
+        ModifiedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateRequirementScore(double score)
+    {
+        RequirementScore = score;
         ModifiedAt = DateTime.UtcNow;
     }
 }
