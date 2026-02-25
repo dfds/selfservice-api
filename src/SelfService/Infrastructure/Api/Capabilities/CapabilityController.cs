@@ -1616,7 +1616,8 @@ public class CapabilityController : ControllerBase
         // Update the cached score in the capability table only if:
         // - the capability is not pending deletion
         // - the capability has not been updated within the last 5 minutes
-        var shouldUpdate = capability.Status != CapabilityStatusOptions.PendingDeletion
+        var shouldUpdate =
+            capability.Status != CapabilityStatusOptions.PendingDeletion
             && (DateTime.UtcNow - capability.ModifiedAt).TotalMinutes >= 5;
 
         if (shouldUpdate)
