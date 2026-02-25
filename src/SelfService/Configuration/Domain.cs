@@ -58,6 +58,7 @@ public static class Domain
         builder.Services.AddTransient<ISelfServiceJsonSchemaService, SelfServiceJsonSchemaService>();
         builder.Services.AddTransient<IDemoApplicationService, DemoApplicationService>();
         builder.Services.AddTransient<IDemoRecordingService, DemoRecordingService>();
+        // Note: IRequirementsMetricService is registered conditionally in RequirementsDbContext.AddRequirementsDatabase
 
         // domain repositories
         builder.Services.AddTransient<ICapabilityRepository, CapabilityRepository>();
