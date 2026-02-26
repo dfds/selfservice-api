@@ -25,11 +25,6 @@ namespace SelfService.Application
                 .Where(x => x.Measurement == "score")
                 .ToListAsync();
             double totalScore = scores.Count > 0 ? scores.Average(r => r.Value) : 100;
-            // Treat 0 or negative scores as "no valid scores" and return 100
-            if (totalScore <= 0)
-            {
-                totalScore = 100;
-            }
             return (totalScore, scores);
         }
     }

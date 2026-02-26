@@ -48,6 +48,7 @@ namespace SelfService.Infrastructure.Api.Capabilities
                         ClusterName = metric.ClusterName,
                         Value = metric.Value,
                         Help = metric.Help,
+                        DisplayName = metric.DisplayName,
                         Type = metric.Type,
                         Date = dateValue,
                         UpdatedAt = metric.UpdatedAt,
