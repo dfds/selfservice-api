@@ -22,6 +22,7 @@ namespace SelfService.Infrastructure.Api.Capabilities
         public string? ClusterName { get; set; }
         public double Value { get; set; }
         public string? Help { get; set; }
+        public string? DisplayName { get; set; }
         public string? Type { get; set; }
         public DateTime Date { get; set; }
         public DateTime? UpdatedAt { get; set; }
