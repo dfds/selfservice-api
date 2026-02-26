@@ -48,6 +48,9 @@ namespace SelfService.Infrastructure.Persistence.Models
         [Column("help")]
         public string? Help { get; set; }
 
+        [Column("display_name")]
+        public string? DisplayName { get; set; }
+
         [Column("type")]
         public string? Type { get; set; }
 
