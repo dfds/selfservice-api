@@ -17,6 +17,10 @@ Id;ObjectId;SchemaVersion;Schema
         ""ti-arch"",
         ""ti-data"",
         ""ti-it"",
+        ""ti-tes"",
+        ""ti-sao"",
+        ""ti-cae"",
+        ""ti-ctoo"",
         ""ti-inno"",
         ""ti-platform"",
         ""ti-competence"",
@@ -24,6 +28,7 @@ Id;ObjectId;SchemaVersion;Schema
         ""finance"",
         ""ferry"",
         ""logistics"",
+        ""people"",
         ""ti-ctia""
       ]
     },
