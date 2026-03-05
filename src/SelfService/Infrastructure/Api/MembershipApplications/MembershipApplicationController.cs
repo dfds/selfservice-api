@@ -18,13 +18,15 @@ public class MembershipApplicationController : ControllerBase
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IMembershipApplicationQuery _membershipApplicationQuery;
     private readonly ApiResourceFactory _apiResourceFactory;
+    private readonly RbacApplicationService _rbacApplicationService;
 
     public MembershipApplicationController(
         ILogger<MembershipApplicationController> logger,
         IAuthorizationService authorizationService,
         IMembershipApplicationService membershipApplicationService,
         IMembershipApplicationQuery membershipApplicationQuery,
-        ApiResourceFactory apiResourceFactory
+        ApiResourceFactory apiResourceFactory,
+        RbacApplicationService rbacApplicationService
     )
     {
         _authorizationService = authorizationService;
@@ -32,6 +34,7 @@ public class MembershipApplicationController : ControllerBase
         _membershipApplicationQuery = membershipApplicationQuery;
         _logger = logger;
         _apiResourceFactory = apiResourceFactory;
+        _rbacApplicationService = rbacApplicationService;
     }
 
     [HttpGet("{id}")]
@@ -178,7 +181,7 @@ public class MembershipApplicationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> SubmitApproval(string id)
+    public async Task<IActionResult> SubmitApproval(string id, [FromBody] RBAC.Dto.RbacRoleGrant? request = null)
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -202,10 +205,57 @@ public class MembershipApplicationController : ControllerBase
             );
         }
 
+        var application = await _membershipApplicationQuery.FindById(membershipApplicationId);
+        if (application == null)
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Membership application not found.",
+                    Detail = $"A membership application with id \"{id}\" could not be found.",
+                }
+            );
+        }
+
         try
         {
+            // If request is null, create a legal RbacRoleGrant for Reader role
+            if (request == null)
+            {
+                // Fetch the Reader role from assignable roles
+                var roles = await _rbacApplicationService.GetAssignableRoles();
+                var readerRole = roles.FirstOrDefault(r => r.Name == "Reader");
+                if (readerRole == null)
+                {
+                    return BadRequest(
+                        new ProblemDetails
+                        {
+                            Title = "No Reader role available",
+                            Detail = "Could not find a Reader role to assign.",
+                        }
+                    );
+                }
+
+                var readerRoleId = _rbacApplicationService
+                    .GetAssignableRoles()
+                    .Result.Where(r => r.Name == "Reader")
+                    .Select(r => r.Id)
+                    .ToList()
+                    .First();
+                Domain.Models.RbacRoleGrant readerRoleGrant = Domain.Models.RbacRoleGrant.New(
+                    readerRoleId!,
+                    AssignedEntityType.User,
+                    application.Applicant,
+                    RbacAccessType.Capability,
+                    application.CapabilityId.ToString()
+                );
+                await _rbacApplicationService.GrantRoleGrant(userId.ToString(), readerRoleGrant);
+            }
+            else
+            {
+                await _rbacApplicationService.GrantRoleGrant(userId.ToString(), request.IntoDomainModel());
+            }
             await _membershipApplicationService.ApproveMembershipApplication(membershipApplicationId, userId);
-            return NoContent();
         }
         catch (EntityNotFoundException<MembershipApplication>)
         {
@@ -228,6 +278,7 @@ public class MembershipApplicationController : ControllerBase
                 }
             );
         }
+        return NoContent();
     }
 
     [HttpGet("eligible-for-approval")]
