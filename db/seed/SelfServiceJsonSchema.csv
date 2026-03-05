@@ -20,7 +20,11 @@ Id;ObjectId;SchemaVersion;Schema
         ""ti-ctai"",
         ""ti-arch"",
         ""ti-data"",
+        ""ti-it"",
+        ""ti-tes"",
         ""ti-sao"",
+        ""ti-cae"",
+        ""ti-ctoo"",
         ""ti-inno"",
         ""ti-platform"",
         ""ti-competence"",
@@ -28,8 +32,8 @@ Id;ObjectId;SchemaVersion;Schema
         ""finance"",
         ""ferry"",
         ""logistics"",
-        ""ti-ctia"",
-        ""people""
+        ""people"",
+        ""ti-ctia""
       ]
     },
     ""dfds.data.classification"": {
@@ -72,7 +76,7 @@ Id;ObjectId;SchemaVersion;Schema
     }
   },
   ""patternProperties"": {
-    ""^dfds\\.other\\."": {
+    ""^dfds\\."": {
       ""type"": ""string""
     }
   }
