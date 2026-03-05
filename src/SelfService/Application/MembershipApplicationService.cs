@@ -248,7 +248,6 @@ public class MembershipApplicationService : IMembershipApplicationService
                 application.Id,
                 application.CapabilityId
             );
-
             throw new NotAuthorizedToApproveMembershipApplication(
                 $"User \"{approvedBy}\" is not authorized to approve membership application \"{application.Id}\" for capability \"{application.CapabilityId}\"."
             );

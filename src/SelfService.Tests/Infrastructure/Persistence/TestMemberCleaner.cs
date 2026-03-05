@@ -85,6 +85,7 @@ public class TestMemberCleaner
         var membershipApplicationRepo = A.MembershipApplicationRepository.WithDbContext(dbContext).Build();
         var membershipRepo = A.MembershipRepository.WithDbContext(dbContext).Build();
         var capabilityRepo = A.CapabilityRepository.WithDbContext(dbContext).Build();
+
         var membershipApplicationService = A
             .MembershipApplicationService.WithMembershipRepository(membershipRepo)
             .WithMembershipApplicationRepository(membershipApplicationRepo)
@@ -108,7 +109,6 @@ public class TestMemberCleaner
         var authService = new Mock<IAuthorizationService>();
         authService.Setup(x => x.CanApproveMembershipApplications(approverMember.Id, application)).ReturnsAsync(true);
 
-        // We need to also check if we can approve the application
         var membershipApplicationServiceWithAuth = A
             .MembershipApplicationService.WithMembershipApplicationRepository(membershipApplicationRepo)
             .WithMembershipRepository(membershipRepo)
