@@ -10,13 +10,17 @@ Id;ObjectId;SchemaVersion;Schema
       ""type"": ""string"",
       ""description"": ""Setting this value helps aggregate cloud costs per tribe in Finout"",
       ""enum"": [
+        ""ti-cae"",
+        ""ti-tes"",
+        ""ti-ctoo"",
         ""ti-ferry"",
         ""ti-logistics"",
-        ""ti-pax"",
+        ""ti-pace"",
+        ""ti-gtad"",
         ""ti-ctai"",
         ""ti-arch"",
         ""ti-data"",
-        ""ti-it"",
+        ""ti-sao"",
         ""ti-inno"",
         ""ti-platform"",
         ""ti-competence"",
@@ -24,7 +28,8 @@ Id;ObjectId;SchemaVersion;Schema
         ""finance"",
         ""ferry"",
         ""logistics"",
-        ""ti-ctia""
+        ""ti-ctia"",
+        ""people""
       ]
     },
     ""dfds.data.classification"": {
