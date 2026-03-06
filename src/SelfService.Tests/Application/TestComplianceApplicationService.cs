@@ -95,7 +95,9 @@ public class TestComplianceApplicationService
 
         var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
 
-        await Assert.ThrowsAsync<EntityNotFoundException<Capability>>(() => service.GetCapabilityCompliance(capabilityId));
+        await Assert.ThrowsAsync<EntityNotFoundException<Capability>>(
+            () => service.GetCapabilityCompliance(capabilityId)
+        );
     }
 
     [Fact]
