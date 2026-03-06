@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SelfService.Application;
+using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence.Models;
 
 namespace SelfService.Infrastructure.Persistence;
@@ -46,6 +47,7 @@ public static class RequirementsDependencyInjection
         // Register real services when database is configured
         builder.Services.AddTransient<IRequirementsMetricService, RequirementsMetricService>();
         builder.Services.AddTransient<IComplianceApplicationService, ComplianceApplicationService>();
+        builder.Services.AddHostedService<RequirementScoreUpdater>();
     }
 }
 

@@ -91,4 +91,23 @@ public class CapabilityRepository : ICapabilityRepository
         _dbContext.Capabilities.Update(found);
         await _dbContext.SaveChangesAsync();
     }
+
+    public async Task BulkUpdateRequirementScores(IReadOnlyDictionary<CapabilityId, double> scores)
+    {
+        if (!scores.Any())
+            return;
+
+        var ids = scores.Keys.ToList();
+        var capabilities = await _dbContext.Capabilities
+            .Where(c => ids.Contains(c.Id))
+            .ToListAsync();
+
+        foreach (var capability in capabilities)
+        {
+            if (scores.TryGetValue(capability.Id, out var score))
+                capability.UpdateRequirementScore(score);
+        }
+
+        await _dbContext.SaveChangesAsync();
+    }
 }
