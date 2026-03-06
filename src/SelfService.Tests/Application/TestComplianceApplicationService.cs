@@ -166,7 +166,7 @@ public class TestComplianceApplicationService
         Assert.Equal(5, result.Categories.Count);
         Assert.Contains(result.Categories, c => c.CategoryName == "Tags");
         Assert.Contains(result.Categories, c => c.CategoryName == "External Secrets");
-        Assert.Contains(result.Categories, c => c.CategoryName == "Established mutual trust between AWS and k8s");
+        Assert.Contains(result.Categories, c => c.CategoryName == "IRSA Mutual Trust");
         Assert.Contains(result.Categories, c => c.CategoryName == "Functioning readiness & liveness probes");
         Assert.Contains(result.Categories, c => c.CategoryName == "All accounts can pull from ECRs");
     }
@@ -220,6 +220,23 @@ public class TestComplianceApplicationService
         var result = await service.GetCostCentreCompliance("ti-platform");
 
         Assert.Equal(1, result.TotalCapabilities);
+    }
+
+    [Fact]
+    public async Task GetCapabilityCompliance_Stub_IrsaMutualTrustIsUnknown()
+    {
+        var capabilityId = CapabilityId.CreateFrom("test-cap");
+        var capability = A.Capability.WithId(capabilityId).WithJsonMetadata(AllTagsPresent).Build();
+
+        var repo = new Mock<ICapabilityRepository>();
+        repo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
+
+        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+
+        var result = await service.GetCapabilityCompliance(capabilityId);
+
+        var irsaCategory = result.Categories.First(c => c.CategoryName == "IRSA Mutual Trust");
+        Assert.Equal(ComplianceStatus.Unknown, irsaCategory.Status);
     }
 
     [Fact]

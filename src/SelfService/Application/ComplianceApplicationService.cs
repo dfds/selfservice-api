@@ -23,12 +23,11 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     private static readonly string[] PlaceholderCategories =
     {
-        "Established mutual trust between AWS and k8s",
         "k8s - Readiness & liveness probes",
         "All accounts can pull from ECRs",
     };
 
-    private static readonly string[] Categories = { "Tags", "External Secrets" };
+    private static readonly string[] Categories = { "Tags", "External Secrets", "IRSA Mutual Trust" };
 
     public ComplianceApplicationService(
         ICapabilityRepository capabilityRepository,
@@ -51,6 +50,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
         categories.Add(CheckTagCompliance(capability.JsonMetadata));
         categories.Add(await CheckExternalSecretsCompliance(capabilityId.ToString()));
+        categories.Add(await CheckIrsaMutualTrustCompliance(capabilityId.ToString()));
 
         foreach (var placeholder in PlaceholderCategories)
         {
@@ -95,6 +95,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
             var categories = new List<ComplianceCategoryResult>();
             categories.Add(CheckTagCompliance(cap.JsonMetadata));
             categories.Add(await CheckExternalSecretsCompliance(cap.Id.ToString()));
+            categories.Add(await CheckIrsaMutualTrustCompliance(cap.Id.ToString()));
             foreach (var placeholder in PlaceholderCategories)
             {
                 categories.Add(
@@ -229,6 +230,60 @@ public class ComplianceApplicationService : IComplianceApplicationService
                     Name = "external_secrets",
                     Status = externalVal.ToString("F0"),
                     Detail = "external secrets count",
+                },
+            },
+        };
+    }
+
+    private async Task<ComplianceCategoryResult> CheckIrsaMutualTrustCompliance(string capabilityId)
+    {
+        var metrics = await _requirementsDbContext
+            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "irsa")
+            .ToListAsync();
+
+        var nonCompliantSAs = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_service_accounts");
+        var compliantSAs = metrics.FirstOrDefault(m => m.Measurement == "compliant_service_accounts");
+        var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
+
+        if (nonCompliantSAs == null && compliantSAs == null)
+        {
+            return new ComplianceCategoryResult
+            {
+                CategoryName = "IRSA Mutual Trust",
+                Status = ComplianceStatus.Unknown,
+                Score = scoreMetric?.Value,
+                HelpUrl = scoreMetric?.HelpUrl,
+                DisplayName = scoreMetric?.DisplayName,
+                Description = scoreMetric?.Description,
+                Items = new(),
+            };
+        }
+
+        var nonCompliantVal = nonCompliantSAs?.Value ?? 0;
+        var compliantVal = compliantSAs?.Value ?? 0;
+        var isCompliant = nonCompliantVal == 0;
+
+        return new ComplianceCategoryResult
+        {
+            CategoryName = "IRSA Mutual Trust",
+            Status = isCompliant ? ComplianceStatus.Compliant : ComplianceStatus.NonCompliant,
+            Score = scoreMetric?.Value,
+            HelpUrl = scoreMetric?.HelpUrl,
+            DisplayName = scoreMetric?.DisplayName,
+            Description = scoreMetric?.Description,
+            Items = new List<ComplianceCategoryItem>
+            {
+                new()
+                {
+                    Name = "compliant_service_accounts",
+                    Status = compliantVal.ToString("F0"),
+                    Detail = "compliant service accounts count",
+                },
+                new()
+                {
+                    Name = "non_compliant_service_accounts",
+                    Status = nonCompliantVal.ToString("F0"),
+                    Detail = "non-compliant service accounts count",
                 },
             },
         };
