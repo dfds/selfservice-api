@@ -9,5 +9,7 @@ namespace SelfService.Application
             double totalScore,
             List<Infrastructure.Persistence.Models.RequirementsMetric> scores
         )> GetRequirementScoreAsync(string capabilityId);
+
+        Task<Dictionary<string, double>> GetAllRequirementScoresAsync();
     }
 }
