@@ -65,11 +65,9 @@ public class StubComplianceApplicationService : IComplianceApplicationService
 
         var evaluated = categories.Where(c => c.Status != ComplianceStatus.Unknown).ToList();
         var overallStatus =
-            evaluated.Count == 0
-                ? ComplianceStatus.Unknown
-                : evaluated.All(c => c.Status == ComplianceStatus.Compliant)
-                    ? ComplianceStatus.Compliant
-                    : ComplianceStatus.NonCompliant;
+            evaluated.Count == 0 ? ComplianceStatus.Unknown
+            : evaluated.All(c => c.Status == ComplianceStatus.Compliant) ? ComplianceStatus.Compliant
+            : ComplianceStatus.NonCompliant;
 
         return new CapabilityComplianceResult
         {
@@ -100,9 +98,7 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             capabilityResults.Add(result);
         }
 
-        var allCategoryNames = new[] { "Tags", "External Secrets" }
-            .Concat(PlaceholderCategories)
-            .ToList();
+        var allCategoryNames = new[] { "Tags", "External Secrets" }.Concat(PlaceholderCategories).ToList();
 
         var categoryBreakdowns = allCategoryNames
             .Select(name => new CostCentreCategoryBreakdown

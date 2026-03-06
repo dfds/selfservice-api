@@ -27,11 +27,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
         "All accounts can pull from ECRs",
     };
 
-    private static readonly string[] Categories =
-    {
-        "Tags",
-        "External Secrets"
-    };
+    private static readonly string[] Categories = { "Tags", "External Secrets" };
 
     public ComplianceApplicationService(
         ICapabilityRepository capabilityRepository,
@@ -119,9 +115,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
             );
         }
 
-        var allCategoryNames = Categories
-            .Concat(PlaceholderCategories)
-            .ToList();
+        var allCategoryNames = Categories.Concat(PlaceholderCategories).ToList();
 
         var categoryBreakdowns = allCategoryNames
             .Select(name => new CostCentreCategoryBreakdown
@@ -181,7 +175,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
             Items = items,
             Description = "Mandatory tags on a Capability level",
             HelpUrl = "https://wiki.dfds.cloud/en/playbooks/requirements/Mandatory-tags-for-capabilities",
-            DisplayName = "Tags for Capabilities"
+            DisplayName = "Tags for Capabilities",
         };
     }
 

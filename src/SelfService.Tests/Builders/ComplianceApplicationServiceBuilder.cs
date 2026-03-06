@@ -15,17 +15,13 @@ public class ComplianceApplicationServiceBuilder
         _capabilityRepository = Dummy.Of<ICapabilityRepository>();
     }
 
-    public ComplianceApplicationServiceBuilder WithCapabilityRepository(
-        ICapabilityRepository capabilityRepository
-    )
+    public ComplianceApplicationServiceBuilder WithCapabilityRepository(ICapabilityRepository capabilityRepository)
     {
         _capabilityRepository = capabilityRepository;
         return this;
     }
 
-    public ComplianceApplicationServiceBuilder WithRequirementsDbContext(
-        RequirementsDbContext requirementsDbContext
-    )
+    public ComplianceApplicationServiceBuilder WithRequirementsDbContext(RequirementsDbContext requirementsDbContext)
     {
         _requirementsDbContext = requirementsDbContext;
         return this;

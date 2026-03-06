@@ -98,9 +98,7 @@ public class CapabilityRepository : ICapabilityRepository
             return;
 
         var ids = scores.Keys.ToList();
-        var capabilities = await _dbContext.Capabilities
-            .Where(c => ids.Contains(c.Id))
-            .ToListAsync();
+        var capabilities = await _dbContext.Capabilities.Where(c => ids.Contains(c.Id)).ToListAsync();
 
         foreach (var capability in capabilities)
         {

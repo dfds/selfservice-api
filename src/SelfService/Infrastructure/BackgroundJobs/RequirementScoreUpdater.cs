@@ -48,22 +48,14 @@ public class RequirementScoreUpdater : BackgroundService
 
             // One query to main DB — all active capabilities
             var allCapabilities = await capabilityRepository.GetAll();
-            var active = allCapabilities
-                .Where(c => c.Status == CapabilityStatusOptions.Active)
-                .ToList();
+            var active = allCapabilities.Where(c => c.Status == CapabilityStatusOptions.Active).ToList();
 
-            logger.LogInformation(
-                "Checking requirement scores for {Count} active capabilities",
-                active.Count
-            );
+            logger.LogInformation("Checking requirement scores for {Count} active capabilities", active.Count);
 
             // In-memory: determine which scores changed
             // Capabilities not present in allScores default to 100 (same as GetRequirementScoreAsync)
             var updates = active
-                .Select(c => (
-                    capability: c,
-                    newScore: allScores.TryGetValue(c.Id.ToString(), out var s) ? s : 100.0
-                ))
+                .Select(c => (capability: c, newScore: allScores.TryGetValue(c.Id.ToString(), out var s) ? s : 100.0))
                 .Where(x =>
                     !x.capability.RequirementScore.HasValue
                     || Math.Abs(x.capability.RequirementScore.Value - x.newScore) >= 0.001

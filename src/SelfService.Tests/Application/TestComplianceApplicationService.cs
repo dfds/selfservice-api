@@ -94,9 +94,7 @@ public class TestComplianceApplicationService
 
         var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(
-            () => service.GetCapabilityCompliance(capabilityId)
-        );
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => service.GetCapabilityCompliance(capabilityId));
     }
 
     [Fact]
@@ -165,43 +163,31 @@ public class TestComplianceApplicationService
         Assert.Equal(5, result.Categories.Count);
         Assert.Contains(result.Categories, c => c.CategoryName == "Tags");
         Assert.Contains(result.Categories, c => c.CategoryName == "External Secrets");
-        Assert.Contains(
-            result.Categories,
-            c => c.CategoryName == "Established mutual trust between AWS and k8s"
-        );
-        Assert.Contains(
-            result.Categories,
-            c => c.CategoryName == "Functioning readiness & liveness probes"
-        );
-        Assert.Contains(
-            result.Categories,
-            c => c.CategoryName == "All accounts can pull from ECRs"
-        );
+        Assert.Contains(result.Categories, c => c.CategoryName == "Established mutual trust between AWS and k8s");
+        Assert.Contains(result.Categories, c => c.CategoryName == "Functioning readiness & liveness probes");
+        Assert.Contains(result.Categories, c => c.CategoryName == "All accounts can pull from ECRs");
     }
 
     [Fact]
     public async Task GetCostCentreCompliance_FiltersMatchingCapabilities()
     {
-        var cap1 = A.Capability
-            .WithId(CapabilityId.CreateFrom("cap-1"))
+        var cap1 = A
+            .Capability.WithId(CapabilityId.CreateFrom("cap-1"))
             .WithJsonMetadata(AllTagsPresent) // cost.centre = "ti-platform"
             .Build();
-        var cap2 = A.Capability
-            .WithId(CapabilityId.CreateFrom("cap-2"))
+        var cap2 = A
+            .Capability.WithId(CapabilityId.CreateFrom("cap-2"))
             .WithJsonMetadata("""{"dfds.cost.centre": "other-centre"}""")
             .Build();
-        var cap3 = A.Capability
-            .WithId(CapabilityId.CreateFrom("cap-3"))
+        var cap3 = A
+            .Capability.WithId(CapabilityId.CreateFrom("cap-3"))
             .WithJsonMetadata(AllTagsPresent) // cost.centre = "ti-platform"
             .Build();
 
         var repo = new Mock<ICapabilityRepository>();
         repo.Setup(r => r.GetAll()).ReturnsAsync(new[] { cap1, cap2, cap3 });
         repo.Setup(r => r.FindBy(It.IsAny<CapabilityId>()))
-            .ReturnsAsync(
-                (CapabilityId id) =>
-                    new[] { cap1, cap2, cap3 }.FirstOrDefault(c => c.Id == id)
-            );
+            .ReturnsAsync((CapabilityId id) => new[] { cap1, cap2, cap3 }.FirstOrDefault(c => c.Id == id));
 
         var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
 
@@ -214,12 +200,9 @@ public class TestComplianceApplicationService
     [Fact]
     public async Task GetCostCentreCompliance_ExcludesDeletedCapabilities()
     {
-        var activeCap = A.Capability
-            .WithId(CapabilityId.CreateFrom("active"))
-            .WithJsonMetadata(AllTagsPresent)
-            .Build();
-        var deletedCap = A.Capability
-            .WithId(CapabilityId.CreateFrom("deleted"))
+        var activeCap = A.Capability.WithId(CapabilityId.CreateFrom("active")).WithJsonMetadata(AllTagsPresent).Build();
+        var deletedCap = A
+            .Capability.WithId(CapabilityId.CreateFrom("deleted"))
             .WithStatus(CapabilityStatusOptions.Deleted)
             .WithJsonMetadata(AllTagsPresent)
             .Build();
@@ -227,10 +210,7 @@ public class TestComplianceApplicationService
         var repo = new Mock<ICapabilityRepository>();
         repo.Setup(r => r.GetAll()).ReturnsAsync(new[] { activeCap, deletedCap });
         repo.Setup(r => r.FindBy(It.IsAny<CapabilityId>()))
-            .ReturnsAsync(
-                (CapabilityId id) =>
-                    new[] { activeCap, deletedCap }.FirstOrDefault(c => c.Id == id)
-            );
+            .ReturnsAsync((CapabilityId id) => new[] { activeCap, deletedCap }.FirstOrDefault(c => c.Id == id));
 
         var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
 
