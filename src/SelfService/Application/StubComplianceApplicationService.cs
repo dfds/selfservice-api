@@ -20,7 +20,6 @@ public class StubComplianceApplicationService : IComplianceApplicationService
 
     private static readonly string[] PlaceholderCategories =
     {
-        "Established mutual trust between AWS and k8s",
         "Functioning readiness & liveness probes",
         "All accounts can pull from ECRs",
     };
@@ -47,6 +46,16 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             new ComplianceCategoryResult
             {
                 CategoryName = "External Secrets",
+                Status = ComplianceStatus.Unknown,
+                Items = new(),
+            }
+        );
+
+        // IRSA Mutual Trust unknown without requirements DB
+        categories.Add(
+            new ComplianceCategoryResult
+            {
+                CategoryName = "IRSA Mutual Trust",
                 Status = ComplianceStatus.Unknown,
                 Items = new(),
             }
@@ -99,7 +108,9 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             capabilityResults.Add(result);
         }
 
-        var allCategoryNames = new[] { "Tags", "External Secrets" }.Concat(PlaceholderCategories).ToList();
+        var allCategoryNames = new[] { "Tags", "External Secrets", "IRSA Mutual Trust" }
+            .Concat(PlaceholderCategories)
+            .ToList();
 
         var categoryBreakdowns = allCategoryNames
             .Select(name => new CostCentreCategoryBreakdown
