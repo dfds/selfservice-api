@@ -1,5 +1,6 @@
 using Moq;
 using SelfService.Application;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
 namespace SelfService.Tests.Application;
@@ -86,7 +87,7 @@ public class TestComplianceApplicationService
     }
 
     [Fact]
-    public async Task GetCapabilityCompliance_NonExistentCapability_ThrowsKeyNotFoundException()
+    public async Task GetCapabilityCompliance_NonExistentCapability_ThrowsEntityNotFoundException()
     {
         var capabilityId = CapabilityId.CreateFrom("non-existent");
         var repo = new Mock<ICapabilityRepository>();
@@ -94,7 +95,7 @@ public class TestComplianceApplicationService
 
         var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => service.GetCapabilityCompliance(capabilityId));
+        await Assert.ThrowsAsync<EntityNotFoundException<Capability>>(() => service.GetCapabilityCompliance(capabilityId));
     }
 
     [Fact]
