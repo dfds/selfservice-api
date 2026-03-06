@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
 namespace SelfService.Infrastructure.Api.Compliance;
@@ -25,7 +26,7 @@ public class ComplianceController : ControllerBase
             var result = await _complianceService.GetCapabilityCompliance(capabilityId);
             return Ok(CapabilityComplianceApiResource.From(result));
         }
-        catch (KeyNotFoundException)
+        catch (EntityNotFoundException)
         {
             return NotFound();
         }

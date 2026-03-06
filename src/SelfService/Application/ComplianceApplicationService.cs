@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 
@@ -43,7 +44,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability == null)
         {
-            throw new KeyNotFoundException($"Capability '{capabilityId}' not found.");
+            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
 
         var categories = new List<ComplianceCategoryResult>();

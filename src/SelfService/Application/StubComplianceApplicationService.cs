@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 
 namespace SelfService.Application;
@@ -34,7 +35,7 @@ public class StubComplianceApplicationService : IComplianceApplicationService
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability == null)
         {
-            throw new KeyNotFoundException($"Capability '{capabilityId}' not found.");
+            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
 
         var categories = new List<ComplianceCategoryResult>();
