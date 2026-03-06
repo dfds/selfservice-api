@@ -48,4 +48,6 @@ public static class A
 
     public static RbacRoleBuilder RbacRole => new();
     public static RbacRoleGrantBuilder RbacRoleGrant => new();
+
+    public static ComplianceApplicationServiceBuilder ComplianceApplicationService => new();
 }

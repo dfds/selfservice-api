@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SelfService.Application;
+using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence.Models;
 
 namespace SelfService.Infrastructure.Persistence;
@@ -14,8 +15,9 @@ public static class RequirementsDependencyInjection
         // Only add the requirements database if a connection string is configured
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            // Register stub service when database is not configured
+            // Register stub services when database is not configured
             builder.Services.AddTransient<IRequirementsMetricService, StubRequirementsMetricService>();
+            builder.Services.AddTransient<IComplianceApplicationService, StubComplianceApplicationService>();
             return;
         }
 
@@ -42,8 +44,10 @@ public static class RequirementsDependencyInjection
             }
         });
 
-        // Register real service when database is configured
+        // Register real services when database is configured
         builder.Services.AddTransient<IRequirementsMetricService, RequirementsMetricService>();
+        builder.Services.AddTransient<IComplianceApplicationService, ComplianceApplicationService>();
+        builder.Services.AddHostedService<RequirementScoreUpdater>();
     }
 }
 

@@ -55,4 +55,9 @@ public class StubCapabilityRepository : ICapabilityRepository
     {
         return Task.CompletedTask;
     }
+
+    public Task BulkUpdateRequirementScores(IReadOnlyDictionary<CapabilityId, double> scores)
+    {
+        return Task.CompletedTask;
+    }
 }

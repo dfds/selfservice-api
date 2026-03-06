@@ -11,4 +11,5 @@ public interface ICapabilityRepository
     Task SetJsonMetadata(CapabilityId id, string jsonMetadata, int jsonSchemaVersion);
     Task<string> GetJsonMetadata(CapabilityId id);
     Task UpdateRequirementScore(CapabilityId id, double score);
+    Task BulkUpdateRequirementScores(IReadOnlyDictionary<CapabilityId, double> scores);
 }
