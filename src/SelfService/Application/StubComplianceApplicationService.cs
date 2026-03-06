@@ -108,7 +108,9 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             capabilityResults.Add(result);
         }
 
-        var allCategoryNames = new[] { "Tags", "External Secrets", "IRSA Mutual Trust" }.Concat(PlaceholderCategories).ToList();
+        var allCategoryNames = new[] { "Tags", "External Secrets", "IRSA Mutual Trust" }
+            .Concat(PlaceholderCategories)
+            .ToList();
 
         var categoryBreakdowns = allCategoryNames
             .Select(name => new CostCentreCategoryBreakdown
