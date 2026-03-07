@@ -18,11 +18,7 @@ public class StubComplianceApplicationService : IComplianceApplicationService
         "dfds.service.availability",
     };
 
-    private static readonly string[] PlaceholderCategories =
-    {
-        "Functioning readiness & liveness probes",
-        "All accounts can pull from ECRs",
-    };
+    private static readonly string[] PlaceholderCategories = Array.Empty<string>();
 
     public StubComplianceApplicationService(ICapabilityRepository capabilityRepository)
     {
@@ -56,6 +52,26 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             new ComplianceCategoryResult
             {
                 CategoryName = "IRSA Mutual Trust",
+                Status = ComplianceStatus.Unknown,
+                Items = new(),
+            }
+        );
+
+        // Workload Liveness and Readiness Probes unknown without requirements DB
+        categories.Add(
+            new ComplianceCategoryResult
+            {
+                CategoryName = "Workload Liveness and Readiness Probes",
+                Status = ComplianceStatus.Unknown,
+                Items = new(),
+            }
+        );
+
+        // ECR pull policy unknown without requirements DB
+        categories.Add(
+            new ComplianceCategoryResult
+            {
+                CategoryName = "ECR pull policy",
                 Status = ComplianceStatus.Unknown,
                 Items = new(),
             }
@@ -108,7 +124,7 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             capabilityResults.Add(result);
         }
 
-        var allCategoryNames = new[] { "Tags", "External Secrets", "IRSA Mutual Trust" }
+        var allCategoryNames = new[] { "Tags", "External Secrets", "IRSA Mutual Trust", "Workload Liveness and Readiness Probes", "ECR pull policy" }
             .Concat(PlaceholderCategories)
             .ToList();
 

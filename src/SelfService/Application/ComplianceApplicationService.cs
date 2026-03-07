@@ -21,13 +21,9 @@ public class ComplianceApplicationService : IComplianceApplicationService
         "dfds.service.availability",
     };
 
-    private static readonly string[] PlaceholderCategories =
-    {
-        "k8s - Readiness & liveness probes",
-        "All accounts can pull from ECRs",
-    };
+    private static readonly string[] PlaceholderCategories = Array.Empty<string>();
 
-    private static readonly string[] Categories = { "Tags", "External Secrets", "IRSA Mutual Trust" };
+    private static readonly string[] Categories = { "Tags", "External Secrets", "IRSA Mutual Trust", "Workload Liveness and Readiness Probes", "ECR pull policy" };
 
     public ComplianceApplicationService(
         ICapabilityRepository capabilityRepository,
@@ -51,18 +47,8 @@ public class ComplianceApplicationService : IComplianceApplicationService
         categories.Add(CheckTagCompliance(capability.JsonMetadata));
         categories.Add(await CheckExternalSecretsCompliance(capabilityId.ToString()));
         categories.Add(await CheckIrsaMutualTrustCompliance(capabilityId.ToString()));
-
-        foreach (var placeholder in PlaceholderCategories)
-        {
-            categories.Add(
-                new ComplianceCategoryResult
-                {
-                    CategoryName = placeholder,
-                    Status = ComplianceStatus.Unknown,
-                    Items = new(),
-                }
-            );
-        }
+        categories.Add(await CheckK8sProbesCompliance(capabilityId.ToString()));
+        categories.Add(await CheckEcrPullCompliance(capabilityId.ToString()));
 
         var overallStatus = DetermineOverallStatus(categories);
         var totalScore = categories.Count(c => c.Status == ComplianceStatus.Compliant);
@@ -96,17 +82,8 @@ public class ComplianceApplicationService : IComplianceApplicationService
             categories.Add(CheckTagCompliance(cap.JsonMetadata));
             categories.Add(await CheckExternalSecretsCompliance(cap.Id.ToString()));
             categories.Add(await CheckIrsaMutualTrustCompliance(cap.Id.ToString()));
-            foreach (var placeholder in PlaceholderCategories)
-            {
-                categories.Add(
-                    new ComplianceCategoryResult
-                    {
-                        CategoryName = placeholder,
-                        Status = ComplianceStatus.Unknown,
-                        Items = new(),
-                    }
-                );
-            }
+            categories.Add(await CheckK8sProbesCompliance(cap.Id.ToString()));
+            categories.Add(await CheckEcrPullCompliance(cap.Id.ToString()));
             capabilityResults.Add(
                 new CapabilityComplianceResult
                 {
@@ -284,6 +261,114 @@ public class ComplianceApplicationService : IComplianceApplicationService
                     Name = "non_compliant_service_accounts",
                     Status = nonCompliantVal.ToString("F0"),
                     Detail = "non-compliant service accounts count",
+                },
+            },
+        };
+    }
+
+    private async Task<ComplianceCategoryResult> CheckK8sProbesCompliance(string capabilityId)
+    {
+        var metrics = await _requirementsDbContext
+            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "k8s-probes")
+            .ToListAsync();
+
+        var nonCompliantWorkloads = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_workloads");
+        var compliantWorkloads = metrics.FirstOrDefault(m => m.Measurement == "compliant_workloads");
+        var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
+
+        if (nonCompliantWorkloads == null && compliantWorkloads == null)
+        {
+            return new ComplianceCategoryResult
+            {
+                CategoryName = "Workload Liveness and Readiness Probes",
+                Status = ComplianceStatus.Unknown,
+                Score = scoreMetric?.Value,
+                HelpUrl = scoreMetric?.HelpUrl,
+                DisplayName = scoreMetric?.DisplayName,
+                Description = scoreMetric?.Description,
+                Items = new(),
+            };
+        }
+
+        var nonCompliantVal = nonCompliantWorkloads?.Value ?? 0;
+        var compliantVal = compliantWorkloads?.Value ?? 0;
+        var isCompliant = nonCompliantVal == 0;
+
+        return new ComplianceCategoryResult
+        {
+            CategoryName = "Workload Liveness and Readiness Probes",
+            Status = isCompliant ? ComplianceStatus.Compliant : ComplianceStatus.NonCompliant,
+            Score = scoreMetric?.Value,
+            HelpUrl = scoreMetric?.HelpUrl,
+            DisplayName = scoreMetric?.DisplayName,
+            Description = scoreMetric?.Description,
+            Items = new List<ComplianceCategoryItem>
+            {
+                new()
+                {
+                    Name = "compliant_workloads",
+                    Status = compliantVal.ToString("F0"),
+                    Detail = "compliant workloads count",
+                },
+                new()
+                {
+                    Name = "non_compliant_workloads",
+                    Status = nonCompliantVal.ToString("F0"),
+                    Detail = "non-compliant workloads count",
+                },
+            },
+        };
+    }
+
+    private async Task<ComplianceCategoryResult> CheckEcrPullCompliance(string capabilityId)
+    {
+        var metrics = await _requirementsDbContext
+            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "ecr-pull")
+            .ToListAsync();
+
+        var nonCompliantRepos = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_ecr_repos");
+        var compliantRepos = metrics.FirstOrDefault(m => m.Measurement == "compliant_ecr_repos");
+        var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
+
+        if (nonCompliantRepos == null && compliantRepos == null)
+        {
+            return new ComplianceCategoryResult
+            {
+                CategoryName = "ECR pull policy",
+                Status = ComplianceStatus.Unknown,
+                Score = scoreMetric?.Value,
+                HelpUrl = scoreMetric?.HelpUrl,
+                DisplayName = scoreMetric?.DisplayName,
+                Description = scoreMetric?.Description,
+                Items = new(),
+            };
+        }
+
+        var nonCompliantVal = nonCompliantRepos?.Value ?? 0;
+        var compliantVal = compliantRepos?.Value ?? 0;
+        var isCompliant = nonCompliantVal == 0;
+
+        return new ComplianceCategoryResult
+        {
+            CategoryName = "ECR pull policy",
+            Status = isCompliant ? ComplianceStatus.Compliant : ComplianceStatus.NonCompliant,
+            Score = scoreMetric?.Value,
+            HelpUrl = scoreMetric?.HelpUrl,
+            DisplayName = scoreMetric?.DisplayName,
+            Description = scoreMetric?.Description,
+            Items = new List<ComplianceCategoryItem>
+            {
+                new()
+                {
+                    Name = "compliant_ecr_repos",
+                    Status = compliantVal.ToString("F0"),
+                    Detail = "compliant ECR repositories count",
+                },
+                new()
+                {
+                    Name = "non_compliant_ecr_repos",
+                    Status = nonCompliantVal.ToString("F0"),
+                    Detail = "non-compliant ECR repositories count",
                 },
             },
         };
