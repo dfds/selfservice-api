@@ -167,8 +167,8 @@ public class TestComplianceApplicationService
         Assert.Contains(result.Categories, c => c.CategoryName == "Tags");
         Assert.Contains(result.Categories, c => c.CategoryName == "External Secrets");
         Assert.Contains(result.Categories, c => c.CategoryName == "IRSA Mutual Trust");
-        Assert.Contains(result.Categories, c => c.CategoryName == "Functioning readiness & liveness probes");
-        Assert.Contains(result.Categories, c => c.CategoryName == "All accounts can pull from ECRs");
+        Assert.Contains(result.Categories, c => c.CategoryName == "Workload Liveness and Readiness Probes");
+        Assert.Contains(result.Categories, c => c.CategoryName == "ECR pull policy");
     }
 
     [Fact]
@@ -237,6 +237,40 @@ public class TestComplianceApplicationService
 
         var irsaCategory = result.Categories.First(c => c.CategoryName == "IRSA Mutual Trust");
         Assert.Equal(ComplianceStatus.Unknown, irsaCategory.Status);
+    }
+
+    [Fact]
+    public async Task GetCapabilityCompliance_Stub_WorkloadProbesIsUnknown()
+    {
+        var capabilityId = CapabilityId.CreateFrom("test-cap");
+        var capability = A.Capability.WithId(capabilityId).WithJsonMetadata(AllTagsPresent).Build();
+
+        var repo = new Mock<ICapabilityRepository>();
+        repo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
+
+        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+
+        var result = await service.GetCapabilityCompliance(capabilityId);
+
+        var probesCategory = result.Categories.First(c => c.CategoryName == "Workload Liveness and Readiness Probes");
+        Assert.Equal(ComplianceStatus.Unknown, probesCategory.Status);
+    }
+
+    [Fact]
+    public async Task GetCapabilityCompliance_Stub_EcrPullIsUnknown()
+    {
+        var capabilityId = CapabilityId.CreateFrom("test-cap");
+        var capability = A.Capability.WithId(capabilityId).WithJsonMetadata(AllTagsPresent).Build();
+
+        var repo = new Mock<ICapabilityRepository>();
+        repo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
+
+        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+
+        var result = await service.GetCapabilityCompliance(capabilityId);
+
+        var ecrCategory = result.Categories.First(c => c.CategoryName == "ECR pull policy");
+        Assert.Equal(ComplianceStatus.Unknown, ecrCategory.Status);
     }
 
     [Fact]

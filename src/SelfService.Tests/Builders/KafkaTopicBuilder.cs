@@ -51,6 +51,12 @@ public class KafkaTopicBuilder
         return this;
     }
 
+    public KafkaTopicBuilder WithCapabilityId(CapabilityId capabilityId)
+    {
+        _capabilityId = capabilityId;
+        return this;
+    }
+
     public KafkaTopicBuilder WithKafkaClusterId(KafkaClusterId kafkaClusterId)
     {
         _kafkaClusterId = kafkaClusterId;
