@@ -23,7 +23,14 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     private static readonly string[] PlaceholderCategories = Array.Empty<string>();
 
-    private static readonly string[] Categories = { "Tags", "External Secrets", "IRSA Mutual Trust", "Workload Liveness and Readiness Probes", "ECR pull policy" };
+    private static readonly string[] Categories =
+    {
+        "Tags",
+        "External Secrets",
+        "IRSA Mutual Trust",
+        "Workload Liveness and Readiness Probes",
+        "ECR pull policy",
+    };
 
     public ComplianceApplicationService(
         ICapabilityRepository capabilityRepository,

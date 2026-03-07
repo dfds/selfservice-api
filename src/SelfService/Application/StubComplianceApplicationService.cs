@@ -124,7 +124,14 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             capabilityResults.Add(result);
         }
 
-        var allCategoryNames = new[] { "Tags", "External Secrets", "IRSA Mutual Trust", "Workload Liveness and Readiness Probes", "ECR pull policy" }
+        var allCategoryNames = new[]
+        {
+            "Tags",
+            "External Secrets",
+            "IRSA Mutual Trust",
+            "Workload Liveness and Readiness Probes",
+            "ECR pull policy",
+        }
             .Concat(PlaceholderCategories)
             .ToList();
 
