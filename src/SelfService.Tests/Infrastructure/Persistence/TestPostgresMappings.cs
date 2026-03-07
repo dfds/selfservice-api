@@ -113,7 +113,9 @@ public class TestPostgresMappings
         await using var databaseFactory = new ExternalDatabaseFactory();
         var dbContext = await databaseFactory.CreateDbContext();
 
-        var stub = A.KafkaCluster.Build();
+        var stub = A.KafkaCluster
+            .WithId(KafkaClusterId.Parse($"cluster-{Guid.NewGuid()}"))
+            .Build();
 
         // write
         await dbContext.KafkaClusters.AddAsync(stub);
@@ -132,7 +134,20 @@ public class TestPostgresMappings
         await using var databaseFactory = new ExternalDatabaseFactory();
         var dbContext = await databaseFactory.CreateDbContext();
 
-        var stub = A.KafkaTopic.Build();
+        var capability = A.Capability.Build();
+        await dbContext.Capabilities.AddAsync(capability);
+
+        var cluster = A.KafkaCluster
+            .WithId(KafkaClusterId.Parse($"cluster-{Guid.NewGuid()}"))
+            .Build();
+        await dbContext.KafkaClusters.AddAsync(cluster);
+
+        await dbContext.SaveChangesAsync();
+
+        var stub = A.KafkaTopic
+            .WithCapabilityId(capability.Id)
+            .WithKafkaClusterId(cluster.Id)
+            .Build();
 
         // write
         await dbContext.KafkaTopics.AddAsync(stub);
