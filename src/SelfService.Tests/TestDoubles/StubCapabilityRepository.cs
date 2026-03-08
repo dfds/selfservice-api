@@ -36,6 +36,11 @@ public class StubCapabilityRepository : ICapabilityRepository
         throw new NotImplementedException();
     }
 
+    public Task<IEnumerable<Capability>> GetAllActive()
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<IEnumerable<Capability>> GetAllPendingDeletionFor(int days)
     {
         throw new NotImplementedException();
