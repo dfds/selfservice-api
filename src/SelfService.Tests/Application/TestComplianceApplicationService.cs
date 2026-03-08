@@ -188,9 +188,7 @@ public class TestComplianceApplicationService
             .Build();
 
         var repo = new Mock<ICapabilityRepository>();
-        repo.Setup(r => r.GetAll()).ReturnsAsync(new[] { cap1, cap2, cap3 });
-        repo.Setup(r => r.FindBy(It.IsAny<CapabilityId>()))
-            .ReturnsAsync((CapabilityId id) => new[] { cap1, cap2, cap3 }.FirstOrDefault(c => c.Id == id));
+        repo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { cap1, cap2, cap3 });
 
         var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
 
@@ -211,9 +209,7 @@ public class TestComplianceApplicationService
             .Build();
 
         var repo = new Mock<ICapabilityRepository>();
-        repo.Setup(r => r.GetAll()).ReturnsAsync(new[] { activeCap, deletedCap });
-        repo.Setup(r => r.FindBy(It.IsAny<CapabilityId>()))
-            .ReturnsAsync((CapabilityId id) => new[] { activeCap, deletedCap }.FirstOrDefault(c => c.Id == id));
+        repo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { activeCap });
 
         var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
 

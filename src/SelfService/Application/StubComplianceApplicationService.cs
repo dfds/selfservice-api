@@ -106,23 +106,58 @@ public class StubComplianceApplicationService : IComplianceApplicationService
 
     public async Task<CostCentreComplianceResult> GetCostCentreCompliance(string costCentre)
     {
-        var allCapabilities = await _capabilityRepository.GetAll();
-        var activeCapabilities = allCapabilities.Where(c => c.Status == CapabilityStatusOptions.Active);
+        var activeCapabilities = await _capabilityRepository.GetAllActive();
 
         var matchingCapabilities = activeCapabilities
             .Where(c =>
-            {
-                var cc = ExtractCostCentre(c.JsonMetadata);
-                return string.Equals(cc, costCentre, StringComparison.OrdinalIgnoreCase);
-            })
+                string.Equals(ExtractCostCentre(c.JsonMetadata), costCentre, StringComparison.OrdinalIgnoreCase)
+            )
             .ToList();
 
-        var capabilityResults = new List<CapabilityComplianceResult>();
-        foreach (var cap in matchingCapabilities)
-        {
-            var result = await GetCapabilityCompliance(cap.Id);
-            capabilityResults.Add(result);
-        }
+        var capabilityResults = matchingCapabilities
+            .Select(cap =>
+            {
+                var categories = new List<ComplianceCategoryResult>
+                {
+                    CheckTagCompliance(cap.JsonMetadata),
+                    new()
+                    {
+                        CategoryName = "External Secrets",
+                        Status = ComplianceStatus.Unknown,
+                        Items = new(),
+                    },
+                    new()
+                    {
+                        CategoryName = "IRSA Mutual Trust",
+                        Status = ComplianceStatus.Unknown,
+                        Items = new(),
+                    },
+                    new()
+                    {
+                        CategoryName = "Workload Liveness and Readiness Probes",
+                        Status = ComplianceStatus.Unknown,
+                        Items = new(),
+                    },
+                    new()
+                    {
+                        CategoryName = "ECR pull policy",
+                        Status = ComplianceStatus.Unknown,
+                        Items = new(),
+                    },
+                };
+                var evaluated = categories.Where(c => c.Status != ComplianceStatus.Unknown).ToList();
+                return new CapabilityComplianceResult
+                {
+                    CapabilityId = cap.Id.ToString(),
+                    OverallStatus =
+                        evaluated.Count == 0 ? ComplianceStatus.Unknown
+                        : evaluated.All(c => c.Status == ComplianceStatus.Compliant) ? ComplianceStatus.Compliant
+                        : ComplianceStatus.NonCompliant,
+                    TotalScore = categories.Count(c => c.Status == ComplianceStatus.Compliant),
+                    Categories = categories,
+                };
+            })
+            .ToList();
 
         var allCategoryNames = new[]
         {
