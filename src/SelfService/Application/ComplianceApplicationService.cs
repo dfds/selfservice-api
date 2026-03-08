@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
+using SelfService.Infrastructure.Persistence.Models;
 
 namespace SelfService.Application;
 
@@ -71,35 +72,46 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     public async Task<CostCentreComplianceResult> GetCostCentreCompliance(string costCentre)
     {
-        var allCapabilities = await _capabilityRepository.GetAll();
-        var activeCapabilities = allCapabilities.Where(c => c.Status == CapabilityStatusOptions.Active);
+        var activeCapabilities = await _capabilityRepository.GetAllActive();
 
         var matchingCapabilities = activeCapabilities
             .Where(c =>
-            {
-                var cc = ExtractCostCentre(c.JsonMetadata);
-                return string.Equals(cc, costCentre, StringComparison.OrdinalIgnoreCase);
-            })
+                string.Equals(ExtractCostCentre(c.JsonMetadata), costCentre, StringComparison.OrdinalIgnoreCase)
+            )
             .ToList();
 
-        var capabilityResults = new List<CapabilityComplianceResult>();
-        foreach (var cap in matchingCapabilities)
-        {
-            var categories = new List<ComplianceCategoryResult>();
-            categories.Add(CheckTagCompliance(cap.JsonMetadata));
-            categories.Add(await CheckExternalSecretsCompliance(cap.Id.ToString()));
-            categories.Add(await CheckIrsaMutualTrustCompliance(cap.Id.ToString()));
-            categories.Add(await CheckK8sProbesCompliance(cap.Id.ToString()));
-            categories.Add(await CheckEcrPullCompliance(cap.Id.ToString()));
-            capabilityResults.Add(
-                new CapabilityComplianceResult
+        var capabilityIds = matchingCapabilities.Select(c => c.Id.ToString()).ToList();
+        var allMetrics = await _requirementsDbContext
+            .Metrics.Where(m => capabilityIds.Contains(m.CapabilityRootId))
+            .ToListAsync();
+
+        var metricMap = allMetrics
+            .GroupBy(m => m.CapabilityRootId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.GroupBy(m => m.RequirementId).ToDictionary(rg => rg.Key, rg => rg.ToList())
+            );
+
+        var capabilityResults = matchingCapabilities
+            .Select(cap =>
+            {
+                var capMetrics = metricMap.GetValueOrDefault(cap.Id.ToString(), new());
+                var categories = new List<ComplianceCategoryResult>
+                {
+                    CheckTagCompliance(cap.JsonMetadata),
+                    CheckExternalSecretsCompliance(capMetrics.GetValueOrDefault("external_secrets", new())),
+                    CheckIrsaMutualTrustCompliance(capMetrics.GetValueOrDefault("irsa", new())),
+                    CheckK8sProbesCompliance(capMetrics.GetValueOrDefault("k8s-probes", new())),
+                    CheckEcrPullCompliance(capMetrics.GetValueOrDefault("ecr-pull", new())),
+                };
+                return new CapabilityComplianceResult
                 {
                     CapabilityId = cap.Id.ToString(),
                     OverallStatus = DetermineOverallStatus(categories),
                     Categories = categories,
-                }
-            );
-        }
+                };
+            })
+            .ToList();
 
         var allCategoryNames = Categories.Concat(PlaceholderCategories).ToList();
 
@@ -170,7 +182,11 @@ public class ComplianceApplicationService : IComplianceApplicationService
         var metrics = await _requirementsDbContext
             .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "external_secrets")
             .ToListAsync();
+        return CheckExternalSecretsCompliance(metrics);
+    }
 
+    private static ComplianceCategoryResult CheckExternalSecretsCompliance(List<RequirementsMetric> metrics)
+    {
         var secretsTotal = metrics.FirstOrDefault(m => m.Measurement == "secrets");
         var externalSecretsCount = metrics.FirstOrDefault(m => m.Measurement == "external_secrets");
         var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
@@ -224,7 +240,11 @@ public class ComplianceApplicationService : IComplianceApplicationService
         var metrics = await _requirementsDbContext
             .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "irsa")
             .ToListAsync();
+        return CheckIrsaMutualTrustCompliance(metrics);
+    }
 
+    private static ComplianceCategoryResult CheckIrsaMutualTrustCompliance(List<RequirementsMetric> metrics)
+    {
         var nonCompliantSAs = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_service_accounts");
         var compliantSAs = metrics.FirstOrDefault(m => m.Measurement == "compliant_service_accounts");
         var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
@@ -278,7 +298,11 @@ public class ComplianceApplicationService : IComplianceApplicationService
         var metrics = await _requirementsDbContext
             .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "k8s-probes")
             .ToListAsync();
+        return CheckK8sProbesCompliance(metrics);
+    }
 
+    private static ComplianceCategoryResult CheckK8sProbesCompliance(List<RequirementsMetric> metrics)
+    {
         var nonCompliantWorkloads = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_workloads");
         var compliantWorkloads = metrics.FirstOrDefault(m => m.Measurement == "compliant_workloads");
         var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
@@ -332,7 +356,11 @@ public class ComplianceApplicationService : IComplianceApplicationService
         var metrics = await _requirementsDbContext
             .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "ecr-pull")
             .ToListAsync();
+        return CheckEcrPullCompliance(metrics);
+    }
 
+    private static ComplianceCategoryResult CheckEcrPullCompliance(List<RequirementsMetric> metrics)
+    {
         var nonCompliantRepos = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_ecr_repos");
         var compliantRepos = metrics.FirstOrDefault(m => m.Measurement == "compliant_ecr_repos");
         var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
