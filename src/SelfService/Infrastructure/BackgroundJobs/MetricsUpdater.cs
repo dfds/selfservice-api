@@ -8,10 +8,7 @@ public class MetricsUpdater : BackgroundService
     private readonly CapabilityMetrics _capabilityMetrics;
     public DateTime UpdateNeededAt;
 
-    public MetricsUpdater(
-        ILogger<MetricsUpdater> logger,
-        IServiceScopeFactory scopeFactory
-    )
+    public MetricsUpdater(ILogger<MetricsUpdater> logger, IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
         _capabilityMetrics = new CapabilityMetrics(scopeFactory);
