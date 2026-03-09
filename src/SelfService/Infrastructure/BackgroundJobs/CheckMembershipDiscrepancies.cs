@@ -41,23 +41,30 @@ public class CheckMembershipDiscrepancies : BackgroundService
         var applicationRepository = scope.ServiceProvider.GetRequiredService<IMembershipApplicationRepository>();
         var applicationService = scope.ServiceProvider.GetRequiredService<IMembershipApplicationService>();
 
-        logger.LogDebug("Checking for application and membership discrepancies...");
-        var applications = await applicationRepository.FindAllPending();
-        foreach (var application in applications)
+        try
         {
-            var relevantMemberships = await membershipRepository.GetAllWithPredicate(x =>
-                x.UserId == application.Applicant && x.CapabilityId == application.CapabilityId
-            );
-            if (relevantMemberships.Count > 0)
+            logger.LogDebug("Checking for application and membership discrepancies...");
+            var applications = await applicationRepository.FindAllPending();
+            foreach (var application in applications)
             {
-                await applicationService.RemoveMembershipApplication(application.Id);
-                logger.LogInformation(
-                    "Application {ApplicationId} for user {UserId} to capability {CapabilityId} was already satisfied",
-                    application.Id,
-                    application.Applicant,
-                    application.CapabilityId
+                var relevantMemberships = await membershipRepository.GetAllWithPredicate(x =>
+                    x.UserId == application.Applicant && x.CapabilityId == application.CapabilityId
                 );
+                if (relevantMemberships.Count > 0)
+                {
+                    await applicationService.RemoveMembershipApplication(application.Id);
+                    logger.LogInformation(
+                        "Application {ApplicationId} for user {UserId} to capability {CapabilityId} was already satisfied",
+                        application.Id,
+                        application.Applicant,
+                        application.CapabilityId
+                    );
+                }
             }
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error checking membership discrepancies");
         }
     }
 }
