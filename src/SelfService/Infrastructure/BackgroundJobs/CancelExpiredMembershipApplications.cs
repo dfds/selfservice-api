@@ -38,7 +38,14 @@ public class CancelExpiredMembershipApplications : BackgroundService
         );
         var applicationService = scope.ServiceProvider.GetRequiredService<IMembershipApplicationService>();
 
-        logger.LogInformation("Cancelling any expired membership applications...");
-        await applicationService.CancelExpiredMembershipApplications();
+        try
+        {
+            logger.LogInformation("Cancelling any expired membership applications...");
+            await applicationService.CancelExpiredMembershipApplications();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error cancelling expired membership applications");
+        }
     }
 }
