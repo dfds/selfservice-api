@@ -97,6 +97,7 @@ public static class Domain
 
         builder.Services.AddTransient<IMembershipQuery, MembershipQuery>();
         builder.Services.AddTransient<ICapabilityDeletionStatusQuery, CapabilityDeletionStatusQuery>();
+        builder.Services.AddTransient<IUserEmailQuery, UserEmailQuery>();
 
         //builder.Services.AddTransient<MembershipQuery>();
         //builder.Services.AddScoped<IMembershipQuery, CachedMembershipQueryDecorator>(provider =>
