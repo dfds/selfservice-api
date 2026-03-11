@@ -243,4 +243,9 @@ public class StubAuthorizationService : IAuthorizationService
     {
         return await Task.FromResult(_authorized);
     }
+
+    public bool CanGetUserEmails(PortalUser portalUser)
+    {
+        return _authorized;
+    }
 }
