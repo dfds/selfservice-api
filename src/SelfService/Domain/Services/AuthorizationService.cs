@@ -807,4 +807,9 @@ public class AuthorizationService : IAuthorizationService
     {
         return IsCloudEngineerEnabled(portalUser);
     }
+
+    public bool CanGetUserEmails(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
 }
