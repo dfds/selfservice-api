@@ -55,4 +55,5 @@ public interface IAuthorizationService
     bool IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser);
     bool IsAuthorizedToRemoveReleaseNote(PortalUser portalUser);
     Task<bool> CanViewMembershipApplications(UserId userId, CapabilityId capabilityId);
+    bool CanGetUserEmails(PortalUser portalUser);
 }
