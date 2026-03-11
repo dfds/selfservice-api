@@ -39,29 +39,29 @@ public class UserEmailQuery : IUserEmailQuery
         // Step 1: Determine which capabilities we're interested in
         // Collect capability IDs from cost-centre, business-capability, and capability filters
         List<CapabilityId>? targetCapabilityIds = null;
-        
+
         if (costCentreList.Any() || businessCapabilityList.Any() || capabilityList.Any())
         {
             var capabilitySets = new List<HashSet<CapabilityId>>();
-            
+
             if (costCentreList.Any())
             {
                 var capIds = await GetCapabilityIdsByMetadataField("dfds.cost.centre", costCentreList);
                 capabilitySets.Add(capIds.ToHashSet());
             }
-            
+
             if (businessCapabilityList.Any())
             {
                 var capIds = await GetCapabilityIdsByMetadataField("dfds.businessCapability", businessCapabilityList);
                 capabilitySets.Add(capIds.ToHashSet());
             }
-            
+
             if (capabilityList.Any())
             {
                 var capIds = await GetCapabilityIdsByCapabilityFilter(capabilityList);
                 capabilitySets.Add(capIds.ToHashSet());
             }
-            
+
             // Intersect capability sets - all capability filters must match
             if (capabilitySets.Count == 1)
             {
@@ -77,12 +77,12 @@ public class UserEmailQuery : IUserEmailQuery
 
         // Step 2: Get users based on role and capability filters
         HashSet<UserId> finalUserIds;
-        
+
         if (roleList.Any())
         {
             // Get users with the role (global or in specific capabilities)
             var usersWithRole = await GetUserIdsByRbacRoles(roleList, targetCapabilityIds);
-            
+
             // If we have target capabilities, we need to intersect with actual membership
             if (targetCapabilityIds != null && targetCapabilityIds.Any())
             {
@@ -92,7 +92,7 @@ public class UserEmailQuery : IUserEmailQuery
                     .Select(m => m.UserId)
                     .Distinct()
                     .ToListAsync();
-                
+
                 // Return intersection: users who have the role AND are members of target capabilities
                 finalUserIds = usersWithRole.Intersect(membersOfTargetCapabilities.ToHashSet()).ToHashSet();
             }
@@ -130,7 +130,10 @@ public class UserEmailQuery : IUserEmailQuery
         return results;
     }
 
-    private async Task<HashSet<UserId>> GetUserIdsByRbacRoles(List<string> roleNames, List<CapabilityId>? targetCapabilityIds)
+    private async Task<HashSet<UserId>> GetUserIdsByRbacRoles(
+        List<string> roleNames,
+        List<CapabilityId>? targetCapabilityIds
+    )
     {
         // Parse role names that might be IDs
         var parsedRoleIds = new List<RbacRoleId>();
@@ -156,10 +159,9 @@ public class UserEmailQuery : IUserEmailQuery
         var roleIds = rbacRoles.Select(r => r.Id).ToList();
 
         // Find all role grants for these roles assigned to users
-        var roleGrantsQuery = _dbContext
-            .RbacRoleGrants.Where(rg =>
-                roleIds.Contains(rg.RoleId) && rg.AssignedEntityType == AssignedEntityType.User
-            );
+        var roleGrantsQuery = _dbContext.RbacRoleGrants.Where(rg =>
+            roleIds.Contains(rg.RoleId) && rg.AssignedEntityType == AssignedEntityType.User
+        );
 
         var allRoleGrants = await roleGrantsQuery.ToListAsync();
 
@@ -169,14 +171,16 @@ public class UserEmailQuery : IUserEmailQuery
             var capabilityIdStrings = targetCapabilityIds.Select(c => c.ToString()).ToList();
 
             // Filter grants that are either global or for the specified capabilities
-            var filteredGrants = allRoleGrants.Where(rg =>
-                rg.Type == RbacAccessType.Global
+            var filteredGrants = allRoleGrants
+                .Where(rg =>
+                    rg.Type == RbacAccessType.Global
                     || (
                         rg.Type == RbacAccessType.Capability
                         && rg.Resource != null
                         && capabilityIdStrings.Contains(rg.Resource)
                     )
-            ).ToList();
+                )
+                .ToList();
 
             // Extract user IDs and parse them
             var userIds = new HashSet<UserId>();
@@ -208,7 +212,9 @@ public class UserEmailQuery : IUserEmailQuery
     {
         // Get all active capabilities - don't filter on JsonMetadata in DB query
         // to avoid PostgreSQL JSON validation errors
-        var capabilities = await _dbContext.Capabilities.Where(c => c.Status == CapabilityStatusOptions.Active).ToListAsync();
+        var capabilities = await _dbContext
+            .Capabilities.Where(c => c.Status == CapabilityStatusOptions.Active)
+            .ToListAsync();
 
         var matchingCapabilityIds = capabilities
             .Where(c =>
@@ -266,5 +272,4 @@ public class UserEmailQuery : IUserEmailQuery
 
         return capabilities.Select(c => c.Id).ToList();
     }
-
 }

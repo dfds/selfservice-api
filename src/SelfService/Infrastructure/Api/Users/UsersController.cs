@@ -22,11 +22,7 @@ public class UsersController : ControllerBase
     [HttpGet("emails")]
     [ProducesResponseType(typeof(IEnumerable<UserEmailApiResource>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(
-        typeof(ProblemDetails),
-        StatusCodes.Status500InternalServerError,
-        "application/problem+json"
-    )]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<IActionResult> GetUserEmails(
         [FromQuery(Name = "role")] string[]? roles,
         [FromQuery(Name = "cost-centre")] string[]? costCentres,
@@ -49,7 +45,12 @@ public class UsersController : ControllerBase
                 );
             }
 
-            var users = await _userEmailQuery.GetUsersWithFilters(roles, costCentres, businessCapabilities, capabilities);
+            var users = await _userEmailQuery.GetUsersWithFilters(
+                roles,
+                costCentres,
+                businessCapabilities,
+                capabilities
+            );
 
             var response = users.Select(u => new UserEmailApiResource { Name = u.Name, Email = u.Email }).ToList();
 
