@@ -182,11 +182,14 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         var mappedCosts = ToCapabilityMap(timeSeriesWithValidCapabilities);
 
         List<CapabilityCosts> costs = new List<CapabilityCosts>();
+        var today = DateTime.UtcNow.Date;
+
         foreach (var myCapability in myCapabilities)
         {
             if (mappedCosts.TryGetValue(myCapability.Id, out var myCosts))
             {
-                var myOrderedCosts = myCosts.OrderBy(x => x.TimeStamp).ToArray();
+                // Filter out current day (which always has value 0) and order by timestamp
+                var myOrderedCosts = myCosts.Where(x => x.TimeStamp.Date != today).OrderBy(x => x.TimeStamp).ToArray();
                 costs.Add(new CapabilityCosts(myCapability.Id, myOrderedCosts));
             }
         }
