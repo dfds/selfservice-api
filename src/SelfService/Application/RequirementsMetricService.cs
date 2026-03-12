@@ -50,7 +50,7 @@ namespace SelfService.Application
 
             // Calculate mandatory tags score from capability metadata
             var calculatedMetric = await CalculateMandatoryTagsScore(capabilityId);
-            
+
             if (calculatedMetric != null)
             {
                 if (existingMandatoryTagsMetric == null)
@@ -66,7 +66,8 @@ namespace SelfService.Application
                 {
                     // Existing score has different value - use average of the two
                     // HACK time, but it is only temporary
-                    existingMandatoryTagsMetric.Value = (existingMandatoryTagsMetric.Value + calculatedMetric.Value) / 2;
+                    existingMandatoryTagsMetric.Value =
+                        (existingMandatoryTagsMetric.Value + calculatedMetric.Value) / 2;
                 }
             }
 
