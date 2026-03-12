@@ -61,7 +61,7 @@ public class TestPlatformDataApiRequesterService
 
         var costs = await service.GetMyCapabilitiesCosts(A.UserId);
         Assert.Single(costs.Costs);
-        Assert.Equal(4, costs.Costs[0].Costs.Length);
+        Assert.Equal(3, costs.Costs[0].Costs.Length); // 4 entries minus yesterday which is filtered
 
         var capabilityCosts = costs.Costs[0].Costs;
         var previousTime = earliest;
