@@ -100,6 +100,17 @@ public static class ConsumerConfiguration
                     messageType: RbacRoleGrantCreated.EventType,
                     keySelector: x => x.RbacRoleGrantId!
                 );
+
+            options
+                .ForTopic($"{SelfServicePrefix}.emailcampaign")
+                .Register<EmailCampaignCreated>(
+                    messageType: EmailCampaignCreated.EventType,
+                    keySelector: x => x.CampaignId!
+                )
+                .Register<EmailCampaignSendRequested>(
+                    messageType: EmailCampaignSendRequested.EventType,
+                    keySelector: x => x.CampaignId!
+                );
             // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs
         });
 
@@ -176,6 +187,16 @@ public static class ConsumerConfiguration
                     "cluster-access-granted"
                 );
             // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs"
+            #endregion
+
+            #region email campaign delivery status
+
+            options
+                .ForTopic($"{SelfServicePrefix}.emailcampaign.status")
+                .RegisterMessageHandler<EmailCampaignDeliveryCompleted, EmailCampaignDeliveryHandler>(
+                    EmailCampaignDeliveryCompleted.EventType
+                );
+
             #endregion
 
             builder.Services.AddProducerFor<IMessagingService, MessagingService>(opts =>
