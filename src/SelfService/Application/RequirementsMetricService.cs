@@ -45,14 +45,29 @@ namespace SelfService.Application
                 .Where(x => x.Measurement == "score")
                 .ToListAsync();
 
-            // Remove any existing mandatory_tags metric from database results
-            scores.RemoveAll(x => x.RequirementId == "mandatory_tags");
+            // Find existing mandatory_tags metric from database
+            var existingMandatoryTagsMetric = scores.FirstOrDefault(x => x.RequirementId == "mandatory_tags");
 
             // Calculate mandatory tags score from capability metadata
-            var mandatoryTagsMetric = await CalculateMandatoryTagsScore(capabilityId);
-            if (mandatoryTagsMetric != null)
+            var calculatedMetric = await CalculateMandatoryTagsScore(capabilityId);
+            
+            if (calculatedMetric != null)
             {
-                scores.Add(mandatoryTagsMetric);
+                if (existingMandatoryTagsMetric == null)
+                {
+                    // No existing score - add the calculated one
+                    scores.Add(calculatedMetric);
+                }
+                else if (Math.Abs(existingMandatoryTagsMetric.Value - calculatedMetric.Value) < 0.0001)
+                {
+                    // Existing score has the same value - keep the existing one (do nothing)
+                }
+                else
+                {
+                    // Existing score has different value - use average of the two
+                    // HACK time, but it is only temporary
+                    existingMandatoryTagsMetric.Value = (existingMandatoryTagsMetric.Value + calculatedMetric.Value) / 2;
+                }
             }
 
             double totalScore = scores.Count > 0 ? scores.Average(r => r.Value) : 100;
