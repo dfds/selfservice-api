@@ -13,7 +13,6 @@ public class DemoRecordingCreateRequest
     [Required]
     public string? RecordingUrl { get; set; }
 
-    [Required]
     public string? SlidesUrl { get; set; }
 
     [Required]
