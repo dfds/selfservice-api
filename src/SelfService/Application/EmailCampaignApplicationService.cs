@@ -1,6 +1,8 @@
+using Microsoft.Extensions.DependencyInjection;
 using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 
 namespace SelfService.Application;
@@ -16,6 +18,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
     private readonly ICapabilityFilterService _capabilityFilterService;
     private readonly ITemplateRenderingService _templateRenderingService;
     private readonly IRbacApplicationService _rbacApplicationService;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     private static readonly List<TemplateVariable> _templateVariables = new()
     {
@@ -32,6 +35,21 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         new() { Name = "Campaign.Name",                Description = "Campaign name",                Entity = "Campaign",   Example = "Q1 Migration Notice" },
         new() { Name = "Date.Today",                   Description = "Current date (yyyy-MM-dd)",    Entity = "Date",       Example = "2024-01-15" },
         new() { Name = "Date.Year",                    Description = "Current year",                 Entity = "Date",       Example = "2024" },
+        // Individual requirement scores (dynamic)
+        new() { Name = "Requirement.<id>",             Description = "Individual requirement score (0-100). Replace <id> with: mandatory_tags, external_secrets, irsa, k8s-probes, ecr-pull", Entity = "Requirement", Example = "85" },
+        new() { Name = "Requirement.<id>.DisplayName", Description = "Requirement display name",     Entity = "Requirement", Example = "Use of Mandatory Tags" },
+        new() { Name = "Requirement.<id>.HelpUrl",     Description = "Requirement help URL",         Entity = "Requirement", Example = "https://wiki.dfds.cloud/..." },
+        // AWS account
+        new() { Name = "Aws.AccountId",                Description = "AWS account number (12-digit)", Entity = "AwsAccount", Example = "123456789012" },
+        new() { Name = "Aws.Status",                   Description = "AWS account status",            Entity = "AwsAccount", Example = "Completed" },
+        new() { Name = "Aws.Namespace",                Description = "Kubernetes namespace linked to AWS account", Entity = "AwsAccount", Example = "my-capability-abc12" },
+        new() { Name = "Aws.RoleEmail",                Description = "AWS account role email",        Entity = "AwsAccount", Example = "aws.123456789012@dfds.com" },
+        // Azure resources
+        new() { Name = "Azure.ResourceCount",          Description = "Number of Azure resource groups", Entity = "AzureResource", Example = "2" },
+        new() { Name = "Azure.Environments",           Description = "Comma-separated Azure environments", Entity = "AzureResource", Example = "dev, prod" },
+        new() { Name = "Azure.<env>.Id",               Description = "Resource group ID for a specific environment (e.g. Azure.dev.Id)", Entity = "AzureResource", Example = "a1b2c3d4-e5f6-..." },
+        // Membership applications
+        new() { Name = "MembershipApplications.PendingCount", Description = "Number of pending membership applications", Entity = "MembershipApplication", Example = "3" },
     };
 
     public EmailCampaignApplicationService(
@@ -43,7 +61,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         IMemberRepository memberRepository,
         ICapabilityFilterService capabilityFilterService,
         ITemplateRenderingService templateRenderingService,
-        IRbacApplicationService rbacApplicationService
+        IRbacApplicationService rbacApplicationService,
+        IServiceScopeFactory serviceScopeFactory
     )
     {
         _emailCampaignRepository = emailCampaignRepository;
@@ -55,6 +74,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         _capabilityFilterService = capabilityFilterService;
         _templateRenderingService = templateRenderingService;
         _rbacApplicationService = rbacApplicationService;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     [TransactionalBoundary, Outboxed]
@@ -195,10 +215,10 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             var memberships = await _membershipRepository.FindBy(cap.Id);
             var capMemberCount = memberships.Count();
             var html = campaign.ContentHtml ?? "";
-            var renderedSubject = _templateRenderingService.RenderTemplate(
-                campaign.Subject, cap, null, campaign.Name, capMemberCount);
-            var renderedHtml = _templateRenderingService.RenderTemplate(
-                html, cap, null, campaign.Name, capMemberCount);
+            var context = await BuildRenderContext(cap, campaign.Name, capMemberCount);
+
+            var renderedSubject = _templateRenderingService.RenderTemplate(campaign.Subject, context);
+            var renderedHtml = _templateRenderingService.RenderTemplate(html, context);
 
             previews.Add(new EmailPreviewResult
             {
@@ -374,6 +394,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
         foreach (var (cap, members, totalMemberships) in resolved)
         {
+            var baseContext = await BuildRenderContext(cap, campaign.Name, totalMemberships);
+
             foreach (var member in members)
             {
                 if (recipientLogs.Count >= EmailCampaign.MaxRecipientsPerCampaign)
@@ -382,10 +404,9 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
                 if (string.IsNullOrEmpty(member.Email))
                     continue;
 
-                var renderedSubject = _templateRenderingService.RenderTemplate(
-                    campaign.Subject, cap, member, campaign.Name, totalMemberships);
-                var renderedHtml = _templateRenderingService.RenderTemplate(
-                    html, cap, member, campaign.Name, totalMemberships);
+                var context = baseContext with { Member = member };
+                var renderedSubject = _templateRenderingService.RenderTemplate(campaign.Subject, context);
+                var renderedHtml = _templateRenderingService.RenderTemplate(html, context);
 
                 var recipientLog = EmailCampaignRecipientLog.Create(
                     campaign.Id,
@@ -468,6 +489,54 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
                 allowedUserIds.Add(grant.AssignedEntityId);
         }
         return allowedUserIds;
+    }
+
+    private async Task<TemplateRenderContext> BuildRenderContext(Capability capability, string campaignName, int memberCount)
+    {
+        var capabilityId = capability.Id;
+
+        var awsAccountTask = Task.Run(async () =>
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var repo = scope.ServiceProvider.GetRequiredService<IAwsAccountRepository>();
+            return await repo.FindBy(capabilityId);
+        });
+
+        var azureResourcesTask = Task.Run(async () =>
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var repo = scope.ServiceProvider.GetRequiredService<IAzureResourceRepository>();
+            return await repo.GetFor(capabilityId);
+        });
+
+        var requirementScoresTask = Task.Run(async () =>
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IRequirementsMetricService>();
+            return await service.GetRequirementScoreAsync(capabilityId.ToString());
+        });
+
+        var pendingAppsTask = Task.Run(async () =>
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var query = scope.ServiceProvider.GetRequiredService<ICapabilityMembershipApplicationQuery>();
+            return await query.FindPendingBy(capabilityId);
+        });
+
+        await Task.WhenAll(awsAccountTask, azureResourcesTask, requirementScoresTask, pendingAppsTask);
+
+        var (_, scores) = await requirementScoresTask;
+
+        return new TemplateRenderContext
+        {
+            Capability = capability,
+            CampaignName = campaignName,
+            MemberCount = memberCount,
+            AwsAccount = await awsAccountTask,
+            AzureResources = await azureResourcesTask,
+            RequirementScores = scores,
+            PendingMembershipApplicationCount = (await pendingAppsTask).Count(),
+        };
     }
 
     private async Task<EmailCampaign> GetRequired(EmailCampaignId id)
