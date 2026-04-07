@@ -5,7 +5,7 @@ public enum EventAttachmentType
     Document,
     Recording,
     Image,
-    Other
+    Other,
 }
 
 public class EventAttachment : Entity<EventAttachmentId>

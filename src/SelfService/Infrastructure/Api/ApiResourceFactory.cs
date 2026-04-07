@@ -2006,9 +2006,7 @@ public class ApiResourceFactory
     {
         return new DemoSignupsApiResponse
         {
-            Items = signups
-                .Select(s => new DemoSignupApiResource { Email = s.Email, Name = s.Name })
-                .ToList(),
+            Items = signups.Select(s => new DemoSignupApiResource { Email = s.Email, Name = s.Name }).ToList(),
             Links = new DemoSignupsApiResponse.DemoSignupsApiResponseLinks
             {
                 Self = new ResourceLink(
@@ -2019,8 +2017,8 @@ public class ApiResourceFactory
                     ) ?? "",
                     rel: "self",
                     allow: Allow.Get
-                )
-            }
+                ),
+            },
         };
     }
 }

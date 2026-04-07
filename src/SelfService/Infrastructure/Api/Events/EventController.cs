@@ -78,7 +78,7 @@ public class EventController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unauthorized",
-                    Detail = "You are not authorized to create events. Only cloud engineers can perform this action."
+                    Detail = "You are not authorized to create events. Only cloud engineers can perform this action.",
                 }
             );
         }
@@ -169,7 +169,7 @@ public class EventController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unauthorized",
-                    Detail = "You are not authorized to update events. Only cloud engineers can perform this action."
+                    Detail = "You are not authorized to update events. Only cloud engineers can perform this action.",
                 }
             );
         }
@@ -205,7 +205,7 @@ public class EventController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unauthorized",
-                    Detail = "You are not authorized to delete events. Only cloud engineers can perform this action."
+                    Detail = "You are not authorized to delete events. Only cloud engineers can perform this action.",
                 }
             );
         }
@@ -245,7 +245,8 @@ public class EventController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unauthorized",
-                    Detail = "You are not authorized to add attachments to events. Only cloud engineers can perform this action."
+                    Detail =
+                        "You are not authorized to add attachments to events. Only cloud engineers can perform this action.",
                 }
             );
         }
@@ -288,7 +289,8 @@ public class EventController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unauthorized",
-                    Detail = "You are not authorized to delete attachments. Only cloud engineers can perform this action."
+                    Detail =
+                        "You are not authorized to delete attachments. Only cloud engineers can perform this action.",
                 }
             );
         }

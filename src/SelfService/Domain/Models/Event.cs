@@ -5,7 +5,7 @@ public enum EventType
     Demo,
     Workshop,
     Informational,
-    Other
+    Other,
 }
 
 public class Event : Entity<EventId>
