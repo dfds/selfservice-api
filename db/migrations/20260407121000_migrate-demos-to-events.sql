@@ -2,37 +2,37 @@
 -- Part 2 of 3: Data migration
 
 -- Migrate data from demos to events
-INSERT INTO events (id, event_date, title, description, type, created_by, created_at)
+INSERT INTO "Event" ("Id", "EventDate", "Title", "Description", "Type", "CreatedBy", "CreatedAt")
 SELECT 
-    id,
-    recording_date as event_date,
-    title,
-    description,
-    'Demo' as type,  -- All old demos become type 'Demo'
-    created_by,
-    created_at
+    "Id",
+    "RecordingDate",
+    "Title",
+    "Description",
+    'Demo',  -- All old demos become type 'Demo'
+    "CreatedBy",
+    "CreatedAt"
 FROM "DemoRecording";
 
 -- Migrate recording URLs to event_attachments
-INSERT INTO event_attachments (id, event_id, url, attachment_type, description, created_at)
+INSERT INTO "EventAttachment" ("Id", "EventId", "Url", "AttachmentType", "Description", "CreatedAt")
 SELECT 
-    gen_random_uuid() as id,
-    id as event_id,
-    recording_url as url,
-    'Recording' as attachment_type,
-    'Migrated recording' as description,
-    created_at
+    gen_random_uuid(),
+    "Id",
+    "RecordingUrl",
+    'Recording',
+    'Migrated recording',
+    "CreatedAt"
 FROM "DemoRecording"
-WHERE recording_url IS NOT NULL AND recording_url != '';
+WHERE "RecordingUrl" IS NOT NULL AND "RecordingUrl" != '';
 
 -- Migrate slides URLs to event_attachments
-INSERT INTO event_attachments (id, event_id, url, attachment_type, description, created_at)
+INSERT INTO "EventAttachment" ("Id", "EventId", "Url", "AttachmentType", "Description", "CreatedAt")
 SELECT 
-    gen_random_uuid() as id,
-    id as event_id,
-    slides_url as url,
-    'Document' as attachment_type,
-    'Migrated slides' as description,
-    created_at
+    gen_random_uuid(),
+    "Id",
+    "SlidesUrl",
+    'Document',
+    'Migrated slides',
+    "CreatedAt"
 FROM "DemoRecording"
-WHERE slides_url IS NOT NULL AND slides_url != '';
+WHERE "SlidesUrl" IS NOT NULL AND "SlidesUrl" != '';

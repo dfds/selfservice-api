@@ -571,7 +571,7 @@ public class SelfServiceDbContext : DbContext
 
         modelBuilder.Entity<Event>(cfg =>
         {
-            cfg.ToTable("events");
+            cfg.ToTable("Event");
             cfg.HasKey(x => x.Id);
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.EventDate);
@@ -585,7 +585,7 @@ public class SelfServiceDbContext : DbContext
 
         modelBuilder.Entity<EventAttachment>(cfg =>
         {
-            cfg.ToTable("event_attachments");
+            cfg.ToTable("EventAttachment");
             cfg.HasKey(x => x.Id);
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.EventId);
