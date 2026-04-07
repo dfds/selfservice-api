@@ -78,6 +78,8 @@ public class SelfServiceDbContext : DbContext
     public DbSet<RbacGroupMember> RbacGroupMembers => Set<RbacGroupMember>();
     public DbSet<RbacRole> RbacRoles => Set<RbacRole>();
     public DbSet<DemoRecording> DemoRecording => Set<DemoRecording>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<EventAttachment> EventAttachments => Set<EventAttachment>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -148,6 +150,10 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<ReleaseNoteHistoryId>().HaveConversion<ReleaseNoteHistoryIdConverter>();
 
         configurationBuilder.Properties<DemoRecordingId>().HaveConversion<DemoRecordingIdConverter>();
+
+        configurationBuilder.Properties<Domain.Models.EventId>().HaveConversion<EventIdConverter>();
+
+        configurationBuilder.Properties<EventAttachmentId>().HaveConversion<EventAttachmentIdConverter>();
 
         configurationBuilder
             .Properties<RbacPermissionGrantId>()
@@ -560,6 +566,32 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.GroupId);
             cfg.Property(x => x.UserId);
+            cfg.Property(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<Event>(cfg =>
+        {
+            cfg.ToTable("events");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.EventDate);
+            cfg.Property(x => x.Title);
+            cfg.Property(x => x.Description);
+            cfg.Property(x => x.Type).HasConversion<string>();
+            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.CreatedAt);
+            cfg.Ignore(x => x.Attachments);
+        });
+
+        modelBuilder.Entity<EventAttachment>(cfg =>
+        {
+            cfg.ToTable("event_attachments");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.EventId);
+            cfg.Property(x => x.Url);
+            cfg.Property(x => x.AttachmentType).HasConversion<string>();
+            cfg.Property(x => x.Description);
             cfg.Property(x => x.CreatedAt);
         });
     }

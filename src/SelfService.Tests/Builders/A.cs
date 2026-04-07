@@ -21,17 +21,19 @@ public static class A
     public static MembershipApplicationBuilder MembershipApplication => new();
     public static MembershipApprovalBuilder MembershipApproval => new();
     public static MessageContractBuilder MessageContract => new();
-    public static ReleaseNoteBuilder ReleaseNote => new();
     public static DemoRecordingBuilder DemoRecording => new();
+    public static ReleaseNoteBuilder ReleaseNote => new();
 
     public static CapabilityRepositoryBuilder CapabilityRepository => new();
     public static MembershipApplicationRepositoryBuilder MembershipApplicationRepository => new();
+    public static DemoRecordingRepositoryBuilder DemoRecordingRepository => new();
     public static ReleaseNoteRepositoryBuilder ReleaseNoteRepository => new();
 
     public static KafkaTopicApplicationServiceBuilder KafkaTopicApplicationService => new();
     public static MembershipRepositoryBuilder MembershipRepository => new();
     public static DeactivatedMemberCleanerApplicationServiceBuilder DeactivatedMemberCleanerApplicationService => new();
     public static SelfServiceJsonSchemaServiceBuilder SelfServiceJsonSchemaService => new();
+    public static DemoRecordingServiceBuilder DemoRecordingService => new();
     public static CapabilityApplicationServiceBuilder CapabilityApplicationService => new();
 
     public static ECRRepositoryBuilder ECRRepository => new();
@@ -42,9 +44,6 @@ public static class A
     public static MembershipApplicationServiceBuilder MembershipApplicationService => new();
 
     public static ConfigurationLevelServiceBuilder ConfigurationLevelService => new();
-
-    public static DemoRecordingRepositoryBuilder DemoRecordingRepository => new();
-    public static DemoRecordingServiceBuilder DemoRecordingService => new();
 
     public static RbacRoleBuilder RbacRole => new();
     public static RbacRoleGrantBuilder RbacRoleGrant => new();
