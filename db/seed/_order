@@ -21,3 +21,5 @@ RbacPermissionGrants.csv
 RbacGroup.csv
 RbacGroupMember.csv
 DemoRecording.csv
+Event.csv
+EventAttachment.csv

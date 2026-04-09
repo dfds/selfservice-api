@@ -23,7 +23,19 @@ public class EventService : IEventService
 
     public async Task<IEnumerable<Event>> GetAllEvents()
     {
-        return await _eventRepository.GetAll();
+        var events = await _eventRepository.GetAll();
+
+        // Load attachments for each event
+        foreach (var eventModel in events)
+        {
+            var attachments = await _eventAttachmentRepository.GetAttachmentsByEventId(eventModel.Id);
+            foreach (var attachment in attachments)
+            {
+                eventModel.AddAttachment(attachment);
+            }
+        }
+
+        return events;
     }
 
     public async Task<Event> GetEventById(EventId eventId)
@@ -62,19 +74,26 @@ public class EventService : IEventService
     [TransactionalBoundary]
     public async Task DeleteEvent(EventId eventId)
     {
-        // Delete all attachments first
-        var attachments = await _eventAttachmentRepository.GetAttachmentsByEventId(eventId);
-        foreach (var attachment in attachments)
-        {
-            await _eventAttachmentRepository.Remove(attachment.Id);
-        }
-
+        // Simply delete the event - attachments will be cascade deleted by the database
+        // due to ON DELETE CASCADE in the EventAttachment_Event_FK foreign key
         await _eventRepository.Remove(eventId);
     }
 
     public async Task<List<Event>> GetUpcomingEvents(int limit = 10)
     {
-        return await _eventRepository.GetUpcomingEvents(limit);
+        var events = await _eventRepository.GetUpcomingEvents(limit);
+
+        // Load attachments for each event
+        foreach (var eventModel in events)
+        {
+            var attachments = await _eventAttachmentRepository.GetAttachmentsByEventId(eventModel.Id);
+            foreach (var attachment in attachments)
+            {
+                eventModel.AddAttachment(attachment);
+            }
+        }
+
+        return events;
     }
 
     public async Task<Event?> GetLatestHeldEvent()
