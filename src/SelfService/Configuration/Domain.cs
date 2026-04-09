@@ -58,6 +58,7 @@ public static class Domain
         builder.Services.AddTransient<ISelfServiceJsonSchemaService, SelfServiceJsonSchemaService>();
         builder.Services.AddTransient<IDemoApplicationService, DemoApplicationService>();
         builder.Services.AddTransient<IDemoRecordingService, DemoRecordingService>();
+        builder.Services.AddTransient<IEventService, EventService>();
         // Note: IRequirementsMetricService is registered conditionally in RequirementsDbContext.AddRequirementsDatabase
 
         // domain repositories
@@ -87,6 +88,8 @@ public static class Domain
         builder.Services.AddTransient<IRbacRoleRepository, RbacRoleRepository>();
         builder.Services.AddTransient<IPermissionQuery, PermissionsQuery>();
         builder.Services.AddTransient<IDemoRecordingRepository, DemoRecordingRepository>();
+        builder.Services.AddTransient<IEventRepository, EventRepository>();
+        builder.Services.AddTransient<IEventAttachmentRepository, EventAttachmentRepository>();
         // domain queries
         builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();
         builder.Services.AddTransient<ICapabilityKafkaTopicsQuery, CapabilityKafkaTopicsQuery>();

@@ -199,6 +199,21 @@ public class StubAuthorizationService : IAuthorizationService
         return _authorized;
     }
 
+    public bool CanCreateDemoRecording(PortalUser portalUser)
+    {
+        return _authorized;
+    }
+
+    public bool CanUpdateDemoRecording(PortalUser portalUser)
+    {
+        return _authorized;
+    }
+
+    public bool CanDeleteDemoRecording(PortalUser portalUser)
+    {
+        return _authorized;
+    }
+
     public bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser)
     {
         return _authorized;
@@ -224,17 +239,17 @@ public class StubAuthorizationService : IAuthorizationService
         return _authorized;
     }
 
-    public bool CanCreateDemo(PortalUser portalUser)
+    public bool CanCreateEvent(PortalUser portalUser)
     {
         return _authorized;
     }
 
-    public bool CanUpdateDemo(PortalUser portalUser)
+    public bool CanUpdateEvent(PortalUser portalUser)
     {
         return _authorized;
     }
 
-    public bool CanDeleteDemo(PortalUser portalUser)
+    public bool CanDeleteEvent(PortalUser portalUser)
     {
         return _authorized;
     }

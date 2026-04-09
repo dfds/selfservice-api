@@ -7,6 +7,7 @@ using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.Demos;
+using SelfService.Infrastructure.Api.Events;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
@@ -1840,49 +1841,124 @@ public class ApiResourceFactory
         return payload;
     }
 
-    public DemoSignupsApiResponse Convert(IEnumerable<DemoSignup> signups)
+    public EventAttachmentApiResource Convert(EventAttachment attachment)
     {
-        var payload = new DemoSignupsApiResponse
+        return new EventAttachmentApiResource(
+            id: attachment.Id,
+            url: attachment.Url,
+            type: attachment.AttachmentType,
+            description: attachment.Description,
+            createdAt: attachment.CreatedAt
+        );
+    }
+
+    public EventApiResource Convert(Event eventModel)
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowOnSelf = Allow.Get;
+        if (_authorizationService.CanDeleteEvent(portalUser))
         {
-            Items = signups.Select(x => new DemoSignupApiResource { Email = x.Email, Name = x.Name }).ToList(),
-            Links = new DemoSignupsApiResponse.DemoSignupsApiResponseLinks
-            {
-                Self = new ResourceLink(
+            allowOnSelf += Delete;
+        }
+        if (_authorizationService.CanUpdateEvent(portalUser))
+        {
+            allowOnSelf += Post;
+        }
+
+        var result = new EventApiResource(
+            id: eventModel.Id,
+            eventDate: eventModel.EventDate,
+            title: eventModel.Title,
+            description: eventModel.Description,
+            type: eventModel.Type,
+            createdBy: eventModel.CreatedBy,
+            createdAt: eventModel.CreatedAt,
+            isUpcoming: eventModel.IsUpcoming(),
+            attachments: eventModel.Attachments.Select(Convert).ToArray(),
+            links: new EventApiResource.EventLinks(
+                self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
                         httpContext: HttpContext,
-                        action: nameof(DemoRecordingController.GetActiveSignups),
-                        controller: GetNameOf<DemoRecordingController>()
+                        action: nameof(EventController.GetEvent),
+                        controller: GetNameOf<EventController>(),
+                        values: new { id = eventModel.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowOnSelf
+                )
+            )
+        );
+
+        return result;
+    }
+
+    public EventsApiResource Convert(IEnumerable<Event> events)
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+
+        var allowOnSelf = Allow.Get;
+        if (_authorizationService.CanCreateEvent(portalUser))
+        {
+            allowOnSelf += Post;
+        }
+
+        var result = new EventsApiResource(
+            events: events.Select(Convert).ToArray(),
+            links: new EventsApiResource.EventsLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(EventController.GetEvents),
+                        controller: GetNameOf<EventController>()
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowOnSelf
+                )
+            )
+        );
+
+        return result;
+    }
+
+    public UpcomingEventsApiResource ConvertUpcomingEvents(IEnumerable<Event> upcomingEvents, Event? latestHeldEvent)
+    {
+        var result = new UpcomingEventsApiResource(
+            upcomingEvents: upcomingEvents.Select(Convert).ToArray(),
+            latestHeldEvent: latestHeldEvent != null ? Convert(latestHeldEvent) : null,
+            links: new UpcomingEventsApiResource.UpcomingEventsLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(EventController.GetUpcomingEvents),
+                        controller: GetNameOf<EventController>()
                     ) ?? "",
                     rel: "self",
                     allow: Allow.Get
-                ),
-            },
-        };
+                )
+            )
+        );
 
-        return payload;
+        return result;
     }
 
     public DemoRecordingApiResource Convert(DemoRecording demo)
     {
         var portalUser = HttpContext.User.ToPortalUser();
-
         var allowOnSelf = Allow.Get;
-        if (_authorizationService.CanDeleteDemo(portalUser))
+
+        if (_authorizationService.CanDeleteDemoRecording(portalUser))
         {
             allowOnSelf += Delete;
         }
-        if (_authorizationService.CanUpdateDemo(portalUser))
-        {
-            allowOnSelf += Post;
-        }
 
-        var result = new DemoRecordingApiResource(
+        return new DemoRecordingApiResource(
             id: demo.Id,
             recordingDate: demo.RecordingDate,
             title: demo.Title,
             description: demo.Description,
             recordingUrl: demo.RecordingUrl,
-            slidesUrl: demo.SlidesUrl ?? string.Empty,
+            slidesUrl: demo.SlidesUrl,
             createdBy: demo.CreatedBy,
             createdAt: demo.CreatedAt,
             links: new DemoRecordingApiResource.DemoRecordingLinks(
@@ -1898,21 +1974,19 @@ public class ApiResourceFactory
                 )
             )
         );
-
-        return result;
     }
 
     public DemoRecordingsApiResource Convert(IEnumerable<DemoRecording> demos)
     {
         var portalUser = HttpContext.User.ToPortalUser();
-
         var allowOnSelf = Allow.Get;
-        if (_authorizationService.CanCreateDemo(portalUser))
+
+        if (_authorizationService.CanCreateDemoRecording(portalUser))
         {
             allowOnSelf += Post;
         }
 
-        var result = new DemoRecordingsApiResource(
+        return new DemoRecordingsApiResource(
             demos: demos.Select(Convert).ToArray(),
             links: new DemoRecordingsApiResource.DemoRecordingsLinks(
                 self: new ResourceLink(
@@ -1926,7 +2000,25 @@ public class ApiResourceFactory
                 )
             )
         );
+    }
 
-        return result;
+    public DemoSignupsApiResponse Convert(IEnumerable<DemoSignup> signups)
+    {
+        return new DemoSignupsApiResponse
+        {
+            Items = signups.Select(s => new DemoSignupApiResource { Email = s.Email, Name = s.Name }).ToList(),
+            Links = new DemoSignupsApiResponse.DemoSignupsApiResponseLinks
+            {
+                Self = new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(DemoRecordingController.GetActiveSignups),
+                        controller: GetNameOf<DemoRecordingController>()
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                ),
+            },
+        };
     }
 }
