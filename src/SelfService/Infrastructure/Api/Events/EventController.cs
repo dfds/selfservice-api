@@ -176,6 +176,43 @@ public class EventController : ControllerBase
 
         await _eventService.UpdateEvent(id, request);
 
+        // Handle attachments if provided in the request
+        if (request.Attachments != null)
+        {
+            // Get current attachments for this event
+            var currentEvent = await _eventService.GetEventById(id);
+            var currentAttachments = currentEvent.Attachments.ToList();
+
+            // Determine which attachment IDs are in the request (existing attachments to keep)
+            var requestedAttachmentIds = request
+                .Attachments.Where(a => a.Id is not null)
+                .Select(a => a.Id!)
+                .ToHashSet();
+
+            // Delete attachments that are not in the request
+            foreach (var currentAttachment in currentAttachments)
+            {
+                if (!requestedAttachmentIds.Contains(currentAttachment.Id))
+                {
+                    await _eventService.DeleteAttachment(currentAttachment.Id);
+                }
+            }
+
+            // Add new attachments (those without an ID)
+            foreach (var attachmentDto in request.Attachments.Where(a => a.Id is null))
+            {
+                var attachment = new EventAttachment(
+                    id: new EventAttachmentId(),
+                    eventId: id,
+                    url: attachmentDto.Url!,
+                    attachmentType: attachmentDto.Type,
+                    description: attachmentDto.Description,
+                    createdAt: DateTime.UtcNow
+                );
+                await _eventService.AddAttachmentToEvent(id, attachment);
+            }
+        }
+
         var updatedEvent = await _eventService.GetEventById(id);
 
         return Ok(_apiResourceFactory.Convert(updatedEvent));
@@ -211,91 +248,6 @@ public class EventController : ControllerBase
         }
 
         await _eventService.DeleteEvent(id);
-
-        return NoContent();
-    }
-
-    [HttpPost("{eventId}/attachments")]
-    [ProducesResponseType(typeof(EventAttachmentApiResource), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> AddAttachment(EventId eventId, [FromBody] EventAttachmentCreateRequest request)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        if (!User.TryGetUserId(out var userId))
-        {
-            return Unauthorized(
-                new ProblemDetails
-                {
-                    Title = "Access Denied!",
-                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
-                }
-            );
-        }
-
-        if (!_authorizationService.CanUpdateEvent(User.ToPortalUser()))
-        {
-            return Unauthorized(
-                new ProblemDetails
-                {
-                    Title = "Unauthorized",
-                    Detail =
-                        "You are not authorized to add attachments to events. Only cloud engineers can perform this action.",
-                }
-            );
-        }
-
-        var attachment = new EventAttachment(
-            id: new EventAttachmentId(),
-            eventId: eventId,
-            url: request.Url!,
-            attachmentType: request.Type,
-            description: request.Description,
-            createdAt: DateTime.UtcNow
-        );
-
-        var createdAttachment = await _eventService.AddAttachmentToEvent(eventId, attachment);
-
-        return Ok(_apiResourceFactory.Convert(createdAttachment));
-    }
-
-    [HttpDelete("{eventId}/attachments/{attachmentId}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
-    public async Task<IActionResult> DeleteAttachment(EventId eventId, EventAttachmentId attachmentId)
-    {
-        if (!User.TryGetUserId(out var userId))
-        {
-            return Unauthorized(
-                new ProblemDetails
-                {
-                    Title = "Access Denied!",
-                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
-                }
-            );
-        }
-
-        if (!_authorizationService.CanDeleteEvent(User.ToPortalUser()))
-        {
-            return Unauthorized(
-                new ProblemDetails
-                {
-                    Title = "Unauthorized",
-                    Detail =
-                        "You are not authorized to delete attachments. Only cloud engineers can perform this action.",
-                }
-            );
-        }
-
-        await _eventService.DeleteAttachment(attachmentId);
 
         return NoContent();
     }
