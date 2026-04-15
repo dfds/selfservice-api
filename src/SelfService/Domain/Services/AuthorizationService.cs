@@ -154,6 +154,21 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser);
     }
 
+    public bool CanCreateDemoRecording(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
+    public bool CanUpdateDemoRecording(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
+    public bool CanDeleteDemoRecording(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
     private bool IsCloudEngineerEnabled(PortalUser portalUser)
     {
         if (portalUser.Roles.Any(role => role == UserRole.CloudEngineer))
@@ -793,17 +808,17 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser);
     }
 
-    public bool CanCreateDemo(PortalUser portalUser)
+    public bool CanCreateEvent(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser);
     }
 
-    public bool CanUpdateDemo(PortalUser portalUser)
+    public bool CanUpdateEvent(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser);
     }
 
-    public bool CanDeleteDemo(PortalUser portalUser)
+    public bool CanDeleteEvent(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser);
     }
