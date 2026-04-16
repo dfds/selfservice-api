@@ -4,6 +4,7 @@ using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Metrics;
 using SelfService.Infrastructure.Api.Prometheus;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.BackgroundJobs;
@@ -135,6 +136,7 @@ public static class Domain
         builder.Services.AddHostedService<ECRRepositorySynchronizer>();
         builder.Services.AddHostedService<UpdateOutOfSyncEcrRepos>();
         builder.Services.AddHostedService<MetricsUpdater>();
+        builder.Services.AddHostedService<AllCapabilitiesCostsCacheUpdater>();
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
@@ -144,6 +146,7 @@ public static class Domain
         >();
 
         builder.Services.AddSingleton<OutOfSyncECRInfo>(OutOfSyncECRInfo.createNewEmpty());
+        builder.Services.AddSingleton<AllCapabilitiesCostsCache>();
 
         var topdeskEndpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
         var topdeskApiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];
