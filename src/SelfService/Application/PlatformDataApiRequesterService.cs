@@ -280,4 +280,3 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         return new AllCapabilitiesCosts(costs);
     }
 }
-

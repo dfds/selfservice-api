@@ -90,7 +90,8 @@ public class AllCapabilitiesCostsCacheUpdater : BackgroundService
             _logger.LogInformation("Starting cache update for all capabilities costs");
 
             using var serviceScope = _scopeFactory.CreateScope();
-            var platformDataService = serviceScope.ServiceProvider.GetRequiredService<IPlatformDataApiRequesterService>();
+            var platformDataService =
+                serviceScope.ServiceProvider.GetRequiredService<IPlatformDataApiRequesterService>();
 
             var allCapabilitiesCosts = await platformDataService.GetAllCapabilitiesCosts();
             await _cache.UpdateCache(allCapabilitiesCosts);
