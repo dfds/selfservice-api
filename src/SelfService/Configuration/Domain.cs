@@ -95,6 +95,7 @@ public static class Domain
         builder.Services.AddTransient<ICapabilityKafkaTopicsQuery, CapabilityKafkaTopicsQuery>();
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
+        builder.Services.AddTransient<IMyCapabilitiesOutstandingActionsQuery, MyCapabilitiesOutstandingActionsQuery>();
         builder.Services.AddTransient<IMembershipApplicationQuery, MembershipApplicationQuery>();
         builder.Services.AddTransient<IAwsAccountIdQuery, AwsAccountIdQuery>();
 
