@@ -823,6 +823,21 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser);
     }
 
+    public bool CanCreateNewsItem(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
+    public bool CanUpdateNewsItem(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
+    public bool CanDeleteNewsItem(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
     public bool CanGetUserEmails(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser);
