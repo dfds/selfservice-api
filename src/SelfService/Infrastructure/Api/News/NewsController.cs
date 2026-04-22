@@ -83,11 +83,7 @@ public class NewsController : ControllerBase
         catch (KeyNotFoundException)
         {
             return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Not Found",
-                    Detail = $"News item with id '{id}' was not found.",
-                }
+                new ProblemDetails { Title = "Not Found", Detail = $"News item with id '{id}' was not found." }
             );
         }
     }
@@ -121,7 +117,8 @@ public class NewsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unauthorized",
-                    Detail = "You are not authorized to create news items. Only cloud engineers can perform this action.",
+                    Detail =
+                        "You are not authorized to create news items. Only cloud engineers can perform this action.",
                 }
             );
         }
@@ -171,7 +168,8 @@ public class NewsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unauthorized",
-                    Detail = "You are not authorized to update news items. Only cloud engineers can perform this action.",
+                    Detail =
+                        "You are not authorized to update news items. Only cloud engineers can perform this action.",
                 }
             );
         }
@@ -185,11 +183,7 @@ public class NewsController : ControllerBase
         catch (KeyNotFoundException)
         {
             return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Not Found",
-                    Detail = $"News item with id '{id}' was not found.",
-                }
+                new ProblemDetails { Title = "Not Found", Detail = $"News item with id '{id}' was not found." }
             );
         }
     }
@@ -218,7 +212,8 @@ public class NewsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unauthorized",
-                    Detail = "You are not authorized to delete news items. Only cloud engineers can perform this action.",
+                    Detail =
+                        "You are not authorized to delete news items. Only cloud engineers can perform this action.",
                 }
             );
         }
@@ -231,11 +226,7 @@ public class NewsController : ControllerBase
         catch (KeyNotFoundException)
         {
             return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Not Found",
-                    Detail = $"News item with id '{id}' was not found.",
-                }
+                new ProblemDetails { Title = "Not Found", Detail = $"News item with id '{id}' was not found." }
             );
         }
     }
@@ -264,7 +255,8 @@ public class NewsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unauthorized",
-                    Detail = "You are not authorized to highlight news items. Only cloud engineers can perform this action.",
+                    Detail =
+                        "You are not authorized to highlight news items. Only cloud engineers can perform this action.",
                 }
             );
         }
@@ -278,11 +270,7 @@ public class NewsController : ControllerBase
         catch (KeyNotFoundException)
         {
             return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Not Found",
-                    Detail = $"News item with id '{id}' was not found.",
-                }
+                new ProblemDetails { Title = "Not Found", Detail = $"News item with id '{id}' was not found." }
             );
         }
     }

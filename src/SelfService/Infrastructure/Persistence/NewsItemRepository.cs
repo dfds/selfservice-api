@@ -11,10 +11,7 @@ public class NewsItemRepository : GenericRepository<NewsItem, NewsItemId>, INews
     public async Task<List<NewsItem>> GetRelevantNewsItems()
     {
         var today = DateTime.UtcNow.Date;
-        return await DbSetReference
-            .Where(n => n.DueDate >= today)
-            .OrderBy(n => n.DueDate)
-            .ToListAsync();
+        return await DbSetReference.Where(n => n.DueDate >= today).OrderBy(n => n.DueDate).ToListAsync();
     }
 
     public async Task ClearHighlight()

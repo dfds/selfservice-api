@@ -35,7 +35,8 @@ public class NewsItemService : INewsItemService
     [TransactionalBoundary]
     public async Task UpdateNewsItem(NewsItemId id, NewsItemUpdateRequest updateRequest)
     {
-        var newsItem = await _newsItemRepository.FindById(id)
+        var newsItem =
+            await _newsItemRepository.FindById(id)
             ?? throw new KeyNotFoundException($"News item with id '{id}' not found.");
 
         newsItem.Update(updateRequest.Title, updateRequest.Body, updateRequest.DueDate, DateTime.UtcNow);
@@ -55,7 +56,8 @@ public class NewsItemService : INewsItemService
     [TransactionalBoundary]
     public async Task HighlightNewsItem(NewsItemId id)
     {
-        var newsItem = await _newsItemRepository.FindById(id)
+        var newsItem =
+            await _newsItemRepository.FindById(id)
             ?? throw new KeyNotFoundException($"News item with id '{id}' not found.");
 
         // Remove highlight from all others first
