@@ -67,7 +67,11 @@ public class MeController : ControllerBase
             .Select(c =>
             {
                 var actions = outstandingActions.GetValueOrDefault(c.Id, CapabilityOutstandingActions.None);
-                return (Capability: c, OutstandingActions: actions, PriorityScore: CapabilityPriorityScore.Compute(c, actions, ownedCapabilityIds));
+                return (
+                    Capability: c,
+                    OutstandingActions: actions,
+                    PriorityScore: CapabilityPriorityScore.Compute(c, actions, ownedCapabilityIds)
+                );
             })
             .OrderByDescending(x => x.PriorityScore);
 
@@ -85,11 +89,7 @@ public class MeController : ControllerBase
 
         var userRoleGrants = await _rbacApplicationService.GetRoleGrantsForUser(userId);
         return userRoleGrants
-            .Where(rg =>
-                rg.RoleId == ownerRoleId
-                && rg.Type == RbacAccessType.Capability
-                && rg.Resource is not null
-            )
+            .Where(rg => rg.RoleId == ownerRoleId && rg.Type == RbacAccessType.Capability && rg.Resource is not null)
             .Select(rg => CapabilityId.Parse(rg.Resource!))
             .ToHashSet();
     }

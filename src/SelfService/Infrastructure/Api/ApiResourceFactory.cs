@@ -1458,14 +1458,25 @@ public class ApiResourceFactory
 
     public MyProfileApiResource Convert(
         UserId userId,
-        IEnumerable<(Capability Capability, CapabilityOutstandingActions OutstandingActions, double PriorityScore)> capabilities,
+        IEnumerable<(
+            Capability Capability,
+            CapabilityOutstandingActions OutstandingActions,
+            double PriorityScore
+        )> capabilities,
         Member? member,
         bool isDevelopment
     )
     {
         return new MyProfileApiResource(
             id: userId,
-            capabilities: capabilities.Select(x => ConvertToListItem(x.Capability, x.OutstandingActions, userIsMember: true, priorityScore: x.PriorityScore)),
+            capabilities: capabilities.Select(x =>
+                ConvertToListItem(
+                    x.Capability,
+                    x.OutstandingActions,
+                    userIsMember: true,
+                    priorityScore: x.PriorityScore
+                )
+            ),
             autoReloadTopics: !isDevelopment,
             personalInformation: member != null
                 ? new PersonalInformationApiResource
