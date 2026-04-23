@@ -11,8 +11,8 @@
       <PackageReference Include="AWSSDK.ECR" Version="4.0.9.4" />
       <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.8" />
       <PackageReference Include="Dafda" Version="0.12.6" />
-      <PackageReference Include="OpenTelemetry" Version="1.15.0" />
-      <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.0" />
+      <PackageReference Include="OpenTelemetry" Version="1.15.2" />
+      <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.2" />
       <PackageReference Include="OpenTelemetry.Exporter.Prometheus.HttpListener" Version="1.15.0-beta.1" />
       <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
       <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.0" />
