@@ -357,9 +357,22 @@ public class ApiResourceFactory
         );
     }
 
-    private CapabilityListItemApiResource ConvertToListItem(Capability capability)
+    private CapabilityListItemApiResource ConvertToListItem(Capability capability) =>
+        ConvertToListItem(capability, outstandingActions: null, userIsMember: false, priorityScore: null);
+
+    private CapabilityListItemApiResource ConvertToListItem(
+        Capability capability,
+        CapabilityOutstandingActions? outstandingActions
+    ) => ConvertToListItem(capability, outstandingActions, userIsMember: false, priorityScore: null);
+
+    private CapabilityListItemApiResource ConvertToListItem(
+        Capability capability,
+        CapabilityOutstandingActions? outstandingActions,
+        bool userIsMember,
+        double? priorityScore
+    )
     {
-        return new CapabilityListItemApiResource(
+        var resource = new CapabilityListItemApiResource(
             id: capability.Id,
             name: capability.Name,
             createdAt: capability.CreatedAt,
@@ -369,7 +382,7 @@ public class ApiResourceFactory
             description: capability.Description,
             jsonMetadata: capability.JsonMetadata,
             awsAccountId: "",
-            userIsMember: false, // this will be updated in the calling method
+            userIsMember: userIsMember,
             requirementScore: capability.RequirementScore,
             links: new CapabilityListItemApiResource.CapabilityListItemLinks(
                 self: new ResourceLink(
@@ -384,6 +397,19 @@ public class ApiResourceFactory
                 )
             )
         );
+
+        resource.PriorityScore = priorityScore;
+
+        if (outstandingActions is not null)
+        {
+            resource.OutstandingActions = new CapabilityListItemApiResource.OutstandingActionsApiResource
+            {
+                IsPendingDeletion = outstandingActions.IsPendingDeletion,
+                PendingMembershipApplicationCount = outstandingActions.PendingMembershipApplicationCount,
+            };
+        }
+
+        return resource;
     }
 
     private async Task<ResourceLink> CreateMembershipApplicationsLinkFor(Capability capability)
@@ -1432,14 +1458,25 @@ public class ApiResourceFactory
 
     public MyProfileApiResource Convert(
         UserId userId,
-        IEnumerable<Capability> capabilities,
+        IEnumerable<(
+            Capability Capability,
+            CapabilityOutstandingActions OutstandingActions,
+            double PriorityScore
+        )> capabilities,
         Member? member,
         bool isDevelopment
     )
     {
         return new MyProfileApiResource(
             id: userId,
-            capabilities: capabilities.Select(ConvertToListItem),
+            capabilities: capabilities.Select(x =>
+                ConvertToListItem(
+                    x.Capability,
+                    x.OutstandingActions,
+                    userIsMember: true,
+                    priorityScore: x.PriorityScore
+                )
+            ),
             autoReloadTopics: !isDevelopment,
             personalInformation: member != null
                 ? new PersonalInformationApiResource
