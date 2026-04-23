@@ -90,10 +90,13 @@ public class MeController : ControllerBase
         var userRoleGrants = await _rbacApplicationService.GetRoleGrantsForUser(userId);
         var ownedCapabilityIds = new HashSet<CapabilityId>();
 
-        foreach (var roleGrant in userRoleGrants.Where(rg =>
-            rg.RoleId == ownerRoleId &&
-            rg.Type == RbacAccessType.Capability &&
-            !string.IsNullOrWhiteSpace(rg.Resource)))
+        foreach (
+            var roleGrant in userRoleGrants.Where(rg =>
+                rg.RoleId == ownerRoleId
+                && rg.Type == RbacAccessType.Capability
+                && !string.IsNullOrWhiteSpace(rg.Resource)
+            )
+        )
         {
             if (CapabilityId.TryParse(roleGrant.Resource!, out var capabilityId))
             {
