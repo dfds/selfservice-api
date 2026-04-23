@@ -33,3 +33,13 @@ public class MyCapabilityCosts
         Costs = costs;
     }
 }
+
+public class AllCapabilitiesCosts
+{
+    public List<CapabilityCosts> Costs { get; set; }
+
+    public AllCapabilitiesCosts(List<CapabilityCosts> costs)
+    {
+        Costs = costs;
+    }
+}

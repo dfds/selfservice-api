@@ -6,4 +6,5 @@ public interface IPlatformDataApiRequesterService
 {
     Task<MyCapabilityCosts> GetMyCapabilitiesCosts(UserId userId);
     Task<MyCapabilitiesAwsResourceCounts> GetMyCapabilitiesAwsResourceCounts(UserId userId);
+    Task<AllCapabilitiesCosts> GetAllCapabilitiesCosts();
 }
