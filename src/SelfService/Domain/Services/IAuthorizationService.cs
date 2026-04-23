@@ -53,6 +53,10 @@ public interface IAuthorizationService
     bool CanUpdateEvent(PortalUser portalUser);
     bool CanDeleteEvent(PortalUser portalUser);
 
+    bool CanCreateNewsItem(PortalUser portalUser);
+    bool CanUpdateNewsItem(PortalUser portalUser);
+    bool CanDeleteNewsItem(PortalUser portalUser);
+
     bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser);
     bool IsAuthorizedToUpdateReleaseNote(PortalUser portalUser);
     bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser);
