@@ -88,10 +88,20 @@ public class MeController : ControllerBase
             return new HashSet<CapabilityId>();
 
         var userRoleGrants = await _rbacApplicationService.GetRoleGrantsForUser(userId);
-        return userRoleGrants
-            .Where(rg => rg.RoleId == ownerRoleId && rg.Type == RbacAccessType.Capability && rg.Resource is not null)
-            .Select(rg => CapabilityId.Parse(rg.Resource!))
-            .ToHashSet();
+        var ownedCapabilityIds = new HashSet<CapabilityId>();
+
+        foreach (var roleGrant in userRoleGrants.Where(rg =>
+            rg.RoleId == ownerRoleId &&
+            rg.Type == RbacAccessType.Capability &&
+            !string.IsNullOrWhiteSpace(rg.Resource)))
+        {
+            if (CapabilityId.TryParse(roleGrant.Resource!, out var capabilityId))
+            {
+                ownedCapabilityIds.Add(capabilityId);
+            }
+        }
+
+        return ownedCapabilityIds;
     }
 
     [HttpPut("personalinformation")]
