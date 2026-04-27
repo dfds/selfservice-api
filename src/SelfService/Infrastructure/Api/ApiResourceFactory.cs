@@ -11,6 +11,7 @@ using SelfService.Infrastructure.Api.Events;
 using SelfService.Infrastructure.Api.Kafka;
 using SelfService.Infrastructure.Api.Me;
 using SelfService.Infrastructure.Api.MembershipApplications;
+using SelfService.Infrastructure.Api.News;
 using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Api.ReleaseNotes;
 using SelfService.Infrastructure.Api.System;
@@ -2057,5 +2058,89 @@ public class ApiResourceFactory
                 ),
             },
         };
+    }
+
+    public NewsItemApiResource Convert(NewsItem newsItem)
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+        var allowOnSelf = Allow.Get;
+
+        if (_authorizationService.CanUpdateNewsItem(portalUser))
+        {
+            allowOnSelf += Post;
+        }
+
+        if (_authorizationService.CanDeleteNewsItem(portalUser))
+        {
+            allowOnSelf += Delete;
+        }
+
+        return new NewsItemApiResource(
+            id: newsItem.Id,
+            title: newsItem.Title,
+            body: newsItem.Body,
+            dueDate: newsItem.DueDate,
+            isHighlighted: newsItem.IsHighlighted,
+            isRelevant: newsItem.IsRelevant(),
+            createdBy: newsItem.CreatedBy,
+            createdAt: newsItem.CreatedAt,
+            modifiedAt: newsItem.ModifiedAt,
+            links: new NewsItemApiResource.NewsItemLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(NewsController.GetNewsItem),
+                        controller: GetNameOf<NewsController>(),
+                        values: new { id = newsItem.Id }
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowOnSelf
+                )
+            )
+        );
+    }
+
+    public NewsItemsApiResource Convert(IEnumerable<NewsItem> newsItems)
+    {
+        var portalUser = HttpContext.User.ToPortalUser();
+        var allowOnSelf = Allow.Get;
+
+        if (_authorizationService.CanCreateNewsItem(portalUser))
+        {
+            allowOnSelf += Post;
+        }
+
+        return new NewsItemsApiResource(
+            newsItems: newsItems.Select(Convert).ToArray(),
+            links: new NewsItemsApiResource.NewsItemsLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(NewsController.GetAllNews),
+                        controller: GetNameOf<NewsController>()
+                    ) ?? "",
+                    rel: "self",
+                    allow: allowOnSelf
+                )
+            )
+        );
+    }
+
+    public NewsItemsApiResource ConvertRelevantNewsItems(IEnumerable<NewsItem> newsItems)
+    {
+        return new NewsItemsApiResource(
+            newsItems: newsItems.Select(Convert).ToArray(),
+            links: new NewsItemsApiResource.NewsItemsLinks(
+                self: new ResourceLink(
+                    href: _linkGenerator.GetUriByAction(
+                        httpContext: HttpContext,
+                        action: nameof(NewsController.GetRelevantNews),
+                        controller: GetNameOf<NewsController>()
+                    ) ?? "",
+                    rel: "self",
+                    allow: Allow.Get
+                )
+            )
+        );
     }
 }
