@@ -367,14 +367,25 @@ public class RbacController : ControllerBase
         {
             var roleGrants = await _rbacApplicationService.GetPermissionGrantsForRoleIgnoreCase(role.Id.ToString());
             grants.AddRange(
-                roleGrants.Select(g => new PermissionMatrixGrantDto(role.Id.ToString(), g.Namespace.ToString(), g.Permission))
+                roleGrants.Select(g => new PermissionMatrixGrantDto(
+                    role.Id.ToString(),
+                    g.Namespace.ToString(),
+                    g.Permission
+                ))
             );
         }
 
         return Ok(
             new PermissionMatrixResponse(
                 roles.Select(RbacRoleDTO.FromRbacRole).ToList(),
-                permissions.Select(p => new PermissionDto(p.Namespace.ToString(), p.Name, p.Description, p.AccessType.ToString())).ToList(),
+                permissions
+                    .Select(p => new PermissionDto(
+                        p.Namespace.ToString(),
+                        p.Name,
+                        p.Description,
+                        p.AccessType.ToString()
+                    ))
+                    .ToList(),
                 grants
             )
         );
@@ -396,8 +407,10 @@ public class RbacController : ControllerBase
             );
 
         var allPermissions = Permission.BootstrapPermissions();
-        var unknownPermissions = request.Permissions
-            .Where(p => !allPermissions.Any(ap => ap.Namespace.ToString() == p.Namespace && ap.Name == p.Name))
+        var unknownPermissions = request
+            .Permissions.Where(p =>
+                !allPermissions.Any(ap => ap.Namespace.ToString() == p.Namespace && ap.Name == p.Name)
+            )
             .ToList();
 
         if (unknownPermissions.Any())
@@ -405,12 +418,13 @@ public class RbacController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Unknown permissions",
-                    Detail = $"The following permissions are not recognised: {string.Join(", ", unknownPermissions.Select(p => $"{p.Namespace}/{p.Name}"))}",
+                    Detail =
+                        $"The following permissions are not recognised: {string.Join(", ", unknownPermissions.Select(p => $"{p.Namespace}/{p.Name}"))}",
                 }
             );
 
-        var entries = request.Permissions
-            .Select(p =>
+        var entries = request
+            .Permissions.Select(p =>
             {
                 var matching = allPermissions.First(ap => ap.Namespace.ToString() == p.Namespace && ap.Name == p.Name);
                 return new RolePermissionEntry(matching.Namespace, matching.Name, matching.AccessType);
