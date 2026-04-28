@@ -365,7 +365,7 @@ public class RbacController : ControllerBase
         var grants = new List<PermissionMatrixGrantDto>();
         foreach (var role in roles)
         {
-            var roleGrants = await _rbacApplicationService.GetPermissionGrantsForRole(role.Id.ToString());
+            var roleGrants = await _rbacApplicationService.GetPermissionGrantsForRoleIgnoreCase(role.Id.ToString());
             grants.AddRange(
                 roleGrants.Select(g => new PermissionMatrixGrantDto(role.Id.ToString(), g.Namespace.ToString(), g.Permission))
             );
