@@ -190,7 +190,7 @@ public class RbacApplicationService : IRbacApplicationService
         );
     }
 
-    private async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCase(string roleId)
+    public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCase(string roleId)
     {
         return await _cache.GetOrAddAsync(
             CacheConst.PermissionGrantsForRoleIgnoreCase,
