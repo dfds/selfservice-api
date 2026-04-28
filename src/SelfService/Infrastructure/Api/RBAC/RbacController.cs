@@ -386,7 +386,7 @@ public class RbacController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     public async Task<IActionResult> SetRolePermissions(string roleId, [FromBody] SetRolePermissionsRequest request)
     {
-        if (!_authorizationService.CanSynchronizeAwsECRAndDatabaseECR(User.ToPortalUser()))
+        if (!_authorizationService.CanManagePermissionMatrix(User.ToPortalUser()))
             return Unauthorized(
                 new ProblemDetails
                 {
