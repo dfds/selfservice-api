@@ -152,4 +152,9 @@ public class StubRbacApplicationService : IRbacApplicationService
     {
         throw new NotImplementedException();
     }
+
+    public Task SetPermissionsForRole(string roleId, List<RolePermissionEntry> permissions)
+    {
+        return Task.CompletedTask;
+    }
 }

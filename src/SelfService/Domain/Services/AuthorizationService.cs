@@ -573,6 +573,11 @@ public class AuthorizationService : IAuthorizationService
         ).Permitted();
     }
 
+    public bool CanManagePermissionMatrix(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
     public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser);
