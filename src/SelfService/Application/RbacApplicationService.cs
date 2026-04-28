@@ -713,7 +713,7 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task SetPermissionsForRole(string roleId, List<RolePermissionEntry> permissions)
     {
-        var existing = await GetPermissionGrantsForRole(roleId);
+        var existing = await GetPermissionGrantsForRoleIgnoreCase(roleId);
         foreach (var grant in existing)
             await _permissionGrantRepository.Remove(grant.Id);
 
