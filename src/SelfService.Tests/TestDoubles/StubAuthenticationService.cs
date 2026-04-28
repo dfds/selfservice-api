@@ -129,6 +129,11 @@ public class StubAuthorizationService : IAuthorizationService
         return await Task.FromResult(_authorized);
     }
 
+    public async Task<bool> CanRemoveMember(UserId requesterId, CapabilityId capabilityId)
+    {
+        return await Task.FromResult(_authorized);
+    }
+
     // not covered by current RBAC rules
     public async Task<bool> CanApply(UserId userId, CapabilityId capabilityId)
     {

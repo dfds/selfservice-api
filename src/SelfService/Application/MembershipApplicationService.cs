@@ -339,6 +339,33 @@ public class MembershipApplicationService : IMembershipApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
+    public async Task RemoveMemberFromCapability(CapabilityId capabilityId, UserId memberId)
+    {
+        using var _ = _logger.BeginScope(
+            "{Action} on {ImplementationType}",
+            nameof(RemoveMemberFromCapability),
+            GetType().FullName
+        );
+
+        _logger.LogDebug("Removing user {UserId} from capability {CapabilityId}", memberId, capabilityId);
+
+        var membership = await _membershipRepository.CancelWithCapabilityId(capabilityId, memberId);
+        if (membership != null)
+        {
+            membership.Cancel();
+            _logger.LogDebug("User {UserId} has been removed from capability {CapabilityId}", memberId, capabilityId);
+        }
+        else
+        {
+            _logger.LogDebug(
+                "User {UserId} has no active membership in capability {CapabilityId}",
+                memberId,
+                capabilityId
+            );
+        }
+    }
+
+    [TransactionalBoundary, Outboxed]
     public async Task JoinCapability(CapabilityId capabilityId, UserId userId)
     {
         _logger.LogInformation(
