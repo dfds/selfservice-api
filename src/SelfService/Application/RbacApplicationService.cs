@@ -709,6 +709,28 @@ public class RbacApplicationService : IRbacApplicationService
 
         return resp.PermissionMatrix.Any(x => x.Value.Permitted);
     }
+
+    [TransactionalBoundary]
+    public async Task SetPermissionsForRole(string roleId, List<RolePermissionEntry> permissions)
+    {
+        var existing = await GetPermissionGrantsForRole(roleId);
+        foreach (var grant in existing)
+            await _permissionGrantRepository.Remove(grant.Id);
+
+        foreach (var p in permissions)
+            await _permissionGrantRepository.Add(
+                RbacPermissionGrant.New(
+                    AssignedEntityType.Role,
+                    roleId,
+                    p.Namespace,
+                    p.PermissionName,
+                    p.AccessType,
+                    ""
+                )
+            );
+
+        _cache.Reset();
+    }
 }
 
 public class Permission
@@ -860,3 +882,5 @@ public class PermittedResponse
         return PermissionMatrix.All(kv => kv.Value.Permitted != false);
     }
 }
+
+public record RolePermissionEntry(RbacNamespace Namespace, string PermissionName, RbacAccessType AccessType);

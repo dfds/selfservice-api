@@ -28,4 +28,5 @@ public interface IRbacApplicationService
     Task DeleteGroup(string user, string groupId);
     Task<RbacGroupMember> GrantGroupGrant(string user, RbacGroupMember membership);
     Task RevokeGroupGrant(string user, RbacGroupMember membership);
+    Task SetPermissionsForRole(string roleId, List<RolePermissionEntry> permissions);
 }
