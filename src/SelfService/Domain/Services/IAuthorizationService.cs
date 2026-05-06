@@ -26,6 +26,7 @@ public interface IAuthorizationService
     Task<bool> CanRequestAzureResources(UserId userId, CapabilityId capabilityId);
 
     Task<bool> CanLeave(UserId userId, CapabilityId capabilityId);
+    Task<bool> CanRemoveMember(UserId requesterId, CapabilityId capabilityId);
     Task<bool> CanApply(UserId userId, CapabilityId capabilityId);
     Task<bool> CanViewAllApplications(UserId userId, CapabilityId capabilityId);
     Task<bool> CanDeleteCapability(UserId userId, CapabilityId capabilityId);
@@ -52,6 +53,10 @@ public interface IAuthorizationService
     bool CanCreateEvent(PortalUser portalUser);
     bool CanUpdateEvent(PortalUser portalUser);
     bool CanDeleteEvent(PortalUser portalUser);
+
+    bool CanCreateNewsItem(PortalUser portalUser);
+    bool CanUpdateNewsItem(PortalUser portalUser);
+    bool CanDeleteNewsItem(PortalUser portalUser);
 
     bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser);
     bool IsAuthorizedToUpdateReleaseNote(PortalUser portalUser);

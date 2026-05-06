@@ -80,6 +80,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<DemoRecording> DemoRecording => Set<DemoRecording>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<EventAttachment> EventAttachments => Set<EventAttachment>();
+    public DbSet<NewsItem> NewsItems => Set<NewsItem>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -154,6 +155,8 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<Domain.Models.EventId>().HaveConversion<EventIdConverter>();
 
         configurationBuilder.Properties<EventAttachmentId>().HaveConversion<EventAttachmentIdConverter>();
+
+        configurationBuilder.Properties<NewsItemId>().HaveConversion<NewsItemIdConverter>();
 
         configurationBuilder
             .Properties<RbacPermissionGrantId>()
@@ -593,6 +596,20 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.AttachmentType).HasConversion<string>();
             cfg.Property(x => x.Description);
             cfg.Property(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<NewsItem>(cfg =>
+        {
+            cfg.ToTable("NewsItem");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.Title);
+            cfg.Property(x => x.Body);
+            cfg.Property(x => x.DueDate);
+            cfg.Property(x => x.IsHighlighted);
+            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.ModifiedAt);
         });
     }
 }

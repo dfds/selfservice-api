@@ -20,4 +20,8 @@ public class CustomObjectResult : ObjectResult
 
     [NonAction]
     public static CustomObjectResult NotImplemented(object error) => new(StatusCodes.Status501NotImplemented, error);
+
+    [NonAction]
+    public static CustomObjectResult ServiceUnavailable(object error) =>
+        new(StatusCodes.Status503ServiceUnavailable, error);
 }

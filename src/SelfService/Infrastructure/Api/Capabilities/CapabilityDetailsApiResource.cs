@@ -119,6 +119,8 @@ public class CapabilityListItemApiResource
     public string AwsAccountId { get; set; }
     public bool UserIsMember { get; set; }
     public double? RequirementScore { get; set; }
+    public double? PriorityScore { get; set; }
+    public OutstandingActionsApiResource? OutstandingActions { get; set; }
 
     [JsonPropertyName("_links")]
     public CapabilityListItemLinks Links { get; set; }
@@ -131,6 +133,12 @@ public class CapabilityListItemApiResource
         {
             Self = self;
         }
+    }
+
+    public class OutstandingActionsApiResource
+    {
+        public bool IsPendingDeletion { get; init; }
+        public int PendingMembershipApplicationCount { get; init; }
     }
 
     public CapabilityListItemApiResource(

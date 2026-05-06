@@ -16,6 +16,8 @@ namespace SelfService.Infrastructure.Api.Me;
 public class MeController : ControllerBase
 {
     private readonly IMyCapabilitiesQuery _myCapabilitiesQuery;
+    private readonly IMyCapabilitiesOutstandingActionsQuery _outstandingActionsQuery;
+    private readonly IRbacApplicationService _rbacApplicationService;
     private readonly SelfServiceDbContext _dbContext;
     private readonly IHostEnvironment _hostEnvironment;
     private readonly ApiResourceFactory _apiResourceFactory;
@@ -24,6 +26,8 @@ public class MeController : ControllerBase
 
     public MeController(
         IMyCapabilitiesQuery myCapabilitiesQuery,
+        IMyCapabilitiesOutstandingActionsQuery outstandingActionsQuery,
+        IRbacApplicationService rbacApplicationService,
         SelfServiceDbContext dbContext,
         IHostEnvironment hostEnvironment,
         ApiResourceFactory apiResourceFactory,
@@ -32,6 +36,8 @@ public class MeController : ControllerBase
     )
     {
         _myCapabilitiesQuery = myCapabilitiesQuery;
+        _outstandingActionsQuery = outstandingActionsQuery;
+        _rbacApplicationService = rbacApplicationService;
         _dbContext = dbContext;
         _hostEnvironment = hostEnvironment;
         _apiResourceFactory = apiResourceFactory;
@@ -53,10 +59,52 @@ public class MeController : ControllerBase
             );
         }
 
-        var capabilities = await _myCapabilitiesQuery.FindBy(userId);
+        var capabilities = (await _myCapabilitiesQuery.FindBy(userId)).ToList();
+        var outstandingActions = await _outstandingActionsQuery.FindFor(capabilities);
+        var ownedCapabilityIds = await GetOwnedCapabilityIds(userId);
+
+        var annotatedCapabilities = capabilities
+            .Select(c =>
+            {
+                var actions = outstandingActions.GetValueOrDefault(c.Id, CapabilityOutstandingActions.None);
+                return (
+                    Capability: c,
+                    OutstandingActions: actions,
+                    PriorityScore: CapabilityPriorityScore.Compute(c, actions, ownedCapabilityIds)
+                );
+            })
+            .OrderByDescending(x => x.PriorityScore);
+
         var member = await _memberRepository.FindBy(userId);
 
-        return Ok(_apiResourceFactory.Convert(userId, capabilities, member, _hostEnvironment.IsDevelopment()));
+        return Ok(_apiResourceFactory.Convert(userId, annotatedCapabilities, member, _hostEnvironment.IsDevelopment()));
+    }
+
+    private async Task<IReadOnlySet<CapabilityId>> GetOwnedCapabilityIds(UserId userId)
+    {
+        var assignableRoles = await _rbacApplicationService.GetAssignableRoles();
+        var ownerRoleId = assignableRoles.FirstOrDefault(r => r.Name == "Owner")?.Id;
+        if (ownerRoleId is null)
+            return new HashSet<CapabilityId>();
+
+        var userRoleGrants = await _rbacApplicationService.GetRoleGrantsForUser(userId);
+        var ownedCapabilityIds = new HashSet<CapabilityId>();
+
+        foreach (
+            var roleGrant in userRoleGrants.Where(rg =>
+                rg.RoleId == ownerRoleId
+                && rg.Type == RbacAccessType.Capability
+                && !string.IsNullOrWhiteSpace(rg.Resource)
+            )
+        )
+        {
+            if (CapabilityId.TryParse(roleGrant.Resource!, out var capabilityId))
+            {
+                ownedCapabilityIds.Add(capabilityId);
+            }
+        }
+
+        return ownedCapabilityIds;
     }
 
     [HttpPut("personalinformation")]

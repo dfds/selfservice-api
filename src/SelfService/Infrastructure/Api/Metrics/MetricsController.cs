@@ -14,14 +14,17 @@ public class MetricsController : ControllerBase
 {
     private readonly IPlatformDataApiRequesterService _platformDataApiRequesterService;
     private readonly OutOfSyncECRInfo _outOfSyncEcrInfo;
+    private readonly AllCapabilitiesCostsCache _allCapabilitiesCostsCache;
 
     public MetricsController(
         IPlatformDataApiRequesterService platformDataApiRequesterService,
-        OutOfSyncECRInfo outOfSyncEcrInfo
+        OutOfSyncECRInfo outOfSyncEcrInfo,
+        AllCapabilitiesCostsCache allCapabilitiesCostsCache
     )
     {
         _platformDataApiRequesterService = platformDataApiRequesterService;
         _outOfSyncEcrInfo = outOfSyncEcrInfo;
+        _allCapabilitiesCostsCache = allCapabilitiesCostsCache;
     }
 
     [HttpGet("my-capabilities-costs")]
@@ -149,5 +152,31 @@ public class MetricsController : ControllerBase
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"GetCapabilityCosts: {e.Message}." }
             );
         }
+    }
+
+    [HttpGet("all-capabilities-costs")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status503ServiceUnavailable, "application/problem+json")]
+    public IActionResult GetAllCapabilitiesCosts()
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        if (!_allCapabilitiesCostsCache.HasData)
+        {
+            return CustomObjectResult.ServiceUnavailable(
+                new ProblemDetails
+                {
+                    Title = "Cache not available",
+                    Detail = "Capability costs cache is not yet populated. Please try again later.",
+                }
+            );
+        }
+
+        var cachedData = _allCapabilitiesCostsCache.GetCachedData();
+        return Ok(cachedData);
     }
 }

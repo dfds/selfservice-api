@@ -4,6 +4,7 @@ using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Metrics;
 using SelfService.Infrastructure.Api.Prometheus;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.BackgroundJobs;
@@ -59,6 +60,7 @@ public static class Domain
         builder.Services.AddTransient<IDemoApplicationService, DemoApplicationService>();
         builder.Services.AddTransient<IDemoRecordingService, DemoRecordingService>();
         builder.Services.AddTransient<IEventService, EventService>();
+        builder.Services.AddTransient<INewsItemService, NewsItemService>();
         // Note: IRequirementsMetricService is registered conditionally in RequirementsDbContext.AddRequirementsDatabase
 
         // domain repositories
@@ -90,11 +92,13 @@ public static class Domain
         builder.Services.AddTransient<IDemoRecordingRepository, DemoRecordingRepository>();
         builder.Services.AddTransient<IEventRepository, EventRepository>();
         builder.Services.AddTransient<IEventAttachmentRepository, EventAttachmentRepository>();
+        builder.Services.AddTransient<INewsItemRepository, NewsItemRepository>();
         // domain queries
         builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();
         builder.Services.AddTransient<ICapabilityKafkaTopicsQuery, CapabilityKafkaTopicsQuery>();
         builder.Services.AddTransient<ICapabilityMembersQuery, CapabilityMembersQuery>();
         builder.Services.AddTransient<IMyCapabilitiesQuery, MyCapabilitiesQuery>();
+        builder.Services.AddTransient<IMyCapabilitiesOutstandingActionsQuery, MyCapabilitiesOutstandingActionsQuery>();
         builder.Services.AddTransient<IMembershipApplicationQuery, MembershipApplicationQuery>();
         builder.Services.AddTransient<IAwsAccountIdQuery, AwsAccountIdQuery>();
 
@@ -135,6 +139,7 @@ public static class Domain
         builder.Services.AddHostedService<ECRRepositorySynchronizer>();
         builder.Services.AddHostedService<UpdateOutOfSyncEcrRepos>();
         builder.Services.AddHostedService<MetricsUpdater>();
+        builder.Services.AddHostedService<AllCapabilitiesCostsCacheUpdater>();
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
@@ -144,6 +149,7 @@ public static class Domain
         >();
 
         builder.Services.AddSingleton<OutOfSyncECRInfo>(OutOfSyncECRInfo.createNewEmpty());
+        builder.Services.AddSingleton<AllCapabilitiesCostsCache>();
 
         var topdeskEndpoint = new Uri(builder.Configuration["SS_TOPDESK_API_GATEWAY_ENDPOINT"] ?? "");
         var topdeskApiKey = builder.Configuration["SS_TOPDESK_API_GATEWAY_API_KEY"];

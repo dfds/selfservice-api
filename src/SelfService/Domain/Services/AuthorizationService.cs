@@ -668,6 +668,25 @@ public class AuthorizationService : IAuthorizationService
         return isApplicant || hasPermission || IsCloudEngineerEnabled(portalUser);
     }
 
+    public async Task<bool> CanRemoveMember(UserId requesterId, CapabilityId capabilityId)
+    {
+        return (
+            await _rbacApplicationService.IsUserPermitted(
+                requesterId,
+                new List<Permission>
+                {
+                    new()
+                    {
+                        Namespace = RbacNamespace.CapabilityMembershipManagement,
+                        Name = "delete",
+                        AccessType = RbacAccessType.Capability,
+                    },
+                },
+                capabilityId
+            )
+        ).Permitted();
+    }
+
     public async Task<bool> CanInviteToCapability(UserId userId, CapabilityId capabilityId)
     {
         return (
@@ -819,6 +838,21 @@ public class AuthorizationService : IAuthorizationService
     }
 
     public bool CanDeleteEvent(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
+    public bool CanCreateNewsItem(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
+    public bool CanUpdateNewsItem(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
+    public bool CanDeleteNewsItem(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser);
     }

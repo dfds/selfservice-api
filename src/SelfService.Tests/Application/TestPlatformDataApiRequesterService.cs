@@ -51,11 +51,13 @@ public class TestPlatformDataApiRequesterService
         var loggerMock = new Mock<ILogger<PlatformDataApiRequesterService>>();
         var awsMock = new Mock<IAwsAccountRepository>();
         var azureMock = new Mock<IAzureResourceRepository>();
+        var capabilityRepositoryMock = new Mock<ICapabilityRepository>();
 
         var service = new PlatformDataApiRequesterService(
             loggerMock.Object,
             awsMock.Object,
             myCapabilitiesQueryMock.Object,
+            capabilityRepositoryMock.Object,
             httpClient
         );
 

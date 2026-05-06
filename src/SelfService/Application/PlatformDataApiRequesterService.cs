@@ -81,18 +81,21 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
     private readonly ILogger<PlatformDataApiRequesterService> _logger;
     private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly IMyCapabilitiesQuery _myCapabilitiesQuery;
+    private readonly ICapabilityRepository _capabilityRepository;
     private readonly HttpClient _httpClient;
 
     public PlatformDataApiRequesterService(
         ILogger<PlatformDataApiRequesterService> logger,
         IAwsAccountRepository awsAccountRepository,
         IMyCapabilitiesQuery myCapabilitiesQuery,
+        ICapabilityRepository capabilityRepository,
         HttpClient httpClient
     )
     {
         _logger = logger;
         _awsAccountRepository = awsAccountRepository;
         _myCapabilitiesQuery = myCapabilitiesQuery;
+        _capabilityRepository = capabilityRepository;
         _httpClient = httpClient;
     }
 
@@ -248,5 +251,32 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
         }
 
         return new MyCapabilitiesAwsResourceCounts(resourceCounts);
+    }
+
+    public async Task<AllCapabilitiesCosts> GetAllCapabilitiesCosts()
+    {
+        var allCapabilities = await _capabilityRepository.GetAllActive();
+
+        var timeSeriesWithValidCapabilities = await FetchCapabilityCosts(DaysToFetch);
+        var mappedCosts = ToCapabilityMap(timeSeriesWithValidCapabilities);
+
+        List<CapabilityCosts> costs = new List<CapabilityCosts>();
+        var today = DateTime.UtcNow.Date;
+        var yesterday = today.AddDays(-1);
+
+        foreach (var capability in allCapabilities)
+        {
+            if (mappedCosts.TryGetValue(capability.Id, out var capabilityCosts))
+            {
+                // Filter out today and yesterday (which have incomplete/zero values) and order by timestamp
+                var orderedCosts = capabilityCosts
+                    .Where(x => x.TimeStamp.Date != today && x.TimeStamp.Date != yesterday)
+                    .OrderBy(x => x.TimeStamp)
+                    .ToArray();
+                costs.Add(new CapabilityCosts(capability.Id, orderedCosts));
+            }
+        }
+
+        return new AllCapabilitiesCosts(costs);
     }
 }
