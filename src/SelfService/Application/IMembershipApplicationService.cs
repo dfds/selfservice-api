@@ -12,6 +12,7 @@ public interface IMembershipApplicationService
     Task AddCreatorAsInitialMember(CapabilityId capabilityId, UserId creatorId);
     Task RemoveMembershipApplication(MembershipApplicationId applicationId);
     Task LeaveCapability(CapabilityId capabilityId, UserId userId);
+    Task RemoveMemberFromCapability(CapabilityId capabilityId, UserId memberId);
     Task JoinCapability(CapabilityId capabilityId, UserId userId);
     Task<IEnumerable<MembershipApplication>> GetMembershipsApplicationsThatUserCanApprove(UserId userId);
     Task<IEnumerable<MembershipApplication>> GetOutstandingMembershipsApplicationsForUser(UserId userId);

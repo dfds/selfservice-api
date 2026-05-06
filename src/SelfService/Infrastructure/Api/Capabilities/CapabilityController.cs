@@ -784,6 +784,45 @@ public class CapabilityController : ControllerBase
         }
     }
 
+    [HttpDelete("{id}/members/{memberId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> RemoveMemberFromCapability(string id, string memberId)
+    {
+        if (!User.TryGetUserId(out var requesterId))
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = "User id is not valid and thus cannot remove members from capabilities.",
+                }
+            );
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found.",
+                }
+            );
+
+        if (!await _authorizationService.CanRemoveMember(requesterId, capabilityId))
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Not allowed to remove member",
+                    Detail = "Only owners of a capability can remove members.",
+                }
+            );
+
+        var memberToRemove = UserId.Parse(memberId);
+        await _membershipApplicationService.RemoveMemberFromCapability(capabilityId, memberToRemove);
+        await _rbacApplicationService.RevokeCapabilityRoleGrant(memberToRemove, capabilityId);
+        return NoContent();
+    }
+
     [HttpGet("{id:required}/kafkaclusteraccess")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
