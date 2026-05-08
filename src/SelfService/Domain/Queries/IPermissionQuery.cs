@@ -6,4 +6,5 @@ public interface IPermissionQuery
 {
     Task<IList<RbacPermissionGrant>> FindUserGroupPermissionsByUserId(string userId);
     Task<IList<RbacRoleGrant>> FindUserGroupRolesByUserId(string userId);
+    Task<List<RbacPermissionGrant>> FindGuestPermissions();
 }

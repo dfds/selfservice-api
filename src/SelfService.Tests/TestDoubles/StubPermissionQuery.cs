@@ -16,4 +16,9 @@ public class StubPermissionQuery : IPermissionQuery
     {
         return Task.FromResult<IList<RbacRoleGrant>>(new List<RbacRoleGrant>());
     }
+
+    public Task<List<RbacPermissionGrant>> FindGuestPermissions()
+    {
+        return Task.FromResult(new List<RbacPermissionGrant>());
+    }
 }

@@ -40,4 +40,23 @@ public class PermissionsQuery : IPermissionQuery
 
         return await query.ToListAsync();
     }
+
+    public async Task<List<RbacPermissionGrant>> FindGuestPermissions()
+    {
+        var guestRole = await _dbContext.RbacRoles.FirstOrDefaultAsync(r =>
+            r.Name.ToLower() == "guest"
+        );
+
+        if (guestRole == null)
+            return new List<RbacPermissionGrant>();
+
+        var guestRoleId = guestRole.Id.ToString();
+
+        return await _dbContext.RbacPermissionGrants
+            .Where(pg =>
+                pg.AssignedEntityType == AssignedEntityType.Role
+                && pg.AssignedEntityId.ToLower() == guestRoleId.ToLower()
+            )
+            .ToListAsync();
+    }
 }

@@ -146,13 +146,6 @@ public class ApiApplication : WebApplicationFactory<Program>
                 SelfService.Application.StubRequirementsMetricService
             >();
 
-            // Replace RbacRoleRepository with an empty stub to avoid database dependency in tests.
-            // Individual tests can replace it with a configured instance if needed.
-            services.RemoveAll<SelfService.Infrastructure.Persistence.IRbacRoleRepository>();
-            services.AddTransient<SelfService.Infrastructure.Persistence.IRbacRoleRepository>(
-                _ => new SelfService.Tests.TestDoubles.StubRbacRoleRepository()
-            );
-
             services
                 .AddAuthentication(FakeAuthenticationSchemeDefaults.AuthenticationScheme)
                 .AddScheme<FakeAuthenticationSchemeOptions, FakeAuthenticationHandler>(

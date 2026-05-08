@@ -71,23 +71,19 @@ public class RbacApplicationService : IRbacApplicationService
             && !combinedRoles.Any(rg => rg.Type == RbacAccessType.Capability && rg.Resource == objectId)
         )
         {
-            var guestRole = (await GetAllRoles()).FirstOrDefault(r => r.Name == "Guest");
-            if (guestRole != null)
-            {
-                combinedRoles = combinedRoles
-                    .Append(
-                        new RbacRoleGrant(
-                            id: RbacRoleGrantId.New(),
-                            roleId: guestRole.Id,
-                            createdAt: DateTime.UtcNow,
-                            assignedEntityType: AssignedEntityType.User,
-                            assignedEntityId: user,
-                            type: RbacAccessType.Capability,
-                            resource: objectId
-                        )
-                    )
-                    .ToList();
-            }
+            var guestPermissions = await _cache.GetOrAddAsync(
+                CacheConst.GuestPermissions,
+                "global",
+                () => _permissionQuery.FindGuestPermissions()
+            );
+            combinedPermissions = combinedPermissions
+                .Concat(
+                    guestPermissions.Select(p => new RbacPermissionGrant(
+                        p.Id, p.CreatedAt, p.AssignedEntityType, p.AssignedEntityId,
+                        p.Namespace, p.Permission, RbacAccessType.Capability, objectId
+                    ))
+                )
+                .ToList();
         }
 
         var accessGrantingPermissionGrants = combinedPermissions.FindAll(p =>
