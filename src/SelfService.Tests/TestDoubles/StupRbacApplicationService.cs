@@ -95,7 +95,7 @@ public class StubRbacApplicationService : IRbacApplicationService
 
     public Task<List<RbacRole>> GetAssignableRoles()
     {
-        return Task.FromResult(_assignableRoles ?? new List<RbacRole>());
+        return Task.FromResult((_assignableRoles ?? new List<RbacRole>()).Where(r => r.Name != "Guest").ToList());
     }
 
     public Task GrantPermission(string user, RbacPermissionGrant permissionGrant)
