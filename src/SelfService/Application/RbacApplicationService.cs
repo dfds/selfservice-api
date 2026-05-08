@@ -79,8 +79,14 @@ public class RbacApplicationService : IRbacApplicationService
             combinedPermissions = combinedPermissions
                 .Concat(
                     guestPermissions.Select(p => new RbacPermissionGrant(
-                        p.Id, p.CreatedAt, p.AssignedEntityType, p.AssignedEntityId,
-                        p.Namespace, p.Permission, RbacAccessType.Capability, objectId
+                        p.Id,
+                        p.CreatedAt,
+                        p.AssignedEntityType,
+                        p.AssignedEntityId,
+                        p.Namespace,
+                        p.Permission,
+                        RbacAccessType.Capability,
+                        objectId
                     ))
                 )
                 .ToList();
