@@ -66,7 +66,10 @@ public class RbacApplicationService : IRbacApplicationService
 
         // If the user has no explicit capability role for this resource, apply Guest role permissions as default
         var isCapabilityCheck = permissions.Any(p => p.AccessType == RbacAccessType.Capability);
-        if (isCapabilityCheck && !combinedRoles.Any(rg => rg.Type == RbacAccessType.Capability && rg.Resource == objectId))
+        if (
+            isCapabilityCheck
+            && !combinedRoles.Any(rg => rg.Type == RbacAccessType.Capability && rg.Resource == objectId)
+        )
         {
             var guestRole = (await GetAllRoles()).FirstOrDefault(r => r.Name == "Guest");
             if (guestRole != null)
