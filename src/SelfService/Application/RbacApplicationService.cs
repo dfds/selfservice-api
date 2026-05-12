@@ -276,16 +276,21 @@ public class RbacApplicationService : IRbacApplicationService
         );
     }
 
-    private async Task<List<RbacRole>> GetAllRoles()
+    private async Task<List<RbacRole>> GetAllRolesInternal()
     {
         return await _cache.GetOrAddAsync(CacheConst.AssignableRoles, "all", () => _roleRepository.GetAll());
+    }
+
+    public async Task<List<RbacRole>> GetAllRoles()
+    {
+        return await GetAllRolesInternal();
     }
 
     // Returns roles that can be assigned to capability members. Guest is excluded as it is a system-level
     // default role applied implicitly to users without an explicit capability role.
     public async Task<List<RbacRole>> GetAssignableRoles()
     {
-        var allRoles = await GetAllRoles();
+        var allRoles = await GetAllRolesInternal();
         return allRoles.Where(r => r.Name != "Guest").ToList();
     }
 
@@ -471,7 +476,7 @@ public class RbacApplicationService : IRbacApplicationService
                     throw new BadHttpRequestException("Capability ID is required for capability role grants");
                 }
 
-                var guestRoleCheck = (await GetAllRoles()).FirstOrDefault(r => r.Name == "Guest");
+                var guestRoleCheck = (await GetAllRolesInternal()).FirstOrDefault(r => r.Name == "Guest");
                 if (guestRoleCheck != null && roleGrant.RoleId == guestRoleCheck.Id)
                 {
                     throw new BadHttpRequestException(
