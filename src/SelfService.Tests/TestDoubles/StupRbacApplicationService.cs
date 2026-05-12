@@ -68,6 +68,11 @@ public class StubRbacApplicationService : IRbacApplicationService
         throw new NotImplementedException();
     }
 
+    public Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCase(string roleId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleGrants(List<RbacRoleGrant> roleGrants)
     {
         throw new NotImplementedException();
@@ -151,5 +156,10 @@ public class StubRbacApplicationService : IRbacApplicationService
     public Task<RbacGroupMember> GrantGroupGrant(string user, RbacGroupMember membership)
     {
         throw new NotImplementedException();
+    }
+
+    public Task SetPermissionsForRole(string roleId, List<RolePermissionEntry> permissions)
+    {
+        return Task.CompletedTask;
     }
 }
