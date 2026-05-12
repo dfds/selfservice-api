@@ -64,6 +64,34 @@ public class RbacApplicationService : IRbacApplicationService
         var combinedPermissions = userPermissions.Concat(groupPermissions).ToList();
         var combinedRoles = userRoles.Concat(groupRoles).ToList();
 
+        // If the user has no explicit capability role for this resource, apply Guest role permissions as default
+        var isCapabilityCheck = permissions.Any(p => p.AccessType == RbacAccessType.Capability);
+        if (
+            isCapabilityCheck
+            && !combinedRoles.Any(rg => rg.Type == RbacAccessType.Capability && rg.Resource == objectId)
+        )
+        {
+            var guestPermissions = await _cache.GetOrAddAsync(
+                CacheConst.GuestPermissions,
+                "global",
+                () => _permissionQuery.FindGuestPermissions()
+            );
+            combinedPermissions = combinedPermissions
+                .Concat(
+                    guestPermissions.Select(p => new RbacPermissionGrant(
+                        p.Id,
+                        p.CreatedAt,
+                        p.AssignedEntityType,
+                        p.AssignedEntityId,
+                        p.Namespace,
+                        p.Permission,
+                        RbacAccessType.Capability,
+                        objectId
+                    ))
+                )
+                .ToList();
+        }
+
         var accessGrantingPermissionGrants = combinedPermissions.FindAll(p =>
         {
             var policyGrantsAccess = false;
@@ -190,7 +218,7 @@ public class RbacApplicationService : IRbacApplicationService
         );
     }
 
-    private async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCase(string roleId)
+    public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCase(string roleId)
     {
         return await _cache.GetOrAddAsync(
             CacheConst.PermissionGrantsForRoleIgnoreCase,
@@ -248,10 +276,22 @@ public class RbacApplicationService : IRbacApplicationService
         );
     }
 
-    // TODO: Implement when repo is available
-    public async Task<List<RbacRole>> GetAssignableRoles()
+    private async Task<List<RbacRole>> GetAllRolesInternal()
     {
         return await _cache.GetOrAddAsync(CacheConst.AssignableRoles, "all", () => _roleRepository.GetAll());
+    }
+
+    public async Task<List<RbacRole>> GetAllRoles()
+    {
+        return await GetAllRolesInternal();
+    }
+
+    // Returns roles that can be assigned to capability members. Guest is excluded as it is a system-level
+    // default role applied implicitly to users without an explicit capability role.
+    public async Task<List<RbacRole>> GetAssignableRoles()
+    {
+        var allRoles = await GetAllRolesInternal();
+        return allRoles.Where(r => r.Name != "Guest").ToList();
     }
 
     [TransactionalBoundary]
@@ -434,6 +474,14 @@ public class RbacApplicationService : IRbacApplicationService
                 if (roleGrant.Resource == null)
                 {
                     throw new BadHttpRequestException("Capability ID is required for capability role grants");
+                }
+
+                var guestRoleCheck = (await GetAllRolesInternal()).FirstOrDefault(r => r.Name == "Guest");
+                if (guestRoleCheck != null && roleGrant.RoleId == guestRoleCheck.Id)
+                {
+                    throw new BadHttpRequestException(
+                        "Guest role cannot be directly assigned to a capability. It is the implicit default role for users without an explicit capability role."
+                    );
                 }
 
                 var existingCapabilityGrant = await _roleGrantRepository.FindByPredicate(rg =>
@@ -709,6 +757,28 @@ public class RbacApplicationService : IRbacApplicationService
 
         return resp.PermissionMatrix.Any(x => x.Value.Permitted);
     }
+
+    [TransactionalBoundary]
+    public async Task SetPermissionsForRole(string roleId, List<RolePermissionEntry> permissions)
+    {
+        var existing = await GetPermissionGrantsForRoleIgnoreCase(roleId);
+        foreach (var grant in existing)
+            await _permissionGrantRepository.Remove(grant.Id);
+
+        foreach (var p in permissions)
+            await _permissionGrantRepository.Add(
+                RbacPermissionGrant.New(
+                    AssignedEntityType.Role,
+                    roleId,
+                    p.Namespace,
+                    p.PermissionName,
+                    p.AccessType,
+                    ""
+                )
+            );
+
+        _cache.Reset();
+    }
 }
 
 public class Permission
@@ -860,3 +930,5 @@ public class PermittedResponse
         return PermissionMatrix.All(kv => kv.Value.Permitted != false);
     }
 }
+
+public record RolePermissionEntry(RbacNamespace Namespace, string PermissionName, RbacAccessType AccessType);

@@ -150,6 +150,11 @@ public class StubAuthorizationService : IAuthorizationService
         return await Task.FromResult(_authorized);
     }
 
+    public bool CanManagePermissionMatrix(PortalUser portalUser)
+    {
+        return _authorized;
+    }
+
     public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
     {
         return _authorized;

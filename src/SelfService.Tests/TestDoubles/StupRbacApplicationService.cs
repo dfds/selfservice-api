@@ -68,6 +68,11 @@ public class StubRbacApplicationService : IRbacApplicationService
         throw new NotImplementedException();
     }
 
+    public Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCase(string roleId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleGrants(List<RbacRoleGrant> roleGrants)
     {
         throw new NotImplementedException();
@@ -93,9 +98,14 @@ public class StubRbacApplicationService : IRbacApplicationService
         return Task.FromResult(_roleGrants ?? new List<RbacRoleGrant>());
     }
 
-    public Task<List<RbacRole>> GetAssignableRoles()
+    public Task<List<RbacRole>> GetAllRoles()
     {
         return Task.FromResult(_assignableRoles ?? new List<RbacRole>());
+    }
+
+    public Task<List<RbacRole>> GetAssignableRoles()
+    {
+        return Task.FromResult((_assignableRoles ?? new List<RbacRole>()).Where(r => r.Name != "Guest").ToList());
     }
 
     public Task GrantPermission(string user, RbacPermissionGrant permissionGrant)
@@ -151,5 +161,10 @@ public class StubRbacApplicationService : IRbacApplicationService
     public Task<RbacGroupMember> GrantGroupGrant(string user, RbacGroupMember membership)
     {
         throw new NotImplementedException();
+    }
+
+    public Task SetPermissionsForRole(string roleId, List<RolePermissionEntry> permissions)
+    {
+        return Task.CompletedTask;
     }
 }

@@ -20,6 +20,7 @@ public class RbacController : ControllerBase
     private readonly IRbacApplicationService _rbacApplicationService;
     private readonly IPermissionQuery _permissionQuery;
     private readonly ApiResourceFactory _apiResourceFactory;
+    private readonly IAuthorizationService _authorizationService;
 
     public RbacController(
         IRbacApplicationService rbacApplicationService,
@@ -31,6 +32,7 @@ public class RbacController : ControllerBase
         _rbacApplicationService = rbacApplicationService;
         _permissionQuery = permissionQuery;
         _apiResourceFactory = apiResourceFactory;
+        _authorizationService = authorizationService;
     }
 
     [HttpGet("me")]
@@ -348,4 +350,102 @@ public class RbacController : ControllerBase
         var resp = await _rbacApplicationService.IsUserPermitted(request.UserId, request.Permissions, request.Objectid);
         return Ok(_apiResourceFactory.Convert(resp));
     }
+
+    [HttpGet("permission-matrix")]
+    [ProducesResponseType(typeof(PermissionMatrixResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetPermissionMatrix()
+    {
+        if (!User.TryGetUserId(out _))
+            return Unauthorized();
+
+        var roles = await _rbacApplicationService.GetAllRoles();
+        var permissions = Permission.BootstrapPermissions();
+
+        var grants = new List<PermissionMatrixGrantDto>();
+        foreach (var role in roles)
+        {
+            var roleGrants = await _rbacApplicationService.GetPermissionGrantsForRoleIgnoreCase(role.Id.ToString());
+            grants.AddRange(
+                roleGrants.Select(g => new PermissionMatrixGrantDto(
+                    role.Id.ToString(),
+                    g.Namespace.ToString(),
+                    g.Permission
+                ))
+            );
+        }
+
+        return Ok(
+            new PermissionMatrixResponse(
+                roles.Select(RbacRoleDTO.FromRbacRole).ToList(),
+                permissions
+                    .Select(p => new PermissionDto(
+                        p.Namespace.ToString(),
+                        p.Name,
+                        p.Description,
+                        p.AccessType.ToString()
+                    ))
+                    .ToList(),
+                grants
+            )
+        );
+    }
+
+    [HttpPut("permission-matrix/role/{roleId:required}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    public async Task<IActionResult> SetRolePermissions(string roleId, [FromBody] SetRolePermissionsRequest request)
+    {
+        if (!_authorizationService.CanManagePermissionMatrix(User.ToPortalUser()))
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Forbidden",
+                    Detail = "Only cloud engineers can modify the permission matrix.",
+                }
+            );
+
+        var allPermissions = Permission.BootstrapPermissions();
+        var unknownPermissions = request
+            .Permissions.Where(p =>
+                !allPermissions.Any(ap => ap.Namespace.ToString() == p.Namespace && ap.Name == p.Name)
+            )
+            .ToList();
+
+        if (unknownPermissions.Any())
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Unknown permissions",
+                    Detail =
+                        $"The following permissions are not recognised: {string.Join(", ", unknownPermissions.Select(p => $"{p.Namespace}/{p.Name}"))}",
+                }
+            );
+
+        var entries = request
+            .Permissions.Select(p =>
+            {
+                var matching = allPermissions.First(ap => ap.Namespace.ToString() == p.Namespace && ap.Name == p.Name);
+                return new RolePermissionEntry(matching.Namespace, matching.Name, matching.AccessType);
+            })
+            .ToList();
+
+        await _rbacApplicationService.SetPermissionsForRole(roleId, entries);
+        return NoContent();
+    }
 }
+
+public record PermissionDto(string Namespace, string Name, string Description, string AccessType);
+
+public record PermissionMatrixGrantDto(string RoleId, string Namespace, string Permission);
+
+public record SetRolePermissionEntry(string Namespace, string Name);
+
+public record SetRolePermissionsRequest(List<SetRolePermissionEntry> Permissions);
+
+public record PermissionMatrixResponse(
+    List<RbacRoleDTO> Roles,
+    List<PermissionDto> Permissions,
+    List<PermissionMatrixGrantDto> Grants
+);
