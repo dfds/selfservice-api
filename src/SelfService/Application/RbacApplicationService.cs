@@ -64,6 +64,34 @@ public class RbacApplicationService : IRbacApplicationService
         var combinedPermissions = userPermissions.Concat(groupPermissions).ToList();
         var combinedRoles = userRoles.Concat(groupRoles).ToList();
 
+        // If the user has no explicit capability role for this resource, apply Guest role permissions as default
+        var isCapabilityCheck = permissions.Any(p => p.AccessType == RbacAccessType.Capability);
+        if (
+            isCapabilityCheck
+            && !combinedRoles.Any(rg => rg.Type == RbacAccessType.Capability && rg.Resource == objectId)
+        )
+        {
+            var guestPermissions = await _cache.GetOrAddAsync(
+                CacheConst.GuestPermissions,
+                "global",
+                () => _permissionQuery.FindGuestPermissions()
+            );
+            combinedPermissions = combinedPermissions
+                .Concat(
+                    guestPermissions.Select(p => new RbacPermissionGrant(
+                        p.Id,
+                        p.CreatedAt,
+                        p.AssignedEntityType,
+                        p.AssignedEntityId,
+                        p.Namespace,
+                        p.Permission,
+                        RbacAccessType.Capability,
+                        objectId
+                    ))
+                )
+                .ToList();
+        }
+
         var accessGrantingPermissionGrants = combinedPermissions.FindAll(p =>
         {
             var policyGrantsAccess = false;
@@ -248,10 +276,17 @@ public class RbacApplicationService : IRbacApplicationService
         );
     }
 
-    // TODO: Implement when repo is available
-    public async Task<List<RbacRole>> GetAssignableRoles()
+    private async Task<List<RbacRole>> GetAllRoles()
     {
         return await _cache.GetOrAddAsync(CacheConst.AssignableRoles, "all", () => _roleRepository.GetAll());
+    }
+
+    // Returns roles that can be assigned to capability members. Guest is excluded as it is a system-level
+    // default role applied implicitly to users without an explicit capability role.
+    public async Task<List<RbacRole>> GetAssignableRoles()
+    {
+        var allRoles = await GetAllRoles();
+        return allRoles.Where(r => r.Name != "Guest").ToList();
     }
 
     [TransactionalBoundary]
@@ -434,6 +469,14 @@ public class RbacApplicationService : IRbacApplicationService
                 if (roleGrant.Resource == null)
                 {
                     throw new BadHttpRequestException("Capability ID is required for capability role grants");
+                }
+
+                var guestRoleCheck = (await GetAllRoles()).FirstOrDefault(r => r.Name == "Guest");
+                if (guestRoleCheck != null && roleGrant.RoleId == guestRoleCheck.Id)
+                {
+                    throw new BadHttpRequestException(
+                        "Guest role cannot be directly assigned to a capability. It is the implicit default role for users without an explicit capability role."
+                    );
                 }
 
                 var existingCapabilityGrant = await _roleGrantRepository.FindByPredicate(rg =>
