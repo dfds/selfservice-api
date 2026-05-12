@@ -359,7 +359,7 @@ public class RbacController : ControllerBase
         if (!User.TryGetUserId(out _))
             return Unauthorized();
 
-        var roles = await _rbacApplicationService.GetAssignableRoles();
+        var roles = await _rbacApplicationService.GetAllRoles();
         var permissions = Permission.BootstrapPermissions();
 
         var grants = new List<PermissionMatrixGrantDto>();

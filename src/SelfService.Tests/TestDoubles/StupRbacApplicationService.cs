@@ -98,6 +98,11 @@ public class StubRbacApplicationService : IRbacApplicationService
         return Task.FromResult(_roleGrants ?? new List<RbacRoleGrant>());
     }
 
+    public Task<List<RbacRole>> GetAllRoles()
+    {
+        return Task.FromResult(_assignableRoles ?? new List<RbacRole>());
+    }
+
     public Task<List<RbacRole>> GetAssignableRoles()
     {
         return Task.FromResult((_assignableRoles ?? new List<RbacRole>()).Where(r => r.Name != "Guest").ToList());
