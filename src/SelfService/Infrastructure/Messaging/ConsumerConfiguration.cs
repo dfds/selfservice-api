@@ -25,6 +25,10 @@ public static class ConsumerConfiguration
                 .Register<CapabilityDeletionRequestSubmitted>(
                     messageType: CapabilityDeletionRequestSubmitted.EventType,
                     keySelector: x => x.CapabilityId!
+                )
+                .Register<CapabilityReadyForDeletion>(
+                    messageType: CapabilityReadyForDeletion.EventType,
+                    keySelector: x => x.CapabilityId!
                 );
 
             options
@@ -113,7 +117,10 @@ public static class ConsumerConfiguration
 
             options
                 .ForTopic($"{SelfServicePrefix}.capability")
-                .RegisterMessageHandler<CapabilityCreated, CapabilityCreatedHandler>(CapabilityCreated.EventType);
+                .RegisterMessageHandler<CapabilityCreated, CapabilityCreatedHandler>(CapabilityCreated.EventType)
+                .RegisterMessageHandler<CapabilityReadyForDeletion, MarkCapabilityAsDeletedHandler>(
+                    CapabilityReadyForDeletion.EventType
+                );
 
             options
                 .ForTopic($"{SelfServicePrefix}.awsaccount")

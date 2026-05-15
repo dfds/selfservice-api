@@ -15,6 +15,7 @@ public class CapabilityDeletionStatusQuery : ICapabilityDeletionStatusQuery
     public async Task<bool> IsPendingDeletion(CapabilityId capabilityId)
     {
         var capability = await _dbContext.Capabilities.FindAsync(capabilityId);
-        return capability?.Status == CapabilityStatusOptions.PendingDeletion;
+        return capability?.Status == CapabilityStatusOptions.PendingDeletion
+            || capability?.Status == CapabilityStatusOptions.OngoingDeletion;
     }
 }
