@@ -4,6 +4,7 @@ public class CapabilityStatusOptions : ValueObject
 {
     public static readonly CapabilityStatusOptions Active = new("Active");
     public static readonly CapabilityStatusOptions PendingDeletion = new("Pending Deletion");
+    public static readonly CapabilityStatusOptions OngoingDeletion = new("Ongoing Deletion");
     public static readonly CapabilityStatusOptions Deleted = new("Deleted");
 
     private readonly string _value;
@@ -50,7 +51,7 @@ public class CapabilityStatusOptions : ValueObject
         return false;
     }
 
-    public static IReadOnlyCollection<CapabilityStatusOptions> Values => new[] { Active, PendingDeletion, Deleted };
+    public static IReadOnlyCollection<CapabilityStatusOptions> Values => new[] { Active, PendingDeletion, OngoingDeletion, Deleted };
 
     public static implicit operator CapabilityStatusOptions(string text) => Parse(text);
 

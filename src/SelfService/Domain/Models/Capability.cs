@@ -124,15 +124,24 @@ public class Capability : AggregateRoot<CapabilityId>
 
     public void MarkAsDeleted()
     {
-        if (Status != CapabilityStatusOptions.PendingDeletion)
+        if (Status != CapabilityStatusOptions.OngoingDeletion)
         {
-            throw new InvalidOperationException("Capability is not pending deletion");
+            throw new InvalidOperationException("Capability is not in ongoing deletion");
         }
 
         Status = CapabilityStatusOptions.Deleted;
         ModifiedAt = DateTime.UtcNow;
     }
+    public void StartDeletion()
+    {
+        if (Status != CapabilityStatusOptions.PendingDeletion)
+        {
+            throw new InvalidOperationException("Capability is not pending deletion");
+        }
 
+        Status = CapabilityStatusOptions.OngoingDeletion;
+        ModifiedAt = DateTime.UtcNow;
+    }
     public void UpdateRequirementScore(double score)
     {
         RequirementScore = score;
