@@ -12,9 +12,7 @@ public class TestActOnPendingCapabilityDeletions
     )
     {
         var repoMock = new Mock<ICapabilityRepository>();
-        repoMock
-            .Setup(r => r.GetAllPendingDeletionFor(It.IsAny<int>()))
-            .ReturnsAsync(pendingCapabilities);
+        repoMock.Setup(r => r.GetAllPendingDeletionFor(It.IsAny<int>())).ReturnsAsync(pendingCapabilities);
 
         return A.CapabilityApplicationService.WithCapabilityRepository(repoMock.Object).Build();
     }
@@ -22,8 +20,8 @@ public class TestActOnPendingCapabilityDeletions
     [Fact]
     public async Task raises_capability_ready_for_deletion_event_for_old_pending_capability()
     {
-        var capability = A.Capability
-            .WithStatus(CapabilityStatusOptions.PendingDeletion)
+        var capability = A
+            .Capability.WithStatus(CapabilityStatusOptions.PendingDeletion)
             .WithModifiedAt(DateTime.UtcNow.AddDays(-8))
             .Build();
 
@@ -40,8 +38,8 @@ public class TestActOnPendingCapabilityDeletions
     [Fact]
     public async Task sets_capability_status_to_ongoing_deletion()
     {
-        var capability = A.Capability
-            .WithStatus(CapabilityStatusOptions.PendingDeletion)
+        var capability = A
+            .Capability.WithStatus(CapabilityStatusOptions.PendingDeletion)
             .WithModifiedAt(DateTime.UtcNow.AddDays(-8))
             .Build();
 
@@ -55,14 +53,14 @@ public class TestActOnPendingCapabilityDeletions
     [Fact]
     public async Task raises_event_for_each_pending_capability()
     {
-        var capability1 = A.Capability
-            .WithId("cap-one")
+        var capability1 = A
+            .Capability.WithId("cap-one")
             .WithStatus(CapabilityStatusOptions.PendingDeletion)
             .WithModifiedAt(DateTime.UtcNow.AddDays(-8))
             .Build();
 
-        var capability2 = A.Capability
-            .WithId("cap-two")
+        var capability2 = A
+            .Capability.WithId("cap-two")
             .WithStatus(CapabilityStatusOptions.PendingDeletion)
             .WithModifiedAt(DateTime.UtcNow.AddDays(-10))
             .Build();

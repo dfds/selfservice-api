@@ -132,6 +132,7 @@ public class Capability : AggregateRoot<CapabilityId>
         Status = CapabilityStatusOptions.Deleted;
         ModifiedAt = DateTime.UtcNow;
     }
+
     public void StartDeletion()
     {
         if (Status != CapabilityStatusOptions.PendingDeletion)
@@ -142,6 +143,7 @@ public class Capability : AggregateRoot<CapabilityId>
         Status = CapabilityStatusOptions.OngoingDeletion;
         ModifiedAt = DateTime.UtcNow;
     }
+
     public void UpdateRequirementScore(double score)
     {
         RequirementScore = score;

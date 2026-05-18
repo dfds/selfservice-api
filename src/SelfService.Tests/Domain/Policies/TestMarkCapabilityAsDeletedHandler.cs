@@ -25,15 +25,9 @@ public class TestMarkCapabilityAsDeletedHandler
 
         var sut = BuildHandler(appServiceMock.Object);
 
-        await sut.Handle(
-            new CapabilityReadyForDeletion { CapabilityId = capabilityId },
-            EmptyContext
-        );
+        await sut.Handle(new CapabilityReadyForDeletion { CapabilityId = capabilityId }, EmptyContext);
 
-        appServiceMock.Verify(
-            x => x.MarkCapabilityAsDeleted(CapabilityId.Parse(capabilityId)),
-            Times.Once
-        );
+        appServiceMock.Verify(x => x.MarkCapabilityAsDeleted(CapabilityId.Parse(capabilityId)), Times.Once);
     }
 
     [Fact]
@@ -43,10 +37,7 @@ public class TestMarkCapabilityAsDeletedHandler
 
         var sut = BuildHandler(appServiceMock.Object);
 
-        await sut.Handle(
-            new CapabilityReadyForDeletion { CapabilityId = null },
-            EmptyContext
-        );
+        await sut.Handle(new CapabilityReadyForDeletion { CapabilityId = null }, EmptyContext);
 
         appServiceMock.Verify(x => x.MarkCapabilityAsDeleted(It.IsAny<CapabilityId>()), Times.Never);
     }
@@ -58,10 +49,7 @@ public class TestMarkCapabilityAsDeletedHandler
 
         var sut = BuildHandler(appServiceMock.Object);
 
-        await sut.Handle(
-            new CapabilityReadyForDeletion { CapabilityId = "" },
-            EmptyContext
-        );
+        await sut.Handle(new CapabilityReadyForDeletion { CapabilityId = "" }, EmptyContext);
 
         appServiceMock.Verify(x => x.MarkCapabilityAsDeleted(It.IsAny<CapabilityId>()), Times.Never);
     }

@@ -12,9 +12,7 @@ namespace SelfService.Tests.Application;
 
 public class TestCapabilityDeletionIntegration
 {
-    private static (CapabilityRepository, CapabilityApplicationService) BuildService(
-        SelfServiceDbContext dbContext
-    )
+    private static (CapabilityRepository, CapabilityApplicationService) BuildService(SelfServiceDbContext dbContext)
     {
         var repo = A.CapabilityRepository.WithDbContext(dbContext).Build();
         var service = A.CapabilityApplicationService.WithCapabilityRepository(repo).Build();
@@ -29,8 +27,8 @@ public class TestCapabilityDeletionIntegration
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         var (repo, service) = BuildService(dbContext);
 
-        var capability = A.Capability
-            .WithId("pending-old")
+        var capability = A
+            .Capability.WithId("pending-old")
             .WithStatus(CapabilityStatusOptions.PendingDeletion)
             .WithModifiedAt(DateTime.UtcNow.AddDays(-8))
             .Build();
@@ -52,8 +50,8 @@ public class TestCapabilityDeletionIntegration
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         var (repo, service) = BuildService(dbContext);
 
-        var recentPending = A.Capability
-            .WithId("pending-new")
+        var recentPending = A
+            .Capability.WithId("pending-new")
             .WithStatus(CapabilityStatusOptions.PendingDeletion)
             .WithModifiedAt(DateTime.UtcNow.AddDays(-1))
             .Build();
@@ -75,8 +73,8 @@ public class TestCapabilityDeletionIntegration
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         var (repo, service) = BuildService(dbContext);
 
-        var capability = A.Capability
-            .WithId("pending-old")
+        var capability = A
+            .Capability.WithId("pending-old")
             .WithStatus(CapabilityStatusOptions.PendingDeletion)
             .WithModifiedAt(DateTime.UtcNow.AddDays(-8))
             .Build();
@@ -98,10 +96,7 @@ public class TestCapabilityDeletionIntegration
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         var (repo, service) = BuildService(dbContext);
 
-        var capability = A.Capability
-            .WithId("ongoing-cap")
-            .WithStatus(CapabilityStatusOptions.OngoingDeletion)
-            .Build();
+        var capability = A.Capability.WithId("ongoing-cap").WithStatus(CapabilityStatusOptions.OngoingDeletion).Build();
         await repo.Add(capability);
         await dbContext.SaveChangesAsync();
 
@@ -120,18 +115,12 @@ public class TestCapabilityDeletionIntegration
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
         var (repo, service) = BuildService(dbContext);
 
-        var capability = A.Capability
-            .WithId("ongoing-cap")
-            .WithStatus(CapabilityStatusOptions.OngoingDeletion)
-            .Build();
+        var capability = A.Capability.WithId("ongoing-cap").WithStatus(CapabilityStatusOptions.OngoingDeletion).Build();
         await repo.Add(capability);
         await dbContext.SaveChangesAsync();
 
 #pragma warning disable CS0618
-        var handler = new MarkCapabilityAsDeletedHandler(
-            NullLogger<MarkCapabilityAsDeletedHandler>.Instance,
-            service
-        );
+        var handler = new MarkCapabilityAsDeletedHandler(NullLogger<MarkCapabilityAsDeletedHandler>.Instance, service);
         await handler.Handle(
             new CapabilityReadyForDeletion { CapabilityId = capability.Id },
             new MessageHandlerContext()

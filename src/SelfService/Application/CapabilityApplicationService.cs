@@ -266,12 +266,14 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
             await _ticketingSystem.CreateTicket(message, headers);
 
-            capability.RaiseEvent(new CapabilityReadyForDeletion
-            {
-                CapabilityId = capability.Id,
-                RequestedBy = capability.ModifiedBy,
-                RequestedAt = capability.ModifiedAt,
-            });
+            capability.RaiseEvent(
+                new CapabilityReadyForDeletion
+                {
+                    CapabilityId = capability.Id,
+                    RequestedBy = capability.ModifiedBy,
+                    RequestedAt = capability.ModifiedAt,
+                }
+            );
 
             capability.StartDeletion();
 
@@ -294,10 +296,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
 
         capability.MarkAsDeleted();
 
-        _logger.LogInformation(
-            "Capability {CapabilityId} has been marked as deleted.",
-            capability.Id
-        );
+        _logger.LogInformation("Capability {CapabilityId} has been marked as deleted.", capability.Id);
     }
 
     [TransactionalBoundary]

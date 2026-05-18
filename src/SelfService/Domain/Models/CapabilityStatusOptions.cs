@@ -51,7 +51,8 @@ public class CapabilityStatusOptions : ValueObject
         return false;
     }
 
-    public static IReadOnlyCollection<CapabilityStatusOptions> Values => new[] { Active, PendingDeletion, OngoingDeletion, Deleted };
+    public static IReadOnlyCollection<CapabilityStatusOptions> Values =>
+        new[] { Active, PendingDeletion, OngoingDeletion, Deleted };
 
     public static implicit operator CapabilityStatusOptions(string text) => Parse(text);
 
