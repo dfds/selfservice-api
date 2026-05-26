@@ -633,60 +633,62 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.CreatedAt);
             cfg.Property(x => x.ModifiedAt);
+        });
+        
         modelBuilder.Entity<EmailCampaign>(cfg =>
-        {
-            cfg.ToTable("EmailCampaign");
-            cfg.HasKey(x => x.Id);
-            cfg.Property(x => x.Id).ValueGeneratedNever();
-            cfg.Property(x => x.Name);
-            cfg.Property(x => x.Subject);
-            cfg.Property(x => x.ContentJson);
-            cfg.Property(x => x.ContentHtml);
-            cfg.Property(x => x.AudienceJson).HasColumnType("jsonb");
-            cfg.Property(x => x.RecipientFilter);
-            cfg.Property(x => x.ScheduleType);
-            cfg.Property(x => x.ScheduledAt).HasConversion<ForceUtcKind>();
-            cfg.Property(x => x.CronExpression);
-            cfg.Property(x => x.Status);
-            cfg.Property(x => x.CreatedAt).HasConversion<ForceUtcKind>();
-            cfg.Property(x => x.CreatedBy);
-            cfg.Property(x => x.ModifiedAt).HasConversion<ForceUtcKind>();
-            cfg.Property(x => x.ModifiedBy);
-            cfg.Property(x => x.SentAt).HasConversion<ForceUtcKind>();
-            cfg.Property(x => x.CancelledAt).HasConversion<ForceUtcKind>();
-            cfg.Property(x => x.IsDeleted).HasDefaultValue(false);
-        });
+            {
+                cfg.ToTable("EmailCampaign");
+                cfg.HasKey(x => x.Id);
+                cfg.Property(x => x.Id).ValueGeneratedNever();
+                cfg.Property(x => x.Name);
+                cfg.Property(x => x.Subject);
+                cfg.Property(x => x.ContentJson);
+                cfg.Property(x => x.ContentHtml);
+                cfg.Property(x => x.AudienceJson).HasColumnType("jsonb");
+                cfg.Property(x => x.RecipientFilter);
+                cfg.Property(x => x.ScheduleType);
+                cfg.Property(x => x.ScheduledAt).HasConversion<ForceUtcKind>();
+                cfg.Property(x => x.CronExpression);
+                cfg.Property(x => x.Status);
+                cfg.Property(x => x.CreatedAt).HasConversion<ForceUtcKind>();
+                cfg.Property(x => x.CreatedBy);
+                cfg.Property(x => x.ModifiedAt).HasConversion<ForceUtcKind>();
+                cfg.Property(x => x.ModifiedBy);
+                cfg.Property(x => x.SentAt).HasConversion<ForceUtcKind>();
+                cfg.Property(x => x.CancelledAt).HasConversion<ForceUtcKind>();
+                cfg.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
 
-        modelBuilder.Entity<EmailCampaignRecipientLog>(cfg =>
-        {
-            cfg.ToTable("EmailCampaignRecipientLog");
-            cfg.HasKey(x => x.Id);
-            cfg.Property(x => x.Id).ValueGeneratedNever();
-            cfg.Property(x => x.EmailCampaignId);
-            cfg.Property(x => x.ExecutionId);
-            cfg.Property(x => x.CapabilityId);
-            cfg.Property(x => x.CapabilityName);
-            cfg.Property(x => x.UserId);
-            cfg.Property(x => x.Email);
-            cfg.Property(x => x.RenderedSubject);
-            cfg.Property(x => x.RenderedHtml);
-            cfg.Property(x => x.Status);
-            cfg.Property(x => x.SentAt).HasConversion<ForceUtcKind>();
-            cfg.Property(x => x.ErrorMessage);
-            cfg.Property(x => x.CreatedAt).HasConversion<ForceUtcKind>();
-        });
+            modelBuilder.Entity<EmailCampaignRecipientLog>(cfg =>
+            {
+                cfg.ToTable("EmailCampaignRecipientLog");
+                cfg.HasKey(x => x.Id);
+                cfg.Property(x => x.Id).ValueGeneratedNever();
+                cfg.Property(x => x.EmailCampaignId);
+                cfg.Property(x => x.ExecutionId);
+                cfg.Property(x => x.CapabilityId);
+                cfg.Property(x => x.CapabilityName);
+                cfg.Property(x => x.UserId);
+                cfg.Property(x => x.Email);
+                cfg.Property(x => x.RenderedSubject);
+                cfg.Property(x => x.RenderedHtml);
+                cfg.Property(x => x.Status);
+                cfg.Property(x => x.SentAt).HasConversion<ForceUtcKind>();
+                cfg.Property(x => x.ErrorMessage);
+                cfg.Property(x => x.CreatedAt).HasConversion<ForceUtcKind>();
+            });
 
-        modelBuilder.Entity<EmailCampaignExecution>(cfg =>
-        {
-            cfg.ToTable("EmailCampaignExecution");
-            cfg.HasKey(x => x.Id);
-            cfg.Property(x => x.Id).ValueGeneratedNever();
-            cfg.Property(x => x.EmailCampaignId);
-            cfg.Property(x => x.ExecutedAt).HasConversion<ForceUtcKind>();
-            cfg.Property(x => x.TotalRecipients);
-            cfg.Property(x => x.SuccessCount);
-            cfg.Property(x => x.FailureCount);
-            cfg.Property(x => x.Status);
-        });
+            modelBuilder.Entity<EmailCampaignExecution>(cfg =>
+            {
+                cfg.ToTable("EmailCampaignExecution");
+                cfg.HasKey(x => x.Id);
+                cfg.Property(x => x.Id).ValueGeneratedNever();
+                cfg.Property(x => x.EmailCampaignId);
+                cfg.Property(x => x.ExecutedAt).HasConversion<ForceUtcKind>();
+                cfg.Property(x => x.TotalRecipients);
+                cfg.Property(x => x.SuccessCount);
+                cfg.Property(x => x.FailureCount);
+                cfg.Property(x => x.Status);
+            });
     }
 }

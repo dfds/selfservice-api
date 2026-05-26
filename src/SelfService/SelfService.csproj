@@ -13,10 +13,10 @@
       <PackageReference Include="Dafda" Version="0.12.6" />
       <PackageReference Include="OpenTelemetry" Version="1.15.3" />
       <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
-      <PackageReference Include="OpenTelemetry.Exporter.Prometheus.HttpListener" Version="1.15.0-beta.1" />
+      <PackageReference Include="OpenTelemetry.Exporter.Prometheus.HttpListener" Version="1.15.3-beta.1" />
       <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
       <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.2" />
-      <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.15.0-beta.1" />
+      <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.15.1-beta.1" />
       <PackageReference Include="JsonSchema.Net" Version="5.2.5" />
       <PackageReference Include="JsonSchema.Net.DataGeneration" Version="1.1.0" />
       <PackageReference Include="LibGit2Sharp" Version="0.30.0" />
