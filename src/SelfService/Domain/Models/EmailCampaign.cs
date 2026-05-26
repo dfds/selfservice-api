@@ -254,7 +254,7 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
     public static EmailCampaign Duplicate(EmailCampaign source, string createdBy)
     {
         var now = DateTime.UtcNow;
-        return new EmailCampaign(
+        var campaign = new EmailCampaign(
             id: EmailCampaignId.New(),
             name: $"{source.Name} (copy)",
             subject: source.Subject,
@@ -273,6 +273,15 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
             sentAt: null,
             cancelledAt: null
         );
+
+        campaign.Raise(new EmailCampaignCreated
+        {
+            CampaignId = campaign.Id.ToString(),
+            Name = campaign.Name,
+            CreatedBy = createdBy,
+        });
+
+        return campaign;
     }
 
     public void RaiseSendRequestedEvent(

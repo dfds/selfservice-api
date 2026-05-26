@@ -156,7 +156,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         campaign.SoftDelete();
     }
 
-    [TransactionalBoundary]
+    [TransactionalBoundary, Outboxed]
     public async Task<EmailCampaign> DuplicateCampaign(EmailCampaignId sourceId, string createdBy)
     {
         var source = await GetRequired(sourceId);
@@ -389,6 +389,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
         var recipientCount = await SendToRecipients(campaign, execution.Id);
         execution.TotalRecipients = recipientCount;
+        if (recipientCount == 0)
+            execution.MarkCompleted(0, 0); // valid empty audience: nothing to deliver
 
         return recipientCount;
     }
@@ -480,7 +482,12 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             return null;
 
         var allRoles = await _rbacApplicationService.GetAssignableRoles();
-        return allRoles.Where(r => r.Name == recipientFilter).Select(r => r.Id).ToHashSet();
+        var matched = allRoles.Where(r => r.Name == recipientFilter).Select(r => r.Id).ToHashSet();
+        if (matched.Count == 0)
+            throw new InvalidOperationException(
+                $"The recipient filter role '{recipientFilter}' does not match any known RBAC role.");
+
+        return matched;
     }
 
     private async Task<HashSet<string>?> GetAllowedUsersForCapability(CapabilityId capabilityId, HashSet<RbacRoleId>? matchingRoleIds)

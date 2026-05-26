@@ -15,3 +15,4 @@ ALTER TABLE "EmailCampaignRecipientLog" RENAME CONSTRAINT "EmailBroadcastRecipie
 -- Rename indexes
 ALTER INDEX "IX_EmailBroadcastRecipientLog_BroadcastId" RENAME TO "IX_EmailCampaignRecipientLog_CampaignId";
 ALTER INDEX "IX_EmailBroadcastExecution_BroadcastId" RENAME TO "IX_EmailCampaignExecution_CampaignId";
+ALTER INDEX "IX_EmailBroadcast_IsDeleted" RENAME TO "IX_EmailCampaign_IsDeleted";

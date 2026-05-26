@@ -1,3 +1,5 @@
+using System.Linq;
+using SelfService.Domain.Events;
 using SelfService.Domain.Models;
 
 namespace SelfService.Tests.Domain.Models;
@@ -50,5 +52,26 @@ public class TestEmailCampaign
         );
 
         Assert.Throws<InvalidOperationException>(() => campaign.RevertToDraft("editor"));
+    }
+
+    [Fact]
+    public void duplicate_raises_email_campaign_created_event()
+    {
+        var source = EmailCampaign.CreateDraft(
+            name: "Campaign",
+            subject: "Subject",
+            contentJson: "{}",
+            contentHtml: "<p></p>",
+            audienceJson: "{\"mode\":\"all\"}",
+            recipientFilter: null,
+            createdBy: "tester"
+        );
+
+        var duplicate = EmailCampaign.Duplicate(source, "duplicator");
+
+        var created = duplicate.GetEvents().OfType<EmailCampaignCreated>().Single();
+        Assert.Equal(duplicate.Id.ToString(), created.CampaignId);
+        Assert.Equal(duplicate.Name, created.Name);
+        Assert.Equal("duplicator", created.CreatedBy);
     }
 }
