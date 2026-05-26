@@ -276,7 +276,7 @@ public class TestDafdaSerializationDeserialization
         await dafda_serialize_deserialize(new EmailCampaignSendRequested());
         await dafda_serialize_deserialize(new EmailCampaignSendRequested
         {
-            CampaignId = "campaign-id",
+            EmailSendId = "campaign-id",
             RecipientLogId = "log-id",
             RecipientEmail = "user@example.com",
             Subject = "Test Subject",
@@ -290,7 +290,7 @@ public class TestDafdaSerializationDeserialization
         await dafda_serialize_deserialize(new EmailCampaignDeliveryCompleted());
         await dafda_serialize_deserialize(new EmailCampaignDeliveryCompleted
         {
-            CampaignId = "campaign-id",
+            EmailSendId = "campaign-id",
             RecipientLogId = "log-id",
             Status = "Sent",
             ErrorMessage = null,

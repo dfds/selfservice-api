@@ -102,14 +102,14 @@ public static class ConsumerConfiguration
                 );
 
             options
-                .ForTopic($"{SelfServicePrefix}.emailcampaign")
+                .ForTopic($"{SelfServicePrefix}.emailsend")
                 .Register<EmailCampaignCreated>(
                     messageType: EmailCampaignCreated.EventType,
                     keySelector: x => x.CampaignId!
                 )
                 .Register<EmailCampaignSendRequested>(
                     messageType: EmailCampaignSendRequested.EventType,
-                    keySelector: x => x.CampaignId!
+                    keySelector: x => x.EmailSendId!
                 );
             // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs
         });
@@ -192,7 +192,7 @@ public static class ConsumerConfiguration
             #region email campaign delivery status
 
             options
-                .ForTopic($"{SelfServicePrefix}.emailcampaign.status")
+                .ForTopic($"{SelfServicePrefix}.emailsend.status")
                 .RegisterMessageHandler<EmailCampaignDeliveryCompleted, EmailCampaignDeliveryHandler>(
                     EmailCampaignDeliveryCompleted.EventType
                 );

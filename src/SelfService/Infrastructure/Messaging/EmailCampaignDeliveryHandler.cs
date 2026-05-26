@@ -53,15 +53,15 @@ public class EmailCampaignDeliveryHandler : IMessageHandler<EmailCampaignDeliver
 
         if (status == EmailCampaignRecipientStatus.Sent)
             _logger.LogInformation(
-                "Marked recipient log {RecipientLogId} as Sent for campaign {CampaignId}",
+                "Marked recipient log {RecipientLogId} as Sent for campaign {EmailSendId}",
                 message.RecipientLogId,
-                message.CampaignId
+                message.EmailSendId
             );
         else
             _logger.LogWarning(
-                "Marked recipient log {RecipientLogId} as Failed for campaign {CampaignId}: {ErrorMessage}",
+                "Marked recipient log {RecipientLogId} as Failed for campaign {EmailSendId}: {ErrorMessage}",
                 message.RecipientLogId,
-                message.CampaignId,
+                message.EmailSendId,
                 message.ErrorMessage
             );
     }

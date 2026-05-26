@@ -271,7 +271,7 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
     {
         Raise(new EmailCampaignSendRequested
         {
-            CampaignId = Id.ToString(),
+            EmailSendId = Id.ToString(),
             RecipientLogId = recipientLogId,
             RecipientEmail = recipientEmail,
             Subject = renderedSubject,
