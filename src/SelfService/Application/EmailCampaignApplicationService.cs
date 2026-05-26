@@ -253,6 +253,13 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
     }
 
     [TransactionalBoundary]
+    public async Task RevertToDraft(EmailCampaignId id, string modifiedBy)
+    {
+        var campaign = await GetRequired(id);
+        campaign.RevertToDraft(modifiedBy);
+    }
+
+    [TransactionalBoundary]
     public async Task ScheduleCampaign(
         EmailCampaignId id,
         EmailCampaignScheduleType scheduleType,

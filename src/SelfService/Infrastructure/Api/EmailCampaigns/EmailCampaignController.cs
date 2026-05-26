@@ -502,6 +502,39 @@ public class EmailCampaignController : ControllerBase
         }
     }
 
+    [HttpPost("{id:required}/revert-to-draft")]
+    public async Task<IActionResult> RevertToDraft(string id)
+    {
+        if (!IsAuthorized())
+            return Unauthorized();
+
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+
+        try
+        {
+            await _emailCampaignApplicationService.RevertToDraft(parsedId, userId.ToString());
+            var campaign = await _emailCampaignApplicationService.GetById(parsedId);
+            return Ok(ToApiResource(campaign!));
+        }
+        catch (EntityNotFoundException e)
+        {
+            return NotFound(new ProblemDetails { Title = "Not Found", Detail = e.Message });
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(new ProblemDetails { Title = "Invalid Operation", Detail = e.Message });
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "Uncaught Exception", Detail = $"RevertToDraft: {e.Message}." }
+            );
+        }
+    }
+
     [HttpPost("{id:required}/cancel")]
     public async Task<IActionResult> Cancel(string id)
     {

@@ -232,6 +232,19 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
         ModifiedAt = DateTime.UtcNow;
     }
 
+    public void RevertToDraft(string? modifiedBy = null)
+    {
+        if (Status != EmailCampaignStatus.Scheduled)
+            throw new InvalidOperationException("Only scheduled campaigns can be moved back to draft.");
+
+        Status = EmailCampaignStatus.Draft;
+        ModifiedAt = DateTime.UtcNow;
+        if (modifiedBy != null)
+            ModifiedBy = modifiedBy;
+        // ScheduleType / ScheduledAt / CronExpression intentionally preserved so the
+        // editor pre-fills the previous schedule; CancelledAt/SentAt are untouched.
+    }
+
     public void SoftDelete()
     {
         IsDeleted = true;

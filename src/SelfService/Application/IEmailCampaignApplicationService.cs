@@ -40,6 +40,7 @@ public interface IEmailCampaignApplicationService
     Task<List<EmailPreviewResult>> PreviewCampaign(EmailCampaignId id, string[]? capabilityIds);
     Task<SendCampaignResult> SendCampaign(EmailCampaignId id, string sentBy);
     Task CancelCampaign(EmailCampaignId id);
+    Task RevertToDraft(EmailCampaignId id, string modifiedBy);
     Task ScheduleCampaign(EmailCampaignId id, EmailCampaignScheduleType scheduleType, DateTime? scheduledAt, string? cronExpression, string scheduledBy);
     Task MarkCampaignAsSending(EmailCampaignId id);
     Task<SendCampaignResult> ExecuteScheduledCampaign(EmailCampaignId id);
