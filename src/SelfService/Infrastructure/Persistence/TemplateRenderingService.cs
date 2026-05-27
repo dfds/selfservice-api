@@ -20,8 +20,7 @@ public class TemplateRenderingService : ITemplateRenderingService
         result = result.Replace("{{Capability.Status}}", capability.Status.ToString());
         result = result.Replace("{{Capability.CreatedAt}}", capability.CreatedAt.ToString("yyyy-MM-dd"));
         result = result.Replace("{{Capability.CreatedBy}}", capability.CreatedBy ?? "");
-        result = result.Replace("{{Capability.RequirementScore}}",
-            capability.RequirementScore?.ToString("0") ?? "N/A");
+        result = result.Replace("{{Capability.RequirementScore}}", capability.RequirementScore?.ToString("0") ?? "N/A");
         result = result.Replace("{{Capability.MemberCount}}", context.MemberCount.ToString());
 
         // Member variables
@@ -46,8 +45,10 @@ public class TemplateRenderingService : ITemplateRenderingService
         result = RenderAzureVariables(result, context.AzureResources);
 
         // Membership application variables
-        result = result.Replace("{{MembershipApplications.PendingCount}}",
-            context.PendingMembershipApplicationCount.ToString());
+        result = result.Replace(
+            "{{MembershipApplications.PendingCount}}",
+            context.PendingMembershipApplicationCount.ToString()
+        );
 
         // Dynamic variables
         result = RenderMetadataVariables(result, capability.JsonMetadata);
@@ -61,10 +62,12 @@ public class TemplateRenderingService : ITemplateRenderingService
         var result = template;
 
         result = result.Replace("{{Azure.ResourceCount}}", azureResources.Count.ToString());
-        result = result.Replace("{{Azure.Environments}}",
+        result = result.Replace(
+            "{{Azure.Environments}}",
             azureResources.Count > 0
                 ? string.Join(", ", azureResources.Select(r => r.Environment).OrderBy(e => e))
-                : "None");
+                : "None"
+        );
 
         if (!result.Contains("{{Azure."))
             return result;
@@ -86,17 +89,16 @@ public class TemplateRenderingService : ITemplateRenderingService
         var result = template;
         foreach (var metric in scores)
         {
-            result = result.Replace($"{{{{Requirement.{metric.RequirementId}}}}}",
-                metric.Value.ToString("0"));
-            result = result.Replace($"{{{{Requirement.{metric.RequirementId}.DisplayName}}}}",
-                metric.DisplayName ?? metric.RequirementId);
-            result = result.Replace($"{{{{Requirement.{metric.RequirementId}.HelpUrl}}}}",
-                metric.HelpUrl ?? "");
+            result = result.Replace($"{{{{Requirement.{metric.RequirementId}}}}}", metric.Value.ToString("0"));
+            result = result.Replace(
+                $"{{{{Requirement.{metric.RequirementId}.DisplayName}}}}",
+                metric.DisplayName ?? metric.RequirementId
+            );
+            result = result.Replace($"{{{{Requirement.{metric.RequirementId}.HelpUrl}}}}", metric.HelpUrl ?? "");
         }
 
         // Replace any remaining Requirement variables that didn't match a metric
-        result = System.Text.RegularExpressions.Regex.Replace(
-            result, @"\{\{Requirement\.[^}]+\}\}", "N/A");
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"\{\{Requirement\.[^}]+\}\}", "N/A");
 
         return result;
     }
@@ -113,9 +115,10 @@ public class TemplateRenderingService : ITemplateRenderingService
             foreach (var prop in doc.RootElement.EnumerateObject())
             {
                 var token = $"{{{{Metadata.{prop.Name}}}}}";
-                var value = prop.Value.ValueKind == JsonValueKind.String
-                    ? prop.Value.GetString() ?? ""
-                    : prop.Value.GetRawText();
+                var value =
+                    prop.Value.ValueKind == JsonValueKind.String
+                        ? prop.Value.GetString() ?? ""
+                        : prop.Value.GetRawText();
                 result = result.Replace(token, value);
             }
             return result;

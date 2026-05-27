@@ -24,16 +24,16 @@ public class EmailCampaignRecipientLogRepository : IEmailCampaignRecipientLogRep
 
     public async Task<List<EmailCampaignRecipientLog>> GetByCampaignId(EmailCampaignId campaignId)
     {
-        return await _dbContext.EmailCampaignRecipientLogs
-            .Where(l => l.EmailCampaignId == campaignId)
+        return await _dbContext
+            .EmailCampaignRecipientLogs.Where(l => l.EmailCampaignId == campaignId)
             .OrderBy(l => l.CreatedAt)
             .ToListAsync();
     }
 
     public async Task<List<EmailCampaignRecipientLog>> GetByExecutionId(EmailCampaignExecutionId executionId)
     {
-        return await _dbContext.EmailCampaignRecipientLogs
-            .Where(l => l.ExecutionId == executionId)
+        return await _dbContext
+            .EmailCampaignRecipientLogs.Where(l => l.ExecutionId == executionId)
             .OrderBy(l => l.CreatedAt)
             .ToListAsync();
     }
@@ -45,8 +45,10 @@ public class EmailCampaignRecipientLogRepository : IEmailCampaignRecipientLogRep
 
     public async Task<List<EmailCampaignRecipientLog>> GetFailedByCampaignId(EmailCampaignId campaignId)
     {
-        return await _dbContext.EmailCampaignRecipientLogs
-            .Where(l => l.EmailCampaignId == campaignId && l.Status == EmailCampaignRecipientStatus.Failed)
+        return await _dbContext
+            .EmailCampaignRecipientLogs.Where(l =>
+                l.EmailCampaignId == campaignId && l.Status == EmailCampaignRecipientStatus.Failed
+            )
             .OrderBy(l => l.CreatedAt)
             .ToListAsync();
     }

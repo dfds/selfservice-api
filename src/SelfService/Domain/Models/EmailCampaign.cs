@@ -106,12 +106,14 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
         if (scheduleType is not null)
             campaign.UpdateScheduleFields(scheduleType, scheduledAt, cronExpression);
 
-        campaign.Raise(new EmailCampaignCreated
-        {
-            CampaignId = campaign.Id.ToString(),
-            Name = name,
-            CreatedBy = createdBy,
-        });
+        campaign.Raise(
+            new EmailCampaignCreated
+            {
+                CampaignId = campaign.Id.ToString(),
+                Name = name,
+                CreatedBy = createdBy,
+            }
+        );
         return campaign;
     }
 
@@ -141,7 +143,8 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
     public void UpdateScheduleFields(
         EmailCampaignScheduleType scheduleType,
         DateTime? scheduledAt,
-        string? cronExpression)
+        string? cronExpression
+    )
     {
         if (Status != EmailCampaignStatus.Draft)
             throw new InvalidOperationException("Only drafts can be updated.");
@@ -153,9 +156,8 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
             throw new InvalidOperationException("CronExpression is required for recurring campaigns.");
 
         ScheduleType = scheduleType;
-        ScheduledAt = scheduleType == EmailCampaignScheduleType.Recurring
-            ? (scheduledAt ?? DateTime.UtcNow)
-            : scheduledAt;
+        ScheduledAt =
+            scheduleType == EmailCampaignScheduleType.Recurring ? (scheduledAt ?? DateTime.UtcNow) : scheduledAt;
         CronExpression = cronExpression;
     }
 
@@ -171,7 +173,8 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
             throw new InvalidOperationException("CronExpression is required for recurring campaigns.");
 
         ScheduleType = scheduleType;
-        ScheduledAt = scheduleType == EmailCampaignScheduleType.Recurring ? (scheduledAt ?? DateTime.UtcNow) : scheduledAt;
+        ScheduledAt =
+            scheduleType == EmailCampaignScheduleType.Recurring ? (scheduledAt ?? DateTime.UtcNow) : scheduledAt;
         CronExpression = cronExpression;
     }
 
@@ -188,7 +191,11 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
 
     public void MarkAsSending()
     {
-        if (Status != EmailCampaignStatus.Draft && Status != EmailCampaignStatus.Scheduled && Status != EmailCampaignStatus.Sending)
+        if (
+            Status != EmailCampaignStatus.Draft
+            && Status != EmailCampaignStatus.Scheduled
+            && Status != EmailCampaignStatus.Sending
+        )
             throw new InvalidOperationException("Only drafts or scheduled campaigns can be sent.");
 
         Status = EmailCampaignStatus.Sending;
@@ -274,12 +281,14 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
             cancelledAt: null
         );
 
-        campaign.Raise(new EmailCampaignCreated
-        {
-            CampaignId = campaign.Id.ToString(),
-            Name = campaign.Name,
-            CreatedBy = createdBy,
-        });
+        campaign.Raise(
+            new EmailCampaignCreated
+            {
+                CampaignId = campaign.Id.ToString(),
+                Name = campaign.Name,
+                CreatedBy = createdBy,
+            }
+        );
 
         return campaign;
     }
@@ -291,13 +300,15 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
         string renderedHtml
     )
     {
-        Raise(new EmailCampaignSendRequested
-        {
-            EmailSendId = Id.ToString(),
-            RecipientLogId = recipientLogId,
-            RecipientEmail = recipientEmail,
-            Subject = renderedSubject,
-            HtmlBody = renderedHtml,
-        });
+        Raise(
+            new EmailCampaignSendRequested
+            {
+                EmailSendId = Id.ToString(),
+                RecipientLogId = recipientLogId,
+                RecipientEmail = recipientEmail,
+                Subject = renderedSubject,
+                HtmlBody = renderedHtml,
+            }
+        );
     }
 }

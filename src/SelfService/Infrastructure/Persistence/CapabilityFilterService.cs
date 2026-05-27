@@ -7,10 +7,7 @@ namespace SelfService.Infrastructure.Persistence;
 
 public class CapabilityFilterService : ICapabilityFilterService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     private readonly SelfServiceDbContext _dbContext;
 
@@ -28,12 +25,10 @@ public class CapabilityFilterService : ICapabilityFilterService
 
         return audience.Mode switch
         {
-            "all" => await _dbContext.Capabilities
-                .Where(c => c.Status == CapabilityStatusOptions.Active)
-                .ToListAsync(),
+            "all" => await _dbContext.Capabilities.Where(c => c.Status == CapabilityStatusOptions.Active).ToListAsync(),
             "specific" => await ResolveSpecific(audience.CapabilityIds ?? Array.Empty<string>()),
             "filter" => await ResolveFiltered(audience.Filters ?? Array.Empty<AudienceFilterCondition>()),
-            _ => new List<Capability>()
+            _ => new List<Capability>(),
         };
     }
 
@@ -49,15 +44,12 @@ public class CapabilityFilterService : ICapabilityFilterService
         if (parsedIds.Count == 0)
             return new List<Capability>();
 
-        return await _dbContext.Capabilities
-            .Where(c => parsedIds.Contains(c.Id))
-            .ToListAsync();
+        return await _dbContext.Capabilities.Where(c => parsedIds.Contains(c.Id)).ToListAsync();
     }
 
     private async Task<List<Capability>> ResolveFiltered(AudienceFilterCondition[] filters)
     {
-        IQueryable<Capability> query = _dbContext.Capabilities
-            .Where(c => c.Status != CapabilityStatusOptions.Deleted);
+        IQueryable<Capability> query = _dbContext.Capabilities.Where(c => c.Status != CapabilityStatusOptions.Deleted);
 
         foreach (var filter in filters)
         {
@@ -80,15 +72,19 @@ public class CapabilityFilterService : ICapabilityFilterService
             "metadatakeyvalue" => ApplyMetadataKeyValueFilter(query, filter.Key, filter.Value),
             "awsaccountcount" => ApplyAwsAccountCountFilter(query, filter.Operator, filter.Value),
             "azureresourcegroupcount" => ApplyAzureResourceCountFilter(query, filter.Operator, filter.Value),
-            "activemembershipapplicationcount" => ApplyActiveMembershipApplicationCountFilter(query, filter.Operator, filter.Value),
-            _ => query
+            "activemembershipapplicationcount" => ApplyActiveMembershipApplicationCountFilter(
+                query,
+                filter.Operator,
+                filter.Value
+            ),
+            _ => query,
         };
     }
 
-    private static IQueryable<Capability> ApplyStatusFilter(
-        IQueryable<Capability> query, string? op, string? value)
+    private static IQueryable<Capability> ApplyStatusFilter(IQueryable<Capability> query, string? op, string? value)
     {
-        if (string.IsNullOrEmpty(value)) return query;
+        if (string.IsNullOrEmpty(value))
+            return query;
 
         // Use explicit static constant comparisons so EF Core can translate them
         // via the registered value converter without needing to parameterise a local variable.
@@ -100,27 +96,27 @@ public class CapabilityFilterService : ICapabilityFilterService
             ("neq", "active") => query.Where(c => c.Status != CapabilityStatusOptions.Active),
             ("neq", "pending deletion") => query.Where(c => c.Status != CapabilityStatusOptions.PendingDeletion),
             ("neq", "deleted") => query.Where(c => c.Status != CapabilityStatusOptions.Deleted),
-            _ => query
+            _ => query,
         };
     }
 
-    private static IQueryable<Capability> ApplyNameFilter(
-        IQueryable<Capability> query, string? op, string? value)
+    private static IQueryable<Capability> ApplyNameFilter(IQueryable<Capability> query, string? op, string? value)
     {
-        if (string.IsNullOrEmpty(value)) return query;
+        if (string.IsNullOrEmpty(value))
+            return query;
 
         return op switch
         {
             "eq" => query.Where(c => c.Name == value),
             "contains" => query.Where(c => c.Name.ToLower().Contains(value.ToLower())),
-            _ => query
+            _ => query,
         };
     }
 
-    private static IQueryable<Capability> ApplyDateFilter(
-        IQueryable<Capability> query, string? op, string? value)
+    private static IQueryable<Capability> ApplyDateFilter(IQueryable<Capability> query, string? op, string? value)
     {
-        if (!DateTime.TryParse(value, out var date)) return query;
+        if (!DateTime.TryParse(value, out var date))
+            return query;
 
         return op switch
         {
@@ -128,14 +124,14 @@ public class CapabilityFilterService : ICapabilityFilterService
             "lte" => query.Where(c => c.CreatedAt <= date),
             "gt" => query.Where(c => c.CreatedAt > date),
             "lt" => query.Where(c => c.CreatedAt < date),
-            _ => query
+            _ => query,
         };
     }
 
-    private static IQueryable<Capability> ApplyScoreFilter(
-        IQueryable<Capability> query, string? op, string? value)
+    private static IQueryable<Capability> ApplyScoreFilter(IQueryable<Capability> query, string? op, string? value)
     {
-        if (!double.TryParse(value, out var score)) return query;
+        if (!double.TryParse(value, out var score))
+            return query;
 
         return op switch
         {
@@ -144,72 +140,83 @@ public class CapabilityFilterService : ICapabilityFilterService
             "lte" => query.Where(c => c.RequirementScore != null && c.RequirementScore <= score),
             "gt" => query.Where(c => c.RequirementScore != null && c.RequirementScore > score),
             "lt" => query.Where(c => c.RequirementScore != null && c.RequirementScore < score),
-            _ => query
+            _ => query,
         };
     }
 
-    private IQueryable<Capability> ApplyMemberCountFilter(
-        IQueryable<Capability> query, string? op, string? value)
+    private IQueryable<Capability> ApplyMemberCountFilter(IQueryable<Capability> query, string? op, string? value)
     {
-        if (!int.TryParse(value, out var count)) return query;
+        if (!int.TryParse(value, out var count))
+            return query;
 
-        var counts = _dbContext.Memberships
-            .GroupBy(m => m.CapabilityId)
+        var counts = _dbContext
+            .Memberships.GroupBy(m => m.CapabilityId)
             .Select(g => new CapabilityCount { CapabilityId = g.Key, Count = g.Count() });
 
         return ApplyCountFilter(query, counts, op, count);
     }
 
-    private static IQueryable<Capability> ApplyMetadataKeyExistsFilter(
-        IQueryable<Capability> query, string? key)
+    private static IQueryable<Capability> ApplyMetadataKeyExistsFilter(IQueryable<Capability> query, string? key)
     {
-        if (string.IsNullOrEmpty(key)) return query;
+        if (string.IsNullOrEmpty(key))
+            return query;
         var keyPattern = "\"" + key + "\"";
         return query.Where(c => c.JsonMetadata != null && c.JsonMetadata.Contains(keyPattern));
     }
 
     private static IQueryable<Capability> ApplyMetadataKeyValueFilter(
-        IQueryable<Capability> query, string? key, string? value)
+        IQueryable<Capability> query,
+        string? key,
+        string? value
+    )
     {
-        if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value)) return query;
+        if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
+            return query;
         // Use jsonb @> operator instead of LIKE — LIKE on a jsonb column is invalid in PostgreSQL.
         // @> checks structural containment, so {"key":"value"} matches regardless of JSON spacing.
         var jsonSnippet = "{\"" + key + "\":\"" + value + "\"}";
-        return query.Where(c => c.JsonMetadata != null &&
-            EF.Functions.JsonContains(c.JsonMetadata, jsonSnippet));
+        return query.Where(c => c.JsonMetadata != null && EF.Functions.JsonContains(c.JsonMetadata, jsonSnippet));
     }
 
-    private IQueryable<Capability> ApplyAwsAccountCountFilter(
-        IQueryable<Capability> query, string? op, string? value)
+    private IQueryable<Capability> ApplyAwsAccountCountFilter(IQueryable<Capability> query, string? op, string? value)
     {
-        if (!int.TryParse(value, out var count)) return query;
+        if (!int.TryParse(value, out var count))
+            return query;
 
-        var counts = _dbContext.AwsAccounts
-            .GroupBy(a => a.CapabilityId)
+        var counts = _dbContext
+            .AwsAccounts.GroupBy(a => a.CapabilityId)
             .Select(g => new CapabilityCount { CapabilityId = g.Key, Count = g.Count() });
 
         return ApplyCountFilter(query, counts, op, count);
     }
 
     private IQueryable<Capability> ApplyAzureResourceCountFilter(
-        IQueryable<Capability> query, string? op, string? value)
+        IQueryable<Capability> query,
+        string? op,
+        string? value
+    )
     {
-        if (!int.TryParse(value, out var count)) return query;
+        if (!int.TryParse(value, out var count))
+            return query;
 
-        var counts = _dbContext.AzureResources
-            .GroupBy(a => a.CapabilityId)
+        var counts = _dbContext
+            .AzureResources.GroupBy(a => a.CapabilityId)
             .Select(g => new CapabilityCount { CapabilityId = g.Key, Count = g.Count() });
 
         return ApplyCountFilter(query, counts, op, count);
     }
 
     private IQueryable<Capability> ApplyActiveMembershipApplicationCountFilter(
-        IQueryable<Capability> query, string? op, string? value)
+        IQueryable<Capability> query,
+        string? op,
+        string? value
+    )
     {
-        if (!int.TryParse(value, out var count)) return query;
+        if (!int.TryParse(value, out var count))
+            return query;
 
-        var counts = _dbContext.MembershipApplications
-            .Where(a => a.Status == MembershipApplicationStatusOptions.PendingApprovals)
+        var counts = _dbContext
+            .MembershipApplications.Where(a => a.Status == MembershipApplicationStatusOptions.PendingApprovals)
             .GroupBy(a => a.CapabilityId)
             .Select(g => new CapabilityCount { CapabilityId = g.Key, Count = g.Count() });
 
@@ -220,15 +227,17 @@ public class CapabilityFilterService : ICapabilityFilterService
         IQueryable<Capability> query,
         IQueryable<CapabilityCount> counts,
         string? op,
-        int count) => op switch
-    {
-        "eq"  => query.Where(c => counts.Any(m => m.CapabilityId == c.Id && m.Count == count)),
-        "gte" => query.Where(c => counts.Any(m => m.CapabilityId == c.Id && m.Count >= count)),
-        "lte" => query.Where(c => counts.Any(m => m.CapabilityId == c.Id && m.Count <= count)),
-        "gt"  => query.Where(c => counts.Any(m => m.CapabilityId == c.Id && m.Count > count)),
-        "lt"  => query.Where(c => counts.Any(m => m.CapabilityId == c.Id && m.Count < count)),
-        _     => query
-    };
+        int count
+    ) =>
+        op switch
+        {
+            "eq" => query.Where(c => counts.Any(m => m.CapabilityId == c.Id && m.Count == count)),
+            "gte" => query.Where(c => counts.Any(m => m.CapabilityId == c.Id && m.Count >= count)),
+            "lte" => query.Where(c => counts.Any(m => m.CapabilityId == c.Id && m.Count <= count)),
+            "gt" => query.Where(c => counts.Any(m => m.CapabilityId == c.Id && m.Count > count)),
+            "lt" => query.Where(c => counts.Any(m => m.CapabilityId == c.Id && m.Count < count)),
+            _ => query,
+        };
 }
 
 internal class CapabilityCount

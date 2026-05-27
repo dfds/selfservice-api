@@ -29,11 +29,17 @@ public class EmailCampaignController : ControllerBase
     private IActionResult? ParseCampaignId(string id, out EmailCampaignId parsedId) =>
         EmailCampaignId.TryParse(id, out parsedId)
             ? null
-            : BadRequest(new ProblemDetails { Title = "Invalid Id", Detail = $"{id} is not a valid email campaign id." });
+            : BadRequest(
+                new ProblemDetails { Title = "Invalid Id", Detail = $"{id} is not a valid email campaign id." }
+            );
 
     private IActionResult? ValidateCampaignRequest(CreateEmailCampaignRequest request) =>
-        string.IsNullOrEmpty(request.Name) || string.IsNullOrEmpty(request.Subject) || string.IsNullOrEmpty(request.ContentJson)
-            ? BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = "Name, subject, and content are required." })
+        string.IsNullOrEmpty(request.Name)
+        || string.IsNullOrEmpty(request.Subject)
+        || string.IsNullOrEmpty(request.ContentJson)
+            ? BadRequest(
+                new ProblemDetails { Title = "Invalid Request", Detail = "Name, subject, and content are required." }
+            )
             : null;
 
     [HttpGet("variables")]
@@ -88,7 +94,8 @@ public class EmailCampaignController : ControllerBase
         if (!IsAuthorized())
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
         try
         {
@@ -96,11 +103,7 @@ public class EmailCampaignController : ControllerBase
             if (campaign == null)
             {
                 return NotFound(
-                    new ProblemDetails
-                    {
-                        Title = "Not Found",
-                        Detail = $"Email campaign with id {id} does not exist.",
-                    }
+                    new ProblemDetails { Title = "Not Found", Detail = $"Email campaign with id {id} does not exist." }
                 );
             }
             return Ok(ToApiResource(campaign));
@@ -122,13 +125,16 @@ public class EmailCampaignController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        if (ValidateCampaignRequest(request) is { } validationError) return validationError;
+        if (ValidateCampaignRequest(request) is { } validationError)
+            return validationError;
 
         try
         {
             EmailCampaignScheduleType? parsedScheduleType = null;
-            if (!string.IsNullOrEmpty(request.ScheduleType) &&
-                EmailCampaignScheduleType.TryParse(request.ScheduleType, out var st))
+            if (
+                !string.IsNullOrEmpty(request.ScheduleType)
+                && EmailCampaignScheduleType.TryParse(request.ScheduleType, out var st)
+            )
             {
                 parsedScheduleType = st;
             }
@@ -164,15 +170,19 @@ public class EmailCampaignController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
-        if (ValidateCampaignRequest(request) is { } validationError) return validationError;
+        if (ValidateCampaignRequest(request) is { } validationError)
+            return validationError;
 
         try
         {
             EmailCampaignScheduleType? parsedScheduleType = null;
-            if (!string.IsNullOrEmpty(request.ScheduleType) &&
-                EmailCampaignScheduleType.TryParse(request.ScheduleType, out var st))
+            if (
+                !string.IsNullOrEmpty(request.ScheduleType)
+                && EmailCampaignScheduleType.TryParse(request.ScheduleType, out var st)
+            )
             {
                 parsedScheduleType = st;
             }
@@ -214,7 +224,8 @@ public class EmailCampaignController : ControllerBase
         if (!IsAuthorized())
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
         try
         {
@@ -246,7 +257,8 @@ public class EmailCampaignController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
         try
         {
@@ -277,30 +289,37 @@ public class EmailCampaignController : ControllerBase
 
         if (string.IsNullOrEmpty(request.AudienceJson))
         {
-            return BadRequest(
-                new ProblemDetails { Title = "Invalid Request", Detail = "AudienceJson is required." }
-            );
+            return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = "AudienceJson is required." });
         }
 
         try
         {
-            var result = await _emailCampaignApplicationService.ResolveAudience(request.AudienceJson, request.RecipientFilter);
-            return Ok(new ResolveAudienceResponse
-            {
-                TotalCapabilities = result.TotalCapabilities,
-                TotalRecipients = result.TotalRecipients,
-                Capabilities = result.Capabilities.Select(c => new AudienceCapabilityItem
+            var result = await _emailCampaignApplicationService.ResolveAudience(
+                request.AudienceJson,
+                request.RecipientFilter
+            );
+            return Ok(
+                new ResolveAudienceResponse
                 {
-                    Id = c.Id,
-                    Name = c.Name,
-                    MemberCount = c.MemberCount,
-                    Recipients = c.Recipients.Select(r => new RecipientItem
-                    {
-                        Email = r.Email,
-                        DisplayName = r.DisplayName,
-                    }).ToList(),
-                }).ToList(),
-            });
+                    TotalCapabilities = result.TotalCapabilities,
+                    TotalRecipients = result.TotalRecipients,
+                    Capabilities = result
+                        .Capabilities.Select(c => new AudienceCapabilityItem
+                        {
+                            Id = c.Id,
+                            Name = c.Name,
+                            MemberCount = c.MemberCount,
+                            Recipients = c
+                                .Recipients.Select(r => new RecipientItem
+                                {
+                                    Email = r.Email,
+                                    DisplayName = r.DisplayName,
+                                })
+                                .ToList(),
+                        })
+                        .ToList(),
+                }
+            );
         }
         catch (Exception e)
         {
@@ -316,22 +335,26 @@ public class EmailCampaignController : ControllerBase
         if (!IsAuthorized())
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
         try
         {
-            var previews = await _emailCampaignApplicationService.PreviewCampaign(
-                parsedId, request?.CapabilityIds);
-            return Ok(new PreviewResponse
-            {
-                Previews = previews.Select(p => new PreviewItem
+            var previews = await _emailCampaignApplicationService.PreviewCampaign(parsedId, request?.CapabilityIds);
+            return Ok(
+                new PreviewResponse
                 {
-                    CapabilityId = p.CapabilityId,
-                    CapabilityName = p.CapabilityName,
-                    Subject = p.Subject,
-                    Html = p.Html,
-                }).ToList(),
-            });
+                    Previews = previews
+                        .Select(p => new PreviewItem
+                        {
+                            CapabilityId = p.CapabilityId,
+                            CapabilityName = p.CapabilityName,
+                            Subject = p.Subject,
+                            Html = p.Html,
+                        })
+                        .ToList(),
+                }
+            );
         }
         catch (EntityNotFoundException e)
         {
@@ -358,7 +381,8 @@ public class EmailCampaignController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
         try
         {
@@ -390,13 +414,20 @@ public class EmailCampaignController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
-        if (!EmailCampaignScheduleType.TryParse(request.ScheduleType, out var scheduleType) ||
-            scheduleType == EmailCampaignScheduleType.Immediate)
+        if (
+            !EmailCampaignScheduleType.TryParse(request.ScheduleType, out var scheduleType)
+            || scheduleType == EmailCampaignScheduleType.Immediate
+        )
         {
             return BadRequest(
-                new ProblemDetails { Title = "Invalid Request", Detail = "ScheduleType must be 'Scheduled' or 'Recurring'." }
+                new ProblemDetails
+                {
+                    Title = "Invalid Request",
+                    Detail = "ScheduleType must be 'Scheduled' or 'Recurring'.",
+                }
             );
         }
 
@@ -434,7 +465,8 @@ public class EmailCampaignController : ControllerBase
         if (!IsAuthorized())
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
         try
         {
@@ -455,7 +487,8 @@ public class EmailCampaignController : ControllerBase
         if (!IsAuthorized())
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
         try
         {
@@ -479,7 +512,8 @@ public class EmailCampaignController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
         try
         {
@@ -511,7 +545,8 @@ public class EmailCampaignController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
         try
         {
@@ -541,7 +576,8 @@ public class EmailCampaignController : ControllerBase
         if (!IsAuthorized())
             return Unauthorized();
 
-        if (ParseCampaignId(id, out var parsedId) is { } parseError) return parseError;
+        if (ParseCampaignId(id, out var parsedId) is { } parseError)
+            return parseError;
 
         try
         {

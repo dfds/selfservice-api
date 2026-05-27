@@ -24,16 +24,16 @@ public class EmailCampaignExecutionRepository : IEmailCampaignExecutionRepositor
 
     public async Task<List<EmailCampaignExecution>> GetByCampaignId(EmailCampaignId campaignId)
     {
-        return await _dbContext.EmailCampaignExecutions
-            .Where(e => e.EmailCampaignId == campaignId)
+        return await _dbContext
+            .EmailCampaignExecutions.Where(e => e.EmailCampaignId == campaignId)
             .OrderByDescending(e => e.ExecutedAt)
             .ToListAsync();
     }
 
     public async Task<EmailCampaignExecution?> GetLatestByCampaignId(EmailCampaignId campaignId)
     {
-        return await _dbContext.EmailCampaignExecutions
-            .Where(e => e.EmailCampaignId == campaignId)
+        return await _dbContext
+            .EmailCampaignExecutions.Where(e => e.EmailCampaignId == campaignId)
             .OrderByDescending(e => e.ExecutedAt)
             .FirstOrDefaultAsync();
     }

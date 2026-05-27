@@ -41,14 +41,24 @@ public interface IEmailCampaignApplicationService
     Task<SendCampaignResult> SendCampaign(EmailCampaignId id, string sentBy);
     Task CancelCampaign(EmailCampaignId id);
     Task RevertToDraft(EmailCampaignId id, string modifiedBy);
-    Task ScheduleCampaign(EmailCampaignId id, EmailCampaignScheduleType scheduleType, DateTime? scheduledAt, string? cronExpression, string scheduledBy);
+    Task ScheduleCampaign(
+        EmailCampaignId id,
+        EmailCampaignScheduleType scheduleType,
+        DateTime? scheduledAt,
+        string? cronExpression,
+        string scheduledBy
+    );
     Task MarkCampaignAsSending(EmailCampaignId id);
     Task<SendCampaignResult> ExecuteScheduledCampaign(EmailCampaignId id);
     Task<SendCampaignResult> ExecuteRecurringCampaign(EmailCampaignId id);
     Task<List<EmailCampaignExecution>> GetExecutions(EmailCampaignId id);
     Task<List<EmailCampaignRecipientLog>> GetRecipientLog(EmailCampaignId id);
     Task<RetryResult> RetryFailedRecipients(EmailCampaignId id, string retriedBy);
-    Task UpdateDeliveryStatus(EmailCampaignRecipientLogId recipientLogId, EmailCampaignRecipientStatus status, string? errorMessage);
+    Task UpdateDeliveryStatus(
+        EmailCampaignRecipientLogId recipientLogId,
+        EmailCampaignRecipientStatus status,
+        string? errorMessage
+    );
 }
 
 public class RetryResult

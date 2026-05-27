@@ -39,12 +39,9 @@ public class EmailCampaignScheduler : BackgroundService
             Guid.NewGuid()
         );
 
-        var applicationService =
-            scope.ServiceProvider.GetRequiredService<IEmailCampaignApplicationService>();
-        var campaignRepository =
-            scope.ServiceProvider.GetRequiredService<IEmailCampaignRepository>();
-        var executionRepository =
-            scope.ServiceProvider.GetRequiredService<IEmailCampaignExecutionRepository>();
+        var applicationService = scope.ServiceProvider.GetRequiredService<IEmailCampaignApplicationService>();
+        var campaignRepository = scope.ServiceProvider.GetRequiredService<IEmailCampaignRepository>();
+        var executionRepository = scope.ServiceProvider.GetRequiredService<IEmailCampaignExecutionRepository>();
 
         try
         {
@@ -68,11 +65,7 @@ public class EmailCampaignScheduler : BackgroundService
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(
-                        e,
-                        "Error executing scheduled campaign {CampaignId}",
-                        campaign.Id
-                    );
+                    logger.LogError(e, "Error executing scheduled campaign {CampaignId}", campaign.Id);
                 }
             }
 
@@ -95,11 +88,7 @@ public class EmailCampaignScheduler : BackgroundService
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(
-                        e,
-                        "Error executing recurring campaign {CampaignId}",
-                        campaign.Id
-                    );
+                    logger.LogError(e, "Error executing recurring campaign {CampaignId}", campaign.Id);
                 }
             }
 
@@ -136,9 +125,8 @@ public class EmailCampaignScheduler : BackgroundService
 
         try
         {
-            var format = campaign.CronExpression.Split(' ').Length == 6
-                ? CronFormat.IncludeSeconds
-                : CronFormat.Standard;
+            var format =
+                campaign.CronExpression.Split(' ').Length == 6 ? CronFormat.IncludeSeconds : CronFormat.Standard;
             var cronExpression = CronExpression.Parse(campaign.CronExpression, format);
             var lastExecution = await executionRepository.GetLatestByCampaignId(campaign.Id);
             var referenceTime = lastExecution?.ExecutedAt ?? campaign.ScheduledAt ?? campaign.CreatedAt;

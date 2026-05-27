@@ -27,8 +27,8 @@ public class EmailCampaignRepository : IEmailCampaignRepository
 
     public async Task<List<EmailCampaign>> GetAll()
     {
-        return await _dbContext.EmailCampaigns
-            .Where(b => !b.IsDeleted)
+        return await _dbContext
+            .EmailCampaigns.Where(b => !b.IsDeleted)
             .OrderByDescending(b => b.ModifiedAt)
             .ToListAsync();
     }
@@ -49,8 +49,8 @@ public class EmailCampaignRepository : IEmailCampaignRepository
 
     public async Task<List<EmailCampaign>> GetDueScheduled()
     {
-        return await _dbContext.EmailCampaigns
-            .Where(b =>
+        return await _dbContext
+            .EmailCampaigns.Where(b =>
                 !b.IsDeleted
                 && b.Status == EmailCampaignStatus.Scheduled
                 && b.ScheduleType == EmailCampaignScheduleType.Scheduled
@@ -62,8 +62,8 @@ public class EmailCampaignRepository : IEmailCampaignRepository
 
     public async Task<List<EmailCampaign>> GetDueRecurring()
     {
-        return await _dbContext.EmailCampaigns
-            .Where(b =>
+        return await _dbContext
+            .EmailCampaigns.Where(b =>
                 !b.IsDeleted
                 && b.Status == EmailCampaignStatus.Scheduled
                 && b.ScheduleType == EmailCampaignScheduleType.Recurring

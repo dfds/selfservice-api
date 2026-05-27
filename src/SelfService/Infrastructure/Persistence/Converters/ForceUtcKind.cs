@@ -9,5 +9,6 @@ public class ForceUtcKind : ValueConverter<DateTime, DateTime>
         : base(ToDatabaseType, FromDatabaseType) { }
 
     private static Expression<Func<DateTime, DateTime>> ToDatabaseType => id => id.ToUniversalTime();
-    private static Expression<Func<DateTime, DateTime>> FromDatabaseType => value => DateTime.SpecifyKind(value, DateTimeKind.Utc);
+    private static Expression<Func<DateTime, DateTime>> FromDatabaseType =>
+        value => DateTime.SpecifyKind(value, DateTimeKind.Utc);
 }

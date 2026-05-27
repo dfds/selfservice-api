@@ -262,38 +262,44 @@ public class TestDafdaSerializationDeserialization
     public async Task dafda_serialize_deserialize_email_campaign_created()
     {
         await dafda_serialize_deserialize(new EmailCampaignCreated());
-        await dafda_serialize_deserialize(new EmailCampaignCreated
-        {
-            CampaignId = "campaign-id",
-            Name = "Test Campaign",
-            CreatedBy = "user@dfds.com",
-        });
+        await dafda_serialize_deserialize(
+            new EmailCampaignCreated
+            {
+                CampaignId = "campaign-id",
+                Name = "Test Campaign",
+                CreatedBy = "user@dfds.com",
+            }
+        );
     }
 
     [Fact]
     public async Task dafda_serialize_deserialize_email_campaign_send_requested()
     {
         await dafda_serialize_deserialize(new EmailCampaignSendRequested());
-        await dafda_serialize_deserialize(new EmailCampaignSendRequested
-        {
-            EmailSendId = "campaign-id",
-            RecipientLogId = "log-id",
-            RecipientEmail = "user@example.com",
-            Subject = "Test Subject",
-            HtmlBody = "<p>Test</p>",
-        });
+        await dafda_serialize_deserialize(
+            new EmailCampaignSendRequested
+            {
+                EmailSendId = "campaign-id",
+                RecipientLogId = "log-id",
+                RecipientEmail = "user@example.com",
+                Subject = "Test Subject",
+                HtmlBody = "<p>Test</p>",
+            }
+        );
     }
 
     [Fact]
     public async Task dafda_serialize_deserialize_email_campaign_delivery_completed()
     {
         await dafda_serialize_deserialize(new EmailCampaignDeliveryCompleted());
-        await dafda_serialize_deserialize(new EmailCampaignDeliveryCompleted
-        {
-            EmailSendId = "campaign-id",
-            RecipientLogId = "log-id",
-            Status = "Sent",
-            ErrorMessage = null,
-        });
+        await dafda_serialize_deserialize(
+            new EmailCampaignDeliveryCompleted
+            {
+                EmailSendId = "campaign-id",
+                RecipientLogId = "log-id",
+                Status = "Sent",
+                ErrorMessage = null,
+            }
+        );
     }
 }

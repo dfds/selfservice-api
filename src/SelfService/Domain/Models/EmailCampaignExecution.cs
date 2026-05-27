@@ -28,10 +28,7 @@ public class EmailCampaignExecution : Entity<EmailCampaignExecutionId>
     public int FailureCount { get; set; }
     public EmailCampaignExecutionStatus Status { get; set; }
 
-    public static EmailCampaignExecution Create(
-        EmailCampaignId campaignId,
-        int totalRecipients
-    )
+    public static EmailCampaignExecution Create(EmailCampaignId campaignId, int totalRecipients)
     {
         return new EmailCampaignExecution(
             id: EmailCampaignExecutionId.New(),
@@ -54,6 +51,7 @@ public class EmailCampaignExecution : Entity<EmailCampaignExecutionId>
     {
         SuccessCount = successCount;
         FailureCount = failureCount;
-        Status = failureCount > 0 ? EmailCampaignExecutionStatus.PartialFailure : EmailCampaignExecutionStatus.Completed;
+        Status =
+            failureCount > 0 ? EmailCampaignExecutionStatus.PartialFailure : EmailCampaignExecutionStatus.Completed;
     }
 }

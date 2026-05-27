@@ -38,8 +38,10 @@ public class EmailCampaignDeliveryHandler : IMessageHandler<EmailCampaignDeliver
             return;
         }
 
-        if (!EmailCampaignRecipientStatus.TryParse(message.Status, out var status) ||
-            (status != EmailCampaignRecipientStatus.Sent && status != EmailCampaignRecipientStatus.Failed))
+        if (
+            !EmailCampaignRecipientStatus.TryParse(message.Status, out var status)
+            || (status != EmailCampaignRecipientStatus.Sent && status != EmailCampaignRecipientStatus.Failed)
+        )
         {
             _logger.LogWarning(
                 "Unknown delivery status {Status} for recipient log {RecipientLogId} - skipping",

@@ -35,10 +35,7 @@ public class TestTemplateRenderingService
     [Fact]
     public void RenderTemplate_ExistingCapabilityVariables_StillWork()
     {
-        var capability = A.Capability
-            .WithName("My Capability")
-            .WithDescription("A test capability")
-            .Build();
+        var capability = A.Capability.WithName("My Capability").WithDescription("A test capability").Build();
         var context = CreateContext(capability: capability);
 
         var result = _sut.RenderTemplate(
@@ -85,8 +82,19 @@ public class TestTemplateRenderingService
     {
         var scores = new List<RequirementsMetric>
         {
-            new() { RequirementId = "mandatory_tags", Value = 83.3, DisplayName = "Use of Mandatory Tags", HelpUrl = "https://wiki.example.com/tags" },
-            new() { RequirementId = "external_secrets", Value = 100, DisplayName = "External Secrets Adoption" },
+            new()
+            {
+                RequirementId = "mandatory_tags",
+                Value = 83.3,
+                DisplayName = "Use of Mandatory Tags",
+                HelpUrl = "https://wiki.example.com/tags",
+            },
+            new()
+            {
+                RequirementId = "external_secrets",
+                Value = 100,
+                DisplayName = "External Secrets Adoption",
+            },
         };
         var context = CreateContext(requirementScores: scores);
 
@@ -103,7 +111,12 @@ public class TestTemplateRenderingService
     {
         var scores = new List<RequirementsMetric>
         {
-            new() { RequirementId = "mandatory_tags", Value = 80, DisplayName = "Use of Mandatory Tags" },
+            new()
+            {
+                RequirementId = "mandatory_tags",
+                Value = 80,
+                DisplayName = "Use of Mandatory Tags",
+            },
         };
         var context = CreateContext(requirementScores: scores);
 
@@ -117,7 +130,12 @@ public class TestTemplateRenderingService
     {
         var scores = new List<RequirementsMetric>
         {
-            new() { RequirementId = "irsa", Value = 50, HelpUrl = "https://wiki.example.com/irsa" },
+            new()
+            {
+                RequirementId = "irsa",
+                Value = 50,
+                HelpUrl = "https://wiki.example.com/irsa",
+            },
         };
         var context = CreateContext(requirementScores: scores);
 
@@ -131,7 +149,12 @@ public class TestTemplateRenderingService
     {
         var scores = new List<RequirementsMetric>
         {
-            new() { RequirementId = "irsa", Value = 50, DisplayName = null },
+            new()
+            {
+                RequirementId = "irsa",
+                Value = 50,
+                DisplayName = null,
+            },
         };
         var context = CreateContext(requirementScores: scores);
 
@@ -177,7 +200,10 @@ public class TestTemplateRenderingService
             context
         );
 
-        Assert.Equal("Account: 123456789012, Status: Completed, NS: my-capability-ns, Email: aws.role@dfds.com", result);
+        Assert.Equal(
+            "Account: 123456789012, Status: Completed, NS: my-capability-ns, Email: aws.role@dfds.com",
+            result
+        );
     }
 
     [Fact]
@@ -214,10 +240,7 @@ public class TestTemplateRenderingService
         };
         var context = CreateContext(azureResources: resources);
 
-        var result = _sut.RenderTemplate(
-            "Count: {{Azure.ResourceCount}}, Envs: {{Azure.Environments}}",
-            context
-        );
+        var result = _sut.RenderTemplate("Count: {{Azure.ResourceCount}}, Envs: {{Azure.Environments}}", context);
 
         Assert.Equal("Count: 2, Envs: dev, prod", result);
     }
@@ -227,10 +250,7 @@ public class TestTemplateRenderingService
     {
         var context = CreateContext(azureResources: new List<AzureResource>());
 
-        var result = _sut.RenderTemplate(
-            "Count: {{Azure.ResourceCount}}, Envs: {{Azure.Environments}}",
-            context
-        );
+        var result = _sut.RenderTemplate("Count: {{Azure.ResourceCount}}, Envs: {{Azure.Environments}}", context);
 
         Assert.Equal("Count: 0, Envs: None", result);
     }
@@ -250,10 +270,7 @@ public class TestTemplateRenderingService
     [Fact]
     public void RenderTemplate_AzureResources_UnknownEnvironment_LeavesTokenUnreplaced()
     {
-        var resources = new List<AzureResource>
-        {
-            A.AzureResource.WithEnvironment("dev").Build(),
-        };
+        var resources = new List<AzureResource> { A.AzureResource.WithEnvironment("dev").Build() };
         var context = CreateContext(azureResources: resources);
 
         var result = _sut.RenderTemplate("{{Azure.staging.Id}}", context);
@@ -286,14 +303,16 @@ public class TestTemplateRenderingService
     {
         var scores = new List<RequirementsMetric>
         {
-            new() { RequirementId = "mandatory_tags", Value = 100, DisplayName = "Tags" },
+            new()
+            {
+                RequirementId = "mandatory_tags",
+                Value = 100,
+                DisplayName = "Tags",
+            },
         };
         var awsAccount = A.AwsAccount.Build();
         awsAccount.RegisterRealAwsAccount("999888777666", "role@dfds.com", DateTime.UtcNow);
-        var resources = new List<AzureResource>
-        {
-            A.AzureResource.WithEnvironment("dev").Build(),
-        };
+        var resources = new List<AzureResource> { A.AzureResource.WithEnvironment("dev").Build() };
         var context = CreateContext(
             awsAccount: awsAccount,
             azureResources: resources,
@@ -323,11 +342,17 @@ public class TestTemplateRenderingService
 
         var result1 = _sut.RenderTemplate(
             "{{Member.DisplayName}}: {{Requirement.irsa}} ({{MembershipApplications.PendingCount}})",
-            baseContext with { Member = member1 }
+            baseContext with
+            {
+                Member = member1,
+            }
         );
         var result2 = _sut.RenderTemplate(
             "{{Member.DisplayName}}: {{Requirement.irsa}} ({{MembershipApplications.PendingCount}})",
-            baseContext with { Member = member2 }
+            baseContext with
+            {
+                Member = member2,
+            }
         );
 
         Assert.Equal("Alice: 75 (3)", result1);

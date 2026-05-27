@@ -22,34 +22,179 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
     private static readonly List<TemplateVariable> _templateVariables = new()
     {
-        new() { Name = "Capability.Id",               Description = "Capability ID slug",           Entity = "Capability", Example = "my-capability-abc12" },
-        new() { Name = "Capability.Name",              Description = "Display name",                 Entity = "Capability", Example = "My Capability" },
-        new() { Name = "Capability.Description",       Description = "Description text",             Entity = "Capability", Example = "A description..." },
-        new() { Name = "Capability.Status",            Description = "Active or Pending Deletion",   Entity = "Capability", Example = "Active" },
-        new() { Name = "Capability.CreatedAt",         Description = "Creation date (yyyy-MM-dd)",   Entity = "Capability", Example = "2024-01-15" },
-        new() { Name = "Capability.CreatedBy",         Description = "Creator user ID",              Entity = "Capability", Example = "user@dfds.com" },
-        new() { Name = "Capability.RequirementScore",  Description = "Compliance score (0-100)",     Entity = "Capability", Example = "85" },
-        new() { Name = "Capability.MemberCount",       Description = "Number of members",            Entity = "Capability", Example = "12" },
-        new() { Name = "Member.DisplayName",           Description = "Recipient display name",       Entity = "Member",     Example = "Jane Doe" },
-        new() { Name = "Member.Email",                 Description = "Recipient email address",      Entity = "Member",     Example = "jane.doe@dfds.com" },
-        new() { Name = "Campaign.Name",                Description = "Campaign name",                Entity = "Campaign",   Example = "Q1 Migration Notice" },
-        new() { Name = "Date.Today",                   Description = "Current date (yyyy-MM-dd)",    Entity = "Date",       Example = "2024-01-15" },
-        new() { Name = "Date.Year",                    Description = "Current year",                 Entity = "Date",       Example = "2024" },
+        new()
+        {
+            Name = "Capability.Id",
+            Description = "Capability ID slug",
+            Entity = "Capability",
+            Example = "my-capability-abc12",
+        },
+        new()
+        {
+            Name = "Capability.Name",
+            Description = "Display name",
+            Entity = "Capability",
+            Example = "My Capability",
+        },
+        new()
+        {
+            Name = "Capability.Description",
+            Description = "Description text",
+            Entity = "Capability",
+            Example = "A description...",
+        },
+        new()
+        {
+            Name = "Capability.Status",
+            Description = "Active or Pending Deletion",
+            Entity = "Capability",
+            Example = "Active",
+        },
+        new()
+        {
+            Name = "Capability.CreatedAt",
+            Description = "Creation date (yyyy-MM-dd)",
+            Entity = "Capability",
+            Example = "2024-01-15",
+        },
+        new()
+        {
+            Name = "Capability.CreatedBy",
+            Description = "Creator user ID",
+            Entity = "Capability",
+            Example = "user@dfds.com",
+        },
+        new()
+        {
+            Name = "Capability.RequirementScore",
+            Description = "Compliance score (0-100)",
+            Entity = "Capability",
+            Example = "85",
+        },
+        new()
+        {
+            Name = "Capability.MemberCount",
+            Description = "Number of members",
+            Entity = "Capability",
+            Example = "12",
+        },
+        new()
+        {
+            Name = "Member.DisplayName",
+            Description = "Recipient display name",
+            Entity = "Member",
+            Example = "Jane Doe",
+        },
+        new()
+        {
+            Name = "Member.Email",
+            Description = "Recipient email address",
+            Entity = "Member",
+            Example = "jane.doe@dfds.com",
+        },
+        new()
+        {
+            Name = "Campaign.Name",
+            Description = "Campaign name",
+            Entity = "Campaign",
+            Example = "Q1 Migration Notice",
+        },
+        new()
+        {
+            Name = "Date.Today",
+            Description = "Current date (yyyy-MM-dd)",
+            Entity = "Date",
+            Example = "2024-01-15",
+        },
+        new()
+        {
+            Name = "Date.Year",
+            Description = "Current year",
+            Entity = "Date",
+            Example = "2024",
+        },
         // Individual requirement scores (dynamic)
-        new() { Name = "Requirement.<id>",             Description = "Individual requirement score (0-100). Replace <id> with: mandatory_tags, external_secrets, irsa, k8s-probes, ecr-pull", Entity = "Requirement", Example = "85" },
-        new() { Name = "Requirement.<id>.DisplayName", Description = "Requirement display name",     Entity = "Requirement", Example = "Use of Mandatory Tags" },
-        new() { Name = "Requirement.<id>.HelpUrl",     Description = "Requirement help URL",         Entity = "Requirement", Example = "https://wiki.dfds.cloud/..." },
+        new()
+        {
+            Name = "Requirement.<id>",
+            Description =
+                "Individual requirement score (0-100). Replace <id> with: mandatory_tags, external_secrets, irsa, k8s-probes, ecr-pull",
+            Entity = "Requirement",
+            Example = "85",
+        },
+        new()
+        {
+            Name = "Requirement.<id>.DisplayName",
+            Description = "Requirement display name",
+            Entity = "Requirement",
+            Example = "Use of Mandatory Tags",
+        },
+        new()
+        {
+            Name = "Requirement.<id>.HelpUrl",
+            Description = "Requirement help URL",
+            Entity = "Requirement",
+            Example = "https://wiki.dfds.cloud/...",
+        },
         // AWS account
-        new() { Name = "Aws.AccountId",                Description = "AWS account number (12-digit)", Entity = "AwsAccount", Example = "123456789012" },
-        new() { Name = "Aws.Status",                   Description = "AWS account status",            Entity = "AwsAccount", Example = "Completed" },
-        new() { Name = "Aws.Namespace",                Description = "Kubernetes namespace linked to AWS account", Entity = "AwsAccount", Example = "my-capability-abc12" },
-        new() { Name = "Aws.RoleEmail",                Description = "AWS account role email",        Entity = "AwsAccount", Example = "aws.123456789012@dfds.com" },
+        new()
+        {
+            Name = "Aws.AccountId",
+            Description = "AWS account number (12-digit)",
+            Entity = "AwsAccount",
+            Example = "123456789012",
+        },
+        new()
+        {
+            Name = "Aws.Status",
+            Description = "AWS account status",
+            Entity = "AwsAccount",
+            Example = "Completed",
+        },
+        new()
+        {
+            Name = "Aws.Namespace",
+            Description = "Kubernetes namespace linked to AWS account",
+            Entity = "AwsAccount",
+            Example = "my-capability-abc12",
+        },
+        new()
+        {
+            Name = "Aws.RoleEmail",
+            Description = "AWS account role email",
+            Entity = "AwsAccount",
+            Example = "aws.123456789012@dfds.com",
+        },
         // Azure resources
-        new() { Name = "Azure.ResourceCount",          Description = "Number of Azure resource groups", Entity = "AzureResource", Example = "2" },
-        new() { Name = "Azure.Environments",           Description = "Comma-separated Azure environments", Entity = "AzureResource", Example = "dev, prod" },
-        new() { Name = "Azure.<env>.Id",               Description = "Resource group ID for a specific environment (e.g. Azure.dev.Id)", Entity = "AzureResource", Example = "a1b2c3d4-e5f6-..." },
+        new()
+        {
+            Name = "Azure.ResourceCount",
+            Description = "Number of Azure resource groups",
+            Entity = "AzureResource",
+            Example = "2",
+        },
+        new()
+        {
+            Name = "Azure.Environments",
+            Description = "Comma-separated Azure environments",
+            Entity = "AzureResource",
+            Example = "dev, prod",
+        },
+        new()
+        {
+            Name = "Azure.<env>.Id",
+            Description = "Resource group ID for a specific environment (e.g. Azure.dev.Id)",
+            Entity = "AzureResource",
+            Example = "a1b2c3d4-e5f6-...",
+        },
         // Membership applications
-        new() { Name = "MembershipApplications.PendingCount", Description = "Number of pending membership applications", Entity = "MembershipApplication", Example = "3" },
+        new()
+        {
+            Name = "MembershipApplications.PendingCount",
+            Description = "Number of pending membership applications",
+            Entity = "MembershipApplication",
+            Example = "3",
+        },
     };
 
     public EmailCampaignApplicationService(
@@ -169,13 +314,17 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
     {
         var resolved = await ResolveCapabilityRecipients(audienceJson, recipientFilter);
 
-        var capabilityResults = resolved.Select(cr => new AudienceCapabilityResult
-        {
-            Id = cr.Capability.Id.ToString(),
-            Name = cr.Capability.Name,
-            MemberCount = cr.Members.Count,
-            Recipients = cr.Members.Select(m => new RecipientDto { Email = m.Email, DisplayName = m.DisplayName }).ToList(),
-        }).ToList();
+        var capabilityResults = resolved
+            .Select(cr => new AudienceCapabilityResult
+            {
+                Id = cr.Capability.Id.ToString(),
+                Name = cr.Capability.Name,
+                MemberCount = cr.Members.Count,
+                Recipients = cr
+                    .Members.Select(m => new RecipientDto { Email = m.Email, DisplayName = m.DisplayName })
+                    .ToList(),
+            })
+            .ToList();
 
         return new AudienceResolutionResult
         {
@@ -198,7 +347,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
                 if (CapabilityId.TryParse(capIdStr, out var capId))
                 {
                     var cap = await _capabilityRepository.FindBy(capId);
-                    if (cap != null) capabilities.Add(cap);
+                    if (cap != null)
+                        capabilities.Add(cap);
                 }
             }
         }
@@ -220,13 +370,15 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             var renderedSubject = _templateRenderingService.RenderTemplate(campaign.Subject, context);
             var renderedHtml = _templateRenderingService.RenderTemplate(html, context);
 
-            previews.Add(new EmailPreviewResult
-            {
-                CapabilityId = cap.Id.ToString(),
-                CapabilityName = cap.Name,
-                Subject = renderedSubject,
-                Html = renderedHtml,
-            });
+            previews.Add(
+                new EmailPreviewResult
+                {
+                    CapabilityId = cap.Id.ToString(),
+                    CapabilityName = cap.Name,
+                    Subject = renderedSubject,
+                    Html = renderedHtml,
+                }
+            );
         }
 
         return previews;
@@ -305,11 +457,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
         campaign.ResetToScheduled("system-scheduler");
 
-        return new SendCampaignResult
-        {
-            TotalRecipients = recipientCount,
-            Status = campaign.Status,
-        };
+        return new SendCampaignResult { TotalRecipients = recipientCount, Status = campaign.Status };
     }
 
     public async Task<List<EmailCampaignExecution>> GetExecutions(EmailCampaignId id)
@@ -338,19 +486,18 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         {
             log.ResetForRetry();
 
-            campaign.RaiseSendRequestedEvent(
-                log.Id.ToString(),
-                log.Email,
-                log.RenderedSubject,
-                log.RenderedHtml
-            );
+            campaign.RaiseSendRequestedEvent(log.Id.ToString(), log.Email, log.RenderedSubject, log.RenderedHtml);
         }
 
         return new RetryResult { RetriedCount = failedLogs.Count, Status = "Retried" };
     }
 
     [TransactionalBoundary]
-    public async Task UpdateDeliveryStatus(EmailCampaignRecipientLogId recipientLogId, EmailCampaignRecipientStatus status, string? errorMessage)
+    public async Task UpdateDeliveryStatus(
+        EmailCampaignRecipientLogId recipientLogId,
+        EmailCampaignRecipientStatus status,
+        string? errorMessage
+    )
     {
         var recipientLog = await _recipientLogRepository.FindById(recipientLogId);
         if (recipientLog == null)
@@ -448,7 +595,10 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
     private sealed record CapabilityRecipients(Capability Capability, List<Member> Members, int TotalMemberships);
 
-    private async Task<List<CapabilityRecipients>> ResolveCapabilityRecipients(string audienceJson, string? recipientFilter)
+    private async Task<List<CapabilityRecipients>> ResolveCapabilityRecipients(
+        string audienceJson,
+        string? recipientFilter
+    )
     {
         var capabilities = await _capabilityFilterService.ResolveCapabilities(audienceJson);
         var matchingRoleIds = await ResolveRoleIds(recipientFilter);
@@ -485,12 +635,16 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         var matched = allRoles.Where(r => r.Name == recipientFilter).Select(r => r.Id).ToHashSet();
         if (matched.Count == 0)
             throw new InvalidOperationException(
-                $"The recipient filter role '{recipientFilter}' does not match any known RBAC role.");
+                $"The recipient filter role '{recipientFilter}' does not match any known RBAC role."
+            );
 
         return matched;
     }
 
-    private async Task<HashSet<string>?> GetAllowedUsersForCapability(CapabilityId capabilityId, HashSet<RbacRoleId>? matchingRoleIds)
+    private async Task<HashSet<string>?> GetAllowedUsersForCapability(
+        CapabilityId capabilityId,
+        HashSet<RbacRoleId>? matchingRoleIds
+    )
     {
         if (matchingRoleIds == null)
             return null;
@@ -505,7 +659,11 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         return allowedUserIds;
     }
 
-    private async Task<TemplateRenderContext> BuildRenderContext(Capability capability, string campaignName, int memberCount)
+    private async Task<TemplateRenderContext> BuildRenderContext(
+        Capability capability,
+        string campaignName,
+        int memberCount
+    )
     {
         var capabilityId = capability.Id;
 

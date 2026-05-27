@@ -25,9 +25,7 @@ public class TestEmailCampaignApplicationService
     public async Task resolve_audience_throws_when_recipient_filter_matches_no_role()
     {
         var capabilityFilter = new Mock<ICapabilityFilterService>();
-        capabilityFilter
-            .Setup(x => x.ResolveCapabilities(It.IsAny<string>()))
-            .ReturnsAsync(new List<Capability>());
+        capabilityFilter.Setup(x => x.ResolveCapabilities(It.IsAny<string>())).ReturnsAsync(new List<Capability>());
 
         var rbac = new Mock<IRbacApplicationService>();
         rbac.Setup(x => x.GetAssignableRoles()).ReturnsAsync(new List<RbacRole>());
@@ -35,7 +33,8 @@ public class TestEmailCampaignApplicationService
         var sut = BuildService(capabilityFilter: capabilityFilter.Object, rbac: rbac.Object);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => sut.ResolveAudience("{\"mode\":\"all\"}", "nonexistent-role"));
+            () => sut.ResolveAudience("{\"mode\":\"all\"}", "nonexistent-role")
+        );
     }
 
     [Fact]
@@ -48,9 +47,7 @@ public class TestEmailCampaignApplicationService
 
         // Empty audience resolves to zero recipients (a valid, conditional outcome).
         var capabilityFilter = new Mock<ICapabilityFilterService>();
-        capabilityFilter
-            .Setup(x => x.ResolveCapabilities(It.IsAny<string>()))
-            .ReturnsAsync(new List<Capability>());
+        capabilityFilter.Setup(x => x.ResolveCapabilities(It.IsAny<string>())).ReturnsAsync(new List<Capability>());
 
         EmailCampaignExecution? captured = null;
         var executionRepo = new Mock<IEmailCampaignExecutionRepository>();
@@ -62,7 +59,8 @@ public class TestEmailCampaignApplicationService
         var sut = BuildService(
             campaignRepo: campaignRepo.Object,
             capabilityFilter: capabilityFilter.Object,
-            executionRepo: executionRepo.Object);
+            executionRepo: executionRepo.Object
+        );
 
         var result = await sut.SendCampaign(campaign.Id, "sender");
 
