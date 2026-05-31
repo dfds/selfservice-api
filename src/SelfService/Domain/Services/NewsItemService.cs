@@ -60,7 +60,14 @@ public class NewsItemService : INewsItemService
             await _newsItemRepository.FindById(id)
             ?? throw new KeyNotFoundException($"News item with id '{id}' not found.");
 
-        // Remove highlight from all others first
+        // Toggle: if the item is already highlighted, just remove the highlight.
+        if (newsItem.IsHighlighted)
+        {
+            newsItem.SetHighlighted(false, DateTime.UtcNow);
+            return;
+        }
+
+        // Otherwise remove highlight from all others first, then highlight this one.
         await _newsItemRepository.ClearHighlight();
 
         newsItem.SetHighlighted(true, DateTime.UtcNow);

@@ -16,10 +16,15 @@ public class NewsItemRepository : GenericRepository<NewsItem, NewsItemId>, INews
 
     public async Task ClearHighlight()
     {
-        var highlighted = await DbSetReference.Where(n => n.IsHighlighted).ToListAsync();
-        foreach (var item in highlighted)
-        {
-            item.SetHighlighted(false, DateTime.UtcNow);
-        }
+        // Execute the clear as its own statement so the previously highlighted row is set to
+        // false in the database before a new row is set to true. Staging both changes through
+        // the change tracker lets EF batch them into a single SaveChanges, where it may emit the
+        // set-true UPDATE before the set-false one and transiently violate the
+        // "UX_NewsItem_Highlighted" partial unique index (only one highlighted row allowed).
+        await DbSetReference
+            .Where(n => n.IsHighlighted)
+            .ExecuteUpdateAsync(s =>
+                s.SetProperty(n => n.IsHighlighted, false).SetProperty(n => n.ModifiedAt, DateTime.UtcNow)
+            );
     }
 }
