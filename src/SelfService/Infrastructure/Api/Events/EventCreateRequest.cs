@@ -11,6 +11,10 @@ public class EventCreateRequest
     [Required]
     public string? Description { get; set; }
 
+    /// <summary>
+    /// ISO 8601 UTC instant including time-of-day, e.g. <c>2026-06-15T14:30:00Z</c>.
+    /// Clients should convert the user's locally-entered date and time to UTC before sending.
+    /// </summary>
     [Required]
     public DateTime EventDate { get; set; }
 

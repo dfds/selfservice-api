@@ -31,7 +31,7 @@ public class Event : Entity<EventId>
     )
         : base(id)
     {
-        EventDate = eventDate;
+        EventDate = NormalizeToUtc(eventDate);
         Title = title;
         Description = description;
         Type = type;
@@ -43,7 +43,7 @@ public class Event : Entity<EventId>
     {
         if (eventDate.HasValue)
         {
-            EventDate = eventDate.Value;
+            EventDate = NormalizeToUtc(eventDate.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(title))
@@ -80,4 +80,12 @@ public class Event : Entity<EventId>
     {
         return EventDate > DateTime.UtcNow;
     }
+
+    private static DateTime NormalizeToUtc(DateTime value) =>
+        value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc),
+        };
 }
