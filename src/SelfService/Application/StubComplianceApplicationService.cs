@@ -7,6 +7,7 @@ namespace SelfService.Application;
 public class StubComplianceApplicationService : IComplianceApplicationService
 {
     private readonly ICapabilityRepository _capabilityRepository;
+    private readonly IAwsAccountRepository _awsAccountRepository;
 
     private static readonly string[] RequiredTags =
     {
@@ -20,9 +21,13 @@ public class StubComplianceApplicationService : IComplianceApplicationService
 
     private static readonly string[] PlaceholderCategories = Array.Empty<string>();
 
-    public StubComplianceApplicationService(ICapabilityRepository capabilityRepository)
+    public StubComplianceApplicationService(
+        ICapabilityRepository capabilityRepository,
+        IAwsAccountRepository awsAccountRepository
+    )
     {
         _capabilityRepository = capabilityRepository;
+        _awsAccountRepository = awsAccountRepository;
     }
 
     public async Task<CapabilityComplianceResult> GetCapabilityCompliance(CapabilityId capabilityId)
@@ -33,49 +38,54 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
 
+        var hasKubernetesContext = await HasKubernetesContext(capabilityId);
+
         var categories = new List<ComplianceCategoryResult>();
 
         categories.Add(CheckTagCompliance(capability.JsonMetadata));
 
-        // External Secrets unknown without requirements DB
-        categories.Add(
-            new ComplianceCategoryResult
-            {
-                CategoryName = "External Secrets",
-                Status = ComplianceStatus.Unknown,
-                Items = new(),
-            }
-        );
+        if (hasKubernetesContext)
+        {
+            // External Secrets unknown without requirements DB
+            categories.Add(
+                new ComplianceCategoryResult
+                {
+                    CategoryName = "External Secrets",
+                    Status = ComplianceStatus.Unknown,
+                    Items = new(),
+                }
+            );
 
-        // IRSA Mutual Trust unknown without requirements DB
-        categories.Add(
-            new ComplianceCategoryResult
-            {
-                CategoryName = "IRSA Mutual Trust",
-                Status = ComplianceStatus.Unknown,
-                Items = new(),
-            }
-        );
+            // IRSA Mutual Trust unknown without requirements DB
+            categories.Add(
+                new ComplianceCategoryResult
+                {
+                    CategoryName = "IRSA Mutual Trust",
+                    Status = ComplianceStatus.Unknown,
+                    Items = new(),
+                }
+            );
 
-        // Workload Liveness and Readiness Probes unknown without requirements DB
-        categories.Add(
-            new ComplianceCategoryResult
-            {
-                CategoryName = "Workload Liveness and Readiness Probes",
-                Status = ComplianceStatus.Unknown,
-                Items = new(),
-            }
-        );
+            // Workload Liveness and Readiness Probes unknown without requirements DB
+            categories.Add(
+                new ComplianceCategoryResult
+                {
+                    CategoryName = "Workload Liveness and Readiness Probes",
+                    Status = ComplianceStatus.Unknown,
+                    Items = new(),
+                }
+            );
 
-        // ECR pull policy unknown without requirements DB
-        categories.Add(
-            new ComplianceCategoryResult
-            {
-                CategoryName = "ECR pull policy",
-                Status = ComplianceStatus.Unknown,
-                Items = new(),
-            }
-        );
+            // ECR pull policy unknown without requirements DB
+            categories.Add(
+                new ComplianceCategoryResult
+                {
+                    CategoryName = "ECR pull policy",
+                    Status = ComplianceStatus.Unknown,
+                    Items = new(),
+                }
+            );
+        }
 
         foreach (var placeholder in PlaceholderCategories)
         {
@@ -114,37 +124,53 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             )
             .ToList();
 
+        var awsAccounts = await _awsAccountRepository.GetByCapabilityIds(matchingCapabilities.Select(c => c.Id));
+        var k8sCapabilityIds = awsAccounts
+            .Where(a => a.KubernetesLink.LinkedAt is not null)
+            .Select(a => a.CapabilityId.ToString())
+            .ToHashSet();
+
         var capabilityResults = matchingCapabilities
             .Select(cap =>
             {
-                var categories = new List<ComplianceCategoryResult>
+                var categories = new List<ComplianceCategoryResult> { CheckTagCompliance(cap.JsonMetadata) };
+
+                if (k8sCapabilityIds.Contains(cap.Id.ToString()))
                 {
-                    CheckTagCompliance(cap.JsonMetadata),
-                    new()
-                    {
-                        CategoryName = "External Secrets",
-                        Status = ComplianceStatus.Unknown,
-                        Items = new(),
-                    },
-                    new()
-                    {
-                        CategoryName = "IRSA Mutual Trust",
-                        Status = ComplianceStatus.Unknown,
-                        Items = new(),
-                    },
-                    new()
-                    {
-                        CategoryName = "Workload Liveness and Readiness Probes",
-                        Status = ComplianceStatus.Unknown,
-                        Items = new(),
-                    },
-                    new()
-                    {
-                        CategoryName = "ECR pull policy",
-                        Status = ComplianceStatus.Unknown,
-                        Items = new(),
-                    },
-                };
+                    categories.Add(
+                        new ComplianceCategoryResult
+                        {
+                            CategoryName = "External Secrets",
+                            Status = ComplianceStatus.Unknown,
+                            Items = new(),
+                        }
+                    );
+                    categories.Add(
+                        new ComplianceCategoryResult
+                        {
+                            CategoryName = "IRSA Mutual Trust",
+                            Status = ComplianceStatus.Unknown,
+                            Items = new(),
+                        }
+                    );
+                    categories.Add(
+                        new ComplianceCategoryResult
+                        {
+                            CategoryName = "Workload Liveness and Readiness Probes",
+                            Status = ComplianceStatus.Unknown,
+                            Items = new(),
+                        }
+                    );
+                    categories.Add(
+                        new ComplianceCategoryResult
+                        {
+                            CategoryName = "ECR pull policy",
+                            Status = ComplianceStatus.Unknown,
+                            Items = new(),
+                        }
+                    );
+                }
+
                 var evaluated = categories.Where(c => c.Status != ComplianceStatus.Unknown).ToList();
                 return new CapabilityComplianceResult
                 {
@@ -191,6 +217,12 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             NonCompliantCount = capabilityResults.Count(r => r.OverallStatus == ComplianceStatus.NonCompliant),
             Categories = categoryBreakdowns,
         };
+    }
+
+    private async Task<bool> HasKubernetesContext(CapabilityId capabilityId)
+    {
+        var awsAccount = await _awsAccountRepository.FindBy(capabilityId);
+        return awsAccount?.KubernetesLink.LinkedAt is not null;
     }
 
     private static ComplianceCategoryResult CheckTagCompliance(string? jsonMetadata)
