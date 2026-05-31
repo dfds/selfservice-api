@@ -27,6 +27,29 @@ public class TestComplianceApplicationService
 
     private const string EmptyMetadata = "{}";
 
+    private static IAwsAccountRepository AwsAccountRepoWithK8sLinkFor(params CapabilityId[] capabilityIds)
+    {
+        var mock = new Mock<IAwsAccountRepository>();
+        mock.Setup(r => r.FindBy(It.IsAny<CapabilityId>())).ReturnsAsync((AwsAccount?)null);
+        var linkedAccounts = new List<AwsAccount>();
+        foreach (var capId in capabilityIds)
+        {
+            var account = AwsAccount.RequestNew(capId, DateTime.UtcNow, "test@dfds.com");
+            account.LinkKubernetesNamespace($"ns-{capId}", DateTime.UtcNow);
+            linkedAccounts.Add(account);
+            mock.Setup(r => r.FindBy(capId)).ReturnsAsync(account);
+        }
+        mock.Setup(r => r.GetByCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(
+                (IEnumerable<CapabilityId> ids) =>
+                {
+                    var idSet = ids.Select(i => i.ToString()).ToHashSet();
+                    return linkedAccounts.Where(a => idSet.Contains(a.CapabilityId.ToString())).ToList();
+                }
+            );
+        return mock.Object;
+    }
+
     [Fact]
     public async Task GetCapabilityCompliance_AllTagsPresent_TagsCategoryCompliant()
     {
@@ -109,7 +132,10 @@ public class TestComplianceApplicationService
         var repo = new Mock<ICapabilityRepository>();
         repo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
 
-        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+        var service = A
+            .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
+            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(capabilityId))
+            .Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
 
@@ -151,7 +177,7 @@ public class TestComplianceApplicationService
     }
 
     [Fact]
-    public async Task GetCapabilityCompliance_HasFiveCategoriesTotal()
+    public async Task GetCapabilityCompliance_HasFiveCategoriesTotal_WhenKubernetesLinked()
     {
         var capabilityId = CapabilityId.CreateFrom("test-cap");
         var capability = A.Capability.WithId(capabilityId).WithJsonMetadata(AllTagsPresent).Build();
@@ -159,7 +185,10 @@ public class TestComplianceApplicationService
         var repo = new Mock<ICapabilityRepository>();
         repo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
 
-        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+        var service = A
+            .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
+            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(capabilityId))
+            .Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
 
@@ -169,6 +198,49 @@ public class TestComplianceApplicationService
         Assert.Contains(result.Categories, c => c.CategoryName == "IRSA Mutual Trust");
         Assert.Contains(result.Categories, c => c.CategoryName == "Workload Liveness and Readiness Probes");
         Assert.Contains(result.Categories, c => c.CategoryName == "ECR pull policy");
+    }
+
+    [Fact]
+    public async Task GetCapabilityCompliance_NoAwsAccount_OnlyTagsCategoryReturned()
+    {
+        var capabilityId = CapabilityId.CreateFrom("test-cap");
+        var capability = A.Capability.WithId(capabilityId).WithJsonMetadata(AllTagsPresent).Build();
+
+        var repo = new Mock<ICapabilityRepository>();
+        repo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
+
+        // Default builder uses an IAwsAccountRepository whose FindBy returns null.
+        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+
+        var result = await service.GetCapabilityCompliance(capabilityId);
+
+        Assert.Single(result.Categories);
+        Assert.Equal("Tags", result.Categories[0].CategoryName);
+    }
+
+    [Fact]
+    public async Task GetCapabilityCompliance_AwsAccountWithoutKubernetesLink_OnlyTagsCategoryReturned()
+    {
+        var capabilityId = CapabilityId.CreateFrom("test-cap");
+        var capability = A.Capability.WithId(capabilityId).WithJsonMetadata(AllTagsPresent).Build();
+        var unlinkedAccount = AwsAccount.RequestNew(capabilityId, DateTime.UtcNow, "test@dfds.com");
+        // No call to LinkKubernetesNamespace — KubernetesLink stays Unlinked.
+
+        var capabilityRepo = new Mock<ICapabilityRepository>();
+        capabilityRepo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
+
+        var awsRepo = new Mock<IAwsAccountRepository>();
+        awsRepo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(unlinkedAccount);
+
+        var service = A
+            .ComplianceApplicationService.WithCapabilityRepository(capabilityRepo.Object)
+            .WithAwsAccountRepository(awsRepo.Object)
+            .Build();
+
+        var result = await service.GetCapabilityCompliance(capabilityId);
+
+        Assert.Single(result.Categories);
+        Assert.Equal("Tags", result.Categories[0].CategoryName);
     }
 
     [Fact]
@@ -219,6 +291,44 @@ public class TestComplianceApplicationService
     }
 
     [Fact]
+    public async Task GetCostCentreCompliance_K8sCategoryCountsOnlyReflectK8sCapabilities()
+    {
+        var k8sCapId = CapabilityId.CreateFrom("k8s-cap");
+        var nonK8sCapId = CapabilityId.CreateFrom("non-k8s-cap");
+        var k8sCap = A.Capability.WithId(k8sCapId).WithJsonMetadata(AllTagsPresent).Build();
+        var nonK8sCap = A.Capability.WithId(nonK8sCapId).WithJsonMetadata(AllTagsPresent).Build();
+
+        var capabilityRepo = new Mock<ICapabilityRepository>();
+        capabilityRepo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { k8sCap, nonK8sCap });
+
+        var service = A
+            .ComplianceApplicationService.WithCapabilityRepository(capabilityRepo.Object)
+            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(k8sCapId))
+            .Build();
+
+        var result = await service.GetCostCentreCompliance("ti-platform");
+
+        Assert.Equal(2, result.TotalCapabilities);
+        foreach (
+            var k8sCategoryName in new[]
+            {
+                "External Secrets",
+                "IRSA Mutual Trust",
+                "Workload Liveness and Readiness Probes",
+                "ECR pull policy",
+            }
+        )
+        {
+            var breakdown = result.Categories.First(c => c.CategoryName == k8sCategoryName);
+            Assert.True(
+                breakdown.CompliantCount + breakdown.NonCompliantCount <= 1,
+                $"K8s category '{k8sCategoryName}' should account for at most 1 capability (the K8s-linked one), "
+                    + $"but counted {breakdown.CompliantCount + breakdown.NonCompliantCount}."
+            );
+        }
+    }
+
+    [Fact]
     public async Task GetCapabilityCompliance_Stub_IrsaMutualTrustIsUnknown()
     {
         var capabilityId = CapabilityId.CreateFrom("test-cap");
@@ -227,7 +337,10 @@ public class TestComplianceApplicationService
         var repo = new Mock<ICapabilityRepository>();
         repo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
 
-        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+        var service = A
+            .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
+            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(capabilityId))
+            .Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
 
@@ -244,7 +357,10 @@ public class TestComplianceApplicationService
         var repo = new Mock<ICapabilityRepository>();
         repo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
 
-        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+        var service = A
+            .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
+            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(capabilityId))
+            .Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
 
@@ -261,7 +377,10 @@ public class TestComplianceApplicationService
         var repo = new Mock<ICapabilityRepository>();
         repo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
 
-        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+        var service = A
+            .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
+            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(capabilityId))
+            .Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
 

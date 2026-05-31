@@ -23,6 +23,16 @@ public class AwsAccountRepository : IAwsAccountRepository
         return await _dbContext.AwsAccounts.ToListAsync();
     }
 
+    public async Task<List<AwsAccount>> GetByCapabilityIds(IEnumerable<CapabilityId> capabilityIds)
+    {
+        var idList = capabilityIds.ToList();
+        if (idList.Count == 0)
+        {
+            return new List<AwsAccount>();
+        }
+        return await _dbContext.AwsAccounts.Where(a => idList.Contains(a.CapabilityId)).ToListAsync();
+    }
+
     public async Task<AwsAccount> Get(AwsAccountId id)
     {
         var found = await _dbContext.AwsAccounts.FindAsync(id);

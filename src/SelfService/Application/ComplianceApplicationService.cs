@@ -10,6 +10,7 @@ namespace SelfService.Application;
 public class ComplianceApplicationService : IComplianceApplicationService
 {
     private readonly ICapabilityRepository _capabilityRepository;
+    private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly RequirementsDbContext _requirementsDbContext;
 
     private static readonly string[] RequiredTags =
@@ -35,10 +36,12 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     public ComplianceApplicationService(
         ICapabilityRepository capabilityRepository,
+        IAwsAccountRepository awsAccountRepository,
         RequirementsDbContext requirementsDbContext
     )
     {
         _capabilityRepository = capabilityRepository;
+        _awsAccountRepository = awsAccountRepository;
         _requirementsDbContext = requirementsDbContext;
     }
 
@@ -50,13 +53,19 @@ public class ComplianceApplicationService : IComplianceApplicationService
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
 
+        var hasKubernetesContext = await HasKubernetesContext(capabilityId);
+
         var categories = new List<ComplianceCategoryResult>();
 
         categories.Add(CheckTagCompliance(capability.JsonMetadata));
-        categories.Add(await CheckExternalSecretsCompliance(capabilityId.ToString()));
-        categories.Add(await CheckIrsaMutualTrustCompliance(capabilityId.ToString()));
-        categories.Add(await CheckK8sProbesCompliance(capabilityId.ToString()));
-        categories.Add(await CheckEcrPullCompliance(capabilityId.ToString()));
+
+        if (hasKubernetesContext)
+        {
+            categories.Add(await CheckExternalSecretsCompliance(capabilityId.ToString()));
+            categories.Add(await CheckIrsaMutualTrustCompliance(capabilityId.ToString()));
+            categories.Add(await CheckK8sProbesCompliance(capabilityId.ToString()));
+            categories.Add(await CheckEcrPullCompliance(capabilityId.ToString()));
+        }
 
         var overallStatus = DetermineOverallStatus(categories);
         var totalScore = categories.Count(c => c.Status == ComplianceStatus.Compliant);
@@ -68,6 +77,12 @@ public class ComplianceApplicationService : IComplianceApplicationService
             TotalScore = totalScore,
             Categories = categories,
         };
+    }
+
+    private async Task<bool> HasKubernetesContext(CapabilityId capabilityId)
+    {
+        var awsAccount = await _awsAccountRepository.FindBy(capabilityId);
+        return awsAccount?.KubernetesLink.LinkedAt is not null;
     }
 
     public async Task<CostCentreComplianceResult> GetCostCentreCompliance(string costCentre)
@@ -92,18 +107,28 @@ public class ComplianceApplicationService : IComplianceApplicationService
                 g => g.GroupBy(m => m.RequirementId).ToDictionary(rg => rg.Key, rg => rg.ToList())
             );
 
+        var awsAccounts = await _awsAccountRepository.GetByCapabilityIds(matchingCapabilities.Select(c => c.Id));
+        var k8sCapabilityIds = awsAccounts
+            .Where(a => a.KubernetesLink.LinkedAt is not null)
+            .Select(a => a.CapabilityId.ToString())
+            .ToHashSet();
+
         var capabilityResults = matchingCapabilities
             .Select(cap =>
             {
                 var capMetrics = metricMap.GetValueOrDefault(cap.Id.ToString(), new());
-                var categories = new List<ComplianceCategoryResult>
+                var categories = new List<ComplianceCategoryResult> { CheckTagCompliance(cap.JsonMetadata) };
+
+                if (k8sCapabilityIds.Contains(cap.Id.ToString()))
                 {
-                    CheckTagCompliance(cap.JsonMetadata),
-                    CheckExternalSecretsCompliance(capMetrics.GetValueOrDefault("external_secrets", new())),
-                    CheckIrsaMutualTrustCompliance(capMetrics.GetValueOrDefault("irsa", new())),
-                    CheckK8sProbesCompliance(capMetrics.GetValueOrDefault("k8s-probes", new())),
-                    CheckEcrPullCompliance(capMetrics.GetValueOrDefault("ecr-pull", new())),
-                };
+                    categories.Add(
+                        CheckExternalSecretsCompliance(capMetrics.GetValueOrDefault("external_secrets", new()))
+                    );
+                    categories.Add(CheckIrsaMutualTrustCompliance(capMetrics.GetValueOrDefault("irsa", new())));
+                    categories.Add(CheckK8sProbesCompliance(capMetrics.GetValueOrDefault("k8s-probes", new())));
+                    categories.Add(CheckEcrPullCompliance(capMetrics.GetValueOrDefault("ecr-pull", new())));
+                }
+
                 return new CapabilityComplianceResult
                 {
                     CapabilityId = cap.Id.ToString(),
