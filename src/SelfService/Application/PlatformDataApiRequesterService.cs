@@ -76,7 +76,7 @@ public class PlatformDataApiRequesterService : IPlatformDataApiRequesterService
     }
 
     private const string QueryParamDaysWindow = "days-window";
-    private const int DaysToFetch = 30;
+    private const int DaysToFetch = 90;
 
     private readonly ILogger<PlatformDataApiRequesterService> _logger;
     private readonly IAwsAccountRepository _awsAccountRepository;
