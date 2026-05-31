@@ -134,9 +134,21 @@ public class EventController : ControllerBase
             );
         }
 
-        var eventModel = await _eventService.GetEventById(id);
-
-        return Ok(_apiResourceFactory.Convert(eventModel));
+        try
+        {
+            var eventModel = await _eventService.GetEventById(id);
+            return Ok(_apiResourceFactory.Convert(eventModel));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Not Found",
+                    Detail = $"Event with id '{id}' was not found.",
+                }
+            );
+        }
     }
 
     [HttpPost("{id}")]
