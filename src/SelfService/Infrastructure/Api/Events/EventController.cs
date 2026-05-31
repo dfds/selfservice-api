@@ -142,11 +142,7 @@ public class EventController : ControllerBase
         catch (KeyNotFoundException)
         {
             return NotFound(
-                new ProblemDetails
-                {
-                    Title = "Not Found",
-                    Detail = $"Event with id '{id}' was not found.",
-                }
+                new ProblemDetails { Title = "Not Found", Detail = $"Event with id '{id}' was not found." }
             );
         }
     }
