@@ -21,6 +21,11 @@ public class StubAwsAccountRepository : IAwsAccountRepository
         throw new NotImplementedException();
     }
 
+    public Task<List<AwsAccount>> GetByCapabilityIds(IEnumerable<CapabilityId> capabilityIds)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<AwsAccount> Get(AwsAccountId id)
     {
         throw new NotImplementedException();
