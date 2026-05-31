@@ -6,6 +6,7 @@ public class EventUpdateRequest
 {
     public string? Title { get; set; }
     public string? Description { get; set; }
+
     /// <summary>
     /// ISO 8601 UTC instant including time-of-day, e.g. <c>2026-06-15T14:30:00Z</c>.
     /// </summary>
