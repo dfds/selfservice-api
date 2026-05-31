@@ -206,6 +206,17 @@ public class EventController : ControllerBase
                 }
             }
 
+            // Update existing attachments (those with an ID still present)
+            foreach (var attachmentDto in request.Attachments.Where(a => a.Id is not null && a.Url is not null))
+            {
+                await _eventService.UpdateAttachment(
+                    attachmentDto.Id!,
+                    attachmentDto.Url!,
+                    attachmentDto.Type,
+                    attachmentDto.Description
+                );
+            }
+
             // Add new attachments (those without an ID)
             foreach (var attachmentDto in request.Attachments.Where(a => a.Id is null))
             {

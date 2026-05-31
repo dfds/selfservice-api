@@ -14,5 +14,6 @@ public interface IEventService
     Task<List<Event>> GetUpcomingEvents(int limit = 10);
     Task<Event?> GetLatestHeldEvent();
     Task<EventAttachment> AddAttachmentToEvent(EventId eventId, EventAttachment attachment);
+    Task UpdateAttachment(EventAttachmentId attachmentId, string url, EventAttachmentType type, string? description);
     Task DeleteAttachment(EventAttachmentId attachmentId);
 }
