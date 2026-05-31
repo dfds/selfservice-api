@@ -123,6 +123,21 @@ public class EventService : IEventService
     }
 
     [TransactionalBoundary]
+    public async Task UpdateAttachment(
+        EventAttachmentId attachmentId,
+        string url,
+        EventAttachmentType type,
+        string? description
+    )
+    {
+        var attachment =
+            await _eventAttachmentRepository.FindById(attachmentId)
+            ?? throw new KeyNotFoundException($"Attachment with id '{attachmentId}' not found.");
+
+        attachment.Update(url, type, description);
+    }
+
+    [TransactionalBoundary]
     public async Task DeleteAttachment(EventAttachmentId attachmentId)
     {
         await _eventAttachmentRepository.Remove(attachmentId);
