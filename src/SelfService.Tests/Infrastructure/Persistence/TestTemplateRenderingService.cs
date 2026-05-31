@@ -329,6 +329,42 @@ public class TestTemplateRenderingService
     }
 
     [Fact]
+    public void GetVariableDefinitions_ReturnsExpectedSet()
+    {
+        var names = _sut.GetVariableDefinitions().Select(v => v.Name).ToHashSet();
+
+        var expected = new HashSet<string>
+        {
+            "Capability.Id",
+            "Capability.Name",
+            "Capability.Description",
+            "Capability.Status",
+            "Capability.CreatedAt",
+            "Capability.CreatedBy",
+            "Capability.RequirementScore",
+            "Capability.MemberCount",
+            "Member.DisplayName",
+            "Member.Email",
+            "Campaign.Name",
+            "Date.Today",
+            "Date.Year",
+            "Requirement.<id>",
+            "Requirement.<id>.DisplayName",
+            "Requirement.<id>.HelpUrl",
+            "Aws.AccountId",
+            "Aws.Status",
+            "Aws.Namespace",
+            "Aws.RoleEmail",
+            "Azure.ResourceCount",
+            "Azure.Environments",
+            "Azure.<env>.Id",
+            "MembershipApplications.PendingCount",
+        };
+
+        Assert.Equal(expected, names);
+    }
+
+    [Fact]
     public void RenderTemplate_WithExpression_MemberChangesButCapabilityDataPreserved()
     {
         var scores = new List<RequirementsMetric>

@@ -1,4 +1,5 @@
 using SelfService.Domain.Models;
+using SelfService.Domain.Services;
 
 namespace SelfService.Application;
 
@@ -34,7 +35,7 @@ public interface IEmailCampaignApplicationService
     );
     Task DeleteDraft(EmailCampaignId id);
     Task<EmailCampaign> DuplicateCampaign(EmailCampaignId sourceId, string createdBy);
-    Task<List<TemplateVariable>> GetTemplateVariables();
+    Task<IReadOnlyList<TemplateVariable>> GetTemplateVariables();
 
     Task<AudienceResolutionResult> ResolveAudience(string audienceJson, string? recipientFilter);
     Task<List<EmailPreviewResult>> PreviewCampaign(EmailCampaignId id, string[]? capabilityIds);
@@ -65,14 +66,6 @@ public class RetryResult
 {
     public int RetriedCount { get; set; }
     public string Status { get; set; } = "";
-}
-
-public class TemplateVariable
-{
-    public string Name { get; set; } = "";
-    public string Description { get; set; } = "";
-    public string Entity { get; set; } = "";
-    public string Example { get; set; } = "";
 }
 
 public class AudienceResolutionResult
