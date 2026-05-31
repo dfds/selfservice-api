@@ -196,7 +196,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
             return new ComplianceCategoryResult
             {
                 CategoryName = "External Secrets",
-                Status = ComplianceStatus.Unknown,
+                Status = StatusFromScore(scoreMetric),
                 Score = scoreMetric?.Value,
                 HelpUrl = scoreMetric?.HelpUrl,
                 DisplayName = scoreMetric?.DisplayName,
@@ -254,7 +254,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
             return new ComplianceCategoryResult
             {
                 CategoryName = "IRSA Mutual Trust",
-                Status = ComplianceStatus.Unknown,
+                Status = StatusFromScore(scoreMetric),
                 Score = scoreMetric?.Value,
                 HelpUrl = scoreMetric?.HelpUrl,
                 DisplayName = scoreMetric?.DisplayName,
@@ -312,7 +312,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
             return new ComplianceCategoryResult
             {
                 CategoryName = "Workload Liveness and Readiness Probes",
-                Status = ComplianceStatus.Unknown,
+                Status = StatusFromScore(scoreMetric),
                 Score = scoreMetric?.Value,
                 HelpUrl = scoreMetric?.HelpUrl,
                 DisplayName = scoreMetric?.DisplayName,
@@ -370,7 +370,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
             return new ComplianceCategoryResult
             {
                 CategoryName = "ECR pull policy",
-                Status = ComplianceStatus.Unknown,
+                Status = StatusFromScore(scoreMetric),
                 Score = scoreMetric?.Value,
                 HelpUrl = scoreMetric?.HelpUrl,
                 DisplayName = scoreMetric?.DisplayName,
@@ -407,6 +407,13 @@ public class ComplianceApplicationService : IComplianceApplicationService
                 },
             },
         };
+    }
+
+    private static ComplianceStatus StatusFromScore(RequirementsMetric? scoreMetric)
+    {
+        if (scoreMetric == null)
+            return ComplianceStatus.Unknown;
+        return scoreMetric.Value >= 100 ? ComplianceStatus.Compliant : ComplianceStatus.NonCompliant;
     }
 
     private static ComplianceStatus DetermineOverallStatus(List<ComplianceCategoryResult> categories)
