@@ -12,3 +12,17 @@ public class PreviewItem
     public string Subject { get; set; } = "";
     public string Html { get; set; } = "";
 }
+
+public class UserPreviewResponse
+{
+    public List<UserPreviewItem> Previews { get; set; } = new();
+}
+
+public class UserPreviewItem
+{
+    public string UserId { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string? DisplayName { get; set; }
+    public string Subject { get; set; } = "";
+    public string Html { get; set; } = "";
+}
