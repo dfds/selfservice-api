@@ -16,6 +16,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
     private readonly IMembershipRepository _membershipRepository;
     private readonly IMemberRepository _memberRepository;
     private readonly ICapabilityFilterService _capabilityFilterService;
+    private readonly IUserFilterService _userFilterService;
     private readonly ITemplateRenderingService _templateRenderingService;
     private readonly IRbacApplicationService _rbacApplicationService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -28,6 +29,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         IMembershipRepository membershipRepository,
         IMemberRepository memberRepository,
         ICapabilityFilterService capabilityFilterService,
+        IUserFilterService userFilterService,
         ITemplateRenderingService templateRenderingService,
         IRbacApplicationService rbacApplicationService,
         IServiceScopeFactory serviceScopeFactory
@@ -40,6 +42,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         _membershipRepository = membershipRepository;
         _memberRepository = memberRepository;
         _capabilityFilterService = capabilityFilterService;
+        _userFilterService = userFilterService;
         _templateRenderingService = templateRenderingService;
         _rbacApplicationService = rbacApplicationService;
         _serviceScopeFactory = serviceScopeFactory;
@@ -56,7 +59,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         string createdBy,
         EmailCampaignScheduleType? scheduleType = null,
         DateTime? scheduledAt = null,
-        string? cronExpression = null
+        string? cronExpression = null,
+        EmailCampaignTargetType? targetType = null
     )
     {
         var campaign = EmailCampaign.CreateDraft(
@@ -69,7 +73,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             createdBy,
             scheduleType,
             scheduledAt,
-            cronExpression
+            cronExpression,
+            targetType
         );
         await _emailCampaignRepository.Add(campaign);
         return campaign;
@@ -101,10 +106,23 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         string modifiedBy,
         EmailCampaignScheduleType? scheduleType = null,
         DateTime? scheduledAt = null,
-        string? cronExpression = null
+        string? cronExpression = null,
+        EmailCampaignTargetType? targetType = null
     )
     {
         var campaign = await GetRequired(id);
+
+        // TargetType is immutable after creation: the audience filter shape and the available
+        // template variables depend on it, so a change would silently break the body & filter.
+        if (
+            targetType is not null
+            && !ReferenceEquals(targetType, campaign.TargetType)
+            && targetType != campaign.TargetType
+        )
+            throw new InvalidOperationException(
+                "TargetType cannot be changed after a campaign is created. Duplicate the campaign instead."
+            );
+
         campaign.Update(name, subject, contentJson, contentHtml, audienceJson, recipientFilter, modifiedBy);
 
         if (scheduleType is not null)
@@ -155,6 +173,92 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             TotalRecipients = capabilityResults.Sum(c => c.MemberCount),
             Capabilities = capabilityResults,
         };
+    }
+
+    public async Task<UserAudienceResolutionResult> ResolveUserAudience(string audienceJson, string? recipientFilter)
+    {
+        var resolution = await _userFilterService.ResolveUsers(audienceJson);
+        var matchingRoleIds = await ResolveRoleIds(recipientFilter);
+        var members = await FilterMembersByRoles(resolution.Members, matchingRoleIds);
+
+        return new UserAudienceResolutionResult
+        {
+            TotalRecipients = members.Count,
+            Users = members
+                .Select(m => new AudienceUserResult
+                {
+                    UserId = m.Id.ToString(),
+                    Email = m.Email,
+                    DisplayName = m.DisplayName,
+                })
+                .ToList(),
+            UnmatchedEmails = resolution.UnmatchedEmails,
+        };
+    }
+
+    private async Task<List<Member>> FilterMembersByRoles(List<Member> members, HashSet<RbacRoleId>? matchingRoleIds)
+    {
+        if (matchingRoleIds == null || matchingRoleIds.Count == 0)
+            return members;
+
+        var result = new List<Member>(members.Count);
+        foreach (var member in members)
+        {
+            var grants = await _rbacApplicationService.GetRoleGrantsForUser(member.Id.ToString());
+            if (grants.Any(g => matchingRoleIds.Contains(g.RoleId)))
+                result.Add(member);
+        }
+        return result;
+    }
+
+    public async Task<List<UserEmailPreviewResult>> PreviewUserCampaign(EmailCampaignId id, string[]? userEmails)
+    {
+        var campaign = await GetRequired(id);
+
+        List<Member> members;
+        if (userEmails != null && userEmails.Length > 0)
+        {
+            var resolution = await _userFilterService.ResolveUsers(
+                System.Text.Json.JsonSerializer.Serialize(new { mode = "specific", userEmails })
+            );
+            members = resolution.Members;
+        }
+        else
+        {
+            var resolution = await _userFilterService.ResolveUsers(campaign.AudienceJson);
+            var matchingRoleIds = await ResolveRoleIds(campaign.RecipientFilter);
+            var filtered = await FilterMembersByRoles(resolution.Members, matchingRoleIds);
+            // Limit preview to first 5 users
+            members = filtered.Take(5).ToList();
+        }
+
+        var previews = new List<UserEmailPreviewResult>();
+        var html = campaign.ContentHtml ?? "";
+
+        foreach (var member in members)
+        {
+            var userCapabilities = await LoadUserCapabilities(member.Id);
+            var context = new TemplateRenderContext
+            {
+                Capability = null,
+                Member = member,
+                CampaignName = campaign.Name,
+                UserCapabilities = userCapabilities,
+            };
+
+            previews.Add(
+                new UserEmailPreviewResult
+                {
+                    UserId = member.Id.ToString(),
+                    Email = member.Email,
+                    DisplayName = member.DisplayName,
+                    Subject = _templateRenderingService.RenderTemplate(campaign.Subject, context),
+                    Html = _templateRenderingService.RenderTemplate(html, context),
+                }
+            );
+        }
+
+        return previews;
     }
 
     public async Task<List<EmailPreviewResult>> PreviewCampaign(EmailCampaignId id, string[]? capabilityIds)
@@ -348,8 +452,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             execution.UpdateProgress(successCount, failureCount);
     }
 
-    public Task<IReadOnlyList<TemplateVariable>> GetTemplateVariables() =>
-        Task.FromResult(_templateRenderingService.GetVariableDefinitions());
+    public Task<IReadOnlyList<TemplateVariable>> GetTemplateVariables(EmailCampaignTargetType? targetType = null) =>
+        Task.FromResult(_templateRenderingService.GetVariableDefinitions(targetType));
 
     private async Task<int> ExecuteSend(EmailCampaign campaign)
     {
@@ -366,7 +470,12 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         return recipientCount;
     }
 
-    private async Task<int> SendToRecipients(EmailCampaign campaign, EmailCampaignExecutionId? executionId = null)
+    private Task<int> SendToRecipients(EmailCampaign campaign, EmailCampaignExecutionId? executionId = null) =>
+        campaign.TargetType == EmailCampaignTargetType.User
+            ? SendToUserRecipients(campaign, executionId)
+            : SendToCapabilityRecipients(campaign, executionId);
+
+    private async Task<int> SendToCapabilityRecipients(EmailCampaign campaign, EmailCampaignExecutionId? executionId)
     {
         var resolved = await ResolveCapabilityRecipients(campaign.AudienceJson, campaign.RecipientFilter);
         var recipientLogs = new List<EmailCampaignRecipientLog>();
@@ -417,6 +526,72 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         return recipientLogs.Count;
     }
 
+    private async Task<int> SendToUserRecipients(EmailCampaign campaign, EmailCampaignExecutionId? executionId)
+    {
+        var resolution = await _userFilterService.ResolveUsers(campaign.AudienceJson);
+        var matchingRoleIds = await ResolveRoleIds(campaign.RecipientFilter);
+        var members = await FilterMembersByRoles(resolution.Members, matchingRoleIds);
+        var recipientLogs = new List<EmailCampaignRecipientLog>();
+        var html = campaign.ContentHtml ?? "";
+
+        foreach (var member in members)
+        {
+            if (recipientLogs.Count >= EmailCampaign.MaxRecipientsPerCampaign)
+                break;
+
+            if (string.IsNullOrEmpty(member.Email))
+                continue;
+
+            var userCapabilities = await LoadUserCapabilities(member.Id);
+
+            var context = new TemplateRenderContext
+            {
+                Capability = null,
+                Member = member,
+                CampaignName = campaign.Name,
+                UserCapabilities = userCapabilities,
+            };
+
+            var renderedSubject = _templateRenderingService.RenderTemplate(campaign.Subject, context);
+            var renderedHtml = _templateRenderingService.RenderTemplate(html, context);
+
+            var recipientLog = EmailCampaignRecipientLog.Create(
+                campaign.Id,
+                executionId,
+                capabilityId: null,
+                capabilityName: null,
+                member.Id.ToString(),
+                member.Email,
+                renderedSubject,
+                renderedHtml
+            );
+
+            recipientLogs.Add(recipientLog);
+
+            campaign.RaiseSendRequestedEvent(recipientLog.Id.ToString(), member.Email, renderedSubject, renderedHtml);
+        }
+
+        await _recipientLogRepository.AddRange(recipientLogs);
+        return recipientLogs.Count;
+    }
+
+    private async Task<List<UserCapabilityRef>> LoadUserCapabilities(UserId userId)
+    {
+        var memberships = await _membershipRepository.GetAllMembershipsForUserId(userId);
+        var result = new List<UserCapabilityRef>(memberships.Count);
+
+        foreach (var membership in memberships)
+        {
+            var cap = await _capabilityRepository.FindBy(membership.CapabilityId);
+            if (cap == null)
+                continue;
+            var memberCount = (await _membershipRepository.FindBy(cap.Id)).Count();
+            result.Add(new UserCapabilityRef { Capability = cap, MemberCount = memberCount });
+        }
+
+        return result;
+    }
+
     private sealed record CapabilityRecipients(Capability Capability, List<Member> Members, int TotalMemberships);
 
     private async Task<List<CapabilityRecipients>> ResolveCapabilityRecipients(
@@ -452,17 +627,29 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
     private async Task<HashSet<RbacRoleId>?> ResolveRoleIds(string? recipientFilter)
     {
-        if (string.IsNullOrEmpty(recipientFilter))
+        if (string.IsNullOrWhiteSpace(recipientFilter))
+            return null;
+
+        var requestedNames = recipientFilter
+            .Split(',')
+            .Select(s => s.Trim())
+            .Where(s => s.Length > 0)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (requestedNames.Count == 0)
             return null;
 
         var allRoles = await _rbacApplicationService.GetAssignableRoles();
-        var matched = allRoles.Where(r => r.Name == recipientFilter).Select(r => r.Id).ToHashSet();
-        if (matched.Count == 0)
+        var matchedRoles = allRoles.Where(r => requestedNames.Contains(r.Name)).ToList();
+        var matchedNames = matchedRoles.Select(r => r.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var unmatched = requestedNames.Where(n => !matchedNames.Contains(n)).ToList();
+
+        if (unmatched.Count > 0)
             throw new InvalidOperationException(
-                $"The recipient filter role '{recipientFilter}' does not match any known RBAC role."
+                $"The recipient filter role(s) '{string.Join(", ", unmatched)}' do not match any known RBAC role."
             );
 
-        return matched;
+        return matchedRoles.Select(r => r.Id).ToHashSet();
     }
 
     private async Task<HashSet<string>?> GetAllowedUsersForCapability(

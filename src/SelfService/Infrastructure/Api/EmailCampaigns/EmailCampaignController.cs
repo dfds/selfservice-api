@@ -43,14 +43,28 @@ public class EmailCampaignController : ControllerBase
             : null;
 
     [HttpGet("variables")]
-    public async Task<IActionResult> GetTemplateVariables()
+    public async Task<IActionResult> GetTemplateVariables([FromQuery] string? targetType)
     {
         if (!IsAuthorized())
             return Unauthorized();
 
         try
         {
-            var variables = await _emailCampaignApplicationService.GetTemplateVariables();
+            EmailCampaignTargetType? parsedTargetType = null;
+            if (!string.IsNullOrEmpty(targetType))
+            {
+                if (!EmailCampaignTargetType.TryParse(targetType, out var tt))
+                    return BadRequest(
+                        new ProblemDetails
+                        {
+                            Title = "Invalid Request",
+                            Detail = $"Unknown targetType '{targetType}'. Expected 'Capability' or 'User'.",
+                        }
+                    );
+                parsedTargetType = tt;
+            }
+
+            var variables = await _emailCampaignApplicationService.GetTemplateVariables(parsedTargetType);
             return Ok(
                 variables.Select(v => new TemplateVariableApiResource
                 {
@@ -139,6 +153,9 @@ public class EmailCampaignController : ControllerBase
                 parsedScheduleType = st;
             }
 
+            if (ParseTargetType(request.TargetType, out var parsedTargetType) is { } targetTypeError)
+                return targetTypeError;
+
             var campaign = await _emailCampaignApplicationService.CreateDraft(
                 request.Name!,
                 request.Subject!,
@@ -149,9 +166,14 @@ public class EmailCampaignController : ControllerBase
                 userId.ToString(),
                 parsedScheduleType,
                 request.ScheduledAt,
-                request.CronExpression
+                request.CronExpression,
+                parsedTargetType
             );
             return CreatedAtAction(nameof(GetById), new { id = campaign.Id.ToString() }, ToApiResource(campaign));
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(new ProblemDetails { Title = "Invalid Operation", Detail = e.Message });
         }
         catch (Exception e)
         {
@@ -187,6 +209,9 @@ public class EmailCampaignController : ControllerBase
                 parsedScheduleType = st;
             }
 
+            if (ParseTargetType(request.TargetType, out var parsedTargetType) is { } targetTypeError)
+                return targetTypeError;
+
             await _emailCampaignApplicationService.UpdateDraft(
                 parsedId,
                 request.Name!,
@@ -198,7 +223,8 @@ public class EmailCampaignController : ControllerBase
                 userId.ToString(),
                 parsedScheduleType,
                 request.ScheduledAt,
-                request.CronExpression
+                request.CronExpression,
+                parsedTargetType
             );
             return NoContent();
         }
@@ -292,8 +318,34 @@ public class EmailCampaignController : ControllerBase
             return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = "AudienceJson is required." });
         }
 
+        if (ParseTargetType(request.TargetType, out var parsedTargetType) is { } targetTypeError)
+            return targetTypeError;
+
         try
         {
+            if (parsedTargetType == EmailCampaignTargetType.User)
+            {
+                var userResult = await _emailCampaignApplicationService.ResolveUserAudience(
+                    request.AudienceJson,
+                    request.RecipientFilter
+                );
+                return Ok(
+                    new ResolveUserAudienceResponse
+                    {
+                        TotalRecipients = userResult.TotalRecipients,
+                        Users = userResult
+                            .Users.Select(u => new AudienceUserItem
+                            {
+                                UserId = u.UserId,
+                                Email = u.Email,
+                                DisplayName = u.DisplayName,
+                            })
+                            .ToList(),
+                        UnmatchedEmails = userResult.UnmatchedEmails,
+                    }
+                );
+            }
+
             var result = await _emailCampaignApplicationService.ResolveAudience(
                 request.AudienceJson,
                 request.RecipientFilter
@@ -340,6 +392,33 @@ public class EmailCampaignController : ControllerBase
 
         try
         {
+            var campaign = await _emailCampaignApplicationService.GetById(parsedId);
+            if (campaign == null)
+                return NotFound(new ProblemDetails { Title = "Not Found", Detail = $"Campaign '{id}' not found." });
+
+            if (campaign.TargetType == EmailCampaignTargetType.User)
+            {
+                var userPreviews = await _emailCampaignApplicationService.PreviewUserCampaign(
+                    parsedId,
+                    request?.UserEmails
+                );
+                return Ok(
+                    new UserPreviewResponse
+                    {
+                        Previews = userPreviews
+                            .Select(p => new UserPreviewItem
+                            {
+                                UserId = p.UserId,
+                                Email = p.Email,
+                                DisplayName = p.DisplayName,
+                                Subject = p.Subject,
+                                Html = p.Html,
+                            })
+                            .ToList(),
+                    }
+                );
+            }
+
             var previews = await _emailCampaignApplicationService.PreviewCampaign(parsedId, request?.CapabilityIds);
             return Ok(
                 new PreviewResponse
@@ -600,6 +679,23 @@ public class EmailCampaignController : ControllerBase
         }
     }
 
+    private IActionResult? ParseTargetType(string? raw, out EmailCampaignTargetType? parsed)
+    {
+        parsed = null;
+        if (string.IsNullOrEmpty(raw))
+            return null;
+        if (!EmailCampaignTargetType.TryParse(raw, out var tt))
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid Request",
+                    Detail = $"Unknown TargetType '{raw}'. Expected 'Capability' or 'User'.",
+                }
+            );
+        parsed = tt;
+        return null;
+    }
+
     private static EmailCampaignApiResource ToApiResource(EmailCampaign b) =>
         new()
         {
@@ -610,6 +706,7 @@ public class EmailCampaignController : ControllerBase
             ContentHtml = b.ContentHtml,
             AudienceJson = b.AudienceJson,
             RecipientFilter = b.RecipientFilter,
+            TargetType = b.TargetType,
             ScheduleType = b.ScheduleType,
             ScheduledAt = b.ScheduledAt,
             CronExpression = b.CronExpression,

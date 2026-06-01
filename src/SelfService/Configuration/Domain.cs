@@ -63,6 +63,7 @@ public static class Domain
         builder.Services.AddTransient<IEventService, EventService>();
         builder.Services.AddTransient<INewsItemService, NewsItemService>();
         builder.Services.AddTransient<ICapabilityFilterService, CapabilityFilterService>();
+        builder.Services.AddTransient<IUserFilterService, UserFilterService>();
         builder.Services.AddTransient<ITemplateRenderingService, TemplateRenderingService>();
         // Note: IRequirementsMetricService is registered conditionally in RequirementsDbContext.AddRequirementsDatabase
 

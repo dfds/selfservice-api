@@ -20,3 +20,17 @@ public class RecipientItem
     public string Email { get; set; } = "";
     public string? DisplayName { get; set; }
 }
+
+public class ResolveUserAudienceResponse
+{
+    public int TotalRecipients { get; set; }
+    public List<AudienceUserItem> Users { get; set; } = new();
+    public List<string> UnmatchedEmails { get; set; } = new();
+}
+
+public class AudienceUserItem
+{
+    public string UserId { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string? DisplayName { get; set; }
+}

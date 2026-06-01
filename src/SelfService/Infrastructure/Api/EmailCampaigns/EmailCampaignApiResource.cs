@@ -9,6 +9,7 @@ public class EmailCampaignApiResource
     public string? ContentHtml { get; set; }
     public string AudienceJson { get; set; } = "";
     public string? RecipientFilter { get; set; }
+    public string TargetType { get; set; } = "Capability";
     public string ScheduleType { get; set; } = "";
     public DateTime? ScheduledAt { get; set; }
     public string? CronExpression { get; set; }

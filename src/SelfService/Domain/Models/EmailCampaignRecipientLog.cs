@@ -6,8 +6,8 @@ public class EmailCampaignRecipientLog : Entity<EmailCampaignRecipientLogId>
         EmailCampaignRecipientLogId id,
         EmailCampaignId emailCampaignId,
         EmailCampaignExecutionId? executionId,
-        string capabilityId,
-        string capabilityName,
+        string? capabilityId,
+        string? capabilityName,
         string userId,
         string email,
         string renderedSubject,
@@ -35,8 +35,10 @@ public class EmailCampaignRecipientLog : Entity<EmailCampaignRecipientLogId>
 
     public EmailCampaignId EmailCampaignId { get; set; }
     public EmailCampaignExecutionId? ExecutionId { get; set; }
-    public string CapabilityId { get; set; }
-    public string CapabilityName { get; set; }
+
+    // Nullable because user-targeted campaigns are not scoped to a capability.
+    public string? CapabilityId { get; set; }
+    public string? CapabilityName { get; set; }
     public string UserId { get; set; }
     public string Email { get; set; }
     public string RenderedSubject { get; set; }
@@ -49,8 +51,8 @@ public class EmailCampaignRecipientLog : Entity<EmailCampaignRecipientLogId>
     public static EmailCampaignRecipientLog Create(
         EmailCampaignId campaignId,
         EmailCampaignExecutionId? executionId,
-        string capabilityId,
-        string capabilityName,
+        string? capabilityId,
+        string? capabilityName,
         string userId,
         string email,
         string renderedSubject,

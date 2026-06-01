@@ -5,7 +5,12 @@ namespace SelfService.Domain.Services;
 
 public record TemplateRenderContext
 {
-    public required Capability Capability { get; init; }
+    /// <summary>
+    /// Required for Capability-targeted campaigns. Null at the top level of a User-targeted
+    /// campaign (where the body is rooted at a User, not a Capability); a non-null Capability
+    /// is supplied inside each iteration of a {{#each User.Capabilities}} block.
+    /// </summary>
+    public Capability? Capability { get; init; }
     public Member? Member { get; init; }
     public required string CampaignName { get; init; }
     public int MemberCount { get; init; }
@@ -13,4 +18,16 @@ public record TemplateRenderContext
     public List<AzureResource> AzureResources { get; init; } = new();
     public List<RequirementsMetric> RequirementScores { get; init; } = new();
     public int PendingMembershipApplicationCount { get; init; }
+
+    /// <summary>
+    /// Capabilities the recipient user belongs to. Used for User-targeted campaigns,
+    /// in particular by the {{#each User.Capabilities}} template block.
+    /// </summary>
+    public List<UserCapabilityRef> UserCapabilities { get; init; } = new();
+}
+
+public record UserCapabilityRef
+{
+    public required Capability Capability { get; init; }
+    public int MemberCount { get; init; }
 }

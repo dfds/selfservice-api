@@ -15,7 +15,8 @@ public interface IEmailCampaignApplicationService
         string createdBy,
         EmailCampaignScheduleType? scheduleType = null,
         DateTime? scheduledAt = null,
-        string? cronExpression = null
+        string? cronExpression = null,
+        EmailCampaignTargetType? targetType = null
     );
 
     Task<EmailCampaign?> GetById(EmailCampaignId id);
@@ -31,14 +32,17 @@ public interface IEmailCampaignApplicationService
         string modifiedBy,
         EmailCampaignScheduleType? scheduleType = null,
         DateTime? scheduledAt = null,
-        string? cronExpression = null
+        string? cronExpression = null,
+        EmailCampaignTargetType? targetType = null
     );
     Task DeleteDraft(EmailCampaignId id);
     Task<EmailCampaign> DuplicateCampaign(EmailCampaignId sourceId, string createdBy);
-    Task<IReadOnlyList<TemplateVariable>> GetTemplateVariables();
+    Task<IReadOnlyList<TemplateVariable>> GetTemplateVariables(EmailCampaignTargetType? targetType = null);
 
     Task<AudienceResolutionResult> ResolveAudience(string audienceJson, string? recipientFilter);
+    Task<UserAudienceResolutionResult> ResolveUserAudience(string audienceJson, string? recipientFilter);
     Task<List<EmailPreviewResult>> PreviewCampaign(EmailCampaignId id, string[]? capabilityIds);
+    Task<List<UserEmailPreviewResult>> PreviewUserCampaign(EmailCampaignId id, string[]? userEmails);
     Task<SendCampaignResult> SendCampaign(EmailCampaignId id, string sentBy);
     Task CancelCampaign(EmailCampaignId id);
     Task RevertToDraft(EmailCampaignId id, string modifiedBy);
@@ -93,6 +97,33 @@ public class EmailPreviewResult
 {
     public string CapabilityId { get; set; } = "";
     public string CapabilityName { get; set; } = "";
+    public string Subject { get; set; } = "";
+    public string Html { get; set; } = "";
+}
+
+public class UserAudienceResolutionResult
+{
+    public int TotalRecipients { get; set; }
+    public List<AudienceUserResult> Users { get; set; } = new();
+
+    /// <summary>
+    /// For "specific" mode: emails the requester provided that did not match any existing user.
+    /// </summary>
+    public List<string> UnmatchedEmails { get; set; } = new();
+}
+
+public class AudienceUserResult
+{
+    public string UserId { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string? DisplayName { get; set; }
+}
+
+public class UserEmailPreviewResult
+{
+    public string UserId { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string? DisplayName { get; set; }
     public string Subject { get; set; } = "";
     public string Html { get; set; } = "";
 }
