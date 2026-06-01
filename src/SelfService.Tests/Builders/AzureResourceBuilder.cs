@@ -19,6 +19,12 @@ public class AzureResourceBuilder
         _createdBy = nameof(AzureResourceBuilder);
     }
 
+    public AzureResourceBuilder WithEnvironment(string environment)
+    {
+        _environment = environment;
+        return this;
+    }
+
     public AzureResourceBuilder WithCapabilityId(CapabilityId capabilityId)
     {
         _capabilityId = capabilityId;
