@@ -34,6 +34,7 @@ public static class Domain
         builder.Services.AddTransient<IPortalVisitApplicationService, PortalVisitApplicationService>();
         builder.Services.AddTransient<ITeamApplicationService, TeamApplicationService>();
         builder.Services.AddTransient<IKafkaSchemaService, KafkaSchemaService>();
+        builder.Services.AddTransient<IEmailCampaignApplicationService, EmailCampaignApplicationService>();
 
         if (aws_type == "mock")
         {
@@ -61,6 +62,8 @@ public static class Domain
         builder.Services.AddTransient<IDemoRecordingService, DemoRecordingService>();
         builder.Services.AddTransient<IEventService, EventService>();
         builder.Services.AddTransient<INewsItemService, NewsItemService>();
+        builder.Services.AddTransient<ICapabilityFilterService, CapabilityFilterService>();
+        builder.Services.AddTransient<ITemplateRenderingService, TemplateRenderingService>();
         // Note: IRequirementsMetricService is registered conditionally in RequirementsDbContext.AddRequirementsDatabase
 
         // domain repositories
@@ -93,6 +96,9 @@ public static class Domain
         builder.Services.AddTransient<IEventRepository, EventRepository>();
         builder.Services.AddTransient<IEventAttachmentRepository, EventAttachmentRepository>();
         builder.Services.AddTransient<INewsItemRepository, NewsItemRepository>();
+        builder.Services.AddTransient<IEmailCampaignRepository, EmailCampaignRepository>();
+        builder.Services.AddTransient<IEmailCampaignRecipientLogRepository, EmailCampaignRecipientLogRepository>();
+        builder.Services.AddTransient<IEmailCampaignExecutionRepository, EmailCampaignExecutionRepository>();
         // domain queries
         builder.Services.AddTransient<IKafkaTopicQuery, KafkaTopicQuery>();
         builder.Services.AddTransient<ICapabilityKafkaTopicsQuery, CapabilityKafkaTopicsQuery>();
@@ -140,6 +146,7 @@ public static class Domain
         builder.Services.AddHostedService<UpdateOutOfSyncEcrRepos>();
         builder.Services.AddHostedService<MetricsUpdater>();
         builder.Services.AddHostedService<AllCapabilitiesCostsCacheUpdater>();
+        builder.Services.AddHostedService<EmailCampaignScheduler>();
 
         // misc
         builder.Services.AddTransient<IDbTransactionFacade, RealDbTransactionFacade>();
