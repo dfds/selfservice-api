@@ -60,38 +60,103 @@ public class TemplateRenderingService : ITemplateRenderingService
     private static readonly VariableEntry[] Variables =
     {
         // --- Capability-targeted variables ---
-        new StaticVariable("Capability.Id", "Capability ID slug", "Capability", "my-capability-abc12",
-            ctx => ctx.Capability?.Id.ToString() ?? ""),
-        new StaticVariable("Capability.Name", "Display name", "Capability", "My Capability",
-            ctx => ctx.Capability?.Name ?? ""),
-        new StaticVariable("Capability.Description", "Description text", "Capability", "A description...",
-            ctx => ctx.Capability?.Description ?? ""),
-        new StaticVariable("Capability.Status", "Active or Pending Deletion", "Capability", "Active",
-            ctx => ctx.Capability?.Status.ToString() ?? ""),
-        new StaticVariable("Capability.CreatedAt", "Creation date (yyyy-MM-dd)", "Capability", "2024-01-15",
-            ctx => ctx.Capability?.CreatedAt.ToString("yyyy-MM-dd") ?? ""),
-        new StaticVariable("Capability.CreatedBy", "Creator user ID", "Capability", "user@dfds.com",
-            ctx => ctx.Capability?.CreatedBy ?? ""),
-        new StaticVariable("Capability.RequirementScore", "Compliance score (0-100)", "Capability", "85",
-            ctx => ctx.Capability?.RequirementScore?.ToString("0") ?? "N/A"),
-        new StaticVariable("Capability.MemberCount", "Number of members", "Capability", "12",
-            ctx => ctx.MemberCount.ToString()),
-
-        new StaticVariable("Member.DisplayName", "Recipient display name", "Member", "Jane Doe",
-            ctx => ctx.Member?.DisplayName ?? "[Member Name]"),
-        new StaticVariable("Member.Email", "Recipient email address", "Member", "jane.doe@dfds.com",
-            ctx => ctx.Member?.Email ?? "[Member Email]"),
-
+        new StaticVariable(
+            "Capability.Id",
+            "Capability ID slug",
+            "Capability",
+            "my-capability-abc12",
+            ctx => ctx.Capability?.Id.ToString() ?? ""
+        ),
+        new StaticVariable(
+            "Capability.Name",
+            "Display name",
+            "Capability",
+            "My Capability",
+            ctx => ctx.Capability?.Name ?? ""
+        ),
+        new StaticVariable(
+            "Capability.Description",
+            "Description text",
+            "Capability",
+            "A description...",
+            ctx => ctx.Capability?.Description ?? ""
+        ),
+        new StaticVariable(
+            "Capability.Status",
+            "Active or Pending Deletion",
+            "Capability",
+            "Active",
+            ctx => ctx.Capability?.Status.ToString() ?? ""
+        ),
+        new StaticVariable(
+            "Capability.CreatedAt",
+            "Creation date (yyyy-MM-dd)",
+            "Capability",
+            "2024-01-15",
+            ctx => ctx.Capability?.CreatedAt.ToString("yyyy-MM-dd") ?? ""
+        ),
+        new StaticVariable(
+            "Capability.CreatedBy",
+            "Creator user ID",
+            "Capability",
+            "user@dfds.com",
+            ctx => ctx.Capability?.CreatedBy ?? ""
+        ),
+        new StaticVariable(
+            "Capability.RequirementScore",
+            "Compliance score (0-100)",
+            "Capability",
+            "85",
+            ctx => ctx.Capability?.RequirementScore?.ToString("0") ?? "N/A"
+        ),
+        new StaticVariable(
+            "Capability.MemberCount",
+            "Number of members",
+            "Capability",
+            "12",
+            ctx => ctx.MemberCount.ToString()
+        ),
+        new StaticVariable(
+            "Member.DisplayName",
+            "Recipient display name",
+            "Member",
+            "Jane Doe",
+            ctx => ctx.Member?.DisplayName ?? "[Member Name]"
+        ),
+        new StaticVariable(
+            "Member.Email",
+            "Recipient email address",
+            "Member",
+            "jane.doe@dfds.com",
+            ctx => ctx.Member?.Email ?? "[Member Email]"
+        ),
         // --- Shared variables (both target types) ---
-        new StaticVariable("Campaign.Name", "Campaign name", "Campaign", "Q1 Migration Notice",
-            ctx => ctx.CampaignName, Applies: AppliesTo.Both),
-
-        new StaticVariable("Date.Today", "Current date (yyyy-MM-dd)", "Date", "2024-01-15",
-            _ => DateTime.UtcNow.ToString("yyyy-MM-dd"), Applies: AppliesTo.Both),
-        new StaticVariable("Date.Year", "Current year", "Date", "2024",
-            _ => DateTime.UtcNow.Year.ToString(), Applies: AppliesTo.Both),
-
-        new PatternVariable("Requirement.<id>",
+        new StaticVariable(
+            "Campaign.Name",
+            "Campaign name",
+            "Campaign",
+            "Q1 Migration Notice",
+            ctx => ctx.CampaignName,
+            Applies: AppliesTo.Both
+        ),
+        new StaticVariable(
+            "Date.Today",
+            "Current date (yyyy-MM-dd)",
+            "Date",
+            "2024-01-15",
+            _ => DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            Applies: AppliesTo.Both
+        ),
+        new StaticVariable(
+            "Date.Year",
+            "Current year",
+            "Date",
+            "2024",
+            _ => DateTime.UtcNow.Year.ToString(),
+            Applies: AppliesTo.Both
+        ),
+        new PatternVariable(
+            "Requirement.<id>",
             "Individual requirement score (0-100). Replace <id> with: mandatory_tags, external_secrets, irsa, k8s-probes, ecr-pull",
             "Requirement",
             "85",
@@ -196,36 +261,67 @@ public class TemplateRenderingService : ITemplateRenderingService
             "",
             new Regex(@"^Metadata\.(?<key>.+)$", RegexOptions.Compiled),
             (m, ctx) => LookupMetadata(ctx.Capability?.JsonMetadata, m.Groups["key"].Value),
-            Hidden: true),
-
+            Hidden: true
+        ),
         // --- User-targeted variables ---
-        new StaticVariable("User.Id", "Recipient user ID", "User", "user@dfds.com",
-            ctx => ctx.Member?.Id.ToString() ?? "[User Id]", Applies: AppliesTo.User),
-        new StaticVariable("User.Email", "Recipient email address", "User", "jane.doe@dfds.com",
-            ctx => ctx.Member?.Email ?? "[User Email]", Applies: AppliesTo.User),
-        new StaticVariable("User.DisplayName", "Recipient display name", "User", "Jane Doe",
-            ctx => ctx.Member?.DisplayName ?? "[User Name]", Applies: AppliesTo.User),
-        new StaticVariable("User.LastSeen",
+        new StaticVariable(
+            "User.Id",
+            "Recipient user ID",
+            "User",
+            "user@dfds.com",
+            ctx => ctx.Member?.Id.ToString() ?? "[User Id]",
+            Applies: AppliesTo.User
+        ),
+        new StaticVariable(
+            "User.Email",
+            "Recipient email address",
+            "User",
+            "jane.doe@dfds.com",
+            ctx => ctx.Member?.Email ?? "[User Email]",
+            Applies: AppliesTo.User
+        ),
+        new StaticVariable(
+            "User.DisplayName",
+            "Recipient display name",
+            "User",
+            "Jane Doe",
+            ctx => ctx.Member?.DisplayName ?? "[User Name]",
+            Applies: AppliesTo.User
+        ),
+        new StaticVariable(
+            "User.LastSeen",
             "Date the user was last seen in the portal (yyyy-MM-dd), or 'Never'",
-            "User", "2024-01-15",
+            "User",
+            "2024-01-15",
             ctx => ctx.Member?.LastSeen?.ToString("yyyy-MM-dd") ?? "Never",
-            Applies: AppliesTo.User),
-        new StaticVariable("User.CapabilityCount",
-            "Number of capabilities the recipient belongs to", "User", "3",
+            Applies: AppliesTo.User
+        ),
+        new StaticVariable(
+            "User.CapabilityCount",
+            "Number of capabilities the recipient belongs to",
+            "User",
+            "3",
             ctx => ctx.UserCapabilities.Count.ToString(),
-            Applies: AppliesTo.User),
-        new StaticVariable("User.CapabilityNames",
+            Applies: AppliesTo.User
+        ),
+        new StaticVariable(
+            "User.CapabilityNames",
             "Comma-separated names of capabilities the recipient belongs to",
-            "User", "Cap A, Cap B, Cap C",
+            "User",
+            "Cap A, Cap B, Cap C",
             ctx => string.Join(", ", ctx.UserCapabilities.Select(uc => uc.Capability.Name)),
-            Applies: AppliesTo.User),
+            Applies: AppliesTo.User
+        ),
         // Documented as a block construct so users discover it via the variable picker.
         // Render-side handling lives in the {{#each User.Capabilities}} block pre-pass.
-        new StaticVariable("User.Capabilities",
+        new StaticVariable(
+            "User.Capabilities",
             "Iterable: {{#each User.Capabilities}} ... {{Capability.Name}} ... {{/each}}",
-            "User", "{{#each User.Capabilities}}...{{/each}}",
+            "User",
+            "{{#each User.Capabilities}}...{{/each}}",
             _ => "",
-            Applies: AppliesTo.User),
+            Applies: AppliesTo.User
+        ),
     };
 
     private static readonly Dictionary<string, StaticVariable> ByName = Variables
@@ -260,34 +356,37 @@ public class TemplateRenderingService : ITemplateRenderingService
 
     private string ExpandUserCapabilitiesBlocks(string template, TemplateRenderContext context)
     {
-        return UserCapabilitiesBlockRegex.Replace(template, match =>
-        {
-            var body = match.Groups["body"].Value;
-            if (context.UserCapabilities.Count == 0)
-                return "";
-
-            var sb = new StringBuilder();
-            foreach (var entry in context.UserCapabilities)
+        return UserCapabilitiesBlockRegex.Replace(
+            template,
+            match =>
             {
-                // Inside the block, Capability.* resolves to this iteration's capability;
-                // Member, Campaign.Name, Date.* are inherited from the outer context.
-                var subContext = context with
+                var body = match.Groups["body"].Value;
+                if (context.UserCapabilities.Count == 0)
+                    return "";
+
+                var sb = new StringBuilder();
+                foreach (var entry in context.UserCapabilities)
                 {
-                    Capability = entry.Capability,
-                    MemberCount = entry.MemberCount,
-                    // The remaining per-capability data (AWS, Azure, requirement scores, pending
-                    // membership applications) is intentionally not loaded for the iteration.
-                    // Doing so per-capability-per-recipient would be costly; if a campaign needs
-                    // those, it should be Capability-targeted.
-                    AwsAccount = null,
-                    AzureResources = new(),
-                    RequirementScores = new(),
-                    PendingMembershipApplicationCount = 0,
-                };
-                sb.Append(TokenRegex.Replace(body, m => Resolve(m.Groups[1].Value, subContext) ?? m.Value));
+                    // Inside the block, Capability.* resolves to this iteration's capability;
+                    // Member, Campaign.Name, Date.* are inherited from the outer context.
+                    var subContext = context with
+                    {
+                        Capability = entry.Capability,
+                        MemberCount = entry.MemberCount,
+                        // The remaining per-capability data (AWS, Azure, requirement scores, pending
+                        // membership applications) is intentionally not loaded for the iteration.
+                        // Doing so per-capability-per-recipient would be costly; if a campaign needs
+                        // those, it should be Capability-targeted.
+                        AwsAccount = null,
+                        AzureResources = new(),
+                        RequirementScores = new(),
+                        PendingMembershipApplicationCount = 0,
+                    };
+                    sb.Append(TokenRegex.Replace(body, m => Resolve(m.Groups[1].Value, subContext) ?? m.Value));
+                }
+                return sb.ToString();
             }
-            return sb.ToString();
-        });
+        );
     }
 
     private static string? Resolve(string name, TemplateRenderContext context)

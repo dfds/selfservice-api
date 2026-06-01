@@ -159,7 +159,12 @@ public class TestEmailCampaignApplicationService
             RbacAccessType.Capability
         );
 
-        var ownerMember = new Member(UserId.Parse("owner@dfds.com"), "owner@dfds.com", "Owner User", UserSettings.Default);
+        var ownerMember = new Member(
+            UserId.Parse("owner@dfds.com"),
+            "owner@dfds.com",
+            "Owner User",
+            UserSettings.Default
+        );
         var readerMember = new Member(
             UserId.Parse("reader@dfds.com"),
             "reader@dfds.com",
@@ -171,7 +176,10 @@ public class TestEmailCampaignApplicationService
         userFilter
             .Setup(x => x.ResolveUsers(It.IsAny<string>()))
             .ReturnsAsync(
-                new UserAudienceResolution { Members = new List<Member> { ownerMember, readerMember } }
+                new UserAudienceResolution
+                {
+                    Members = new List<Member> { ownerMember, readerMember },
+                }
             );
 
         var rbac = new Mock<IRbacApplicationService>();

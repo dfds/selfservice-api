@@ -114,7 +114,11 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
         // TargetType is immutable after creation: the audience filter shape and the available
         // template variables depend on it, so a change would silently break the body & filter.
-        if (targetType is not null && !ReferenceEquals(targetType, campaign.TargetType) && targetType != campaign.TargetType)
+        if (
+            targetType is not null
+            && !ReferenceEquals(targetType, campaign.TargetType)
+            && targetType != campaign.TargetType
+        )
             throw new InvalidOperationException(
                 "TargetType cannot be changed after a campaign is created. Duplicate the campaign instead."
             );
@@ -471,10 +475,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             ? SendToUserRecipients(campaign, executionId)
             : SendToCapabilityRecipients(campaign, executionId);
 
-    private async Task<int> SendToCapabilityRecipients(
-        EmailCampaign campaign,
-        EmailCampaignExecutionId? executionId
-    )
+    private async Task<int> SendToCapabilityRecipients(EmailCampaign campaign, EmailCampaignExecutionId? executionId)
     {
         var resolved = await ResolveCapabilityRecipients(campaign.AudienceJson, campaign.RecipientFilter);
         var recipientLogs = new List<EmailCampaignRecipientLog>();
@@ -567,12 +568,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
             recipientLogs.Add(recipientLog);
 
-            campaign.RaiseSendRequestedEvent(
-                recipientLog.Id.ToString(),
-                member.Email,
-                renderedSubject,
-                renderedHtml
-            );
+            campaign.RaiseSendRequestedEvent(recipientLog.Id.ToString(), member.Email, renderedSubject, renderedHtml);
         }
 
         await _recipientLogRepository.AddRange(recipientLogs);
