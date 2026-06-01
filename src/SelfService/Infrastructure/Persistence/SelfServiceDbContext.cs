@@ -180,6 +180,10 @@ public class SelfServiceDbContext : DbContext
             .HaveConversion<ValueObjectEnumConverter<EmailCampaignScheduleType>>();
 
         configurationBuilder
+            .Properties<EmailCampaignTargetType>()
+            .HaveConversion<ValueObjectEnumConverter<EmailCampaignTargetType>>();
+
+        configurationBuilder
             .Properties<EmailCampaignRecipientStatus>()
             .HaveConversion<ValueObjectEnumConverter<EmailCampaignRecipientStatus>>();
 
@@ -652,6 +656,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.ContentHtml);
             cfg.Property(x => x.AudienceJson).HasColumnType("jsonb");
             cfg.Property(x => x.RecipientFilter);
+            cfg.Property(x => x.TargetType);
             cfg.Property(x => x.ScheduleType);
             cfg.Property(x => x.ScheduledAt).HasConversion<ForceUtcKind>();
             cfg.Property(x => x.CronExpression);

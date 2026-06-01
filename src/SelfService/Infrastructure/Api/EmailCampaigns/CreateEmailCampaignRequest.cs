@@ -23,4 +23,9 @@ public class CreateEmailCampaignRequest
     public string? ScheduleType { get; set; }
     public DateTime? ScheduledAt { get; set; }
     public string? CronExpression { get; set; }
+
+    /// <summary>
+    /// "Capability" (default) or "User". Immutable after creation.
+    /// </summary>
+    public string? TargetType { get; set; }
 }

@@ -23,10 +23,12 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
         string modifiedBy,
         DateTime? sentAt,
         DateTime? cancelledAt,
-        bool isDeleted = false
+        bool isDeleted = false,
+        EmailCampaignTargetType? targetType = null
     )
         : base(id)
     {
+        TargetType = targetType ?? EmailCampaignTargetType.Capability;
         Name = name;
         Subject = subject;
         ContentJson = contentJson;
@@ -46,6 +48,7 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
         IsDeleted = isDeleted;
     }
 
+    public EmailCampaignTargetType TargetType { get; private set; }
     public string Name { get; set; }
     public string Subject { get; set; }
     public string ContentJson { get; set; }
@@ -79,9 +82,12 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
         string createdBy,
         EmailCampaignScheduleType? scheduleType = null,
         DateTime? scheduledAt = null,
-        string? cronExpression = null
+        string? cronExpression = null,
+        EmailCampaignTargetType? targetType = null
     )
     {
+        var resolvedTargetType = targetType ?? EmailCampaignTargetType.Capability;
+
         var now = DateTime.UtcNow;
         var campaign = new EmailCampaign(
             id: EmailCampaignId.New(),
@@ -100,7 +106,8 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
             modifiedAt: now,
             modifiedBy: createdBy,
             sentAt: null,
-            cancelledAt: null
+            cancelledAt: null,
+            targetType: resolvedTargetType
         );
 
         if (scheduleType is not null)
@@ -278,7 +285,8 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
             modifiedAt: now,
             modifiedBy: createdBy,
             sentAt: null,
-            cancelledAt: null
+            cancelledAt: null,
+            targetType: source.TargetType
         );
 
         campaign.Raise(

@@ -394,4 +394,120 @@ public class TestTemplateRenderingService
         Assert.Equal("Alice: 75 (3)", result1);
         Assert.Equal("Bob: 75 (3)", result2);
     }
+
+    private static TemplateRenderContext UserContext(
+        Member? member = null,
+        List<UserCapabilityRef>? userCapabilities = null
+    )
+    {
+        return new TemplateRenderContext
+        {
+            Capability = null,
+            Member = member ?? A.Member.Build(),
+            CampaignName = "User Campaign",
+            UserCapabilities = userCapabilities ?? new List<UserCapabilityRef>(),
+        };
+    }
+
+    [Fact]
+    public void RenderTemplate_UserScalars_Render()
+    {
+        var member = A.Member.WithDisplayName("Jane Doe").Build();
+        var capA = A.Capability.WithName("Cap A").Build();
+        var capB = A.Capability.WithName("Cap B").Build();
+        var ctx = UserContext(
+            member: member,
+            userCapabilities: new List<UserCapabilityRef>
+            {
+                new() { Capability = capA, MemberCount = 4 },
+                new() { Capability = capB, MemberCount = 7 },
+            }
+        );
+
+        var result = _sut.RenderTemplate(
+            "Hello {{User.DisplayName}}, you belong to {{User.CapabilityCount}} caps: {{User.CapabilityNames}}",
+            ctx
+        );
+
+        Assert.Equal("Hello Jane Doe, you belong to 2 caps: Cap A, Cap B", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_EachUserCapabilities_RendersOnePerCapability()
+    {
+        var capA = A.Capability.WithName("Cap A").Build();
+        var capB = A.Capability.WithName("Cap B").Build();
+        var ctx = UserContext(
+            userCapabilities: new List<UserCapabilityRef>
+            {
+                new() { Capability = capA, MemberCount = 4 },
+                new() { Capability = capB, MemberCount = 7 },
+            }
+        );
+
+        var result = _sut.RenderTemplate(
+            "<ul>{{#each User.Capabilities}}<li>{{Capability.Name}} ({{Capability.MemberCount}})</li>{{/each}}</ul>",
+            ctx
+        );
+
+        Assert.Equal("<ul><li>Cap A (4)</li><li>Cap B (7)</li></ul>", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_EachUserCapabilities_EmptyList_RendersNothingForBlock()
+    {
+        var ctx = UserContext(userCapabilities: new List<UserCapabilityRef>());
+
+        // The surrounding text outside the block (and other tokens) must still render.
+        var result = _sut.RenderTemplate(
+            "Before {{#each User.Capabilities}}<li>{{Capability.Name}}</li>{{/each}} {{Campaign.Name}}",
+            ctx
+        );
+
+        Assert.Equal("Before  User Campaign", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_EachUserCapabilities_OuterTokensStillResolve()
+    {
+        var member = A.Member.WithDisplayName("Jane").Build();
+        var capA = A.Capability.WithName("Cap A").Build();
+        var ctx = UserContext(
+            member: member,
+            userCapabilities: new List<UserCapabilityRef>
+            {
+                new() { Capability = capA, MemberCount = 1 },
+            }
+        );
+
+        var result = _sut.RenderTemplate(
+            "{{User.DisplayName}}: {{#each User.Capabilities}}{{Capability.Name}}{{/each}} - {{Campaign.Name}}",
+            ctx
+        );
+
+        Assert.Equal("Jane: Cap A - User Campaign", result);
+    }
+
+    [Fact]
+    public void GetVariableDefinitions_User_OmitsCapabilityVariables()
+    {
+        var userVars = _sut.GetVariableDefinitions(EmailCampaignTargetType.User);
+
+        Assert.Contains(userVars, v => v.Name == "User.Email");
+        Assert.Contains(userVars, v => v.Name == "User.CapabilityCount");
+        Assert.Contains(userVars, v => v.Name == "Campaign.Name");
+        Assert.DoesNotContain(userVars, v => v.Name == "Capability.Name");
+        Assert.DoesNotContain(userVars, v => v.Name == "Aws.AccountId");
+    }
+
+    [Fact]
+    public void GetVariableDefinitions_Capability_OmitsUserVariables()
+    {
+        var capVars = _sut.GetVariableDefinitions(EmailCampaignTargetType.Capability);
+
+        Assert.Contains(capVars, v => v.Name == "Capability.Name");
+        Assert.Contains(capVars, v => v.Name == "Member.Email");
+        Assert.DoesNotContain(capVars, v => v.Name == "User.Email");
+        Assert.DoesNotContain(capVars, v => v.Name == "User.CapabilityCount");
+    }
 }
