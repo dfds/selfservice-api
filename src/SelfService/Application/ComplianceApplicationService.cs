@@ -229,11 +229,11 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     private static ComplianceCategoryResult CheckExternalSecretsCompliance(List<RequirementsMetric> metrics)
     {
-        var secretsTotal = metrics.FirstOrDefault(m => m.Measurement == "secrets");
-        var externalSecretsCount = metrics.FirstOrDefault(m => m.Measurement == "external_secrets");
+        var nonCompliantWorkloads = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_total");
+        var compliantWorkloads = metrics.FirstOrDefault(m => m.Measurement == "compliant_total");
         var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
 
-        if (secretsTotal == null && externalSecretsCount == null)
+        if (nonCompliantWorkloads == null && compliantWorkloads == null)
         {
             return new ComplianceCategoryResult
             {
@@ -247,9 +247,9 @@ public class ComplianceApplicationService : IComplianceApplicationService
             };
         }
 
-        var totalVal = secretsTotal?.Value ?? 0;
-        var externalVal = externalSecretsCount?.Value ?? 0;
-        var isCompliant = totalVal == externalVal;
+        var nonCompliantVal = nonCompliantWorkloads?.Value ?? 0;
+        var compliantVal = compliantWorkloads?.Value ?? 0;
+        var isCompliant = nonCompliantVal == 0;
 
         return new ComplianceCategoryResult
         {
@@ -263,15 +263,15 @@ public class ComplianceApplicationService : IComplianceApplicationService
             {
                 new()
                 {
-                    Name = "secrets",
-                    Status = totalVal.ToString("F0"),
-                    Detail = "total secrets count",
+                    Name = "compliant_secrets",
+                    Status = compliantVal.ToString("F0"),
+                    Detail = "compliant external secrets count",
                 },
                 new()
                 {
-                    Name = "external_secrets",
-                    Status = externalVal.ToString("F0"),
-                    Detail = "external secrets count",
+                    Name = "non_compliant_external_secrets",
+                    Status = nonCompliantVal.ToString("F0"),
+                    Detail = "non-compliant external secrets count",
                 },
             },
         };
@@ -287,8 +287,8 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     private static ComplianceCategoryResult CheckIrsaMutualTrustCompliance(List<RequirementsMetric> metrics)
     {
-        var nonCompliantSAs = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_service_accounts");
-        var compliantSAs = metrics.FirstOrDefault(m => m.Measurement == "compliant_service_accounts");
+        var nonCompliantSAs = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_total");
+        var compliantSAs = metrics.FirstOrDefault(m => m.Measurement == "compliant_total");
         var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
 
         if (nonCompliantSAs == null && compliantSAs == null)
@@ -345,8 +345,8 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     private static ComplianceCategoryResult CheckK8sProbesCompliance(List<RequirementsMetric> metrics)
     {
-        var nonCompliantWorkloads = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_workloads");
-        var compliantWorkloads = metrics.FirstOrDefault(m => m.Measurement == "compliant_workloads");
+        var nonCompliantWorkloads = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_total");
+        var compliantWorkloads = metrics.FirstOrDefault(m => m.Measurement == "compliant_total");
         var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
 
         if (nonCompliantWorkloads == null && compliantWorkloads == null)
@@ -403,8 +403,8 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     private static ComplianceCategoryResult CheckEcrPullCompliance(List<RequirementsMetric> metrics)
     {
-        var nonCompliantRepos = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_ecr_repos");
-        var compliantRepos = metrics.FirstOrDefault(m => m.Measurement == "compliant_ecr_repos");
+        var nonCompliantRepos = metrics.FirstOrDefault(m => m.Measurement == "non_compliant_total");
+        var compliantRepos = metrics.FirstOrDefault(m => m.Measurement == "compliant_total");
         var scoreMetric = metrics.FirstOrDefault(m => m.Measurement == "score");
 
         if (nonCompliantRepos == null && compliantRepos == null)
