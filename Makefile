@@ -37,7 +37,7 @@ build:
 
 unittest: unittests
 
-unittests:
+unittests: build
 	@cd src && dotnet test \
 		--configuration $(CONFIGURATION) \
 		--no-restore \
