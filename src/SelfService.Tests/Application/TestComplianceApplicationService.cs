@@ -300,14 +300,9 @@ public class TestComplianceApplicationService
             }
             """;
 
-        var cap1 = A
-            .Capability.WithId(CapabilityId.CreateFrom("cap-1"))
-            .WithJsonMetadata(AllTagsPresent)
-            .Build();
-        var cap2 = A
-            .Capability.WithId(CapabilityId.CreateFrom("cap-2"))
-            .WithJsonMetadata(customMetadata)
-            .Build();
+        var cap2Id = CapabilityId.CreateFrom("cap-2");
+        var cap1 = A.Capability.WithId(CapabilityId.CreateFrom("cap-1")).WithJsonMetadata(AllTagsPresent).Build();
+        var cap2 = A.Capability.WithId(cap2Id).WithJsonMetadata(customMetadata).Build();
         var cap3 = A
             .Capability.WithId(CapabilityId.CreateFrom("cap-3"))
             .WithJsonMetadata("""{"dfds.cost.centre": "other-centre"}""")
@@ -324,7 +319,7 @@ public class TestComplianceApplicationService
         Assert.Equal(2, details.TotalCapabilities);
         Assert.Equal(2, details.Capabilities.Count);
 
-        var cap2Result = details.Capabilities.Single(c => c.CapabilityId == "cap-2");
+        var cap2Result = details.Capabilities.Single(c => c.CapabilityId == cap2Id.ToString());
         Assert.Equal(customMetadata, cap2Result.JsonMetadata);
         Assert.Contains(cap2Result.Categories, c => c.CategoryName == "Tags");
 
