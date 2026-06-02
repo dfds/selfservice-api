@@ -291,6 +291,46 @@ public class TestComplianceApplicationService
     }
 
     [Fact]
+    public async Task GetCostCentreComplianceDetails_ReturnsPerCapabilityBreakdownWithMetadataPreserved()
+    {
+        const string customMetadata = """
+            {
+                "dfds.cost.centre": "ti-platform",
+                "dfds.custom.team": "alpha"
+            }
+            """;
+
+        var cap2Id = CapabilityId.CreateFrom("cap-2");
+        var cap1 = A.Capability.WithId(CapabilityId.CreateFrom("cap-1")).WithJsonMetadata(AllTagsPresent).Build();
+        var cap2 = A.Capability.WithId(cap2Id).WithJsonMetadata(customMetadata).Build();
+        var cap3 = A
+            .Capability.WithId(CapabilityId.CreateFrom("cap-3"))
+            .WithJsonMetadata("""{"dfds.cost.centre": "other-centre"}""")
+            .Build();
+
+        var repo = new Mock<ICapabilityRepository>();
+        repo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { cap1, cap2, cap3 });
+
+        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+
+        var details = await service.GetCostCentreComplianceDetails("ti-platform");
+
+        Assert.Equal("ti-platform", details.CostCentre);
+        Assert.Equal(2, details.TotalCapabilities);
+        Assert.Equal(2, details.Capabilities.Count);
+
+        var cap2Result = details.Capabilities.Single(c => c.CapabilityId == cap2Id.ToString());
+        Assert.Equal(customMetadata, cap2Result.JsonMetadata);
+        Assert.Contains(cap2Result.Categories, c => c.CategoryName == "Tags");
+
+        // Aggregate counts must agree with the legacy method for the same input.
+        var aggregate = await service.GetCostCentreCompliance("ti-platform");
+        Assert.Equal(aggregate.TotalCapabilities, details.TotalCapabilities);
+        Assert.Equal(aggregate.CompliantCount, details.CompliantCount);
+        Assert.Equal(aggregate.NonCompliantCount, details.NonCompliantCount);
+    }
+
+    [Fact]
     public async Task GetCostCentreCompliance_K8sCategoryCountsOnlyReflectK8sCapabilities()
     {
         var k8sCapId = CapabilityId.CreateFrom("k8s-cap");

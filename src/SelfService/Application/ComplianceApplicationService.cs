@@ -87,6 +87,19 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     public async Task<CostCentreComplianceResult> GetCostCentreCompliance(string costCentre)
     {
+        var details = await GetCostCentreComplianceDetails(costCentre);
+        return new CostCentreComplianceResult
+        {
+            CostCentre = details.CostCentre,
+            TotalCapabilities = details.TotalCapabilities,
+            CompliantCount = details.CompliantCount,
+            NonCompliantCount = details.NonCompliantCount,
+            Categories = details.Categories,
+        };
+    }
+
+    public async Task<CostCentreComplianceDetailsResult> GetCostCentreComplianceDetails(string costCentre)
+    {
         var activeCapabilities = await _capabilityRepository.GetAllActive();
 
         var matchingCapabilities = activeCapabilities
@@ -129,9 +142,11 @@ public class ComplianceApplicationService : IComplianceApplicationService
                     categories.Add(CheckEcrPullCompliance(capMetrics.GetValueOrDefault("ecr-pull", new())));
                 }
 
-                return new CapabilityComplianceResult
+                return new CostCentreCapabilityComplianceResult
                 {
                     CapabilityId = cap.Id.ToString(),
+                    CapabilityName = cap.Name,
+                    JsonMetadata = cap.JsonMetadata,
                     OverallStatus = DetermineOverallStatus(categories),
                     Categories = categories,
                 };
@@ -153,13 +168,15 @@ public class ComplianceApplicationService : IComplianceApplicationService
             })
             .ToList();
 
-        return new CostCentreComplianceResult
+        return new CostCentreComplianceDetailsResult
         {
             CostCentre = costCentre,
             TotalCapabilities = matchingCapabilities.Count,
             CompliantCount = capabilityResults.Count(r => r.OverallStatus == ComplianceStatus.Compliant),
             NonCompliantCount = capabilityResults.Count(r => r.OverallStatus == ComplianceStatus.NonCompliant),
+            UnknownCount = capabilityResults.Count(r => r.OverallStatus == ComplianceStatus.Unknown),
             Categories = categoryBreakdowns,
+            Capabilities = capabilityResults,
         };
     }
 
