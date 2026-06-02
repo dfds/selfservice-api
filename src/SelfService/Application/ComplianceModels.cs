@@ -48,3 +48,23 @@ public class CostCentreCategoryBreakdown
     public int CompliantCount { get; set; }
     public int NonCompliantCount { get; set; }
 }
+
+public class CostCentreComplianceDetailsResult
+{
+    public string CostCentre { get; set; } = null!;
+    public int TotalCapabilities { get; set; }
+    public int CompliantCount { get; set; }
+    public int NonCompliantCount { get; set; }
+    public int UnknownCount { get; set; }
+    public List<CostCentreCategoryBreakdown> Categories { get; set; } = new();
+    public List<CostCentreCapabilityComplianceResult> Capabilities { get; set; } = new();
+}
+
+public class CostCentreCapabilityComplianceResult
+{
+    public string CapabilityId { get; set; } = null!;
+    public string CapabilityName { get; set; } = null!;
+    public string? JsonMetadata { get; set; }
+    public ComplianceStatus OverallStatus { get; set; }
+    public List<ComplianceCategoryResult> Categories { get; set; } = new();
+}

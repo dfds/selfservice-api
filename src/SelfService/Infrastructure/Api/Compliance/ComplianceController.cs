@@ -38,4 +38,11 @@ public class ComplianceController : ControllerBase
         var result = await _complianceService.GetCostCentreCompliance(costCentre);
         return Ok(CostCentreComplianceApiResource.From(result));
     }
+
+    [HttpGet("cost-centres/{costCentre}/details")]
+    public async Task<IActionResult> GetCostCentreComplianceDetails([FromRoute] string costCentre)
+    {
+        var result = await _complianceService.GetCostCentreComplianceDetails(costCentre);
+        return Ok(CostCentreComplianceDetailsApiResource.From(result));
+    }
 }

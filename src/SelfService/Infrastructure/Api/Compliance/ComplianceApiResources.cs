@@ -100,3 +100,49 @@ public class CostCentreCategoryBreakdownApiResource
         };
     }
 }
+
+public class CostCentreComplianceDetailsApiResource
+{
+    public string CostCentre { get; set; } = null!;
+    public int TotalCapabilities { get; set; }
+    public int CompliantCount { get; set; }
+    public int NonCompliantCount { get; set; }
+    public int UnknownCount { get; set; }
+    public List<CostCentreCategoryBreakdownApiResource> Categories { get; set; } = new();
+    public List<CostCentreCapabilityComplianceApiResource> Capabilities { get; set; } = new();
+
+    public static CostCentreComplianceDetailsApiResource From(CostCentreComplianceDetailsResult result)
+    {
+        return new CostCentreComplianceDetailsApiResource
+        {
+            CostCentre = result.CostCentre,
+            TotalCapabilities = result.TotalCapabilities,
+            CompliantCount = result.CompliantCount,
+            NonCompliantCount = result.NonCompliantCount,
+            UnknownCount = result.UnknownCount,
+            Categories = result.Categories.Select(CostCentreCategoryBreakdownApiResource.From).ToList(),
+            Capabilities = result.Capabilities.Select(CostCentreCapabilityComplianceApiResource.From).ToList(),
+        };
+    }
+}
+
+public class CostCentreCapabilityComplianceApiResource
+{
+    public string CapabilityId { get; set; } = null!;
+    public string CapabilityName { get; set; } = null!;
+    public string? JsonMetadata { get; set; }
+    public string OverallStatus { get; set; } = null!;
+    public List<ComplianceCategoryApiResource> Categories { get; set; } = new();
+
+    public static CostCentreCapabilityComplianceApiResource From(CostCentreCapabilityComplianceResult result)
+    {
+        return new CostCentreCapabilityComplianceApiResource
+        {
+            CapabilityId = result.CapabilityId,
+            CapabilityName = result.CapabilityName,
+            JsonMetadata = result.JsonMetadata,
+            OverallStatus = result.OverallStatus.ToString(),
+            Categories = result.Categories.Select(ComplianceCategoryApiResource.From).ToList(),
+        };
+    }
+}
