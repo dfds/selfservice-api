@@ -302,4 +302,18 @@ public class TestDafdaSerializationDeserialization
             }
         );
     }
+
+    [Fact]
+    public async Task dafda_serialize_deserialize_capability_ready_for_deletion()
+    {
+        await dafda_serialize_deserialize(new CapabilityReadyForDeletion());
+        await dafda_serialize_deserialize(
+            new CapabilityReadyForDeletion
+            {
+                CapabilityId = TestCapabilityId,
+                RequestedBy = TestUser,
+                RequestedAt = DateTime.UtcNow,
+            }
+        );
+    }
 }

@@ -26,7 +26,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-      - uses: dfds/shared-workflows/.github/actions/helm-repo-update@master
+      - uses: dfds/shared-workflows/.github/actions/helm-repo-update@v2.0.1
         name: Helm repo update
         id: helm_repo_update
         with:
