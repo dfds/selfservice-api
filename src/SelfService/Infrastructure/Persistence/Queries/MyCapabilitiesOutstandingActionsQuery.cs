@@ -32,7 +32,9 @@ public class MyCapabilitiesOutstandingActionsQuery : IMyCapabilitiesOutstandingA
             c => c.Id,
             c => new CapabilityOutstandingActions
             {
-                IsPendingDeletion = c.Status == CapabilityStatusOptions.PendingDeletion,
+                IsPendingDeletion =
+                    c.Status == CapabilityStatusOptions.PendingDeletion
+                    || c.Status == CapabilityStatusOptions.OngoingDeletion,
                 PendingMembershipApplicationCount = pendingApplicationCounts.GetValueOrDefault(c.Id, 0),
             }
         );

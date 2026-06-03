@@ -40,6 +40,11 @@ public class TestCapabilityRepository
                 .WithStatus(CapabilityStatusOptions.PendingDeletion)
                 .WithModifiedAt(DateTime.UtcNow.AddDays(-8))
         );
+        await repo.Add(
+            A.Capability.WithId("ongoing-deletion")
+                .WithStatus(CapabilityStatusOptions.OngoingDeletion)
+                .WithModifiedAt(DateTime.UtcNow.AddDays(-9))
+        );
         await repo.Add(A.Capability.WithId("deleted").WithStatus(CapabilityStatusOptions.Deleted));
 
         await dbContext.SaveChangesAsync();
@@ -47,7 +52,7 @@ public class TestCapabilityRepository
         var allCapabilities = await repo.GetAll(); // does not get deleted
         var readyForDeletion = await repo.GetAllPendingDeletionFor(days: 7);
 
-        Assert.Equal(4, allCapabilities.Count());
+        Assert.Equal(5, allCapabilities.Count());
         Assert.Single(readyForDeletion);
         Assert.Equal("pending-old", readyForDeletion.First().Id);
     }
