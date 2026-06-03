@@ -1626,11 +1626,13 @@ public class CapabilityController : ControllerBase
 
             if (!CapabilityId.TryCreateFrom(proto.Name!, out var capabilityId))
             {
-                failed.Add(new FailedCapabilityResult
-                {
-                    Name = proto.Name!,
-                    Errors = new List<string> { $"Unable to derive a capability ID from name \"{proto.Name}\"." },
-                });
+                failed.Add(
+                    new FailedCapabilityResult
+                    {
+                        Name = proto.Name!,
+                        Errors = new List<string> { $"Unable to derive a capability ID from name \"{proto.Name}\"." },
+                    }
+                );
                 continue;
             }
 
@@ -1661,9 +1663,7 @@ public class CapabilityController : ControllerBase
                     await _rbacApplicationService.GrantRoleGrant(userId, ownerRoleGrant);
                 }
 
-                var membersToAdd = proto
-                    .Members.Append(proto.Owner!)
-                    .Distinct(StringComparer.OrdinalIgnoreCase);
+                var membersToAdd = proto.Members.Append(proto.Owner!).Distinct(StringComparer.OrdinalIgnoreCase);
                 foreach (var member in membersToAdd)
                     await _membershipApplicationService.JoinCapability(capabilityId, UserId.Parse(member));
 
@@ -1682,20 +1682,24 @@ public class CapabilityController : ControllerBase
             }
             catch (EntityAlreadyExistsException)
             {
-                failed.Add(new FailedCapabilityResult
-                {
-                    Name = proto.Name!,
-                    Errors = new List<string> { $"A capability with name \"{proto.Name}\" already exists." },
-                });
+                failed.Add(
+                    new FailedCapabilityResult
+                    {
+                        Name = proto.Name!,
+                        Errors = new List<string> { $"A capability with name \"{proto.Name}\" already exists." },
+                    }
+                );
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error creating capability {CapabilityName} in batch", proto.Name);
-                failed.Add(new FailedCapabilityResult
-                {
-                    Name = proto.Name!,
-                    Errors = new List<string> { $"Unexpected error: {ex.Message}" },
-                });
+                failed.Add(
+                    new FailedCapabilityResult
+                    {
+                        Name = proto.Name!,
+                        Errors = new List<string> { $"Unexpected error: {ex.Message}" },
+                    }
+                );
             }
         }
 
@@ -1787,8 +1791,7 @@ public class CapabilityController : ControllerBase
                 errors.Add("Tag 'dfds.service.availability' is required when azure resource groups are specified.");
 
             if (
-                !proto.Tags.TryGetValue("dfds.azure.purpose", out var azPurpose)
-                || string.IsNullOrWhiteSpace(azPurpose)
+                !proto.Tags.TryGetValue("dfds.azure.purpose", out var azPurpose) || string.IsNullOrWhiteSpace(azPurpose)
             )
                 errors.Add("Tag 'dfds.azure.purpose' is required when azure resource groups are specified.");
 

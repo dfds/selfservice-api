@@ -646,15 +646,16 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser);
     }
 
-    private static readonly IReadOnlySet<string> BatchCapabilityAllowList = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    private static readonly IReadOnlySet<string> BatchCapabilityAllowList = new HashSet<string>(
+        StringComparer.OrdinalIgnoreCase
+    )
     {
         "andfris@dfds.com",
     };
 
     public bool CanBatchCreateCapabilities(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser)
-            || BatchCapabilityAllowList.Contains(portalUser.Id.ToString());
+        return IsCloudEngineerEnabled(portalUser) || BatchCapabilityAllowList.Contains(portalUser.Id.ToString());
     }
 
     public async Task<bool> CanDeleteMembershipApplication(
