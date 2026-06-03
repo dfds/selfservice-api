@@ -261,12 +261,18 @@ public class MyUserSettingsApiResource
     public bool SignedUpForDemos { get; set; }
     public bool ShowOnlyMyCapabilities { get; set; }
     public bool ShowDeletedCapabilities { get; set; }
+    public List<string> SeenWhatsNewIds { get; set; }
+    public List<string> DismissedWhatsNewIds { get; set; }
+    public List<string> CompletedWhatsNewIds { get; set; }
 
     public MyUserSettingsApiResource(UserSettings userSettings)
     {
         SignedUpForDemos = userSettings.SignedUpForDemos;
         ShowOnlyMyCapabilities = userSettings.ShowOnlyMyCapabilities;
         ShowDeletedCapabilities = userSettings.ShowDeletedCapabilities;
+        SeenWhatsNewIds = userSettings.SeenWhatsNewIds;
+        DismissedWhatsNewIds = userSettings.DismissedWhatsNewIds;
+        CompletedWhatsNewIds = userSettings.CompletedWhatsNewIds;
     }
 }
 

@@ -13,5 +13,14 @@ public class UserSettings
     [JsonPropertyName("showDeletedCapabilities")]
     public bool ShowDeletedCapabilities { get; set; } = false;
 
+    [JsonPropertyName("seenWhatsNewIds")]
+    public List<string> SeenWhatsNewIds { get; set; } = new();
+
+    [JsonPropertyName("dismissedWhatsNewIds")]
+    public List<string> DismissedWhatsNewIds { get; set; } = new();
+
+    [JsonPropertyName("completedWhatsNewIds")]
+    public List<string> CompletedWhatsNewIds { get; set; } = new();
+
     public static UserSettings Default => new();
 }
