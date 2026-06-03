@@ -22,5 +22,8 @@ public class UserSettings
     [JsonPropertyName("completedWhatsNewIds")]
     public List<string> CompletedWhatsNewIds { get; set; } = new();
 
+    [JsonPropertyName("seenReleaseNoteIds")]
+    public List<string> SeenReleaseNoteIds { get; set; } = new();
+
     public static UserSettings Default => new();
 }

@@ -264,6 +264,7 @@ public class MyUserSettingsApiResource
     public List<string> SeenWhatsNewIds { get; set; }
     public List<string> DismissedWhatsNewIds { get; set; }
     public List<string> CompletedWhatsNewIds { get; set; }
+    public List<string> SeenReleaseNoteIds { get; set; }
 
     public MyUserSettingsApiResource(UserSettings userSettings)
     {
@@ -273,6 +274,7 @@ public class MyUserSettingsApiResource
         SeenWhatsNewIds = userSettings.SeenWhatsNewIds;
         DismissedWhatsNewIds = userSettings.DismissedWhatsNewIds;
         CompletedWhatsNewIds = userSettings.CompletedWhatsNewIds;
+        SeenReleaseNoteIds = userSettings.SeenReleaseNoteIds;
     }
 }
 
