@@ -299,7 +299,6 @@ public class TestDafdaSerializationDeserialization
                 RecipientLogId = "log-id",
                 Status = "Sent",
                 ErrorMessage = null,
-
             }
         );
     }
