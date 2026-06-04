@@ -37,7 +37,7 @@ public class NewsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Access Denied!",
-                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
+                    Detail = $"Value \"{User.GetUserId()}\" is not a valid user id.",
                 }
             );
         }
@@ -70,7 +70,7 @@ public class NewsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Access Denied!",
-                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
+                    Detail = $"Value \"{User.GetUserId()}\" is not a valid user id.",
                 }
             );
         }
@@ -106,7 +106,7 @@ public class NewsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Access Denied!",
-                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
+                    Detail = $"Value \"{User.GetUserId()}\" is not a valid user id.",
                 }
             );
         }
@@ -157,7 +157,7 @@ public class NewsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Access Denied!",
-                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
+                    Detail = $"Value \"{User.GetUserId()}\" is not a valid user id.",
                 }
             );
         }
@@ -201,7 +201,7 @@ public class NewsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Access Denied!",
-                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
+                    Detail = $"Value \"{User.GetUserId()}\" is not a valid user id.",
                 }
             );
         }
@@ -244,7 +244,7 @@ public class NewsController : ControllerBase
                 new ProblemDetails
                 {
                     Title = "Access Denied!",
-                    Detail = $"Value \"{User.Identity?.Name}\" is not a valid user id.",
+                    Detail = $"Value \"{User.GetUserId()}\" is not a valid user id.",
                 }
             );
         }
