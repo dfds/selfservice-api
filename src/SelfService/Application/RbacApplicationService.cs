@@ -364,6 +364,21 @@ public class RbacApplicationService : IRbacApplicationService
     }
 
     [TransactionalBoundary]
+    public async Task<BulkGrantResult<RbacPermissionGrant>> GrantPermissions(
+        string user,
+        List<RbacPermissionGrant> grants
+    )
+    {
+        var result = new BulkGrantResult<RbacPermissionGrant>();
+        foreach (var grant in grants)
+        {
+            await GrantPermission(user, grant);
+            result.CreatedInputs.Add(grant);
+        }
+        return result;
+    }
+
+    [TransactionalBoundary]
     public async Task RevokePermission(string user, string id)
     {
         _cache.Reset();
@@ -508,6 +523,18 @@ public class RbacApplicationService : IRbacApplicationService
                 throw new Exception("Invalid role grant");
         }
         _cache.Reset();
+    }
+
+    [TransactionalBoundary]
+    public async Task<BulkGrantResult<RbacRoleGrant>> GrantRoleGrants(string user, List<RbacRoleGrant> grants)
+    {
+        var result = new BulkGrantResult<RbacRoleGrant>();
+        foreach (var grant in grants)
+        {
+            await GrantRoleGrant(user, grant);
+            result.CreatedInputs.Add(grant);
+        }
+        return result;
     }
 
     [TransactionalBoundary]
@@ -888,6 +915,12 @@ public class Permission
             new(RbacNamespace.Rbac, "create", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "update", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "delete", "Manage RBAC", RbacAccessType.Global),
+            new(
+                RbacNamespace.SystemLegacy,
+                "read",
+                "Read legacy system data (e.g. AAD-AWS sync capability list)",
+                RbacAccessType.Global
+            ),
         };
 
         return permissions;

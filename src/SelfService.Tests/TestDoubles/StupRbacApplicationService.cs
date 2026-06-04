@@ -113,7 +113,17 @@ public class StubRbacApplicationService : IRbacApplicationService
         throw new NotImplementedException();
     }
 
+    public Task<BulkGrantResult<RbacPermissionGrant>> GrantPermissions(string user, List<RbacPermissionGrant> grants)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task GrantRoleGrant(string user, RbacRoleGrant roleGrant)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<BulkGrantResult<RbacRoleGrant>> GrantRoleGrants(string user, List<RbacRoleGrant> grants)
     {
         throw new NotImplementedException();
     }

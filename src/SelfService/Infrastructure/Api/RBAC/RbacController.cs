@@ -4,6 +4,7 @@ using SelfService.Configuration;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api;
 using SelfService.Infrastructure.Api.Capabilities;
 using SelfService.Infrastructure.Api.RBAC.Dto;
 using RbacPermissionGrant = SelfService.Infrastructure.Api.RBAC.Dto.RbacPermissionGrant;
@@ -19,18 +20,24 @@ public class RbacController : ControllerBase
 {
     private readonly IRbacApplicationService _rbacApplicationService;
     private readonly IPermissionQuery _permissionQuery;
+    private readonly IMemberQuery _memberQuery;
+    private readonly IMemberRepository _memberRepository;
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IAuthorizationService _authorizationService;
 
     public RbacController(
         IRbacApplicationService rbacApplicationService,
         IPermissionQuery permissionQuery,
+        IMemberQuery memberQuery,
+        IMemberRepository memberRepository,
         ApiResourceFactory apiResourceFactory,
         IAuthorizationService authorizationService
     )
     {
         _rbacApplicationService = rbacApplicationService;
         _permissionQuery = permissionQuery;
+        _memberQuery = memberQuery;
+        _memberRepository = memberRepository;
         _apiResourceFactory = apiResourceFactory;
         _authorizationService = authorizationService;
     }
@@ -328,6 +335,154 @@ public class RbacController : ControllerBase
 
         await _rbacApplicationService.RevokeGroupGrant(userId.ToString(), membership);
         return Ok();
+    }
+
+    [HttpGet("members")]
+    [ProducesResponseType(typeof(MemberSummaryListApiResource), StatusCodes.Status200OK)]
+    [RequiresPermission("rbac", "read")]
+    public async Task<IActionResult> SearchMembers(
+        [FromQuery] string? type,
+        [FromQuery] string? search,
+        [FromQuery] int? limit,
+        [FromQuery] int? offset
+    )
+    {
+        MemberType? memberType = null;
+        if (!string.IsNullOrWhiteSpace(type) && !string.Equals(type, "All", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!Enum.TryParse<MemberType>(type, ignoreCase: true, out var parsed))
+                return BadRequest($"Unknown member type \"{type}\". Expected: User, ServicePrincipal, All.");
+            memberType = parsed;
+        }
+
+        var (members, total) = await _memberQuery.Search(memberType, search, limit ?? 50, offset ?? 0);
+        var resource = new MemberSummaryListApiResource
+        {
+            Items = members.Select(m => MapMemberSummary(m, includeLinks: false)).ToList(),
+            Total = total,
+        };
+        return Ok(resource);
+    }
+
+    [HttpGet("members/{id:required}")]
+    [ProducesResponseType(typeof(MemberSummaryApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequiresPermission("rbac", "read")]
+    public async Task<IActionResult> GetMember(string id)
+    {
+        if (!UserId.TryParse(id, out var memberId))
+            return BadRequest("Invalid member id");
+
+        var member = await _memberRepository.FindBy(memberId);
+        if (member == null)
+            return NotFound();
+
+        return Ok(MapMemberSummary(member, includeLinks: true));
+    }
+
+    [HttpGet("members/{id:required}/groups")]
+    [ProducesResponseType(typeof(List<RbacGroupApiResource>), StatusCodes.Status200OK)]
+    [RequiresPermission("rbac", "read")]
+    public async Task<IActionResult> GetMemberGroups(string id)
+    {
+        if (!UserId.TryParse(id, out var memberId))
+            return BadRequest("Invalid member id");
+
+        var groups = await _rbacApplicationService.GetGroupsForUser(memberId.ToString());
+        var payload = groups.Select(g => _apiResourceFactory.Convert(g)).ToList();
+        return Ok(payload);
+    }
+
+    [HttpPost("permission/grant-bulk")]
+    [ProducesResponseType(typeof(BulkPermissionGrantResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [RequiresPermission("rbac", "create")]
+    public async Task<IActionResult> GrantPermissionBulk([FromBody] BulkPermissionGrantRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (request?.Grants == null || request.Grants.Count == 0)
+            return BadRequest("At least one grant is required");
+
+        var domainGrants = request
+            .Grants.Select(g =>
+                Domain.Models.RbacPermissionGrant.New(
+                    g.AssignedEntityType,
+                    g.AssignedEntityId,
+                    g.Namespace,
+                    g.Permission,
+                    RbacAccessType.Parse(g.Type),
+                    g.Resource ?? ""
+                )
+            )
+            .ToList();
+
+        await _rbacApplicationService.GrantPermissions(userId.ToString(), domainGrants);
+
+        var response = new BulkPermissionGrantResponse
+        {
+            Created = domainGrants.Select(g => _apiResourceFactory.Convert(g)).ToList(),
+        };
+        return StatusCode(StatusCodes.Status201Created, response);
+    }
+
+    [HttpPost("role/grant-bulk")]
+    [ProducesResponseType(typeof(BulkRoleGrantResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [RequiresPermission("rbac", "create")]
+    public async Task<IActionResult> GrantRoleBulk([FromBody] BulkRoleGrantRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (request?.Grants == null || request.Grants.Count == 0)
+            return BadRequest("At least one grant is required");
+
+        var domainGrants = request.Grants.Select(g => g.IntoDomainModel()).ToList();
+
+        await _rbacApplicationService.GrantRoleGrants(userId.ToString(), domainGrants);
+
+        var response = new BulkRoleGrantResponse
+        {
+            Created = domainGrants.Select(g => _apiResourceFactory.Convert(g)).ToList(),
+        };
+        return StatusCode(StatusCodes.Status201Created, response);
+    }
+
+    private MemberSummaryApiResource MapMemberSummary(Member member, bool includeLinks)
+    {
+        var resource = new MemberSummaryApiResource
+        {
+            Id = member.Id.ToString(),
+            Email = member.Email,
+            DisplayName = member.DisplayName,
+            Type = member.Type.ToString(),
+            LastSeen = member.LastSeen,
+        };
+
+        if (includeLinks)
+        {
+            resource.Links = new MemberSummaryApiResource.MemberSummaryLinks
+            {
+                Self = new ResourceLink($"/rbac/members/{member.Id}", rel: "self", allow: Allow.Get),
+                PermissionGrants = new ResourceLink(
+                    $"/rbac/permission/user/{member.Id}",
+                    rel: "permission-grants",
+                    allow: Allow.Get + Method.Post
+                ),
+                RoleGrants = new ResourceLink(
+                    $"/rbac/role/user/{member.Id}",
+                    rel: "role-grants",
+                    allow: Allow.Get + Method.Post
+                ),
+                Groups = new ResourceLink($"/rbac/members/{member.Id}/groups", rel: "groups", allow: Allow.Get),
+            };
+        }
+
+        return resource;
     }
 
     [HttpPost("can-i")]
