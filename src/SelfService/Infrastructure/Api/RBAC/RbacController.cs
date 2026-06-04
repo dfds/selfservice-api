@@ -22,6 +22,7 @@ public class RbacController : ControllerBase
     private readonly IPermissionQuery _permissionQuery;
     private readonly IMemberQuery _memberQuery;
     private readonly IMemberRepository _memberRepository;
+    private readonly IMemberApplicationService _memberApplicationService;
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IAuthorizationService _authorizationService;
 
@@ -30,6 +31,7 @@ public class RbacController : ControllerBase
         IPermissionQuery permissionQuery,
         IMemberQuery memberQuery,
         IMemberRepository memberRepository,
+        IMemberApplicationService memberApplicationService,
         ApiResourceFactory apiResourceFactory,
         IAuthorizationService authorizationService
     )
@@ -38,6 +40,7 @@ public class RbacController : ControllerBase
         _permissionQuery = permissionQuery;
         _memberQuery = memberQuery;
         _memberRepository = memberRepository;
+        _memberApplicationService = memberApplicationService;
         _apiResourceFactory = apiResourceFactory;
         _authorizationService = authorizationService;
     }
@@ -362,6 +365,56 @@ public class RbacController : ControllerBase
             Total = total,
         };
         return Ok(resource);
+    }
+
+    [HttpPost("service-principals")]
+    [ProducesResponseType(typeof(MemberSummaryApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MemberSummaryApiResource), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [RequiresPermission("rbac", "create")]
+    public async Task<IActionResult> RegisterServicePrincipal([FromBody] RegisterServicePrincipalRequest request)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.Id))
+            return BadRequest("id is required");
+
+        if (!UserId.TryParse(request.Id, out var servicePrincipalId))
+            return BadRequest("id is not a valid service principal id");
+
+        var existing = await _memberRepository.FindBy(servicePrincipalId);
+        if (existing != null && existing.Type == MemberType.User)
+        {
+            return Conflict(
+                new ProblemDetails
+                {
+                    Title = "Identifier already taken by a user",
+                    Detail =
+                        $"Member \"{servicePrincipalId}\" already exists as a user and cannot be registered as a service principal.",
+                    Status = StatusCodes.Status409Conflict,
+                }
+            );
+        }
+
+        if (existing == null)
+        {
+            var syntheticEmail = ClaimsPrincipleExtensions.BuildSyntheticEmail(
+                servicePrincipalId.ToString(),
+                request.DisplayName
+            );
+            await _memberApplicationService.RegisterServicePrincipal(
+                servicePrincipalId,
+                syntheticEmail,
+                request.DisplayName
+            );
+        }
+
+        var member = await _memberRepository.FindBy(servicePrincipalId);
+        if (member == null)
+            return StatusCode(StatusCodes.Status500InternalServerError);
+
+        var resource = MapMemberSummary(member, includeLinks: true);
+        return existing == null ? StatusCode(StatusCodes.Status201Created, resource) : Ok(resource);
     }
 
     [HttpGet("members/{id:required}")]
