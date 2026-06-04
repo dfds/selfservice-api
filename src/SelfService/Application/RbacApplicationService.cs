@@ -1,5 +1,6 @@
 using SelfService.Configuration;
 using SelfService.Domain;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Persistence;
@@ -744,7 +745,19 @@ public class RbacApplicationService : IRbacApplicationService
         var group = await _groupRepository.FindById(RbacGroupId.Parse(membership.GroupId));
         if (group == null)
             throw new Exception("Group not found");
-        await _groupMemberRepository.Remove(membership.Id);
+
+        // The controller passes a freshly-minted RbacGroupMember (random Id) carrying
+        // only the GroupId + UserId of the membership the caller wants to revoke.
+        // Look up the real membership row before removing.
+        var existing = await _groupMemberRepository.FindByPredicate(m =>
+            m.GroupId == membership.GroupId && m.UserId == membership.UserId
+        );
+        if (existing == null)
+            throw EntityNotFoundException<RbacGroupMemberId>.UsingId(
+                $"(groupId={membership.GroupId}, userId={membership.UserId})"
+            );
+
+        await _groupMemberRepository.Remove(existing.Id);
         _cache.Reset();
     }
 
