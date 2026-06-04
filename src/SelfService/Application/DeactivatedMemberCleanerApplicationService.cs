@@ -55,6 +55,11 @@ public class DeactivatedMemberCleanerApplicationService : IDeactivatedMemberClea
         List<Member> notFoundMembers = new List<Member>();
         foreach (var member in members)
         {
+            // Service principals are not represented in Azure AD's /users endpoint;
+            // skipping them keeps the cleaner from incorrectly removing every SP membership.
+            if (member.Type == MemberType.ServicePrincipal)
+                continue;
+
             var status = await userStatusChecker.CheckUserStatus(member.Id);
 
             if (status == UserStatusCheckerStatus.NotFound)

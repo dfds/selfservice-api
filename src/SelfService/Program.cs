@@ -1,6 +1,7 @@
 using SelfService;
 using SelfService.Configuration;
 using SelfService.Infrastructure.Api;
+using SelfService.Infrastructure.Api.Auth;
 using SelfService.Infrastructure.Api.Configuration;
 using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Messaging;
@@ -53,6 +54,7 @@ try
 
     app.MapEndpoints();
 
+    app.UseMemberAutoProvisioner();
     app.UseUserActionMiddleware();
     app.UseUserImpersonationMiddleware();
     app.UseAuthCheckerMiddleware();

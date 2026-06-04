@@ -284,11 +284,13 @@ public class ApiResourceFactory
 
     private static MemberApiResource Convert(Member member)
     {
+        var isServicePrincipal = member.Type == MemberType.ServicePrincipal;
         return new MemberApiResource(
             id: member.Id.ToString(),
             name: member.DisplayName,
-            email: member.Email
-        // Note: [jandr] current design does not include the need for links
+            email: member.Email,
+            type: isServicePrincipal ? "service-principal" : "user",
+            servicePrincipalOid: isServicePrincipal ? member.Id.ToString() : null
         );
     }
 
@@ -771,8 +773,29 @@ public class ApiResourceFactory
                 joinCapability: CreateJoinLinkFor(capability),
                 configurationLevel: CreateConfigurationLevelLinkFor(capability),
                 selfAssessments: await CreateSelfAssessmentsLinkFor(capability),
-                requirementScore: CreateRequirementScoreLinkFor(capability)
+                requirementScore: CreateRequirementScoreLinkFor(capability),
+                servicePrincipalMembers: await CreateServicePrincipalMembersLinkFor(capability)
             )
+        );
+    }
+
+    private async Task<ResourceLink> CreateServicePrincipalMembersLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+        if (await _authorizationService.CanApproveMembershipApplications(CurrentUser, capability.Id))
+        {
+            allowedInteractions += Post;
+        }
+
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.AddServicePrincipalAsCapabilityMember),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "related",
+            allow: allowedInteractions
         );
     }
 

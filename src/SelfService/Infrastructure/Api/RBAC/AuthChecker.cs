@@ -47,7 +47,7 @@ public class AuthChecker : IMiddleware
         PortalUser portalUser;
         try
         {
-            portalUser = context.User.ToPortalUser(); // TODO: Clean up to support tokens from service accounts
+            portalUser = context.User.ToPortalUser();
         }
         catch (Exception)
         {
