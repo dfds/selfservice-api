@@ -333,21 +333,31 @@ public class RbacController : ControllerBase
     [HttpPost("can-i")]
     [ProducesResponseType(typeof(RbacPermittedResponseApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> CanI([FromBody] CanRequest request)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CanI([FromBody] CanRequest? request)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
-        var resp = await _rbacApplicationService.IsUserPermitted(userId, request.Permissions, request.Objectid);
+        if (request is null)
+            return BadRequest("Missing request body");
+
+        var permissions = request.Permissions ?? new List<Permission>();
+        var resp = await _rbacApplicationService.IsUserPermitted(userId, permissions, request.Objectid ?? "");
         return Ok(_apiResourceFactory.Convert(resp));
     }
 
     [HttpPost("can-they")]
     [ProducesResponseType(typeof(RbacPermittedResponseApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [RequiresPermission("rbac", "read")]
-    public async Task<IActionResult> CanThey([FromBody] CanRequest request)
+    public async Task<IActionResult> CanThey([FromBody] CanRequest? request)
     {
-        var resp = await _rbacApplicationService.IsUserPermitted(request.UserId, request.Permissions, request.Objectid);
+        if (request is null)
+            return BadRequest("Missing request body");
+
+        var permissions = request.Permissions ?? new List<Permission>();
+        var resp = await _rbacApplicationService.IsUserPermitted(request.UserId, permissions, request.Objectid ?? "");
         return Ok(_apiResourceFactory.Convert(resp));
     }
 
