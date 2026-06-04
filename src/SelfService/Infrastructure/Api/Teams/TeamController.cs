@@ -131,7 +131,7 @@ public class TeamController : ControllerBase
             );
         }
 
-        if (UserId.TryParse(User.Identity?.Name, out var userId))
+        if (User.TryGetUserId(out var userId))
         {
             return Unauthorized(
                 new ProblemDetails { Title = "Unauthorized", Detail = "You are not authorized to perform this action" }
