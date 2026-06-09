@@ -347,7 +347,8 @@ public class CapabilityController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
                 new ProblemDetails
                 {
                     Title = "Error",

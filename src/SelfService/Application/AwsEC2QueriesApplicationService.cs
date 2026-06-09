@@ -65,10 +65,15 @@ public class AwsEC2QueriesApplicationService : IAwsEC2QueriesApplicationService
         try
         {
             var vpcresponse = await ec2Client.DescribeVpcsAsync();
-            if (vpcresponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
+            if (vpcresponse.HttpStatusCode == System.Net.HttpStatusCode.OK && vpcresponse.Vpcs != null)
             {
                 foreach (var vpc in vpcresponse.Vpcs)
                 {
+                    if (string.IsNullOrWhiteSpace(vpc?.VpcId))
+                    {
+                        continue;
+                    }
+
                     var describeTagsRequest = new DescribeTagsRequest
                     {
                         Filters = new List<Filter>
@@ -82,7 +87,8 @@ public class AwsEC2QueriesApplicationService : IAwsEC2QueriesApplicationService
                     };
                     var tagsResponse = await ec2Client.DescribeTagsAsync(describeTagsRequest);
 
-                    var hasPeeringTag = tagsResponse.Tags.Exists(tag => tag.Key == "Name" && tag.Value == "peering");
+                    var hasPeeringTag =
+                        tagsResponse.Tags?.Exists(tag => tag.Key == "Name" && tag.Value == "peering") ?? false;
                     if (hasPeeringTag)
                     {
                         result.Add(vpc);
