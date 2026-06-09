@@ -81,7 +81,9 @@ public class TestMembershipApplicationService
             .ReturnsAsync(new List<Membership>());
 
         var membershipApplicationRepo = new Mock<IMembershipApplicationRepository>();
-        membershipApplicationRepo.Setup(x => x.FindPendingBy(capabilityId, userId)).ReturnsAsync((MembershipApplication?)null);
+        membershipApplicationRepo
+            .Setup(x => x.FindPendingBy(capabilityId, userId))
+            .ReturnsAsync((MembershipApplication?)null);
 
         MembershipApplication? added = null;
         membershipApplicationRepo

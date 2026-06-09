@@ -63,7 +63,9 @@ public class MembershipApplicationServiceBuilder
         return this;
     }
 
-    public MembershipApplicationServiceBuilder WithRbacApplicationService(IRbacApplicationService rbacApplicationService)
+    public MembershipApplicationServiceBuilder WithRbacApplicationService(
+        IRbacApplicationService rbacApplicationService
+    )
     {
         _rbacApplicationService = rbacApplicationService;
         return this;
