@@ -288,4 +288,9 @@ public class StubAuthorizationService : IAuthorizationService
     {
         return _authorized;
     }
+
+    public bool CanBatchCreateCapabilities(PortalUser portalUser, UserId userId)
+    {
+        return _authorized;
+    }
 }

@@ -646,6 +646,25 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser);
     }
 
+    /*
+     * This is a temporary solution to allow certain users to create capabilities in batch until we have a proper RBAC solution in place for this.
+     * User ids are extracted from Azure AD
+     */
+    private static readonly IReadOnlySet<string> BatchCapabilityAllowList = new HashSet<string>(
+        StringComparer.OrdinalIgnoreCase
+    )
+    {
+        "noesimo@dfds.com",
+        "jakstr.ptr@partner.dfds.com",
+        "joakkei@dfds.com",
+        "jonlars@dfds.com",
+    };
+
+    public bool CanBatchCreateCapabilities(PortalUser portalUser, UserId userId)
+    {
+        return BatchCapabilityAllowList.Contains(userId.ToString()) || IsCloudEngineerEnabled(portalUser);
+    }
+
     public async Task<bool> CanDeleteMembershipApplication(
         PortalUser portalUser,
         UserId userId,
