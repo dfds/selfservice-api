@@ -9,3 +9,4 @@ notmycapability-xx2;Not My Capability 2;Something you are not a member of;2023-0
 notmycapability-xx3;Not My Capability 3;Something you are not a member of;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript;{};0;0
 notmycapability-xx4;Not My Capability 4;Something you are not a member of;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript;{};0;0
 notmycapability-xx5;Not My Capability 5;Something you are not a member of;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript;{};0;0
+no-members-xxx;no-members;Capability used to verify auto-approval when there are no existing members;2023-02-10T08:00:00;SeedScript;Active;2023-02-10T08:00:00;SeedScript;{};0;0

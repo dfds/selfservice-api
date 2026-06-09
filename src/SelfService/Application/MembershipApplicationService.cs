@@ -15,6 +15,7 @@ public class MembershipApplicationService : IMembershipApplicationService
     private readonly IMembershipRepository _membershipRepository;
     private readonly IMembershipApplicationRepository _membershipApplicationRepository;
     private readonly IAuthorizationService _authorizationService;
+    private readonly IRbacApplicationService _rbacApplicationService;
     private readonly SystemTime _systemTime;
     private readonly IMembershipQuery _membershipQuery;
     private readonly IMembershipApplicationDomainService _membershipApplicationDomainService;
@@ -26,6 +27,7 @@ public class MembershipApplicationService : IMembershipApplicationService
         IMembershipRepository membershipRepository,
         IMembershipApplicationRepository membershipApplicationRepository,
         IAuthorizationService authorizationService,
+        IRbacApplicationService rbacApplicationService,
         SystemTime systemTime,
         IMembershipQuery membershipQuery,
         IMembershipApplicationDomainService membershipApplicationDomainService,
@@ -37,10 +39,38 @@ public class MembershipApplicationService : IMembershipApplicationService
         _membershipRepository = membershipRepository;
         _membershipApplicationRepository = membershipApplicationRepository;
         _authorizationService = authorizationService;
+        _rbacApplicationService = rbacApplicationService;
         _systemTime = systemTime;
         _membershipQuery = membershipQuery;
         _membershipApplicationDomainService = membershipApplicationDomainService;
         _myCapabilitiesQuery = myCapabilitiesQuery;
+    }
+
+    private async Task GrantOwnerRole(CapabilityId capabilityId, UserId userId)
+    {
+        var ownerRoleId = (await _rbacApplicationService.GetAssignableRoles())
+            .FirstOrDefault(r => r.Name == "Owner")
+            ?.Id;
+
+        if (ownerRoleId == null)
+        {
+            _logger.LogWarning(
+                "Unable to grant Owner role to user {UserId} for capability {CapabilityId} because role was not found",
+                userId,
+                capabilityId
+            );
+            return;
+        }
+
+        var ownerRoleGrant = RbacRoleGrant.New(
+            ownerRoleId,
+            AssignedEntityType.User,
+            userId,
+            RbacAccessType.Capability,
+            capabilityId.ToString()
+        );
+
+        await _rbacApplicationService.GrantRoleGrant(userId.ToString(), ownerRoleGrant);
     }
 
     private async Task CreateAndAddMembership(CapabilityId capabilityId, UserId userId)
@@ -185,6 +215,23 @@ public class MembershipApplicationService : IMembershipApplicationService
             throw new PendingMembershipApplicationAlreadyExistsException(
                 $"User \"{userId}\" already has a pending membership application for capability \"{capabilityId}\""
             );
+        }
+
+        if (!membersOfCapability.Any())
+        {
+            var autoApprovedApplication = MembershipApplication.New(capabilityId, userId, _systemTime.Now, []);
+            autoApprovedApplication.FinalizeApprovals();
+            await _membershipApplicationRepository.Add(autoApprovedApplication);
+            await GrantOwnerRole(capabilityId, userId);
+
+            _logger.LogInformation(
+                "Auto-approved membership application {MembershipApplicationId} for first member {UserId} in capability {CapabilityId}",
+                autoApprovedApplication.Id,
+                userId,
+                capabilityId
+            );
+
+            return autoApprovedApplication.Id;
         }
 
         var application = MembershipApplication.New(capabilityId, userId, _systemTime.Now, approverIdStrings);
