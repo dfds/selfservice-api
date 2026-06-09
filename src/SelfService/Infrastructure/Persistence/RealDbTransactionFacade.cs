@@ -11,6 +11,11 @@ public class RealDbTransactionFacade : IDbTransactionFacade
 
     public async Task<IDbTransaction> BeginTransaction()
     {
+        if (_dbContext.Database.CurrentTransaction != null)
+        {
+            return new NoOpDbTransaction(_dbContext);
+        }
+
         var transaction = await _dbContext.Database.BeginTransactionAsync();
 
         return new RealDbTransaction(_dbContext, transaction);
