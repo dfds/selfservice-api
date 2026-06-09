@@ -1598,17 +1598,18 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(BatchCapabilityResponse), StatusCodes.Status207MultiStatus)]
     [ProducesResponseType(typeof(BatchCapabilityResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
-    public async Task<IActionResult> CreateCapabilitiesFromBatch([FromBody] BatchCapabilityRequest request)
+    public async Task<IActionResult> de([FromBody] BatchCapabilityRequest request)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        if (!_authorizationService.CanBatchCreateCapabilities(HttpContext.User.ToPortalUser()))
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!_authorizationService.CanBatchCreateCapabilities(portalUser, userId))
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "User unauthorized",
-                    Detail = "Only cloud engineers can create capabilities in batch.",
+                    Detail = "Only cloud engineers and selected users can create capabilities in batch.",
                 }
             );
 
@@ -1617,7 +1618,7 @@ public class CapabilityController : ControllerBase
 
         foreach (var proto in request.ProtoCapabilities)
         {
-            var errors = ValidateProtoCapabilityRequest(proto);
+            var errors = await ValidateProtoCapabilityRequest(proto);
             if (errors.Count > 0)
             {
                 failed.Add(new FailedCapabilityResult { Name = proto.Name ?? "(unknown)", Errors = errors });
@@ -1738,12 +1739,18 @@ public class CapabilityController : ControllerBase
         "other",
     };
 
-    private static List<string> ValidateProtoCapabilityRequest(ProtoCapabilityRequest proto)
+    private async Task<List<string>> ValidateProtoCapabilityRequest(ProtoCapabilityRequest proto)
     {
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(proto.Name))
             errors.Add("Name is required.");
+        else
+        {
+            var existingCapabilities = await _capabilityRepository.GetAll();
+            if (existingCapabilities.Any(capability => capability.Name.Equals(proto.Name, StringComparison.OrdinalIgnoreCase)))
+                errors.Add($"A capability with name \"{proto.Name}\" already exists.");
+        }
 
         if (string.IsNullOrWhiteSpace(proto.Owner))
             errors.Add("Owner is required.");
@@ -1796,10 +1803,10 @@ public class CapabilityController : ControllerBase
                 errors.Add("Tag 'dfds.azure.purpose' is required when azure resource groups are specified.");
 
             if (
-                !proto.Tags.TryGetValue("dfds.service.capabilities", out var svcCaps)
-                || string.IsNullOrWhiteSpace(svcCaps)
+                !proto.Tags.TryGetValue("dfds.businessCapability", out var businessCapability)
+                || string.IsNullOrWhiteSpace(businessCapability)
             )
-                errors.Add("Tag 'dfds.service.capabilities' is required when azure resource groups are specified.");
+                errors.Add("Tag 'dfds.businessCapability' is required when azure resource groups are specified.");
 
             for (int i = 0; i < proto.AzureResourceGroups.Count; i++)
             {
