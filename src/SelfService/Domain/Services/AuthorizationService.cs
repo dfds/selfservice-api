@@ -657,7 +657,7 @@ public class AuthorizationService : IAuthorizationService
         "noesimo@dfds.com",
         "jakstr.ptr@partner.dfds.com",
         "joakkei@dfds.com",
-        "jonlars@dfds.com"
+        "jonlars@dfds.com",
     };
 
     public bool CanBatchCreateCapabilities(PortalUser portalUser, UserId userId)

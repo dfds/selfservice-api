@@ -1748,7 +1748,11 @@ public class CapabilityController : ControllerBase
         else
         {
             var existingCapabilities = await _capabilityRepository.GetAll();
-            if (existingCapabilities.Any(capability => capability.Name.Equals(proto.Name, StringComparison.OrdinalIgnoreCase)))
+            if (
+                existingCapabilities.Any(capability =>
+                    capability.Name.Equals(proto.Name, StringComparison.OrdinalIgnoreCase)
+                )
+            )
                 errors.Add($"A capability with name \"{proto.Name}\" already exists.");
         }
 
