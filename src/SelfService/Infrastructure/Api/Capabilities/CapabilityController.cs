@@ -1587,4 +1587,256 @@ public class CapabilityController : ControllerBase
         var resource = RequirementsMetricConverter.Convert(id, totalScore, scores);
         return Ok(resource);
     }
+
+    /// <summary>
+    /// Creates multiple capabilities from a list of proto-capabilities.
+    /// Each proto-capability is validated individually; invalid ones are skipped and reported in the response.
+    /// Returns 201 if all were created successfully, 207 if some failed, or 400 if all failed.
+    /// </summary>
+    [HttpPost("batch")]
+    [ProducesResponseType(typeof(BatchCapabilityResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(BatchCapabilityResponse), StatusCodes.Status207MultiStatus)]
+    [ProducesResponseType(typeof(BatchCapabilityResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    public async Task<IActionResult> de([FromBody] BatchCapabilityRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!_authorizationService.CanBatchCreateCapabilities(portalUser, userId))
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "User unauthorized",
+                    Detail = "Only cloud engineers and selected users can create capabilities in batch.",
+                }
+            );
+
+        var created = new List<CreatedCapabilityResult>();
+        var failed = new List<FailedCapabilityResult>();
+
+        foreach (var proto in request.ProtoCapabilities)
+        {
+            var errors = await ValidateProtoCapabilityRequest(proto);
+            if (errors.Count > 0)
+            {
+                failed.Add(new FailedCapabilityResult { Name = proto.Name ?? "(unknown)", Errors = errors });
+                continue;
+            }
+
+            if (!CapabilityId.TryCreateFrom(proto.Name!, out var capabilityId))
+            {
+                failed.Add(
+                    new FailedCapabilityResult
+                    {
+                        Name = proto.Name!,
+                        Errors = new List<string> { $"Unable to derive a capability ID from name \"{proto.Name}\"." },
+                    }
+                );
+                continue;
+            }
+
+            var jsonMetadata = JsonSerializer.Serialize(proto.Tags);
+            try
+            {
+                await _capabilityApplicationService.CreateNewCapability(
+                    capabilityId,
+                    proto.Name!,
+                    proto.Description ?? "",
+                    proto.Owner!,
+                    jsonMetadata,
+                    jsonSchemaVersion: 0
+                );
+
+                var ownerRoleId = (await _rbacApplicationService.GetAssignableRoles())
+                    .FirstOrDefault(r => r.Name == "Owner")
+                    ?.Id;
+                if (ownerRoleId is not null)
+                {
+                    var ownerRoleGrant = Domain.Models.RbacRoleGrant.New(
+                        ownerRoleId,
+                        AssignedEntityType.User,
+                        proto.Owner!,
+                        RbacAccessType.Capability,
+                        capabilityId.ToString()
+                    );
+                    await _rbacApplicationService.GrantRoleGrant(userId, ownerRoleGrant);
+                }
+
+                var membersToAdd = proto.Members.Append(proto.Owner!).Distinct(StringComparer.OrdinalIgnoreCase);
+                foreach (var member in membersToAdd)
+                    await _membershipApplicationService.JoinCapability(capabilityId, UserId.Parse(member));
+
+                foreach (var rg in proto.AzureResourceGroups)
+                    await _azureResourceApplicationService.RequestAzureResource(
+                        capabilityId,
+                        rg.Environment!,
+                        UserId.Parse(proto.Owner!),
+                        rg.Purpose!,
+                        rg.CatalogueId,
+                        rg.Risk,
+                        rg.Gdpr
+                    );
+
+                created.Add(new CreatedCapabilityResult { CapabilityId = capabilityId.ToString(), Name = proto.Name! });
+            }
+            catch (EntityAlreadyExistsException)
+            {
+                failed.Add(
+                    new FailedCapabilityResult
+                    {
+                        Name = proto.Name!,
+                        Errors = new List<string> { $"A capability with name \"{proto.Name}\" already exists." },
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error creating capability {CapabilityName} in batch", proto.Name);
+                failed.Add(
+                    new FailedCapabilityResult
+                    {
+                        Name = proto.Name!,
+                        Errors = new List<string> { $"Unexpected error: {ex.Message}" },
+                    }
+                );
+            }
+        }
+
+        var response = new BatchCapabilityResponse { Created = created, Failed = failed };
+        if (created.Count == 0)
+            return BadRequest(response);
+        if (failed.Count > 0)
+            return StatusCode(StatusCodes.Status207MultiStatus, response);
+        return StatusCode(StatusCodes.Status201Created, response);
+    }
+
+    private static readonly IReadOnlyList<string> LegalCostCentres = new[]
+    {
+        "ti-cae",
+        "ti-ferry",
+        "ti-logistics",
+        "ti-gtad",
+        "ti-sao",
+        "ti-arch",
+        "ti-tes",
+        "ti-ctoo",
+        "ferry",
+        "finance",
+        "logistics",
+        "people",
+    };
+
+    private static readonly IReadOnlyList<string> LegalServiceAvailabilities = new[] { "low", "medium", "high" };
+
+    private static readonly IReadOnlyList<string> LegalAzurePurposes = new[]
+    {
+        "toolaccess",
+        "ai",
+        "thirdpartylimitations",
+        "thirdpartylimitations → partnerpackagelimitation",
+        "other",
+    };
+
+    private async Task<List<string>> ValidateProtoCapabilityRequest(ProtoCapabilityRequest proto)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(proto.Name))
+            errors.Add("Name is required.");
+        else
+        {
+            var existingCapabilities = await _capabilityRepository.GetAll();
+            if (
+                existingCapabilities.Any(capability =>
+                    capability.Name.Equals(proto.Name, StringComparison.OrdinalIgnoreCase)
+                )
+            )
+                errors.Add($"A capability with name \"{proto.Name}\" already exists.");
+        }
+
+        if (string.IsNullOrWhiteSpace(proto.Owner))
+            errors.Add("Owner is required.");
+        else if (!proto.Owner.EndsWith("@dfds.com", StringComparison.OrdinalIgnoreCase))
+            errors.Add($"Owner '{proto.Owner}' must be a @dfds.com email address.");
+
+        if (proto.Members.Count == 0)
+            errors.Add("At least one member is required.");
+
+        // dfds.cost.centre: always required, must be a legal value
+        if (!proto.Tags.TryGetValue("dfds.cost.centre", out var costCentre) || string.IsNullOrWhiteSpace(costCentre))
+            errors.Add("Tag 'dfds.cost.centre' is required.");
+        else if (!LegalCostCentres.Contains(costCentre, StringComparer.OrdinalIgnoreCase))
+            errors.Add(
+                $"Tag 'dfds.cost.centre' value '{costCentre}' is not valid. Legal values: {string.Join(", ", LegalCostCentres)}."
+            );
+
+        // dfds.service.availability: validate value if present
+        if (
+            proto.Tags.TryGetValue("dfds.service.availability", out var availability)
+            && !string.IsNullOrWhiteSpace(availability)
+            && !LegalServiceAvailabilities.Contains(availability, StringComparer.OrdinalIgnoreCase)
+        )
+            errors.Add(
+                $"Tag 'dfds.service.availability' value '{availability}' is not valid. Legal values: {string.Join(", ", LegalServiceAvailabilities)}."
+            );
+
+        // dfds.azure.purpose: validate value if present
+        if (
+            proto.Tags.TryGetValue("dfds.azure.purpose", out var azurePurpose)
+            && !string.IsNullOrWhiteSpace(azurePurpose)
+            && !LegalAzurePurposes.Contains(azurePurpose, StringComparer.OrdinalIgnoreCase)
+        )
+            errors.Add(
+                $"Tag 'dfds.azure.purpose' value '{azurePurpose}' is not valid. Legal values: {string.Join(", ", LegalAzurePurposes)}."
+            );
+
+        if (proto.AzureResourceGroups.Count > 0)
+        {
+            // Additional tags required when requesting Azure resources
+            if (
+                !proto.Tags.TryGetValue("dfds.service.availability", out var svcAvail)
+                || string.IsNullOrWhiteSpace(svcAvail)
+            )
+                errors.Add("Tag 'dfds.service.availability' is required when azure resource groups are specified.");
+
+            if (
+                !proto.Tags.TryGetValue("dfds.azure.purpose", out var azPurpose) || string.IsNullOrWhiteSpace(azPurpose)
+            )
+                errors.Add("Tag 'dfds.azure.purpose' is required when azure resource groups are specified.");
+
+            if (
+                !proto.Tags.TryGetValue("dfds.businessCapability", out var businessCapability)
+                || string.IsNullOrWhiteSpace(businessCapability)
+            )
+                errors.Add("Tag 'dfds.businessCapability' is required when azure resource groups are specified.");
+
+            for (int i = 0; i < proto.AzureResourceGroups.Count; i++)
+            {
+                var rg = proto.AzureResourceGroups[i];
+
+                if (string.IsNullOrWhiteSpace(rg.Environment))
+                    errors.Add($"Azure resource group at index {i}: environment is required.");
+
+                if (string.IsNullOrWhiteSpace(rg.Purpose))
+                    errors.Add($"Azure resource group at index {i}: purpose is required.");
+                else if (!LegalAzurePurposes.Contains(rg.Purpose, StringComparer.OrdinalIgnoreCase))
+                    errors.Add(
+                        $"Azure resource group at index {i}: purpose '{rg.Purpose}' is not valid. Legal values: {string.Join(", ", LegalAzurePurposes)}."
+                    );
+                else if (rg.Purpose.Equals("ai", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (string.IsNullOrWhiteSpace(rg.CatalogueId))
+                        errors.Add($"Azure resource group at index {i}: catalogueId is required when purpose is 'ai'.");
+                    if (string.IsNullOrWhiteSpace(rg.Risk))
+                        errors.Add($"Azure resource group at index {i}: risk is required when purpose is 'ai'.");
+                    if (!rg.Gdpr.HasValue)
+                        errors.Add($"Azure resource group at index {i}: gdpr is required when purpose is 'ai'.");
+                }
+            }
+        }
+
+        return errors;
+    }
 }
