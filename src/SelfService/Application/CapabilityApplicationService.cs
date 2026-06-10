@@ -437,17 +437,14 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     [TransactionalBoundary]
     public async Task UnsetCapabilityTags(CapabilityId capabilityId, List<string> tagKeys)
     {
-        if (!await _capabilityRepository.Exists(capabilityId))
-        {
-            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
-        }
+        var capability = await _capabilityRepository.Get(capabilityId);
 
         if (tagKeys == null || tagKeys.Count == 0)
         {
             return;
         }
 
-        var currentMetadata = await _capabilityRepository.GetJsonMetadata(capabilityId);
+        var currentMetadata = capability.JsonMetadata;
         var metadataObject = JsonNode.Parse(currentMetadata)?.AsObject();
 
         if (metadataObject == null)
@@ -455,12 +452,22 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             throw new InvalidOperationException("Unable to parse current metadata for capability.");
         }
 
-        foreach (var tagKey in tagKeys)
+        var tagsToUnset = new HashSet<string>(tagKeys, StringComparer.Ordinal);
+        if (tagsToUnset.Contains("dfds.cost.centre"))
+        {
+            tagsToUnset.Add("dfds.businessCapability");
+        }
+
+        foreach (var tagKey in tagsToUnset)
         {
             metadataObject.Remove(tagKey);
         }
 
         var updatedMetadata = metadataObject.ToJsonString();
-        await SetJsonMetadata(capabilityId, updatedMetadata);
+        await _capabilityRepository.SetJsonMetadata(
+            capabilityId,
+            updatedMetadata,
+            capability.JsonMetadataSchemaVersion
+        );
     }
 }
