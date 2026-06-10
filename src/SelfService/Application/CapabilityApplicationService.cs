@@ -452,7 +452,13 @@ public class CapabilityApplicationService : ICapabilityApplicationService
             throw new InvalidOperationException("Unable to parse current metadata for capability.");
         }
 
-        foreach (var tagKey in tagKeys)
+        var tagsToUnset = new HashSet<string>(tagKeys, StringComparer.Ordinal);
+        if (tagsToUnset.Contains("dfds.cost.centre"))
+        {
+            tagsToUnset.Add("dfds.businessCapability");
+        }
+
+        foreach (var tagKey in tagsToUnset)
         {
             metadataObject.Remove(tagKey);
         }
