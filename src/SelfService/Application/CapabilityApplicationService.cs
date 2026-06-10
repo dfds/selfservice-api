@@ -433,4 +433,34 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         }
         return selfAssessment.Id;
     }
+
+    [TransactionalBoundary]
+    public async Task UnsetCapabilityTags(CapabilityId capabilityId, List<string> tagKeys)
+    {
+        if (!await _capabilityRepository.Exists(capabilityId))
+        {
+            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
+        }
+
+        if (tagKeys == null || tagKeys.Count == 0)
+        {
+            return;
+        }
+
+        var currentMetadata = await _capabilityRepository.GetJsonMetadata(capabilityId);
+        var metadataObject = JsonNode.Parse(currentMetadata)?.AsObject();
+
+        if (metadataObject == null)
+        {
+            throw new InvalidOperationException("Unable to parse current metadata for capability.");
+        }
+
+        foreach (var tagKey in tagKeys)
+        {
+            metadataObject.Remove(tagKey);
+        }
+
+        var updatedMetadata = metadataObject.ToJsonString();
+        await SetJsonMetadata(capabilityId, updatedMetadata);
+    }
 }

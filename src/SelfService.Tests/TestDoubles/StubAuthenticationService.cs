@@ -289,6 +289,11 @@ public class StubAuthorizationService : IAuthorizationService
         return _authorized;
     }
 
+    public bool CanUnsetCapabilityTags(PortalUser portalUser)
+    {
+        return _authorized;
+    }
+
     public bool CanBatchCreateCapabilities(PortalUser portalUser, UserId userId)
     {
         return _authorized;

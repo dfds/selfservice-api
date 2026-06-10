@@ -154,6 +154,11 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser);
     }
 
+    public bool CanUnsetCapabilityTags(PortalUser portalUser)
+    {
+        return IsCloudEngineerEnabled(portalUser);
+    }
+
     public bool CanCreateDemoRecording(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser);
