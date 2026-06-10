@@ -44,4 +44,6 @@ public interface ICapabilityApplicationService
         UserId userId,
         SelfAssessmentStatus status
     );
+
+    Task UnsetCapabilityTags(CapabilityId capabilityId, List<string> tagKeys);
 }
