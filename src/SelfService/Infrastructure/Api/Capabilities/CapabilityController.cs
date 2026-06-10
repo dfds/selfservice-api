@@ -1840,4 +1840,67 @@ public class CapabilityController : ControllerBase
 
         return errors;
     }
+
+    [HttpPatch("{id}/remove-tags")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [RequiresPermission("cloud-engineer", "unset-tags")]
+    public async Task<IActionResult> UnsetCapabilityTags(string id, [FromBody] UnsetCapabilityTagsRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized(
+                new ProblemDetails
+                {
+                    Title = "Unknown user id",
+                    Detail = "User id is not valid and thus cannot unset capability tags.",
+                }
+            );
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found.",
+                }
+            );
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found.",
+                    Detail = $"A capability with id \"{id}\" could not be found.",
+                }
+            );
+
+        var portalUser = HttpContext.User.ToPortalUser();
+        if (!_authorizationService.CanUnsetCapabilityTags(portalUser))
+            return Forbid();
+
+        if (request?.Tags == null || request.Tags.Count == 0)
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid request",
+                    Detail = "Tags list is required and must not be empty.",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+
+        try
+        {
+            await _capabilityApplicationService.UnsetCapabilityTags(capabilityId, request.Tags);
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return CustomObjectResult.InternalServerError(
+                new ProblemDetails { Title = "Error unsetting tags", Detail = e.Message }
+            );
+        }
+    }
 }
