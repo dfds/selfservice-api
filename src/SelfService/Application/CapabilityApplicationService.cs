@@ -437,17 +437,14 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     [TransactionalBoundary]
     public async Task UnsetCapabilityTags(CapabilityId capabilityId, List<string> tagKeys)
     {
-        if (!await _capabilityRepository.Exists(capabilityId))
-        {
-            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
-        }
+        var capability = await _capabilityRepository.Get(capabilityId);
 
         if (tagKeys == null || tagKeys.Count == 0)
         {
             return;
         }
 
-        var currentMetadata = await _capabilityRepository.GetJsonMetadata(capabilityId);
+        var currentMetadata = capability.JsonMetadata;
         var metadataObject = JsonNode.Parse(currentMetadata)?.AsObject();
 
         if (metadataObject == null)
@@ -461,6 +458,10 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         }
 
         var updatedMetadata = metadataObject.ToJsonString();
-        await SetJsonMetadata(capabilityId, updatedMetadata);
+        await _capabilityRepository.SetJsonMetadata(
+            capabilityId,
+            updatedMetadata,
+            capability.JsonMetadataSchemaVersion
+        );
     }
 }

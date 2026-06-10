@@ -1847,7 +1847,6 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [RequiresPermission("cloud-engineer", "unset-tags")]
     public async Task<IActionResult> UnsetCapabilityTags(string id, [FromBody] UnsetCapabilityTagsRequest request)
     {
         if (!User.TryGetUserId(out var userId))
