@@ -539,7 +539,7 @@ public class RbacApplicationService : IRbacApplicationService
     }
 
     [TransactionalBoundary]
-    public async Task RevokeRoleGrant(string user, string id)
+    public async Task<RbacRoleGrant?> RevokeRoleGrant(string user, string id)
     {
         _cache.Reset();
         var roleGrant = await _roleGrantRepository.FindById(RbacRoleGrantId.Parse(id));
@@ -589,6 +589,7 @@ public class RbacApplicationService : IRbacApplicationService
                 throw new Exception("Invalid role grant");
         }
         _cache.Reset();
+        return roleGrant;
     }
 
     [TransactionalBoundary]

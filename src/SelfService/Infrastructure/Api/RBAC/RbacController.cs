@@ -23,6 +23,7 @@ public class RbacController : ControllerBase
     private readonly IMemberQuery _memberQuery;
     private readonly IMemberRepository _memberRepository;
     private readonly IMemberApplicationService _memberApplicationService;
+    private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IAuthorizationService _authorizationService;
 
@@ -32,6 +33,7 @@ public class RbacController : ControllerBase
         IMemberQuery memberQuery,
         IMemberRepository memberRepository,
         IMemberApplicationService memberApplicationService,
+        IMembershipApplicationService membershipApplicationService,
         ApiResourceFactory apiResourceFactory,
         IAuthorizationService authorizationService
     )
@@ -41,6 +43,7 @@ public class RbacController : ControllerBase
         _memberQuery = memberQuery;
         _memberRepository = memberRepository;
         _memberApplicationService = memberApplicationService;
+        _membershipApplicationService = membershipApplicationService;
         _apiResourceFactory = apiResourceFactory;
         _authorizationService = authorizationService;
     }
@@ -213,7 +216,9 @@ public class RbacController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        await _rbacApplicationService.GrantRoleGrant(userId.ToString(), roleGrant.IntoDomainModel());
+        var domainGrant = roleGrant.IntoDomainModel();
+        await _rbacApplicationService.GrantRoleGrant(userId.ToString(), domainGrant);
+        await SyncMembershipOnCapabilityGrant(domainGrant);
         return Created();
     }
 
@@ -226,7 +231,8 @@ public class RbacController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        await _rbacApplicationService.RevokeRoleGrant(userId.ToString(), id);
+        var revokedGrant = await _rbacApplicationService.RevokeRoleGrant(userId.ToString(), id);
+        await SyncMembershipOnCapabilityRevoke(revokedGrant);
         return Ok();
     }
 
@@ -498,11 +504,71 @@ public class RbacController : ControllerBase
 
         await _rbacApplicationService.GrantRoleGrants(userId.ToString(), domainGrants);
 
+        foreach (var grant in domainGrants)
+            await SyncMembershipOnCapabilityGrant(grant);
+
         var response = new BulkRoleGrantResponse
         {
             Created = domainGrants.Select(g => _apiResourceFactory.Convert(g)).ToList(),
         };
         return StatusCode(StatusCodes.Status201Created, response);
+    }
+
+    // When a capability-scoped role is granted to a user or service principal from the RBAC admin
+    // page, mirror it as a capability membership so the principal shows up on the capability's
+    // members list and in their own /me. Groups are excluded — only individual identities (users
+    // and service principals, both carried as AssignedEntityType.User) become capability members.
+    private async Task SyncMembershipOnCapabilityGrant(Domain.Models.RbacRoleGrant grant)
+    {
+        if (grant.Type != RbacAccessType.Capability || grant.AssignedEntityType != AssignedEntityType.User)
+            return;
+        if (string.IsNullOrWhiteSpace(grant.Resource) || !CapabilityId.TryParse(grant.Resource, out var capabilityId))
+            return;
+        if (!UserId.TryParse(grant.AssignedEntityId, out var entityId))
+            return;
+
+        var member = await _memberRepository.FindBy(entityId);
+        if (member is { Type: MemberType.ServicePrincipal })
+        {
+            // Ensures the service-principal Member record exists, then creates the membership.
+            await _membershipApplicationService.AddServicePrincipalMember(
+                capabilityId,
+                entityId,
+                member.DisplayName
+            );
+        }
+        else
+        {
+            await _membershipApplicationService.JoinCapability(capabilityId, entityId);
+        }
+        // Both membership methods swallow AlreadyHasActiveMembershipException, so re-granting is idempotent.
+    }
+
+    // Counterpart to the grant: when the last capability-scoped role for a user or service principal
+    // is revoked, remove their capability membership too. Other capability roles keep them a member.
+    private async Task SyncMembershipOnCapabilityRevoke(Domain.Models.RbacRoleGrant? revokedGrant)
+    {
+        if (revokedGrant is null)
+            return;
+        if (revokedGrant.Type != RbacAccessType.Capability || revokedGrant.AssignedEntityType != AssignedEntityType.User)
+            return;
+        if (
+            string.IsNullOrWhiteSpace(revokedGrant.Resource)
+            || !CapabilityId.TryParse(revokedGrant.Resource, out var capabilityId)
+        )
+            return;
+        if (!UserId.TryParse(revokedGrant.AssignedEntityId, out var entityId))
+            return;
+
+        // The revoke has already committed, so the remaining grants reflect the post-revoke state.
+        var remainingRoles = await _rbacApplicationService.GetRoleGrantsForUser(revokedGrant.AssignedEntityId);
+        var stillHasCapabilityRole = remainingRoles.Any(r =>
+            r.Type == RbacAccessType.Capability && r.Resource == revokedGrant.Resource
+        );
+        if (stillHasCapabilityRole)
+            return;
+
+        await _membershipApplicationService.RemoveMemberFromCapability(capabilityId, entityId);
     }
 
     private MemberSummaryApiResource MapMemberSummary(Member member, bool includeLinks)

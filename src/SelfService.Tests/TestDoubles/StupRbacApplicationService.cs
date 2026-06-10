@@ -143,7 +143,7 @@ public class StubRbacApplicationService : IRbacApplicationService
         throw new NotImplementedException();
     }
 
-    public Task RevokeRoleGrant(string user, string id)
+    public Task<RbacRoleGrant?> RevokeRoleGrant(string user, string id)
     {
         throw new NotImplementedException();
     }
