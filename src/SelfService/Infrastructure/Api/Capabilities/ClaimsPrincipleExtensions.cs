@@ -19,46 +19,8 @@ public static class ClaimsPrincipleExtensions
         ClaimTypes.Email,
         "email",
     };
-
-    public static string? GetUserId(this ClaimsPrincipal? principal)
-    {
-        if (principal is null)
-        {
-            return null;
-        }
-
-        var name = principal.Identity?.Name;
-        if (!string.IsNullOrWhiteSpace(name))
-        {
-            return name;
-        }
-
-        foreach (var claimType in UserIdClaimTypes)
-        {
-            var value = principal.FindFirstValue(claimType);
-            if (!string.IsNullOrWhiteSpace(value))
-            {
-                return value;
-            }
-        }
-
-        return null;
-    }
-
     private const string ServicePrincipalEmailDomain = "dfds.cloud";
     private const string ServicePrincipalEmailMarker = ".s";
-
-    // v2.0 access tokens drop `unique_name` (which Identity.Name maps from in v1.0) in favour of
-    // `preferred_username`. Fall back through the most common alternatives so tokens of either
-    // version resolve to a user id.
-    private static readonly string[] UserIdClaimTypes =
-    {
-        "preferred_username",
-        "upn",
-        ClaimTypes.Upn,
-        ClaimTypes.Email,
-        "email",
-    };
 
     public static string? GetUserId(this ClaimsPrincipal? principal)
     {
