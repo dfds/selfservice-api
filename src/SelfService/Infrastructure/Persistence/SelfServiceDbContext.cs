@@ -281,6 +281,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.DisplayName);
             cfg.Property(x => x.Email);
             cfg.Property(x => x.UserSettings).HasColumnType("jsonb").HasConversion<UserSettingsConverter>();
+            cfg.Property(x => x.Type).HasConversion<string>().HasMaxLength(32);
             cfg.Ignore(x => x.LastSeen);
         });
 

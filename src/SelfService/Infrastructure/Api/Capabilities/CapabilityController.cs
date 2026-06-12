@@ -649,6 +649,93 @@ public class CapabilityController : ControllerBase
         }
     }
 
+    [HttpPost("{id:required}/service-principal-members")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
+    public async Task<IActionResult> AddServicePrincipalAsCapabilityMember(
+        string id,
+        [FromBody] AddServicePrincipalMemberRequest request
+    )
+    {
+        if (!User.TryGetUserId(out var requesterId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        if (request == null || string.IsNullOrWhiteSpace(request.ServicePrincipalId))
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "servicePrincipalId is required.",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+        }
+
+        if (!UserId.TryParse(request.ServicePrincipalId, out var servicePrincipalId))
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "servicePrincipalId is not valid.",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+        }
+
+        if (!await _authorizationService.CanApproveMembershipApplications(requesterId, capabilityId))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new ProblemDetails
+                {
+                    Title = "Not allowed to add service principal members.",
+                    Detail = "Only members who can approve membership applications can add service principals.",
+                }
+            );
+        }
+
+        try
+        {
+            await _membershipApplicationService.AddServicePrincipalMember(
+                capabilityId,
+                servicePrincipalId,
+                request.AppDisplayName
+            );
+            return NoContent();
+        }
+        catch (EntityNotFoundException<Capability>)
+        {
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found",
+                    Detail = $"Capability \"{capabilityId}\" is unknown by the system.",
+                }
+            );
+        }
+        catch (AlreadyHasActiveMembershipException)
+        {
+            return Conflict(
+                new ProblemDetails
+                {
+                    Title = "Already member",
+                    Detail =
+                        $"Service principal \"{servicePrincipalId}\" is already a member of capability \"{capabilityId}\".",
+                }
+            );
+        }
+    }
+
     [HttpPost("{id:required}/topics")] // TODO [jandr@2023-03-20]: refactor - have been "moved as is"
     [ProducesResponseType(typeof(KafkaTopicApiResource), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]

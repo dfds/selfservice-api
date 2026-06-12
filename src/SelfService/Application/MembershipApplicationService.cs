@@ -5,6 +5,7 @@ using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Capabilities;
 
 namespace SelfService.Application;
 
@@ -20,6 +21,7 @@ public class MembershipApplicationService : IMembershipApplicationService
     private readonly IMembershipQuery _membershipQuery;
     private readonly IMembershipApplicationDomainService _membershipApplicationDomainService;
     private readonly IMyCapabilitiesQuery _myCapabilitiesQuery;
+    private readonly IMemberRepository _memberRepository;
 
     public MembershipApplicationService(
         ILogger<MembershipApplicationService> logger,
@@ -31,7 +33,8 @@ public class MembershipApplicationService : IMembershipApplicationService
         SystemTime systemTime,
         IMembershipQuery membershipQuery,
         IMembershipApplicationDomainService membershipApplicationDomainService,
-        IMyCapabilitiesQuery myCapabilitiesQuery
+        IMyCapabilitiesQuery myCapabilitiesQuery,
+        IMemberRepository memberRepository
     )
     {
         _logger = logger;
@@ -44,6 +47,7 @@ public class MembershipApplicationService : IMembershipApplicationService
         _membershipQuery = membershipQuery;
         _membershipApplicationDomainService = membershipApplicationDomainService;
         _myCapabilitiesQuery = myCapabilitiesQuery;
+        _memberRepository = memberRepository;
     }
 
     private async Task GrantOwnerRole(CapabilityId capabilityId, UserId userId)
@@ -197,10 +201,18 @@ public class MembershipApplicationService : IMembershipApplicationService
 
         var membersOfCapability = await _membershipRepository.GetAllWithPredicate(x => x.CapabilityId == capabilityId);
 
-        // filter membersOfCapabilityUserIds to only include those who can approve membership applications
+        // filter membersOfCapabilityUserIds to only include those who can approve membership applications.
+        // Service principals can hold capability memberships but cannot act as approvers, so we exclude
+        // them here to keep the downstream notification path human-only.
         var membersWhoCanApprove = new List<UserId>();
         foreach (var member in membersOfCapability)
         {
+            var memberRecord = await _memberRepository.FindBy(member.UserId);
+            if (memberRecord != null && memberRecord.Type == MemberType.ServicePrincipal)
+            {
+                continue;
+            }
+
             if (await _authorizationService.CanApproveMembershipApplications(member.UserId, capabilityId))
             {
                 membersWhoCanApprove.Add(member.UserId);
@@ -407,6 +419,53 @@ public class MembershipApplicationService : IMembershipApplicationService
             _logger.LogDebug(
                 "User {UserId} has no active membership in capability {CapabilityId}",
                 memberId,
+                capabilityId
+            );
+        }
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task AddServicePrincipalMember(
+        CapabilityId capabilityId,
+        UserId servicePrincipalId,
+        string? appDisplayName
+    )
+    {
+        _logger.LogInformation(
+            "Service principal {UserId} is being added as a member of capability {CapabilityId}",
+            servicePrincipalId,
+            capabilityId
+        );
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+        {
+            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
+        }
+
+        var existing = await _memberRepository.FindBy(servicePrincipalId);
+        if (existing == null)
+        {
+            var syntheticEmail = ClaimsPrincipleExtensions.BuildSyntheticEmail(
+                servicePrincipalId.ToString(),
+                appDisplayName
+            );
+            var member = Member.RegisterServicePrincipal(servicePrincipalId, syntheticEmail, appDisplayName);
+            await _memberRepository.Add(member);
+        }
+        else if (existing.Type == MemberType.ServicePrincipal && existing.DisplayName != appDisplayName)
+        {
+            existing.UpdateServicePrincipalDisplayName(appDisplayName);
+        }
+
+        try
+        {
+            await CreateAndAddMembership(capabilityId, servicePrincipalId);
+        }
+        catch (AlreadyHasActiveMembershipException)
+        {
+            _logger.LogWarning(
+                "Service principal {UserId} is already a member of capability {CapabilityId}",
+                servicePrincipalId,
                 capabilityId
             );
         }

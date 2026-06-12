@@ -8,6 +8,7 @@ public class MemberBuilder
     private string _email;
     private string? _displayName;
     private UserSettings _userSettings;
+    private bool _isServicePrincipal;
 
     public MemberBuilder()
     {
@@ -23,6 +24,12 @@ public class MemberBuilder
         return this;
     }
 
+    public MemberBuilder WithEmail(string email)
+    {
+        _email = email;
+        return this;
+    }
+
     public MemberBuilder WithDisplayName(string displayName)
     {
         _displayName = displayName;
@@ -35,8 +42,19 @@ public class MemberBuilder
         return this;
     }
 
+    public MemberBuilder AsServicePrincipal()
+    {
+        _isServicePrincipal = true;
+        return this;
+    }
+
     public Member Build()
     {
+        if (_isServicePrincipal)
+        {
+            return Member.RegisterServicePrincipal(_id, _email, _displayName);
+        }
+
         return new Member(_id, _email, _displayName, _userSettings);
     }
 

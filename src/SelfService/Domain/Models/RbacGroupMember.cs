@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using SelfService.Domain.Events;
 
 namespace SelfService.Domain.Models;
@@ -36,14 +37,24 @@ public class RbacGroupMember : AggregateRoot<RbacGroupMemberId>
     }
 }
 
+// Accepts either a regular User member or a ServicePrincipal member.
+// `MemberId` is the canonical field; `UserId` is preserved as a deserialization alias
+// for backwards compatibility with existing callers.
 public class RbacGroupMemberCreationDTO
 {
     public string GroupId { get; set; }
-    public string UserId { get; set; }
+    public string? MemberId { get; set; }
 
-    public RbacGroupMemberCreationDTO(string groupId, string userId)
+    [JsonPropertyName("userId")]
+    public string? UserIdAlias { get; set; }
+
+    [JsonIgnore]
+    public string UserId => MemberId ?? UserIdAlias ?? "";
+
+    public RbacGroupMemberCreationDTO(string groupId, string? memberId = null, string? userIdAlias = null)
     {
         GroupId = groupId;
-        UserId = userId;
+        MemberId = memberId;
+        UserIdAlias = userIdAlias;
     }
 }

@@ -1,8 +1,8 @@
-Email;DisplayName;Id;UserSettings
-andfris@dfds.com;Andreas Frisch;andfris@dfds.com;"{""signedUpForDemos"":true}"
-pausegh@dfds.com;Paul Seghers;pausegh@dfds.com;"{""signedUpForDemos"":true}"
-hritote@dfds.com;Hristiyana Toteva;hritote@dfds.com;"{""signedUpForDemos"":true}"
-wicar@dfds.com;Willi hehe;wicar@dfds.com;"{""signedUpForDemos"":true}"
-emwee@dfds.com;Emil Weee;emwee@dfds.com;"{""signedUpForDemos"":false}"
-ewica@dfds.com;Emil Carlsen;ewica@dfds.com;"{""signedUpForDemos"":true}"
-emcla@dfds.com;Emil Clausen;emcla@dfds.com;"{""signedUpForDemos"":true}"
+Email;DisplayName;Id;UserSettings;Type
+andfris@dfds.com;Andreas Frisch;andfris@dfds.com;"{""signedUpForDemos"":true}";User
+pausegh@dfds.com;Paul Seghers;pausegh@dfds.com;"{""signedUpForDemos"":true}";User
+hritote@dfds.com;Hristiyana Toteva;hritote@dfds.com;"{""signedUpForDemos"":true}";User
+wicar@dfds.com;Willi hehe;wicar@dfds.com;"{""signedUpForDemos"":true}";User
+emwee@dfds.com;Emil Weee;emwee@dfds.com;"{""signedUpForDemos"":false}";User
+ewica@dfds.com;Emil Carlsen;ewica@dfds.com;"{""signedUpForDemos"":true}";User
+emcla@dfds.com;Emil Clausen;emcla@dfds.com;"{""signedUpForDemos"":true}";User
