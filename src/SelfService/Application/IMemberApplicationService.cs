@@ -7,6 +7,8 @@ public interface IMemberApplicationService
 {
     Task RegisterUserProfile(UserId userId, string name, string email);
     Task RegisterLastSeen(UserId userId, DateTime lastSeen);
+    Task RegisterServicePrincipal(UserId userId, string syntheticEmail, string? displayName);
+    Task SyncServicePrincipalDisplayName(UserId userId, string? displayName);
 }
 
 public class MemberApplicationService : IMemberApplicationService
@@ -50,6 +52,47 @@ public class MemberApplicationService : IMemberApplicationService
         user.Update(email, name);
 
         _logger.LogDebug("User {UserId} has been updated", userId);
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task RegisterServicePrincipal(UserId userId, string syntheticEmail, string? displayName)
+    {
+        using var _ = _logger.BeginScope(
+            "{Action} on {ImplementationType} for {CurrentUser}",
+            nameof(RegisterServicePrincipal),
+            GetType().FullName,
+            userId
+        );
+
+        var existing = await _memberRepository.FindBy(userId);
+        if (existing == null)
+        {
+            var member = Member.RegisterServicePrincipal(userId, syntheticEmail, displayName);
+            await _memberRepository.Add(member);
+            _logger.LogInformation("Service principal {UserId} has been registered", userId);
+            return;
+        }
+
+        if (existing.Type == MemberType.ServicePrincipal && existing.DisplayName != displayName)
+        {
+            existing.UpdateServicePrincipalDisplayName(displayName);
+            _logger.LogDebug("Service principal {UserId} display name updated", userId);
+        }
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task SyncServicePrincipalDisplayName(UserId userId, string? displayName)
+    {
+        var existing = await _memberRepository.FindBy(userId);
+        if (existing == null || existing.Type != MemberType.ServicePrincipal)
+        {
+            return;
+        }
+
+        if (existing.DisplayName != displayName)
+        {
+            existing.UpdateServicePrincipalDisplayName(displayName);
+        }
     }
 
     [TransactionalBoundary, Outboxed]

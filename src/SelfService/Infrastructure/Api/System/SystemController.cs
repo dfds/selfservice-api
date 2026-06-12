@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.BackgroundJobs;
 
 namespace SelfService.Infrastructure.Api.System;
 
 [Route("system")]
+[RbacConfig(nameof(RbacObjectType.Global), "id")]
 [ApiController]
 public class SystemController : ControllerBase
 {
@@ -39,6 +41,7 @@ public class SystemController : ControllerBase
     }
 
     [HttpGet("legacy/aad-aws-sync")]
+    [RequiresPermission("system-legacy", "read")]
     public async Task<IActionResult> GetCapabilitiesForAadAwsSync()
     {
         var capabilities = await _aadAwsSyncCapabilityQuery.GetCapabilities();

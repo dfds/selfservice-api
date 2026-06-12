@@ -20,9 +20,11 @@ public interface IRbacApplicationService
     Task<List<RbacRole>> GetAssignableRoles();
     Task<List<RbacRole>> GetAllRoles();
     Task GrantPermission(string user, RbacPermissionGrant permissionGrant);
+    Task<BulkGrantResult<RbacPermissionGrant>> GrantPermissions(string user, List<RbacPermissionGrant> grants);
     Task RevokePermission(string user, string id);
     Task GrantRoleGrant(string user, RbacRoleGrant roleGrant);
-    Task RevokeRoleGrant(string user, string id);
+    Task<BulkGrantResult<RbacRoleGrant>> GrantRoleGrants(string user, List<RbacRoleGrant> grants);
+    Task<RbacRoleGrant?> RevokeRoleGrant(string user, string id);
     Task RevokeCapabilityRoleGrant(UserId userId, CapabilityId capabilityId);
     Task<RbacRole> CreateRole(string user, RbacRole role);
     Task DeleteRole(string user, string roleId);
@@ -31,4 +33,10 @@ public interface IRbacApplicationService
     Task<RbacGroupMember> GrantGroupGrant(string user, RbacGroupMember membership);
     Task RevokeGroupGrant(string user, RbacGroupMember membership);
     Task SetPermissionsForRole(string roleId, List<RolePermissionEntry> permissions);
+}
+
+public class BulkGrantResult<TInput>
+{
+    public List<TInput> CreatedInputs { get; set; } = new();
+    public List<(TInput Input, string Reason)> Failed { get; set; } = new();
 }

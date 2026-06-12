@@ -1,5 +1,9 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace SelfService.Domain.Models;
 
+[JsonConverter(typeof(RbacAccessTypeJsonConverter))]
 public class RbacAccessType : ValueObject
 {
     public static readonly RbacAccessType Capability = new("capability");
@@ -56,5 +60,20 @@ public class RbacAccessType : ValueObject
         }
 
         return true;
+    }
+}
+
+public class RbacAccessTypeJsonConverter : JsonConverter<RbacAccessType>
+{
+    public override RbacAccessType? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var value = reader.GetString();
+        RbacAccessType.TryParse(value ?? "", out var result);
+        return result;
+    }
+
+    public override void Write(Utf8JsonWriter writer, RbacAccessType value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString());
     }
 }

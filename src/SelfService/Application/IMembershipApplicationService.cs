@@ -14,6 +14,7 @@ public interface IMembershipApplicationService
     Task LeaveCapability(CapabilityId capabilityId, UserId userId);
     Task RemoveMemberFromCapability(CapabilityId capabilityId, UserId memberId);
     Task JoinCapability(CapabilityId capabilityId, UserId userId);
+    Task AddServicePrincipalMember(CapabilityId capabilityId, UserId servicePrincipalId, string? appDisplayName);
     Task<IEnumerable<MembershipApplication>> GetMembershipsApplicationsThatUserCanApprove(UserId userId);
     Task<IEnumerable<MembershipApplication>> GetOutstandingMembershipsApplicationsForUser(UserId userId);
 }

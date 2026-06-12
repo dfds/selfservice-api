@@ -6,7 +6,7 @@ namespace SelfService.Domain.Models;
 [JsonConverter(typeof(RbacNamespaceJsonConverter))]
 public class RbacNamespace : ValueObject
 {
-    // topics, capability-management, capability-membership-management, tags-and-metadata, aws, finout, azure, rbac
+    // topics, capability-management, capability-membership-management, tags-and-metadata, aws, finout, azure, rbac, system-legacy
     public static readonly RbacNamespace Topics = new("topics");
     public static readonly RbacNamespace TopicsPublic = new("topics-public");
     public static readonly RbacNamespace CapabilityManagement = new("capability-management");
@@ -16,6 +16,7 @@ public class RbacNamespace : ValueObject
     public static readonly RbacNamespace Finout = new("finout");
     public static readonly RbacNamespace Azure = new("azure");
     public static readonly RbacNamespace Rbac = new("rbac");
+    public static readonly RbacNamespace SystemLegacy = new("system-legacy");
 
     // allow non-optional values. Cannot be created and has no permissions.
     public static readonly RbacNamespace Default = new("default");
@@ -77,6 +78,9 @@ public class RbacNamespace : ValueObject
                 break;
             case "rbac":
                 rbacNamespace = Rbac;
+                break;
+            case "system-legacy":
+                rbacNamespace = SystemLegacy;
                 break;
             default:
                 rbacNamespace = null!;

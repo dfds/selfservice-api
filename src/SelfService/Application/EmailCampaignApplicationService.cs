@@ -198,11 +198,13 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
     private async Task<List<Member>> FilterMembersByRoles(List<Member> members, HashSet<RbacRoleId>? matchingRoleIds)
     {
-        if (matchingRoleIds == null || matchingRoleIds.Count == 0)
-            return members;
+        var emailEligible = members.Where(m => m.ShouldReceiveEmail).ToList();
 
-        var result = new List<Member>(members.Count);
-        foreach (var member in members)
+        if (matchingRoleIds == null || matchingRoleIds.Count == 0)
+            return emailEligible;
+
+        var result = new List<Member>(emailEligible.Count);
+        foreach (var member in emailEligible)
         {
             var grants = await _rbacApplicationService.GetRoleGrantsForUser(member.Id.ToString());
             if (grants.Any(g => matchingRoleIds.Contains(g.RoleId)))
@@ -490,7 +492,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
                 if (recipientLogs.Count >= EmailCampaign.MaxRecipientsPerCampaign)
                     break;
 
-                if (string.IsNullOrEmpty(member.Email))
+                if (!member.ShouldReceiveEmail)
                     continue;
 
                 var context = baseContext with { Member = member };
@@ -615,7 +617,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
                     continue;
 
                 var member = await _memberRepository.FindBy(membership.UserId);
-                if (member != null)
+                if (member != null && member.ShouldReceiveEmail)
                     members.Add(member);
             }
 

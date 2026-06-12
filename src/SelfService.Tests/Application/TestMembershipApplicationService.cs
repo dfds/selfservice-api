@@ -119,7 +119,8 @@ public class TestMembershipApplicationService
             systemTime: SystemTime.Default,
             membershipQuery: Mock.Of<IMembershipQuery>(),
             membershipApplicationDomainService: Mock.Of<IMembershipApplicationDomainService>(),
-            myCapabilitiesQuery: Mock.Of<IMyCapabilitiesQuery>()
+            myCapabilitiesQuery: Mock.Of<IMyCapabilitiesQuery>(),
+            memberRepository: Mock.Of<IMemberRepository>()
         );
 
         await service.SubmitMembershipApplication(capabilityId, userId);

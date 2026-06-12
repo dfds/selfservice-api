@@ -1,4 +1,5 @@
 using SelfService.Application;
+using SelfService.Infrastructure.Api.Auth;
 using SelfService.Infrastructure.Api.RBAC;
 
 namespace SelfService.Configuration;
@@ -9,5 +10,6 @@ public static class Rbac
     {
         builder.Services.AddScoped<IRbacApplicationService, RbacApplicationService>();
         builder.Services.AddTransient<AuthChecker>();
+        builder.Services.AddTransient<MemberAutoProvisioner>();
     }
 }

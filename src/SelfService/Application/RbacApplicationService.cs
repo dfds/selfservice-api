@@ -1,5 +1,6 @@
 using SelfService.Configuration;
 using SelfService.Domain;
+using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Infrastructure.Persistence;
@@ -364,6 +365,21 @@ public class RbacApplicationService : IRbacApplicationService
     }
 
     [TransactionalBoundary]
+    public async Task<BulkGrantResult<RbacPermissionGrant>> GrantPermissions(
+        string user,
+        List<RbacPermissionGrant> grants
+    )
+    {
+        var result = new BulkGrantResult<RbacPermissionGrant>();
+        foreach (var grant in grants)
+        {
+            await GrantPermission(user, grant);
+            result.CreatedInputs.Add(grant);
+        }
+        return result;
+    }
+
+    [TransactionalBoundary]
     public async Task RevokePermission(string user, string id)
     {
         _cache.Reset();
@@ -511,7 +527,19 @@ public class RbacApplicationService : IRbacApplicationService
     }
 
     [TransactionalBoundary]
-    public async Task RevokeRoleGrant(string user, string id)
+    public async Task<BulkGrantResult<RbacRoleGrant>> GrantRoleGrants(string user, List<RbacRoleGrant> grants)
+    {
+        var result = new BulkGrantResult<RbacRoleGrant>();
+        foreach (var grant in grants)
+        {
+            await GrantRoleGrant(user, grant);
+            result.CreatedInputs.Add(grant);
+        }
+        return result;
+    }
+
+    [TransactionalBoundary]
+    public async Task<RbacRoleGrant?> RevokeRoleGrant(string user, string id)
     {
         _cache.Reset();
         var roleGrant = await _roleGrantRepository.FindById(RbacRoleGrantId.Parse(id));
@@ -561,6 +589,7 @@ public class RbacApplicationService : IRbacApplicationService
                 throw new Exception("Invalid role grant");
         }
         _cache.Reset();
+        return roleGrant;
     }
 
     [TransactionalBoundary]
@@ -717,7 +746,19 @@ public class RbacApplicationService : IRbacApplicationService
         var group = await _groupRepository.FindById(RbacGroupId.Parse(membership.GroupId));
         if (group == null)
             throw new Exception("Group not found");
-        await _groupMemberRepository.Remove(membership.Id);
+
+        // The controller passes a freshly-minted RbacGroupMember (random Id) carrying
+        // only the GroupId + UserId of the membership the caller wants to revoke.
+        // Look up the real membership row before removing.
+        var existing = await _groupMemberRepository.FindByPredicate(m =>
+            m.GroupId == membership.GroupId && m.UserId == membership.UserId
+        );
+        if (existing == null)
+            throw EntityNotFoundException<RbacGroupMemberId>.UsingId(
+                $"(groupId={membership.GroupId}, userId={membership.UserId})"
+            );
+
+        await _groupMemberRepository.Remove(existing.Id);
         _cache.Reset();
     }
 
@@ -888,6 +929,12 @@ public class Permission
             new(RbacNamespace.Rbac, "create", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "update", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "delete", "Manage RBAC", RbacAccessType.Global),
+            new(
+                RbacNamespace.SystemLegacy,
+                "read",
+                "Read legacy system data (e.g. AAD-AWS sync capability list)",
+                RbacAccessType.Global
+            ),
         };
 
         return permissions;
