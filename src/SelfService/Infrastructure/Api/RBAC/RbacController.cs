@@ -531,11 +531,7 @@ public class RbacController : ControllerBase
         if (member is { Type: MemberType.ServicePrincipal })
         {
             // Ensures the service-principal Member record exists, then creates the membership.
-            await _membershipApplicationService.AddServicePrincipalMember(
-                capabilityId,
-                entityId,
-                member.DisplayName
-            );
+            await _membershipApplicationService.AddServicePrincipalMember(capabilityId, entityId, member.DisplayName);
         }
         else
         {
@@ -546,11 +542,23 @@ public class RbacController : ControllerBase
 
     // Counterpart to the grant: when the last capability-scoped role for a user or service principal
     // is revoked, remove their capability membership too. Other capability roles keep them a member.
+    //
+    // KNOWN LIMITATION: this assumes the membership was created by SyncMembershipOnCapabilityGrant,
+    // i.e. that membership is role-grant-derived. Memberships have no provenance tracking, so this
+    // cannot distinguish a role-synced membership from one created independently — via the normal
+    // membership-application flow, or via the explicit POST /{id}/service-principal-members endpoint.
+    // When such a pre-existing member is granted then revoked a capability role, the grant is a no-op
+    // (CreateAndAddMembership throws AlreadyHasActiveMembershipException, which is swallowed) but the
+    // revoke still removes them here. Granting a role to an already-existing member is expected to be
+    // rare; if it stops being rare, add a provenance flag to Membership and gate removal on it.
     private async Task SyncMembershipOnCapabilityRevoke(Domain.Models.RbacRoleGrant? revokedGrant)
     {
         if (revokedGrant is null)
             return;
-        if (revokedGrant.Type != RbacAccessType.Capability || revokedGrant.AssignedEntityType != AssignedEntityType.User)
+        if (
+            revokedGrant.Type != RbacAccessType.Capability
+            || revokedGrant.AssignedEntityType != AssignedEntityType.User
+        )
             return;
         if (
             string.IsNullOrWhiteSpace(revokedGrant.Resource)
