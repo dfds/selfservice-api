@@ -368,19 +368,17 @@ public class TemplateRenderingService : ITemplateRenderingService
                 foreach (var entry in context.UserCapabilities)
                 {
                     // Inside the block, Capability.* resolves to this iteration's capability;
-                    // Member, Campaign.Name, Date.* are inherited from the outer context.
+                    // Member, Campaign.Name, Date.* are inherited from the outer context. The
+                    // per-capability data (AWS, Azure, requirement scores, pending applications)
+                    // is carried on the entry — bulk-loaded once per campaign by the caller.
                     var subContext = context with
                     {
                         Capability = entry.Capability,
                         MemberCount = entry.MemberCount,
-                        // The remaining per-capability data (AWS, Azure, requirement scores, pending
-                        // membership applications) is intentionally not loaded for the iteration.
-                        // Doing so per-capability-per-recipient would be costly; if a campaign needs
-                        // those, it should be Capability-targeted.
-                        AwsAccount = null,
-                        AzureResources = new(),
-                        RequirementScores = new(),
-                        PendingMembershipApplicationCount = 0,
+                        AwsAccount = entry.AwsAccount,
+                        AzureResources = entry.AzureResources,
+                        RequirementScores = entry.RequirementScores,
+                        PendingMembershipApplicationCount = entry.PendingMembershipApplicationCount,
                     };
                     sb.Append(TokenRegex.Replace(body, m => Resolve(m.Groups[1].Value, subContext) ?? m.Value));
                 }

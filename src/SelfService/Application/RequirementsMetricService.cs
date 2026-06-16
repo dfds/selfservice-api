@@ -39,6 +39,22 @@ namespace SelfService.Application
 
             return metrics.GroupBy(m => m.CapabilityRootId).ToDictionary(g => g.Key, g => g.Average(m => m.Value));
         }
+
+        public async Task<
+            Dictionary<string, List<Infrastructure.Persistence.Models.RequirementsMetric>>
+        > GetRequirementScoresForCapabilitiesAsync(IReadOnlyCollection<string> capabilityIds)
+        {
+            var ids = capabilityIds.Distinct().ToList();
+            if (ids.Count == 0)
+            {
+                return new Dictionary<string, List<Infrastructure.Persistence.Models.RequirementsMetric>>();
+            }
+            var metrics = await _requirementsDbContext
+                .Metrics.Where(x => ids.Contains(x.CapabilityRootId))
+                .Where(x => x.Measurement == "score")
+                .ToListAsync();
+            return metrics.GroupBy(m => m.CapabilityRootId).ToDictionary(g => g.Key, g => g.ToList());
+        }
     }
 
     // Stub implementation for when RequirementsDbContext is not available
@@ -55,5 +71,10 @@ namespace SelfService.Application
 
         public Task<Dictionary<string, double>> GetAllRequirementScoresAsync() =>
             Task.FromResult(new Dictionary<string, double>());
+
+        public Task<
+            Dictionary<string, List<Infrastructure.Persistence.Models.RequirementsMetric>>
+        > GetRequirementScoresForCapabilitiesAsync(IReadOnlyCollection<string> capabilityIds) =>
+            Task.FromResult(new Dictionary<string, List<Infrastructure.Persistence.Models.RequirementsMetric>>());
     }
 }

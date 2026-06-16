@@ -7,4 +7,6 @@ public interface IMembershipRepository : IGenericRepository<Membership, Membersh
     Task<Membership?> CancelWithCapabilityId(CapabilityId capabilityId, UserId userId);
     Task<List<Membership>> CancelAllMembershipsWithUserId(UserId userId);
     Task<List<Membership>> GetAllMembershipsForUserId(UserId userId);
+    Task<List<Membership>> GetAllMembershipsForUserIds(IEnumerable<UserId> userIds);
+    Task<Dictionary<CapabilityId, int>> GetMemberCountsByCapabilityIds(IEnumerable<CapabilityId> capabilityIds);
 }

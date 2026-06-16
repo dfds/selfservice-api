@@ -183,4 +183,20 @@ public class CapabilityMembershipApplicationQuery : ICapabilityMembershipApplica
             .OrderBy(x => x.SubmittedAt)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<MembershipApplication>> FindPendingByCapabilityIds(
+        IEnumerable<CapabilityId> capabilityIds
+    )
+    {
+        var idList = capabilityIds.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return new List<MembershipApplication>();
+        }
+        return await _dbContext
+            .MembershipApplications.Where(x =>
+                idList.Contains(x.CapabilityId) && x.Status == MembershipApplicationStatusOptions.PendingApprovals
+            )
+            .ToListAsync();
+    }
 }

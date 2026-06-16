@@ -454,6 +454,67 @@ public class TestTemplateRenderingService
     }
 
     [Fact]
+    public void RenderTemplate_EachUserCapabilities_RendersPerCapabilityRequirementAndCounts()
+    {
+        // Regression: per-capability data (requirement scores, pending applications, Azure) must be
+        // carried into each {{#each User.Capabilities}} iteration instead of always rendering "N/A".
+        var capA = A.Capability.WithName("Cap A").Build();
+        var capB = A.Capability.WithName("Cap B").Build();
+        var ctx = UserContext(
+            userCapabilities: new List<UserCapabilityRef>
+            {
+                new()
+                {
+                    Capability = capA,
+                    MemberCount = 4,
+                    RequirementScores = new List<RequirementsMetric>
+                    {
+                        new() { RequirementId = "external_secrets", Value = 100 },
+                    },
+                    PendingMembershipApplicationCount = 2,
+                },
+                new()
+                {
+                    Capability = capB,
+                    MemberCount = 7,
+                    RequirementScores = new List<RequirementsMetric>
+                    {
+                        new() { RequirementId = "external_secrets", Value = 40 },
+                    },
+                    PendingMembershipApplicationCount = 0,
+                },
+            }
+        );
+
+        var result = _sut.RenderTemplate(
+            "{{#each User.Capabilities}}[{{Capability.Name}}: secrets={{Requirement.external_secrets}}, pending={{MembershipApplications.PendingCount}}]{{/each}}",
+            ctx
+        );
+
+        Assert.Equal("[Cap A: secrets=100, pending=2][Cap B: secrets=40, pending=0]", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_EachUserCapabilities_MissingRequirement_FallsBackToNA()
+    {
+        // A capability with no requirement scores still falls back to N/A (no data leaks in).
+        var cap = A.Capability.WithName("Cap A").Build();
+        var ctx = UserContext(
+            userCapabilities: new List<UserCapabilityRef>
+            {
+                new() { Capability = cap, MemberCount = 1 },
+            }
+        );
+
+        var result = _sut.RenderTemplate(
+            "{{#each User.Capabilities}}{{Requirement.external_secrets}}{{/each}}",
+            ctx
+        );
+
+        Assert.Equal("N/A", result);
+    }
+
+    [Fact]
     public void RenderTemplate_EachUserCapabilities_EmptyList_RendersNothingForBlock()
     {
         var ctx = UserContext(userCapabilities: new List<UserCapabilityRef>());
