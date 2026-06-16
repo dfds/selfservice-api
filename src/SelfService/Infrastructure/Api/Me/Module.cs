@@ -23,6 +23,7 @@ public class MeController : ControllerBase
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IMemberRepository _memberRepository;
     private readonly IMemberApplicationService _memberApplicationService;
+    private readonly IFavouriteRepository _favouriteRepository;
 
     public MeController(
         IMyCapabilitiesQuery myCapabilitiesQuery,
@@ -32,7 +33,8 @@ public class MeController : ControllerBase
         IHostEnvironment hostEnvironment,
         ApiResourceFactory apiResourceFactory,
         IMemberRepository memberRepository,
-        IMemberApplicationService memberApplicationService
+        IMemberApplicationService memberApplicationService,
+        IFavouriteRepository favouriteRepository
     )
     {
         _myCapabilitiesQuery = myCapabilitiesQuery;
@@ -43,6 +45,7 @@ public class MeController : ControllerBase
         _apiResourceFactory = apiResourceFactory;
         _memberRepository = memberRepository;
         _memberApplicationService = memberApplicationService;
+        _favouriteRepository = favouriteRepository;
     }
 
     [HttpGet("")]
@@ -60,6 +63,8 @@ public class MeController : ControllerBase
         }
 
         var capabilities = (await _myCapabilitiesQuery.FindBy(userId)).ToList();
+        var favourites = await _favouriteRepository.GetAllFavouritesForUserId(userId);
+        var favouritedCapabilityIds = favourites.Select(x => x.CapabilityId).ToHashSet();
         var outstandingActions = await _outstandingActionsQuery.FindFor(capabilities);
         var ownedCapabilityIds = await GetOwnedCapabilityIds(userId);
 
@@ -77,7 +82,15 @@ public class MeController : ControllerBase
 
         var member = await _memberRepository.FindBy(userId);
 
-        return Ok(_apiResourceFactory.Convert(userId, annotatedCapabilities, member, _hostEnvironment.IsDevelopment()));
+        return Ok(
+            _apiResourceFactory.Convert(
+                userId,
+                annotatedCapabilities,
+                member,
+                _hostEnvironment.IsDevelopment(),
+                favouritedCapabilityIds
+            )
+        );
     }
 
     private async Task<IReadOnlySet<CapabilityId>> GetOwnedCapabilityIds(UserId userId)

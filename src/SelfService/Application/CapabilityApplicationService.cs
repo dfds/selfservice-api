@@ -18,6 +18,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     private readonly ISelfAssessmentRepository _selfAssessmentRepository;
     private readonly ISelfAssessmentOptionRepository _selfAssessmentOptionRepository;
     private readonly IMembershipRepository _membershipRepository;
+    private readonly IFavouriteRepository _favouriteRepository;
     private readonly ITicketingSystem _ticketingSystem;
     private readonly SystemTime _systemTime;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
@@ -35,6 +36,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         ISelfAssessmentRepository selfAssessmentRepository,
         ISelfAssessmentOptionRepository selfAssessmentOptionRepository,
         IMembershipRepository membershipRepository,
+        IFavouriteRepository favouriteRepository,
         ITicketingSystem ticketingSystem,
         SystemTime systemTime,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
@@ -49,6 +51,7 @@ public class CapabilityApplicationService : ICapabilityApplicationService
         _selfAssessmentOptionRepository = selfAssessmentOptionRepository;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _membershipRepository = membershipRepository;
+        _favouriteRepository = favouriteRepository;
         _ticketingSystem = ticketingSystem;
         _systemTime = systemTime;
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
@@ -319,6 +322,37 @@ public class CapabilityApplicationService : ICapabilityApplicationService
     public async Task<string> GetJsonMetadata(CapabilityId id)
     {
         return await _capabilityRepository.GetJsonMetadata(id);
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task FavouriteCapability(CapabilityId capabilityId, UserId userId)
+    {
+        var capability = await _capabilityRepository.FindBy(capabilityId);
+        if (capability is null)
+        {
+            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
+        }
+
+        var existingFavourite = await _favouriteRepository.FindBy(capabilityId, userId);
+        if (existingFavourite is not null)
+        {
+            return;
+        }
+
+        var favourite = Favourite.CreateFor(capabilityId, userId, _systemTime.Now);
+        await _favouriteRepository.Add(favourite);
+    }
+
+    [TransactionalBoundary, Outboxed]
+    public async Task UnfavouriteCapability(CapabilityId capabilityId, UserId userId)
+    {
+        var capability = await _capabilityRepository.FindBy(capabilityId);
+        if (capability is null)
+        {
+            throw EntityNotFoundException<Capability>.UsingId(capabilityId);
+        }
+
+        await _favouriteRepository.RemoveWithCapabilityId(capabilityId, userId);
     }
 
     public async Task<bool> DoesOnlyModifyRequiredProperties(string jsonMetadata, CapabilityId capabilityId)

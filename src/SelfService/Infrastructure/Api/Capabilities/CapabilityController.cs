@@ -33,6 +33,7 @@ public class CapabilityController : ControllerBase
     private readonly ILogger<CapabilityController> _logger;
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IMembershipRepository _membershipRepository;
+    private readonly IFavouriteRepository _favouriteRepository;
     private readonly ICapabilityMembersQuery _membersQuery;
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
     private readonly ISelfAssessmentRepository _selfAssessmentRepository;
@@ -55,6 +56,7 @@ public class CapabilityController : ControllerBase
         IAzureResourceApplicationService azureResourceApplicationService,
         IMembershipApplicationService membershipApplicationService,
         IMembershipRepository membershipRepository,
+        IFavouriteRepository favouriteRepository,
         IKafkaClusterAccessRepository kafkaClusterAccessRepository,
         ISelfServiceJsonSchemaService selfServiceJsonSchemaService,
         ILogger<CapabilityController> logger,
@@ -79,6 +81,7 @@ public class CapabilityController : ControllerBase
         _azureResourceApplicationService = azureResourceApplicationService;
         _membershipApplicationService = membershipApplicationService;
         _membershipRepository = membershipRepository;
+        _favouriteRepository = favouriteRepository;
         _kafkaClusterAccessRepository = kafkaClusterAccessRepository;
         _selfServiceJsonSchemaService = selfServiceJsonSchemaService;
         _logger = logger;
@@ -99,8 +102,9 @@ public class CapabilityController : ControllerBase
 
         var capabilities = await _capabilityRepository.GetAll();
         var userMemberships = await _membershipRepository.GetAllMembershipsForUserId(userId);
+        var userFavourites = await _favouriteRepository.GetAllFavouritesForUserId(userId);
 
-        return Ok(_apiResourceFactory.Convert(capabilities, userMemberships));
+        return Ok(_apiResourceFactory.Convert(capabilities, userMemberships, userFavourites));
     }
 
     [HttpPost("")]
@@ -201,7 +205,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> GetCapabilityById(string id)
     {
-        if (!User.TryGetUserId(out _))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -232,7 +236,61 @@ public class CapabilityController : ControllerBase
                 }
             );
 
-        return Ok(await _apiResourceFactory.Convert(capability));
+        var isFavourite = await _favouriteRepository.IsFavourite(capability.Id, userId);
+
+        return Ok(await _apiResourceFactory.Convert(capability, isFavourite));
+    }
+
+    [HttpPost("{id:required}/favourite")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> FavouriteCapability(string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        Console.WriteLine($"FLUTTERSHY >> FavouriteCapability requested | capabilityId={id} | userId={userId}");
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        await _capabilityApplicationService.FavouriteCapability(capabilityId, userId);
+
+        Console.WriteLine(
+            $"FLUTTERSHY >> FavouriteCapability completed | capabilityId={capabilityId} | userId={userId}"
+        );
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id:required}/favourite")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> UnfavouriteCapability(string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        Console.WriteLine($"FLUTTERSHY >> UnfavouriteCapability requested | capabilityId={id} | userId={userId}");
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        await _capabilityApplicationService.UnfavouriteCapability(capabilityId, userId);
+
+        Console.WriteLine(
+            $"FLUTTERSHY >> UnfavouriteCapability completed | capabilityId={capabilityId} | userId={userId}"
+        );
+
+        return NoContent();
     }
 
     [HttpGet("{id:required}/members")]
