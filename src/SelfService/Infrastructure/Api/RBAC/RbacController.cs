@@ -24,6 +24,7 @@ public class RbacController : ControllerBase
     private readonly IMemberRepository _memberRepository;
     private readonly IMemberApplicationService _memberApplicationService;
     private readonly IMembershipApplicationService _membershipApplicationService;
+    private readonly IMembershipRepository _membershipRepository;
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IAuthorizationService _authorizationService;
 
@@ -34,6 +35,7 @@ public class RbacController : ControllerBase
         IMemberRepository memberRepository,
         IMemberApplicationService memberApplicationService,
         IMembershipApplicationService membershipApplicationService,
+        IMembershipRepository membershipRepository,
         ApiResourceFactory apiResourceFactory,
         IAuthorizationService authorizationService
     )
@@ -44,6 +46,7 @@ public class RbacController : ControllerBase
         _memberRepository = memberRepository;
         _memberApplicationService = memberApplicationService;
         _membershipApplicationService = membershipApplicationService;
+        _membershipRepository = membershipRepository;
         _apiResourceFactory = apiResourceFactory;
         _authorizationService = authorizationService;
     }
@@ -423,6 +426,46 @@ public class RbacController : ControllerBase
         return existing == null ? StatusCode(StatusCodes.Status201Created, resource) : Ok(resource);
     }
 
+    [HttpPost("members")]
+    [ProducesResponseType(typeof(MemberSummaryApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MemberSummaryApiResource), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [RequiresPermission("rbac", "create")]
+    public async Task<IActionResult> ProvisionMember([FromBody] ProvisionMemberRequest request)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.Id))
+            return BadRequest("id is required");
+
+        if (!UserId.TryParse(request.Id, out var userId))
+            return BadRequest("id is not a valid user id");
+
+        var existing = await _memberRepository.FindBy(userId);
+        if (existing != null && existing.Type == MemberType.ServicePrincipal)
+        {
+            return Conflict(
+                new ProblemDetails
+                {
+                    Title = "Identifier already taken by a service principal",
+                    Detail =
+                        $"Member \"{userId}\" already exists as a service principal and cannot be registered as a user.",
+                    Status = StatusCodes.Status409Conflict,
+                }
+            );
+        }
+
+        var email = string.IsNullOrWhiteSpace(request.Email) ? userId.ToString() : request.Email!;
+        await _memberApplicationService.RegisterUserProfile(userId, request.DisplayName ?? email, email);
+
+        var member = await _memberRepository.FindBy(userId);
+        if (member == null)
+            return StatusCode(StatusCodes.Status500InternalServerError);
+
+        var resource = MapMemberSummary(member, includeLinks: true);
+        return existing == null ? StatusCode(StatusCodes.Status201Created, resource) : Ok(resource);
+    }
+
     [HttpGet("members/{id:required}")]
     [ProducesResponseType(typeof(MemberSummaryApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -450,6 +493,61 @@ public class RbacController : ControllerBase
         var groups = await _rbacApplicationService.GetGroupsForUser(memberId.ToString());
         var payload = groups.Select(g => _apiResourceFactory.Convert(g)).ToList();
         return Ok(payload);
+    }
+
+    [HttpGet("members/{id:required}/memberships")]
+    [ProducesResponseType(typeof(List<CapabilityMembershipApiResource>), StatusCodes.Status200OK)]
+    [RequiresPermission("rbac", "read")]
+    public async Task<IActionResult> GetMemberMemberships(string id)
+    {
+        if (!UserId.TryParse(id, out var memberId))
+            return BadRequest("Invalid member id");
+
+        var memberships = await _membershipRepository.GetAllMembershipsForUserId(memberId);
+        var payload = memberships
+            .Select(m => new CapabilityMembershipApiResource
+            {
+                CapabilityId = m.CapabilityId.ToString(),
+                CreatedAt = m.CreatedAt,
+            })
+            .ToList();
+        return Ok(payload);
+    }
+
+    [HttpPost("members/{id:required}/memberships")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [RequiresPermission("rbac", "create")]
+    public async Task<IActionResult> AddMemberMembership(string id, [FromBody] GrantCapabilityMembershipRequest request)
+    {
+        if (!User.TryGetUserId(out _))
+            return Unauthorized();
+        if (!UserId.TryParse(id, out var memberId))
+            return BadRequest("Invalid member id");
+        if (request?.CapabilityId == null || !CapabilityId.TryParse(request.CapabilityId, out var capabilityId))
+            return BadRequest("Invalid capability id");
+
+        await EnsureCapabilityMembership(capabilityId, memberId);
+        return Created();
+    }
+
+    [HttpDelete("members/{id:required}/memberships/{capabilityId:required}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [RequiresPermission("rbac", "delete")]
+    public async Task<IActionResult> RemoveMemberMembership(string id, string capabilityId)
+    {
+        if (!User.TryGetUserId(out _))
+            return Unauthorized();
+        if (!UserId.TryParse(id, out var memberId))
+            return BadRequest("Invalid member id");
+        if (!CapabilityId.TryParse(capabilityId, out var parsedCapabilityId))
+            return BadRequest("Invalid capability id");
+
+        await _membershipApplicationService.RemoveMemberFromCapability(parsedCapabilityId, memberId);
+        return NoContent();
     }
 
     [HttpPost("permission/grant-bulk")]
@@ -527,6 +625,11 @@ public class RbacController : ControllerBase
         if (!UserId.TryParse(grant.AssignedEntityId, out var entityId))
             return;
 
+        await EnsureCapabilityMembership(capabilityId, entityId);
+    }
+
+    private async Task EnsureCapabilityMembership(CapabilityId capabilityId, UserId entityId)
+    {
         var member = await _memberRepository.FindBy(entityId);
         if (member is { Type: MemberType.ServicePrincipal })
         {
@@ -537,7 +640,6 @@ public class RbacController : ControllerBase
         {
             await _membershipApplicationService.JoinCapability(capabilityId, entityId);
         }
-        // Both membership methods swallow AlreadyHasActiveMembershipException, so re-granting is idempotent.
     }
 
     // Counterpart to the grant: when the last capability-scoped role for a user or service principal
