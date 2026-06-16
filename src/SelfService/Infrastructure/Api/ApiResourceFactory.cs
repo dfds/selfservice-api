@@ -310,9 +310,14 @@ public class ApiResourceFactory
 
         var capabilitiesSelected = capabilities.Select(ConvertToListItem).ToList();
 
+        // Resolve all AWS account ids in a single bulk query instead of one query per capability (N+1).
+        var awsAccountIds = _awsAccountIdQuery.FindBy(
+            capabilitiesSelected.Select(x => CapabilityId.Parse(x.Id)).ToList()
+        );
+
         foreach (var capability in capabilitiesSelected)
         {
-            var awsAccountId = _awsAccountIdQuery.FindBy(capability.Id);
+            var awsAccountId = awsAccountIds.GetValueOrDefault(capability.Id);
             capability.AwsAccountId = awsAccountId == null ? "" : awsAccountId.ToString();
             capability.UserIsMember = membershipCapabilityIds.Contains(capability.Id);
             capability.IsFavourite = favouritedCapabilityIds.Contains(capability.Id);
