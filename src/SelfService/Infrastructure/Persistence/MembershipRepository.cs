@@ -79,7 +79,10 @@ public class MembershipRepository : GenericRepository<Membership, MembershipId>,
         }
         // Project to the capability id column only, then group in memory — avoids relying on
         // EF Core translating GroupBy over a value-converted key.
-        var capIds = await DbSetReference.Where(x => idList.Contains(x.CapabilityId)).Select(x => x.CapabilityId).ToListAsync();
+        var capIds = await DbSetReference
+            .Where(x => idList.Contains(x.CapabilityId))
+            .Select(x => x.CapabilityId)
+            .ToListAsync();
         return capIds.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
     }
 }

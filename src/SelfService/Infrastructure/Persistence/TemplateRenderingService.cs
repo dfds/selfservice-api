@@ -403,17 +403,32 @@ public class TemplateRenderingService : ITemplateRenderingService
         return null;
     }
 
-    private static string? ResolveRequirementScore(TemplateRenderContext ctx, string id) =>
-        ctx.RequirementScores.FirstOrDefault(s => s.RequirementId == id)?.Value.ToString("0");
+    private static string? ResolveRequirementScore(TemplateRenderContext ctx, string id)
+    {
+        // Tags are not stored in the requirements DB — they are derived from the capability's metadata,
+        // matching how GET /compliance/capabilities/{id} computes the Tags score.
+        if (id == TagComplianceEvaluator.RequirementId)
+            return ctx.Capability is null
+                ? null
+                : TagComplianceEvaluator.Evaluate(ctx.Capability.JsonMetadata).Score.ToString("0");
+
+        return ctx.RequirementScores.FirstOrDefault(s => s.RequirementId == id)?.Value.ToString("0");
+    }
 
     private static string? ResolveRequirementDisplayName(TemplateRenderContext ctx, string id)
     {
+        if (id == TagComplianceEvaluator.RequirementId)
+            return ctx.Capability is null ? null : TagComplianceEvaluator.DisplayName;
+
         var metric = ctx.RequirementScores.FirstOrDefault(s => s.RequirementId == id);
         return metric is null ? null : (metric.DisplayName ?? metric.RequirementId);
     }
 
     private static string? ResolveRequirementHelpUrl(TemplateRenderContext ctx, string id)
     {
+        if (id == TagComplianceEvaluator.RequirementId)
+            return ctx.Capability is null ? null : TagComplianceEvaluator.HelpUrl;
+
         var metric = ctx.RequirementScores.FirstOrDefault(s => s.RequirementId == id);
         return metric is null ? null : (metric.HelpUrl ?? "");
     }

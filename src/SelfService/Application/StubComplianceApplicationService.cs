@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Domain.Services;
 
 namespace SelfService.Application;
 
@@ -8,16 +9,6 @@ public class StubComplianceApplicationService : IComplianceApplicationService
 {
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IAwsAccountRepository _awsAccountRepository;
-
-    private static readonly string[] RequiredTags =
-    {
-        "dfds.cost.centre",
-        "dfds.businessCapability",
-        "dfds.env",
-        "dfds.data.classification",
-        "dfds.service.criticality",
-        "dfds.service.availability",
-    };
 
     private static readonly string[] PlaceholderCategories = Array.Empty<string>();
 
@@ -243,37 +234,24 @@ public class StubComplianceApplicationService : IComplianceApplicationService
 
     private static ComplianceCategoryResult CheckTagCompliance(string? jsonMetadata)
     {
-        var items = new List<ComplianceCategoryItem>();
-        JsonObject? jsonObject = null;
-
-        if (!string.IsNullOrEmpty(jsonMetadata))
-        {
-            jsonObject = JsonNode.Parse(jsonMetadata)?.AsObject();
-        }
-
-        foreach (var tag in RequiredTags)
-        {
-            var value = jsonObject?[tag]?.ToString();
-            var isPresent = !string.IsNullOrEmpty(value);
-            items.Add(
-                new ComplianceCategoryItem
-                {
-                    Name = tag,
-                    Status = isPresent ? "present" : "missing",
-                    Detail = isPresent ? value : null,
-                }
-            );
-        }
-
-        var presentCount = items.Count(i => i.Status == "present");
-        var score = (double)presentCount / items.Count * 100;
+        var evaluation = TagComplianceEvaluator.Evaluate(jsonMetadata);
 
         return new ComplianceCategoryResult
         {
-            CategoryName = "Tags",
-            Status = presentCount == items.Count ? ComplianceStatus.Compliant : ComplianceStatus.NonCompliant,
-            Score = score,
-            Items = items,
+            CategoryName = TagComplianceEvaluator.CategoryName,
+            Status = evaluation.IsCompliant ? ComplianceStatus.Compliant : ComplianceStatus.NonCompliant,
+            Score = evaluation.Score,
+            Items = evaluation
+                .Tags.Select(t => new ComplianceCategoryItem
+                {
+                    Name = t.Name,
+                    Status = t.IsPresent ? "present" : "missing",
+                    Detail = t.Value,
+                })
+                .ToList(),
+            Description = TagComplianceEvaluator.Description,
+            HelpUrl = TagComplianceEvaluator.HelpUrl,
+            DisplayName = TagComplianceEvaluator.DisplayName,
         };
     }
 

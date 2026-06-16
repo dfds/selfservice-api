@@ -613,7 +613,11 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             return members.ToDictionary(m => m.Id, _ => new List<UserCapabilityRef>());
 
         // One bulk query per data source for the distinct capability set.
-        var caps = (await capabilityRepository.GetByIds(allCapIds)).ToDictionary(c => c.Id);
+        // Only active capabilities surface in {{#each User.Capabilities}} — memberships linger on
+        // capabilities that are pending deletion or deleted, so they must be filtered out here.
+        var caps = (await capabilityRepository.GetByIds(allCapIds))
+            .Where(c => c.Status == CapabilityStatusOptions.Active)
+            .ToDictionary(c => c.Id);
         var aws = (await awsAccountRepository.GetByCapabilityIds(allCapIds))
             .GroupBy(a => a.CapabilityId)
             .ToDictionary(g => g.Key, g => g.First());
