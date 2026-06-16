@@ -372,7 +372,8 @@ public class ApiResourceFactory
     private CapabilityListItemApiResource ConvertToListItem(
         Capability capability,
         CapabilityOutstandingActions? outstandingActions
-    ) => ConvertToListItem(capability, outstandingActions, userIsMember: false, isFavourite: false, priorityScore: null);
+    ) =>
+        ConvertToListItem(capability, outstandingActions, userIsMember: false, isFavourite: false, priorityScore: null);
 
     private CapabilityListItemApiResource ConvertToListItem(
         Capability capability,

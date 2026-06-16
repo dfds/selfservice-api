@@ -16,11 +16,6 @@ public class Favourite : AggregateRoot<FavouriteId>
 
     public static Favourite CreateFor(CapabilityId capabilityId, UserId userId, DateTime createdAt)
     {
-        return new Favourite(
-            id: FavouriteId.New(),
-            capabilityId: capabilityId,
-            userId: userId,
-            createdAt: createdAt
-        );
+        return new Favourite(id: FavouriteId.New(), capabilityId: capabilityId, userId: userId, createdAt: createdAt);
     }
 }
