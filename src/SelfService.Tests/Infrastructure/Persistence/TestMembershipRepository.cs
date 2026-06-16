@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SelfService.Domain;
+using SelfService.Domain.Models;
 using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.Comparers;
@@ -68,5 +69,67 @@ public class TestMembershipRepository
 
         var remaining = await dbContext.Memberships.ToListAsync();
         Assert.Contains(member, remaining, new MembershipComparer());
+    }
+
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task get_member_counts_by_capability_ids_returns_count_per_capability()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+
+        var capA = A.Capability.Build();
+        var capB = A.Capability.Build();
+        var repo = A.MembershipRepository.WithDbContext(dbContext).Build();
+
+        await repo.Add(A.Membership.WithCapabilityId(capA.Id).WithUserId("U1").Build());
+        await repo.Add(A.Membership.WithCapabilityId(capA.Id).WithUserId("U2").Build());
+        await repo.Add(A.Membership.WithCapabilityId(capB.Id).WithUserId("U1").Build());
+        await dbContext.SaveChangesAsync();
+
+        var counts = await repo.GetMemberCountsByCapabilityIds(new[] { capA.Id, capB.Id });
+
+        Assert.Equal(2, counts[capA.Id]);
+        Assert.Equal(1, counts[capB.Id]);
+    }
+
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task get_member_counts_by_capability_ids_empty_input_returns_empty()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+        var repo = A.MembershipRepository.WithDbContext(dbContext).Build();
+
+        var counts = await repo.GetMemberCountsByCapabilityIds(Array.Empty<CapabilityId>());
+
+        Assert.Empty(counts);
+    }
+
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task get_all_memberships_for_user_ids_returns_memberships_for_requested_users()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+
+        var capA = A.Capability.Build();
+        var capB = A.Capability.Build();
+        var repo = A.MembershipRepository.WithDbContext(dbContext).Build();
+
+        var u1 = UserId.Parse("U1");
+        var u2 = UserId.Parse("U2");
+        var u3 = UserId.Parse("U3");
+        await repo.Add(A.Membership.WithCapabilityId(capA.Id).WithUserId("U1").Build());
+        await repo.Add(A.Membership.WithCapabilityId(capB.Id).WithUserId("U1").Build());
+        await repo.Add(A.Membership.WithCapabilityId(capA.Id).WithUserId("U2").Build());
+        await repo.Add(A.Membership.WithCapabilityId(capA.Id).WithUserId("U3").Build());
+        await dbContext.SaveChangesAsync();
+
+        var memberships = await repo.GetAllMembershipsForUserIds(new[] { u1, u2 });
+
+        Assert.Equal(3, memberships.Count);
+        Assert.All(memberships, m => Assert.Contains(m.UserId, new[] { u1, u2 }));
+        Assert.DoesNotContain(memberships, m => m.UserId == u3);
     }
 }

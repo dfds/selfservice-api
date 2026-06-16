@@ -93,8 +93,8 @@ public class DeactivatedMemberCleanerApplicationService : IDeactivatedMemberClea
         }
         else
         {
-            _logger.LogDebug(
-                "Removing {DeactivatedMembersCount} members, disabled or not found in Azure AD:\\n{DeactivatedMembers}",
+            _logger.LogWarning(
+                "Removing {DeactivatedMembersCount} members with deactivated/disabled accounts in Azure AD:\n{DeactivatedMembers}",
                 deactivatedMembers.Count,
                 ToIdStringList(deactivatedMembers)
             );
@@ -112,20 +112,22 @@ public class DeactivatedMemberCleanerApplicationService : IDeactivatedMemberClea
             await _membershipRepository.CancelAllMembershipsWithUserId(member.Id);
         }
 
-        _logger.LogDebug("Successfully cancelled memberships of users with deactivated accounts");
+        _logger.LogInformation("Successfully cancelled memberships of users with deactivated accounts");
 
         foreach (var member in membersToBeDeleted)
         {
             await _membershipApplicationRepository.RemoveAllWithUserId(member.Id);
         }
 
-        _logger.LogDebug("Successfully removed pending membership applications of users with deactivated accounts");
+        _logger.LogInformation(
+            "Successfully removed pending membership applications of users with deactivated accounts"
+        );
 
         foreach (var member in membersToBeDeleted)
         {
             await _memberRepository.Remove(member.Id);
         }
 
-        _logger.LogDebug("Successfully removed member entries of users with deactivated accounts");
+        _logger.LogInformation("Successfully removed member entries of users with deactivated accounts");
     }
 }

@@ -30,4 +30,8 @@ public record UserCapabilityRef
 {
     public required Capability Capability { get; init; }
     public int MemberCount { get; init; }
+    public AwsAccount? AwsAccount { get; init; }
+    public List<AzureResource> AzureResources { get; init; } = new();
+    public List<RequirementsMetric> RequirementScores { get; init; } = new();
+    public int PendingMembershipApplicationCount { get; init; }
 }

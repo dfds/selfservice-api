@@ -4,6 +4,7 @@ using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Persistence.Models;
 
 namespace SelfService.Application;
 
@@ -203,14 +204,14 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         if (matchingRoleIds == null || matchingRoleIds.Count == 0)
             return emailEligible;
 
-        var result = new List<Member>(emailEligible.Count);
-        foreach (var member in emailEligible)
-        {
-            var grants = await _rbacApplicationService.GetRoleGrantsForUser(member.Id.ToString());
-            if (grants.Any(g => matchingRoleIds.Contains(g.RoleId)))
-                result.Add(member);
-        }
-        return result;
+        // Bulk-load role grants for every candidate in a single query instead of one query per member
+        // (the per-member lookup full-table-scans RbacRoleGrants, so a large audience meant N scans).
+        var userIds = emailEligible.Select(m => m.Id.ToString()).ToList();
+        var grantsByUser = await _rbacApplicationService.GetRoleGrantsForUsers(userIds);
+
+        return emailEligible
+            .Where(member => grantsByUser[member.Id.ToString()].Any(g => matchingRoleIds.Contains(g.RoleId)))
+            .ToList();
     }
 
     public async Task<List<UserEmailPreviewResult>> PreviewUserCampaign(EmailCampaignId id, string[]? userEmails)
@@ -237,15 +238,16 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         var previews = new List<UserEmailPreviewResult>();
         var html = campaign.ContentHtml ?? "";
 
+        var userCapabilitiesByMember = await LoadUserCapabilitiesForMembers(members);
+
         foreach (var member in members)
         {
-            var userCapabilities = await LoadUserCapabilities(member.Id);
             var context = new TemplateRenderContext
             {
                 Capability = null,
                 Member = member,
                 CampaignName = campaign.Name,
-                UserCapabilities = userCapabilities,
+                UserCapabilities = userCapabilitiesByMember.GetValueOrDefault(member.Id) ?? new(),
             };
 
             previews.Add(
@@ -536,22 +538,21 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         var recipientLogs = new List<EmailCampaignRecipientLog>();
         var html = campaign.ContentHtml ?? "";
 
-        foreach (var member in members)
+        // Restrict to deliverable recipients up front, then bulk-load their capability data once.
+        var recipients = members
+            .Where(m => !string.IsNullOrEmpty(m.Email))
+            .Take(EmailCampaign.MaxRecipientsPerCampaign)
+            .ToList();
+        var userCapabilitiesByMember = await LoadUserCapabilitiesForMembers(recipients);
+
+        foreach (var member in recipients)
         {
-            if (recipientLogs.Count >= EmailCampaign.MaxRecipientsPerCampaign)
-                break;
-
-            if (string.IsNullOrEmpty(member.Email))
-                continue;
-
-            var userCapabilities = await LoadUserCapabilities(member.Id);
-
             var context = new TemplateRenderContext
             {
                 Capability = null,
                 Member = member,
                 CampaignName = campaign.Name,
-                UserCapabilities = userCapabilities,
+                UserCapabilities = userCapabilitiesByMember.GetValueOrDefault(member.Id) ?? new(),
             };
 
             var renderedSubject = _templateRenderingService.RenderTemplate(campaign.Subject, context);
@@ -577,18 +578,85 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         return recipientLogs.Count;
     }
 
-    private async Task<List<UserCapabilityRef>> LoadUserCapabilities(UserId userId)
+    /// <summary>
+    /// Builds the per-recipient <see cref="UserCapabilityRef"/> lists used by the
+    /// {{#each User.Capabilities}} template block. All per-capability data (capability,
+    /// member count, AWS account, Azure resources, requirement scores, pending applications)
+    /// is bulk-loaded with one query per data source for the distinct set of capabilities
+    /// across ALL recipients — never one query per capability per recipient.
+    /// </summary>
+    private async Task<Dictionary<UserId, List<UserCapabilityRef>>> LoadUserCapabilitiesForMembers(
+        IReadOnlyCollection<Member> members
+    )
     {
-        var memberships = await _membershipRepository.GetAllMembershipsForUserId(userId);
-        var result = new List<UserCapabilityRef>(memberships.Count);
+        if (members.Count == 0)
+            return new Dictionary<UserId, List<UserCapabilityRef>>();
 
-        foreach (var membership in memberships)
+        using var scope = _serviceScopeFactory.CreateScope();
+        var sp = scope.ServiceProvider;
+        var membershipRepository = sp.GetRequiredService<IMembershipRepository>();
+        var capabilityRepository = sp.GetRequiredService<ICapabilityRepository>();
+        var awsAccountRepository = sp.GetRequiredService<IAwsAccountRepository>();
+        var azureResourceRepository = sp.GetRequiredService<IAzureResourceRepository>();
+        var membershipApplicationQuery = sp.GetRequiredService<ICapabilityMembershipApplicationQuery>();
+        var requirementsMetricService = sp.GetRequiredService<IRequirementsMetricService>();
+
+        // One query for all recipients' memberships, grouped to capability ids per user.
+        var memberIds = members.Select(m => m.Id).ToList();
+        var memberships = await membershipRepository.GetAllMembershipsForUserIds(memberIds);
+        var capIdsByUser = memberships
+            .GroupBy(m => m.UserId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.CapabilityId).Distinct().ToList());
+
+        var allCapIds = capIdsByUser.Values.SelectMany(x => x).Distinct().ToList();
+        if (allCapIds.Count == 0)
+            return members.ToDictionary(m => m.Id, _ => new List<UserCapabilityRef>());
+
+        // One bulk query per data source for the distinct capability set.
+        // Only active capabilities surface in {{#each User.Capabilities}} — memberships linger on
+        // capabilities that are pending deletion or deleted, so they must be filtered out here.
+        var caps = (await capabilityRepository.GetByIds(allCapIds))
+            .Where(c => c.Status == CapabilityStatusOptions.Active)
+            .ToDictionary(c => c.Id);
+        var aws = (await awsAccountRepository.GetByCapabilityIds(allCapIds))
+            .GroupBy(a => a.CapabilityId)
+            .ToDictionary(g => g.Key, g => g.First());
+        var azure = (await azureResourceRepository.GetForCapabilityIds(allCapIds))
+            .GroupBy(r => r.CapabilityId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+        var pending = (await membershipApplicationQuery.FindPendingByCapabilityIds(allCapIds))
+            .GroupBy(a => a.CapabilityId)
+            .ToDictionary(g => g.Key, g => g.Count());
+        var memberCounts = await membershipRepository.GetMemberCountsByCapabilityIds(allCapIds);
+        var requirementScores = await requirementsMetricService.GetRequirementScoresForCapabilitiesAsync(
+            allCapIds.Select(id => id.ToString()).ToList()
+        );
+
+        var result = new Dictionary<UserId, List<UserCapabilityRef>>();
+        foreach (var member in members)
         {
-            var cap = await _capabilityRepository.FindBy(membership.CapabilityId);
-            if (cap == null)
-                continue;
-            var memberCount = (await _membershipRepository.FindBy(cap.Id)).Count();
-            result.Add(new UserCapabilityRef { Capability = cap, MemberCount = memberCount });
+            var refs = new List<UserCapabilityRef>();
+            if (capIdsByUser.TryGetValue(member.Id, out var capIds))
+            {
+                foreach (var capId in capIds)
+                {
+                    if (!caps.TryGetValue(capId, out var cap))
+                        continue;
+                    refs.Add(
+                        new UserCapabilityRef
+                        {
+                            Capability = cap,
+                            MemberCount = memberCounts.GetValueOrDefault(capId),
+                            AwsAccount = aws.GetValueOrDefault(capId),
+                            AzureResources = azure.GetValueOrDefault(capId) ?? new List<AzureResource>(),
+                            RequirementScores =
+                                requirementScores.GetValueOrDefault(capId.ToString()) ?? new List<RequirementsMetric>(),
+                            PendingMembershipApplicationCount = pending.GetValueOrDefault(capId),
+                        }
+                    );
+                }
+            }
+            result[member.Id] = refs;
         }
 
         return result;

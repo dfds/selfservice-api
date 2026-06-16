@@ -3,6 +3,7 @@ namespace SelfService.Domain.Models;
 public interface IAzureResourceRepository
 {
     Task<List<AzureResource>> GetFor(CapabilityId capabilityId);
+    Task<List<AzureResource>> GetForCapabilityIds(IEnumerable<CapabilityId> capabilityIds);
     Task<List<AzureResource>> GetAll();
     Task Add(AzureResource azureResource);
     Task<AzureResource> Get(AzureResourceId id);

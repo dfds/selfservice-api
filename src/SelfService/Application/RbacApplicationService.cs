@@ -195,6 +195,15 @@ public class RbacApplicationService : IRbacApplicationService
         );
     }
 
+    public async Task<ILookup<string, RbacRoleGrant>> GetRoleGrantsForUsers(IReadOnlyCollection<string> userIds)
+    {
+        if (userIds.Count == 0)
+            return Enumerable.Empty<RbacRoleGrant>().ToLookup(g => g.AssignedEntityId);
+
+        var grants = await _roleGrantRepository.GetByAssignedUsers(userIds);
+        return grants.ToLookup(g => g.AssignedEntityId);
+    }
+
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForGroup(string groupId)
     {
         return await _cache.GetOrAddAsync(

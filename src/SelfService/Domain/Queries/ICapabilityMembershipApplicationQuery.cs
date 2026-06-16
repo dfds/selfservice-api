@@ -5,4 +5,5 @@ namespace SelfService.Domain.Queries;
 public interface ICapabilityMembershipApplicationQuery
 {
     Task<IEnumerable<MembershipApplication>> FindPendingBy(CapabilityId capabilityId);
+    Task<IEnumerable<MembershipApplication>> FindPendingByCapabilityIds(IEnumerable<CapabilityId> capabilityIds);
 }

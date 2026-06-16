@@ -468,4 +468,9 @@ public class StubCapabilityMembershipApplicationQuery : ICapabilityMembershipApp
     {
         return Task.FromResult(_result.AsEnumerable());
     }
+
+    public Task<IEnumerable<MembershipApplication>> FindPendingByCapabilityIds(IEnumerable<CapabilityId> capabilityIds)
+    {
+        return Task.FromResult(_result.AsEnumerable());
+    }
 }

@@ -77,18 +77,23 @@ public class TestTemplateRenderingService
         Assert.Equal("Campaign: Test Campaign", result);
     }
 
+    // 5 of the 6 mandatory tags present → 83.33 → "83". Non-tags scores still come from the requirements DB.
+    private const string FivePresentTagsMetadata =
+        "{\"dfds.cost.centre\":\"cc\",\"dfds.businessCapability\":\"bc\",\"dfds.env\":\"prod\","
+        + "\"dfds.data.classification\":\"internal\",\"dfds.service.criticality\":\"high\"}";
+
+    private const string AllTagsMetadata =
+        "{\"dfds.cost.centre\":\"cc\",\"dfds.businessCapability\":\"bc\",\"dfds.env\":\"prod\","
+        + "\"dfds.data.classification\":\"internal\",\"dfds.service.criticality\":\"high\","
+        + "\"dfds.service.availability\":\"99.9\"}";
+
     [Fact]
     public void RenderTemplate_RequirementScore_RendersValue()
     {
+        // Tags derive from the capability metadata (like the compliance endpoint); other scores from the DB.
+        var capability = A.Capability.WithJsonMetadata(FivePresentTagsMetadata).Build();
         var scores = new List<RequirementsMetric>
         {
-            new()
-            {
-                RequirementId = "mandatory_tags",
-                Value = 83.3,
-                DisplayName = "Use of Mandatory Tags",
-                HelpUrl = "https://wiki.example.com/tags",
-            },
             new()
             {
                 RequirementId = "external_secrets",
@@ -96,7 +101,7 @@ public class TestTemplateRenderingService
                 DisplayName = "External Secrets Adoption",
             },
         };
-        var context = CreateContext(requirementScores: scores);
+        var context = CreateContext(capability: capability, requirementScores: scores);
 
         var result = _sut.RenderTemplate(
             "Tags: {{Requirement.mandatory_tags}}, Secrets: {{Requirement.external_secrets}}",
@@ -107,22 +112,55 @@ public class TestTemplateRenderingService
     }
 
     [Fact]
+    public void RenderTemplate_RequirementScore_Tags_IgnoresRequirementsDbMetric()
+    {
+        // A stale mandatory_tags metric in the requirements DB must not override the metadata-derived score.
+        var capability = A.Capability.WithJsonMetadata(AllTagsMetadata).Build();
+        var scores = new List<RequirementsMetric>
+        {
+            new() { RequirementId = "mandatory_tags", Value = 12 },
+        };
+        var context = CreateContext(capability: capability, requirementScores: scores);
+
+        var result = _sut.RenderTemplate("{{Requirement.mandatory_tags}}", context);
+
+        Assert.Equal("100", result);
+    }
+
+    [Fact]
     public void RenderTemplate_RequirementScore_DisplayName_Renders()
     {
+        // Non-tags requirements take DisplayName from the requirements DB metric.
         var scores = new List<RequirementsMetric>
         {
             new()
             {
-                RequirementId = "mandatory_tags",
+                RequirementId = "external_secrets",
                 Value = 80,
-                DisplayName = "Use of Mandatory Tags",
+                DisplayName = "External Secrets Adoption",
             },
         };
         var context = CreateContext(requirementScores: scores);
 
-        var result = _sut.RenderTemplate("{{Requirement.mandatory_tags.DisplayName}}", context);
+        var result = _sut.RenderTemplate("{{Requirement.external_secrets.DisplayName}}", context);
 
-        Assert.Equal("Use of Mandatory Tags", result);
+        Assert.Equal("External Secrets Adoption", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_RequirementScore_Tags_DisplayNameAndHelpUrl_UseComplianceConstants()
+    {
+        // Tags DisplayName/HelpUrl mirror the compliance endpoint, independent of the requirements DB.
+        var context = CreateContext();
+
+        Assert.Equal(
+            TagComplianceEvaluator.DisplayName,
+            _sut.RenderTemplate("{{Requirement.mandatory_tags.DisplayName}}", context)
+        );
+        Assert.Equal(
+            TagComplianceEvaluator.HelpUrl,
+            _sut.RenderTemplate("{{Requirement.mandatory_tags.HelpUrl}}", context)
+        );
     }
 
     [Fact]
@@ -180,11 +218,23 @@ public class TestTemplateRenderingService
     [Fact]
     public void RenderTemplate_RequirementScore_EmptyScores_RendersNA()
     {
+        // Non-tags requirements with no DB metric still fall back to N/A.
+        var context = CreateContext(requirementScores: new List<RequirementsMetric>());
+
+        var result = _sut.RenderTemplate("{{Requirement.external_secrets}}", context);
+
+        Assert.Equal("N/A", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_RequirementScore_Tags_NoTagsInMetadata_RendersZero()
+    {
+        // Default capability metadata "{}" has none of the required tags → 0 (not N/A).
         var context = CreateContext(requirementScores: new List<RequirementsMetric>());
 
         var result = _sut.RenderTemplate("{{Requirement.mandatory_tags}}", context);
 
-        Assert.Equal("N/A", result);
+        Assert.Equal("0", result);
     }
 
     [Fact]
@@ -301,22 +351,14 @@ public class TestTemplateRenderingService
     [Fact]
     public void RenderTemplate_AllNewVariablesCombined()
     {
-        var scores = new List<RequirementsMetric>
-        {
-            new()
-            {
-                RequirementId = "mandatory_tags",
-                Value = 100,
-                DisplayName = "Tags",
-            },
-        };
+        var capability = A.Capability.WithJsonMetadata(AllTagsMetadata).Build();
         var awsAccount = A.AwsAccount.Build();
         awsAccount.RegisterRealAwsAccount("999888777666", "role@dfds.com", DateTime.UtcNow);
         var resources = new List<AzureResource> { A.AzureResource.WithEnvironment("dev").Build() };
         var context = CreateContext(
+            capability: capability,
             awsAccount: awsAccount,
             azureResources: resources,
-            requirementScores: scores,
             pendingMembershipApplicationCount: 2
         );
 
@@ -451,6 +493,64 @@ public class TestTemplateRenderingService
         );
 
         Assert.Equal("<ul><li>Cap A (4)</li><li>Cap B (7)</li></ul>", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_EachUserCapabilities_RendersPerCapabilityRequirementAndCounts()
+    {
+        // Regression: per-capability data (requirement scores, pending applications, Azure) must be
+        // carried into each {{#each User.Capabilities}} iteration instead of always rendering "N/A".
+        var capA = A.Capability.WithName("Cap A").Build();
+        var capB = A.Capability.WithName("Cap B").Build();
+        var ctx = UserContext(
+            userCapabilities: new List<UserCapabilityRef>
+            {
+                new()
+                {
+                    Capability = capA,
+                    MemberCount = 4,
+                    RequirementScores = new List<RequirementsMetric>
+                    {
+                        new() { RequirementId = "external_secrets", Value = 100 },
+                    },
+                    PendingMembershipApplicationCount = 2,
+                },
+                new()
+                {
+                    Capability = capB,
+                    MemberCount = 7,
+                    RequirementScores = new List<RequirementsMetric>
+                    {
+                        new() { RequirementId = "external_secrets", Value = 40 },
+                    },
+                    PendingMembershipApplicationCount = 0,
+                },
+            }
+        );
+
+        var result = _sut.RenderTemplate(
+            "{{#each User.Capabilities}}[{{Capability.Name}}: secrets={{Requirement.external_secrets}}, pending={{MembershipApplications.PendingCount}}]{{/each}}",
+            ctx
+        );
+
+        Assert.Equal("[Cap A: secrets=100, pending=2][Cap B: secrets=40, pending=0]", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_EachUserCapabilities_MissingRequirement_FallsBackToNA()
+    {
+        // A capability with no requirement scores still falls back to N/A (no data leaks in).
+        var cap = A.Capability.WithName("Cap A").Build();
+        var ctx = UserContext(
+            userCapabilities: new List<UserCapabilityRef>
+            {
+                new() { Capability = cap, MemberCount = 1 },
+            }
+        );
+
+        var result = _sut.RenderTemplate("{{#each User.Capabilities}}{{Requirement.external_secrets}}{{/each}}", ctx);
+
+        Assert.Equal("N/A", result);
     }
 
     [Fact]
