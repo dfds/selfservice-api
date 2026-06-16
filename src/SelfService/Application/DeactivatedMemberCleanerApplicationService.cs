@@ -119,7 +119,9 @@ public class DeactivatedMemberCleanerApplicationService : IDeactivatedMemberClea
             await _membershipApplicationRepository.RemoveAllWithUserId(member.Id);
         }
 
-        _logger.LogInformation("Successfully removed pending membership applications of users with deactivated accounts");
+        _logger.LogInformation(
+            "Successfully removed pending membership applications of users with deactivated accounts"
+        );
 
         foreach (var member in membersToBeDeleted)
         {
