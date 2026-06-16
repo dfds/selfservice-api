@@ -79,6 +79,7 @@ public static class Domain
         builder.Services.AddTransient<IKafkaTopicRepository, KafkaTopicRepository>();
         builder.Services.AddTransient<IMessageContractRepository, MessageContractRepository>();
         builder.Services.AddTransient<IMemberRepository, MemberRepository>();
+        builder.Services.AddTransient<IMissingMemberRepository, MissingMemberRepository>();
         builder.Services.AddTransient<IPortalVisitRepository, PortalVisitRepository>();
         builder.Services.AddTransient<IECRRepositoryRepository, ECRRepositoryRepository>();
         builder.Services.AddTransient<ISelfServiceJsonSchemaRepository, SelfServiceJsonSchemaRepository>();

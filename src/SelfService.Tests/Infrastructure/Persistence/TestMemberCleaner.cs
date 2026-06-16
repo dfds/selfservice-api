@@ -13,6 +13,80 @@ public class TestMemberCleaner
 {
     [Fact]
     [Trait("Category", "InMemoryDatabase")]
+    public async Task deactivated_member_cleaner_marks_missing_member_without_deleting_on_first_detection()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+
+        var memberRepo = new MemberRepository(dbContext);
+        var membershipRepo = new MembershipRepository(dbContext);
+        var missingMemberRepo = new MissingMemberRepository(dbContext);
+        var membershipApplicationRepo = new MembershipApplicationRepository(dbContext, SystemTime.Default);
+
+        var member = A.Member.WithUserId("userdeactivated@dfds.com").Build();
+        await memberRepo.Add(member);
+        await dbContext.SaveChangesAsync();
+
+        var membershipCleaner = A
+            .DeactivatedMemberCleanerApplicationService.WithMemberRepository(memberRepo)
+            .WithMembershipRepository(membershipRepo)
+            .WithMembershipApplicationRepository(membershipApplicationRepo)
+            .WithMissingMemberRepository(missingMemberRepo)
+            .Build();
+
+        var userStatusChecker = new StubUserStatusChecker().WithDeactivatedUser(member.Id);
+
+        await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
+        await dbContext.SaveChangesAsync();
+
+        var memberAfterRun = await memberRepo.FindBy(member.Id);
+        Assert.NotNull(memberAfterRun);
+
+        var missingRecord = await missingMemberRepo.FindByUser(member.Id.ToString());
+        Assert.NotNull(missingRecord);
+        Assert.Equal(MissingMemberStatus.Deactivated, missingRecord.Status);
+    }
+
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task deactivated_member_cleaner_deletes_member_after_grace_period_expires()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+
+        var memberRepo = new MemberRepository(dbContext);
+        var membershipRepo = new MembershipRepository(dbContext);
+        var missingMemberRepo = new MissingMemberRepository(dbContext);
+        var membershipApplicationRepo = new MembershipApplicationRepository(dbContext, SystemTime.Default);
+
+        var member = A.Member.WithUserId("userdeactivated@dfds.com").Build();
+        await memberRepo.Add(member);
+        await missingMemberRepo.Add(
+            new MissingMemberRecord(member.Id.ToString(), MissingMemberStatus.Deactivated, DateTime.UtcNow.AddDays(-8))
+        );
+        await dbContext.SaveChangesAsync();
+
+        var membershipCleaner = A
+            .DeactivatedMemberCleanerApplicationService.WithMemberRepository(memberRepo)
+            .WithMembershipRepository(membershipRepo)
+            .WithMembershipApplicationRepository(membershipApplicationRepo)
+            .WithMissingMemberRepository(missingMemberRepo)
+            .Build();
+
+        var userStatusChecker = new StubUserStatusChecker().WithDeactivatedUser(member.Id);
+
+        await membershipCleaner.RemoveDeactivatedMemberships(userStatusChecker);
+        await dbContext.SaveChangesAsync();
+
+        var memberAfterRun = await memberRepo.FindBy(member.Id);
+        Assert.Null(memberAfterRun);
+
+        var missingRecordAfterRun = await missingMemberRepo.FindByUser(member.Id.ToString());
+        Assert.Null(missingRecordAfterRun);
+    }
+
+    [Fact]
+    [Trait("Category", "InMemoryDatabase")]
     public async Task deactivated_member_cleaner_removes_deactivated_users()
     {
         //create dbContext which also provides stub argument for MembershipRepository
@@ -24,6 +98,7 @@ public class TestMemberCleaner
             .DeactivatedMemberCleanerApplicationService.WithMemberRepository(new MemberRepository(dbContext))
             .WithMembershipRepository(new MembershipRepository(dbContext))
             .WithMembershipApplicationRepository(new MembershipApplicationRepository(dbContext, systemTime))
+            .WithMissingMemberRepository(new MissingMemberRepository(dbContext))
             .Build();
 
         var capability = A.Capability.Build();
@@ -127,10 +202,22 @@ public class TestMemberCleaner
 
         //now the repository is in the right state
 
+        var missingMemberRepo = new MissingMemberRepository(dbContext);
+        // Pre-seed an expired missing record so the grace period is already elapsed
+        await missingMemberRepo.Add(
+            new MissingMemberRecord(
+                deactivatedMember.Id.ToString(),
+                MissingMemberStatus.Deactivated,
+                firstSeenAt: DateTime.UtcNow.AddDays(-8)
+            )
+        );
+        await dbContext.SaveChangesAsync();
+
         var membershipCleaner = A
             .DeactivatedMemberCleanerApplicationService.WithMemberRepository(memberRepo)
             .WithMembershipRepository(membershipRepo)
             .WithMembershipApplicationRepository(membershipApplicationRepo)
+            .WithMissingMemberRepository(missingMemberRepo)
             .Build();
 
         var userStatusChecker = new StubUserStatusChecker()
@@ -144,6 +231,8 @@ public class TestMemberCleaner
 
         // CLEAN UP
         await memberRepo.Remove(approverMember.Id);
+        await dbContext.SaveChangesAsync();
+
         dbContext.Capabilities.Remove(capability);
         await dbContext.SaveChangesAsync();
     }
