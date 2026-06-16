@@ -189,36 +189,29 @@ public class TestEmailCampaignApplicationService
 
         var rbac = new Mock<IRbacApplicationService>();
         rbac.Setup(x => x.GetAssignableRoles()).ReturnsAsync(new List<RbacRole> { ownerRole, readerRole });
-        rbac.Setup(x => x.GetRoleGrantsForUser(ownerMember.Id.ToString()))
-            .ReturnsAsync(
-                new List<RbacRoleGrant>
-                {
-                    new(
-                        RbacRoleGrantId.New(),
-                        ownerRole.Id,
-                        DateTime.UtcNow,
-                        AssignedEntityType.User,
-                        ownerMember.Id.ToString(),
-                        RbacAccessType.Capability,
-                        "some-capability"
-                    ),
-                }
-            );
-        rbac.Setup(x => x.GetRoleGrantsForUser(readerMember.Id.ToString()))
-            .ReturnsAsync(
-                new List<RbacRoleGrant>
-                {
-                    new(
-                        RbacRoleGrantId.New(),
-                        readerRole.Id,
-                        DateTime.UtcNow,
-                        AssignedEntityType.User,
-                        readerMember.Id.ToString(),
-                        RbacAccessType.Capability,
-                        "some-capability"
-                    ),
-                }
-            );
+        var roleGrants = new List<RbacRoleGrant>
+        {
+            new(
+                RbacRoleGrantId.New(),
+                ownerRole.Id,
+                DateTime.UtcNow,
+                AssignedEntityType.User,
+                ownerMember.Id.ToString(),
+                RbacAccessType.Capability,
+                "some-capability"
+            ),
+            new(
+                RbacRoleGrantId.New(),
+                readerRole.Id,
+                DateTime.UtcNow,
+                AssignedEntityType.User,
+                readerMember.Id.ToString(),
+                RbacAccessType.Capability,
+                "some-capability"
+            ),
+        };
+        rbac.Setup(x => x.GetRoleGrantsForUsers(It.IsAny<IReadOnlyCollection<string>>()))
+            .ReturnsAsync(roleGrants.ToLookup(g => g.AssignedEntityId));
 
         var sut = BuildService(userFilter: userFilter.Object, rbac: rbac.Object);
 

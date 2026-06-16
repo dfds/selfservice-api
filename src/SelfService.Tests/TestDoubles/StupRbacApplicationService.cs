@@ -98,6 +98,13 @@ public class StubRbacApplicationService : IRbacApplicationService
         return Task.FromResult(_roleGrants ?? new List<RbacRoleGrant>());
     }
 
+    public Task<ILookup<string, RbacRoleGrant>> GetRoleGrantsForUsers(IReadOnlyCollection<string> userIds)
+    {
+        var grants = _roleGrants ?? new List<RbacRoleGrant>();
+        var lookup = userIds.SelectMany(id => grants.Select(g => (id, g))).ToLookup(x => x.id, x => x.g);
+        return Task.FromResult(lookup);
+    }
+
     public Task<List<RbacRole>> GetAllRoles()
     {
         return Task.FromResult(_assignableRoles ?? new List<RbacRole>());

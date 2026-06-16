@@ -49,4 +49,9 @@ public class StubRbacRoleGrantRepository : IRbacRoleGrantRepository
     {
         return Task.FromResult(new List<RbacRoleGrant>());
     }
+
+    public Task<List<RbacRoleGrant>> GetByAssignedUsers(IReadOnlyCollection<string> userIds)
+    {
+        return Task.FromResult(new List<RbacRoleGrant>());
+    }
 }

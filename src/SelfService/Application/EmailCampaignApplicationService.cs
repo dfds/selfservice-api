@@ -204,14 +204,14 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         if (matchingRoleIds == null || matchingRoleIds.Count == 0)
             return emailEligible;
 
-        var result = new List<Member>(emailEligible.Count);
-        foreach (var member in emailEligible)
-        {
-            var grants = await _rbacApplicationService.GetRoleGrantsForUser(member.Id.ToString());
-            if (grants.Any(g => matchingRoleIds.Contains(g.RoleId)))
-                result.Add(member);
-        }
-        return result;
+        // Bulk-load role grants for every candidate in a single query instead of one query per member
+        // (the per-member lookup full-table-scans RbacRoleGrants, so a large audience meant N scans).
+        var userIds = emailEligible.Select(m => m.Id.ToString()).ToList();
+        var grantsByUser = await _rbacApplicationService.GetRoleGrantsForUsers(userIds);
+
+        return emailEligible
+            .Where(member => grantsByUser[member.Id.ToString()].Any(g => matchingRoleIds.Contains(g.RoleId)))
+            .ToList();
     }
 
     public async Task<List<UserEmailPreviewResult>> PreviewUserCampaign(EmailCampaignId id, string[]? userEmails)
