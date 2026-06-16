@@ -250,8 +250,6 @@ public class CapabilityController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        Console.WriteLine($"FLUTTERSHY >> FavouriteCapability requested | capabilityId={id} | userId={userId}");
-
         if (!CapabilityId.TryParse(id, out var capabilityId))
             return NotFound();
 
@@ -259,10 +257,6 @@ public class CapabilityController : ControllerBase
             return NotFound();
 
         await _capabilityApplicationService.FavouriteCapability(capabilityId, userId);
-
-        Console.WriteLine(
-            $"FLUTTERSHY >> FavouriteCapability completed | capabilityId={capabilityId} | userId={userId}"
-        );
 
         return NoContent();
     }
@@ -276,8 +270,6 @@ public class CapabilityController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        Console.WriteLine($"FLUTTERSHY >> UnfavouriteCapability requested | capabilityId={id} | userId={userId}");
-
         if (!CapabilityId.TryParse(id, out var capabilityId))
             return NotFound();
 
@@ -285,10 +277,6 @@ public class CapabilityController : ControllerBase
             return NotFound();
 
         await _capabilityApplicationService.UnfavouriteCapability(capabilityId, userId);
-
-        Console.WriteLine(
-            $"FLUTTERSHY >> UnfavouriteCapability completed | capabilityId={capabilityId} | userId={userId}"
-        );
 
         return NoContent();
     }
