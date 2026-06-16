@@ -16,6 +16,7 @@ public class ApiApplicationBuilder
 {
     private IAwsAccountRepository _awsAccountRepository;
     private ICapabilityRepository _capabilityRepository;
+    private IFavouriteRepository _favouriteRepository;
     private IReleaseNoteRepository _releaseNoteRepository;
     private IMembershipQuery _membershipQuery;
     private ICapabilityDeletionStatusQuery _capabilityDeletionStatusQuery;
@@ -30,6 +31,7 @@ public class ApiApplicationBuilder
     {
         _awsAccountRepository = new StubAwsAccountRepository();
         _capabilityRepository = new StubCapabilityRepository();
+        _favouriteRepository = Dummy.Of<IFavouriteRepository>();
         _releaseNoteRepository = new StubReleaseNoteRepository();
         _membershipQuery = new StubMembershipQuery();
         _capabilityDeletionStatusQuery = new StubCapabilityDeletionStatusQuery();
@@ -46,6 +48,12 @@ public class ApiApplicationBuilder
     public ApiApplicationBuilder WithCapabilityRepository(ICapabilityRepository capabilityRepository)
     {
         _capabilityRepository = capabilityRepository;
+        return this;
+    }
+
+    public ApiApplicationBuilder WithFavouriteRepository(IFavouriteRepository favouriteRepository)
+    {
+        _favouriteRepository = favouriteRepository;
         return this;
     }
 
@@ -114,6 +122,7 @@ public class ApiApplicationBuilder
         var application = new ApiApplication(overrideDb: _overrideDb);
         application.ReplaceService<IAwsAccountRepository>(_awsAccountRepository);
         application.ReplaceService<ICapabilityRepository>(_capabilityRepository);
+        application.ReplaceService<IFavouriteRepository>(_favouriteRepository);
         application.ReplaceService<IReleaseNoteRepository>(_releaseNoteRepository);
         application.ReplaceService<IMembershipQuery>(_membershipQuery);
         application.ReplaceService<ICapabilityDeletionStatusQuery>(_capabilityDeletionStatusQuery);

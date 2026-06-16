@@ -37,11 +37,19 @@ public class MyCapabilitiesQuery : IMyCapabilitiesQuery
 
     public async Task<IEnumerable<Capability>> FindBy(UserId userId)
     {
-        var query =
+        var memberCapabilities =
             from membership in _dbContext.Memberships
             join capability in _dbContext.Capabilities on membership.CapabilityId equals capability.Id
             where membership.UserId == userId
             select capability;
+
+        var favouritedCapabilities =
+            from favourite in _dbContext.Favourites
+            join capability in _dbContext.Capabilities on favourite.CapabilityId equals capability.Id
+            where favourite.UserId == userId
+            select capability;
+
+        var query = memberCapabilities.Union(favouritedCapabilities);
 
         return await query.OrderBy(x => x.Name).Where(x => x.Status != CapabilityStatusOptions.Deleted).ToListAsync();
     }

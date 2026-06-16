@@ -15,6 +15,7 @@ public class CapabilityDetailsApiResource
     public string JsonMetadata { get; set; }
     public int JsonMetadataSchemaVersion { get; set; }
     public double? RequirementScore { get; set; }
+    public bool IsFavourite { get; set; }
 
     [JsonPropertyName("_links")]
     public CapabilityDetailsLinks Links { get; set; }
@@ -93,6 +94,7 @@ public class CapabilityDetailsApiResource
         string jsonMetadata,
         int jsonMetadataSchemaVersion,
         double? requirementScore,
+        bool isFavourite,
         CapabilityDetailsLinks links
     )
     {
@@ -106,6 +108,7 @@ public class CapabilityDetailsApiResource
         JsonMetadata = jsonMetadata;
         JsonMetadataSchemaVersion = jsonMetadataSchemaVersion;
         RequirementScore = requirementScore;
+        IsFavourite = isFavourite;
     }
 }
 
@@ -121,6 +124,7 @@ public class CapabilityListItemApiResource
     public string JsonMetadata { get; set; }
     public string AwsAccountId { get; set; }
     public bool UserIsMember { get; set; }
+    public bool IsFavourite { get; set; }
     public double? RequirementScore { get; set; }
     public double? PriorityScore { get; set; }
     public OutstandingActionsApiResource? OutstandingActions { get; set; }
@@ -156,6 +160,7 @@ public class CapabilityListItemApiResource
         string awsAccountId,
         CapabilityListItemLinks links,
         bool userIsMember,
+        bool isFavourite,
         double? requirementScore
     )
     {
@@ -170,6 +175,7 @@ public class CapabilityListItemApiResource
         AwsAccountId = awsAccountId;
         Links = links;
         UserIsMember = userIsMember;
+        IsFavourite = isFavourite;
         RequirementScore = requirementScore;
     }
 }

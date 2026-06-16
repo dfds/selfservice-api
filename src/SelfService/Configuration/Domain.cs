@@ -72,6 +72,7 @@ public static class Domain
         builder.Services.AddTransient<IAwsAccountRepository, AwsAccountRepository>();
         builder.Services.AddTransient<IAzureResourceRepository, AzureResourceRepository>();
         builder.Services.AddTransient<IMembershipRepository, MembershipRepository>();
+        builder.Services.AddTransient<IFavouriteRepository, FavouriteRepository>();
         builder.Services.AddTransient<IMembershipApplicationRepository, MembershipApplicationRepository>();
         builder.Services.AddTransient<IKafkaClusterRepository, KafkaClusterRepository>();
         builder.Services.AddTransient<IKafkaClusterAccessRepository, KafkaClusterAccessRepository>();

@@ -33,6 +33,8 @@ public interface ICapabilityApplicationService
     Task SetJsonMetadata(CapabilityId capabilityId, string jsonMetadata);
     Task<string> GetJsonMetadata(CapabilityId capabilityId);
     Task<bool> DoesOnlyModifyRequiredProperties(string jsonMetadata, CapabilityId capabilityId);
+    Task FavouriteCapability(CapabilityId capabilityId, UserId userId);
+    Task UnfavouriteCapability(CapabilityId capabilityId, UserId userId);
     Task<ConfigurationLevelInfo> GetConfigurationLevel(CapabilityId capabilityId);
 
     Task<bool> SelfAssessmentOptionExists(CapabilityId capabilityId, SelfAssessmentOptionId selfAssessmentOptionId);
