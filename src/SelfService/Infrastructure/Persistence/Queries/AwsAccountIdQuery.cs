@@ -24,4 +24,25 @@ public class AwsAccountIdQuery : IAwsAccountIdQuery
             return null;
         }
     }
+
+    public IReadOnlyDictionary<CapabilityId, RealAwsAccountId> FindBy(IReadOnlyCollection<CapabilityId> capabilityIds)
+    {
+        try
+        {
+            var ids = capabilityIds.Distinct().ToList();
+            if (ids.Count == 0)
+                return new Dictionary<CapabilityId, RealAwsAccountId>();
+
+            var accounts = _context.AwsAccounts.Where(x => ids.Contains(x.CapabilityId)).ToList();
+
+            return accounts
+                .Where(x => x.Registration.AccountId is not null)
+                .GroupBy(x => x.CapabilityId)
+                .ToDictionary(g => g.Key, g => g.First().Registration.AccountId!);
+        }
+        catch
+        {
+            return new Dictionary<CapabilityId, RealAwsAccountId>();
+        }
+    }
 }
