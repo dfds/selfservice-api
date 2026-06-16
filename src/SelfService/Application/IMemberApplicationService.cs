@@ -41,7 +41,11 @@ public class MemberApplicationService : IMemberApplicationService
         var user = await _memberRepository.FindBy(userId);
         if (user == null)
         {
-            user = Member.Register(userId, name, email, new UserSettings());
+            // Member.Register is (id, email, displayName) — keep the same arg order as the Update
+            // path below so create and update agree. (Previously this passed (name, email), which
+            // stored Email/DisplayName swapped until the next profile update healed it; members
+            // provisioned from the RBAC admin page never log in, so the swap was permanent.)
+            user = Member.Register(userId, email, name, new UserSettings());
             await _memberRepository.Add(user);
 
             _logger.LogInformation("User {UserId} has been registered", userId);
