@@ -57,4 +57,32 @@ public class MembershipRepository : GenericRepository<Membership, MembershipId>,
     {
         return await GetAllWithPredicate(x => x.UserId == userId);
     }
+
+    public async Task<List<Membership>> GetAllMembershipsForUserIds(IEnumerable<UserId> userIds)
+    {
+        var idList = userIds.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return new List<Membership>();
+        }
+        return await DbSetReference.Where(x => idList.Contains(x.UserId)).ToListAsync();
+    }
+
+    public async Task<Dictionary<CapabilityId, int>> GetMemberCountsByCapabilityIds(
+        IEnumerable<CapabilityId> capabilityIds
+    )
+    {
+        var idList = capabilityIds.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return new Dictionary<CapabilityId, int>();
+        }
+        // Project to the capability id column only, then group in memory — avoids relying on
+        // EF Core translating GroupBy over a value-converted key.
+        var capIds = await DbSetReference
+            .Where(x => idList.Contains(x.CapabilityId))
+            .Select(x => x.CapabilityId)
+            .ToListAsync();
+        return capIds.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+    }
 }

@@ -11,5 +11,9 @@ namespace SelfService.Application
         )> GetRequirementScoreAsync(string capabilityId);
 
         Task<Dictionary<string, double>> GetAllRequirementScoresAsync();
+
+        Task<
+            Dictionary<string, List<Infrastructure.Persistence.Models.RequirementsMetric>>
+        > GetRequirementScoresForCapabilitiesAsync(IReadOnlyCollection<string> capabilityIds);
     }
 }

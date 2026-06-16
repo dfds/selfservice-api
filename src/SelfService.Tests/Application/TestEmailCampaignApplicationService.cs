@@ -1,10 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using SelfService.Application;
 using SelfService.Domain.Models;
+using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Persistence;
+using SelfService.Infrastructure.Persistence.Models;
+using SelfService.Tests.Builders;
 
 namespace SelfService.Tests.Application;
 
@@ -184,36 +189,29 @@ public class TestEmailCampaignApplicationService
 
         var rbac = new Mock<IRbacApplicationService>();
         rbac.Setup(x => x.GetAssignableRoles()).ReturnsAsync(new List<RbacRole> { ownerRole, readerRole });
-        rbac.Setup(x => x.GetRoleGrantsForUser(ownerMember.Id.ToString()))
-            .ReturnsAsync(
-                new List<RbacRoleGrant>
-                {
-                    new(
-                        RbacRoleGrantId.New(),
-                        ownerRole.Id,
-                        DateTime.UtcNow,
-                        AssignedEntityType.User,
-                        ownerMember.Id.ToString(),
-                        RbacAccessType.Capability,
-                        "some-capability"
-                    ),
-                }
-            );
-        rbac.Setup(x => x.GetRoleGrantsForUser(readerMember.Id.ToString()))
-            .ReturnsAsync(
-                new List<RbacRoleGrant>
-                {
-                    new(
-                        RbacRoleGrantId.New(),
-                        readerRole.Id,
-                        DateTime.UtcNow,
-                        AssignedEntityType.User,
-                        readerMember.Id.ToString(),
-                        RbacAccessType.Capability,
-                        "some-capability"
-                    ),
-                }
-            );
+        var roleGrants = new List<RbacRoleGrant>
+        {
+            new(
+                RbacRoleGrantId.New(),
+                ownerRole.Id,
+                DateTime.UtcNow,
+                AssignedEntityType.User,
+                ownerMember.Id.ToString(),
+                RbacAccessType.Capability,
+                "some-capability"
+            ),
+            new(
+                RbacRoleGrantId.New(),
+                readerRole.Id,
+                DateTime.UtcNow,
+                AssignedEntityType.User,
+                readerMember.Id.ToString(),
+                RbacAccessType.Capability,
+                "some-capability"
+            ),
+        };
+        rbac.Setup(x => x.GetRoleGrantsForUsers(It.IsAny<IReadOnlyCollection<string>>()))
+            .ReturnsAsync(roleGrants.ToLookup(g => g.AssignedEntityId));
 
         var sut = BuildService(userFilter: userFilter.Object, rbac: rbac.Object);
 
@@ -224,13 +222,106 @@ public class TestEmailCampaignApplicationService
         Assert.Equal("owner@dfds.com", result.Users[0].Email);
     }
 
+    [Fact]
+    public async Task user_capabilities_loop_excludes_non_active_capabilities()
+    {
+        // Memberships linger on capabilities that are deleted / pending deletion; those must NOT
+        // appear in the {{#each User.Capabilities}} loop — only active capabilities.
+        var member = new Member(UserId.Parse("user@dfds.com"), "user@dfds.com", "User", UserSettings.Default);
+
+        var activeCap = A.Capability.WithId(CapabilityId.CreateFrom("active-cap")).WithName("Active Cap").Build();
+        var deletedCap = A
+            .Capability.WithId(CapabilityId.CreateFrom("deleted-cap"))
+            .WithName("Deleted Cap")
+            .WithStatus(CapabilityStatusOptions.Deleted)
+            .Build();
+
+        var campaign = EmailCampaign.CreateDraft(
+            name: "Campaign",
+            subject: "Subject",
+            contentJson: "{}",
+            contentHtml: "{{#each User.Capabilities}}[{{Capability.Name}}]{{/each}}",
+            audienceJson: "{\"mode\":\"all\"}",
+            recipientFilter: null,
+            createdBy: "tester"
+        );
+
+        var campaignRepo = new Mock<IEmailCampaignRepository>();
+        campaignRepo.Setup(x => x.FindById(It.IsAny<EmailCampaignId>())).ReturnsAsync(campaign);
+
+        var userFilter = new Mock<IUserFilterService>();
+        userFilter
+            .Setup(x => x.ResolveUsers(It.IsAny<string>()))
+            .ReturnsAsync(new UserAudienceResolution { Members = new List<Member> { member } });
+
+        var membershipRepo = new Mock<IMembershipRepository>();
+        membershipRepo
+            .Setup(x => x.GetAllMembershipsForUserIds(It.IsAny<IEnumerable<UserId>>()))
+            .ReturnsAsync(
+                new List<Membership>
+                {
+                    A.Membership.WithUserId(member.Id).WithCapabilityId(activeCap.Id),
+                    A.Membership.WithUserId(member.Id).WithCapabilityId(deletedCap.Id),
+                }
+            );
+        membershipRepo
+            .Setup(x => x.GetMemberCountsByCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(new Dictionary<CapabilityId, int>());
+
+        var capabilityRepo = new Mock<ICapabilityRepository>();
+        capabilityRepo
+            .Setup(x => x.GetByIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(new List<Capability> { activeCap, deletedCap });
+
+        var awsRepo = new Mock<IAwsAccountRepository>();
+        awsRepo
+            .Setup(x => x.GetByCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(new List<AwsAccount>());
+        var azureRepo = new Mock<IAzureResourceRepository>();
+        azureRepo
+            .Setup(x => x.GetForCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(new List<AzureResource>());
+        var appQuery = new Mock<ICapabilityMembershipApplicationQuery>();
+        appQuery
+            .Setup(x => x.FindPendingByCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(new List<MembershipApplication>());
+        var metricService = new Mock<IRequirementsMetricService>();
+        metricService
+            .Setup(x => x.GetRequirementScoresForCapabilitiesAsync(It.IsAny<IReadOnlyCollection<string>>()))
+            .ReturnsAsync(new Dictionary<string, List<RequirementsMetric>>());
+
+        var scopeFactory = ScopeFactoryWith(
+            (typeof(IMembershipRepository), membershipRepo.Object),
+            (typeof(ICapabilityRepository), capabilityRepo.Object),
+            (typeof(IAwsAccountRepository), awsRepo.Object),
+            (typeof(IAzureResourceRepository), azureRepo.Object),
+            (typeof(ICapabilityMembershipApplicationQuery), appQuery.Object),
+            (typeof(IRequirementsMetricService), metricService.Object)
+        );
+
+        var sut = BuildService(
+            campaignRepo: campaignRepo.Object,
+            userFilter: userFilter.Object,
+            templateRendering: new TemplateRenderingService(),
+            scopeFactory: scopeFactory
+        );
+
+        var previews = await sut.PreviewUserCampaign(campaign.Id, new[] { member.Email });
+
+        Assert.Single(previews);
+        Assert.Contains("Active Cap", previews[0].Html);
+        Assert.DoesNotContain("Deleted Cap", previews[0].Html);
+    }
+
     private static EmailCampaignApplicationService BuildService(
         IEmailCampaignRepository? campaignRepo = null,
         IEmailCampaignRecipientLogRepository? recipientLogRepo = null,
         IEmailCampaignExecutionRepository? executionRepo = null,
         ICapabilityFilterService? capabilityFilter = null,
         IUserFilterService? userFilter = null,
-        IRbacApplicationService? rbac = null
+        IRbacApplicationService? rbac = null,
+        ITemplateRenderingService? templateRendering = null,
+        IServiceScopeFactory? scopeFactory = null
     )
     {
         return new EmailCampaignApplicationService(
@@ -242,9 +333,25 @@ public class TestEmailCampaignApplicationService
             Mock.Of<IMemberRepository>(),
             capabilityFilter ?? Mock.Of<ICapabilityFilterService>(),
             userFilter ?? Mock.Of<IUserFilterService>(),
-            Mock.Of<ITemplateRenderingService>(),
+            templateRendering ?? Mock.Of<ITemplateRenderingService>(),
             rbac ?? Mock.Of<IRbacApplicationService>(),
-            Mock.Of<IServiceScopeFactory>()
+            scopeFactory ?? Mock.Of<IServiceScopeFactory>()
         );
+    }
+
+    // Wires an IServiceScopeFactory whose scope resolves the given service instances — mirrors the
+    // scoped resolution LoadUserCapabilitiesForMembers performs at runtime.
+    private static IServiceScopeFactory ScopeFactoryWith(params (Type type, object impl)[] services)
+    {
+        var provider = new Mock<IServiceProvider>();
+        foreach (var (type, impl) in services)
+            provider.Setup(p => p.GetService(type)).Returns(impl);
+
+        var scope = new Mock<IServiceScope>();
+        scope.SetupGet(s => s.ServiceProvider).Returns(provider.Object);
+
+        var factory = new Mock<IServiceScopeFactory>();
+        factory.Setup(f => f.CreateScope()).Returns(scope.Object);
+        return factory.Object;
     }
 }

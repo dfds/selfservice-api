@@ -23,6 +23,16 @@ public class AzureResourceRepository : IAzureResourceRepository
         return await _dbContext.AzureResources.Where(x => x.CapabilityId == capabilityId).ToListAsync();
     }
 
+    public async Task<List<AzureResource>> GetForCapabilityIds(IEnumerable<CapabilityId> capabilityIds)
+    {
+        var idList = capabilityIds.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return new List<AzureResource>();
+        }
+        return await _dbContext.AzureResources.Where(x => idList.Contains(x.CapabilityId)).ToListAsync();
+    }
+
     public async Task<AzureResource> Get(AzureResourceId id)
     {
         var found = await _dbContext.AzureResources.FindAsync(id);

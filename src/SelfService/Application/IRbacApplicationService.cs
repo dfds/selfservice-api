@@ -9,6 +9,12 @@ public interface IRbacApplicationService
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleGrants(List<RbacRoleGrant> roleGrants);
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForUser(string user);
     Task<List<RbacRoleGrant>> GetRoleGrantsForUser(string user);
+
+    /// <summary>
+    /// Bulk variant of <see cref="GetRoleGrantsForUser"/>: loads role grants for many users in a single
+    /// query and groups them by user id. Use this instead of calling the per-user method in a loop.
+    /// </summary>
+    Task<ILookup<string, RbacRoleGrant>> GetRoleGrantsForUsers(IReadOnlyCollection<string> userIds);
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForGroup(string groupId);
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForRole(string roleId);
     Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleIgnoreCase(string roleId);

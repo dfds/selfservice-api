@@ -4,6 +4,7 @@ public interface ICapabilityRepository
 {
     Task<Capability> Get(CapabilityId id);
     Task<Capability?> FindBy(CapabilityId id);
+    Task<IEnumerable<Capability>> GetByIds(IEnumerable<CapabilityId> ids);
     Task<bool> Exists(CapabilityId id);
     Task Add(Capability capability);
     Task<IEnumerable<Capability>> GetAll();

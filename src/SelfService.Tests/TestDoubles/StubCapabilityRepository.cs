@@ -21,6 +21,13 @@ public class StubCapabilityRepository : ICapabilityRepository
         return Task.FromResult(_capability);
     }
 
+    public Task<IEnumerable<Capability>> GetByIds(IEnumerable<CapabilityId> ids)
+    {
+        return Task.FromResult(
+            _capability is null ? Enumerable.Empty<Capability>() : new[] { _capability }.AsEnumerable()
+        );
+    }
+
     public Task<bool> Exists(CapabilityId id)
     {
         return Task.FromResult(_capability != null);

@@ -29,6 +29,16 @@ public class CapabilityRepository : ICapabilityRepository
         return await _dbContext.Capabilities.FindAsync(id);
     }
 
+    public async Task<IEnumerable<Capability>> GetByIds(IEnumerable<CapabilityId> ids)
+    {
+        var idList = ids.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return new List<Capability>();
+        }
+        return await _dbContext.Capabilities.Where(c => idList.Contains(c.Id)).ToListAsync();
+    }
+
     public async Task<bool> Exists(CapabilityId id)
     {
         return await _dbContext.Capabilities.AnyAsync(x => x.Id == id);
