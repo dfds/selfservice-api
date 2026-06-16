@@ -45,6 +45,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<Capability> Capabilities => Set<Capability>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<Membership> Memberships => Set<Membership>();
+    public DbSet<Favourite> Favourites => Set<Favourite>();
 
     public DbSet<MembershipApplication> MembershipApplications => Set<MembershipApplication>();
 
@@ -96,6 +97,8 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<UserId>().HaveConversion<UserIdConverter>();
 
         configurationBuilder.Properties<MembershipId>().HaveConversion<MembershipIdConverter>();
+
+        configurationBuilder.Properties<FavouriteId>().HaveConversion<FavouriteIdConverter>();
 
         configurationBuilder.Properties<AwsAccountId>().HaveConversion<AwsAccountIdConverter>();
 
@@ -293,6 +296,17 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CapabilityId);
             cfg.Property(x => x.UserId);
             cfg.Property(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<Favourite>(cfg =>
+        {
+            cfg.ToTable("Favourite");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CapabilityId);
+            cfg.Property(x => x.UserId);
+            cfg.Property(x => x.CreatedAt);
+            cfg.HasIndex(x => new { x.CapabilityId, x.UserId }).IsUnique();
         });
 
         modelBuilder.Entity<MembershipApplication>(opt =>

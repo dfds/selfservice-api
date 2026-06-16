@@ -296,7 +296,8 @@ public class ApiResourceFactory
 
     public CapabilityListApiResource Convert(
         IEnumerable<Capability> capabilities,
-        IEnumerable<Membership> currentUserMemberships
+        IEnumerable<Membership> currentUserMemberships,
+        IEnumerable<Favourite> currentUserFavourites
     )
     {
         var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
@@ -304,18 +305,17 @@ public class ApiResourceFactory
             ? capabilities
             : capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted);
 
+        var membershipCapabilityIds = currentUserMemberships.Select(x => x.CapabilityId).ToHashSet();
+        var favouritedCapabilityIds = currentUserFavourites.Select(x => x.CapabilityId).ToHashSet();
+
         var capabilitiesSelected = capabilities.Select(ConvertToListItem).ToList();
 
         foreach (var capability in capabilitiesSelected)
         {
             var awsAccountId = _awsAccountIdQuery.FindBy(capability.Id);
             capability.AwsAccountId = awsAccountId == null ? "" : awsAccountId.ToString();
-
-            var membership = currentUserMemberships.FirstOrDefault(x => x.CapabilityId == capability.Id);
-            if (membership != null)
-            {
-                capability.UserIsMember = true;
-            }
+            capability.UserIsMember = membershipCapabilityIds.Contains(capability.Id);
+            capability.IsFavourite = favouritedCapabilityIds.Contains(capability.Id);
         }
 
         return new CapabilityListApiResource(
@@ -361,17 +361,25 @@ public class ApiResourceFactory
     }
 
     private CapabilityListItemApiResource ConvertToListItem(Capability capability) =>
-        ConvertToListItem(capability, outstandingActions: null, userIsMember: false, priorityScore: null);
+        ConvertToListItem(
+            capability,
+            outstandingActions: null,
+            userIsMember: false,
+            isFavourite: false,
+            priorityScore: null
+        );
 
     private CapabilityListItemApiResource ConvertToListItem(
         Capability capability,
         CapabilityOutstandingActions? outstandingActions
-    ) => ConvertToListItem(capability, outstandingActions, userIsMember: false, priorityScore: null);
+    ) =>
+        ConvertToListItem(capability, outstandingActions, userIsMember: false, isFavourite: false, priorityScore: null);
 
     private CapabilityListItemApiResource ConvertToListItem(
         Capability capability,
         CapabilityOutstandingActions? outstandingActions,
         bool userIsMember,
+        bool isFavourite,
         double? priorityScore
     )
     {
@@ -386,6 +394,7 @@ public class ApiResourceFactory
             jsonMetadata: capability.JsonMetadata,
             awsAccountId: "",
             userIsMember: userIsMember,
+            isFavourite: isFavourite,
             requirementScore: capability.RequirementScore,
             links: new CapabilityListItemApiResource.CapabilityListItemLinks(
                 self: new ResourceLink(
@@ -744,7 +753,7 @@ public class ApiResourceFactory
         );
     }
 
-    public async Task<CapabilityDetailsApiResource> Convert(Capability capability)
+    public async Task<CapabilityDetailsApiResource> Convert(Capability capability, bool isFavourite = false)
     {
         return new CapabilityDetailsApiResource(
             id: capability.Id,
@@ -756,6 +765,7 @@ public class ApiResourceFactory
             jsonMetadata: capability.JsonMetadata,
             jsonMetadataSchemaVersion: capability.JsonMetadataSchemaVersion,
             requirementScore: capability.RequirementScore,
+            isFavourite: isFavourite,
             links: new CapabilityDetailsApiResource.CapabilityDetailsLinks(
                 self: CreateSelfLinkFor(capability),
                 members: CreateMembersLinkFor(capability),
@@ -1488,7 +1498,8 @@ public class ApiResourceFactory
             double PriorityScore
         )> capabilities,
         Member? member,
-        bool isDevelopment
+        bool isDevelopment,
+        ISet<CapabilityId>? favouritedCapabilityIds = null
     )
     {
         return new MyProfileApiResource(
@@ -1498,6 +1509,7 @@ public class ApiResourceFactory
                     x.Capability,
                     x.OutstandingActions,
                     userIsMember: true,
+                    isFavourite: favouritedCapabilityIds?.Contains(x.Capability.Id) ?? false,
                     priorityScore: x.PriorityScore
                 )
             ),

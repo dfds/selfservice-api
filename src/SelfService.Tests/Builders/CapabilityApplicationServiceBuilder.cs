@@ -11,12 +11,14 @@ namespace SelfService.Tests.Builders;
 public class CapabilityApplicationServiceBuilder
 {
     private ICapabilityRepository _capabilityRepository;
+    private IFavouriteRepository _favouriteRepository;
     private ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
     private IConfigurationLevelService _configurationLevelService;
 
     public CapabilityApplicationServiceBuilder()
     {
         _capabilityRepository = Dummy.Of<ICapabilityRepository>();
+        _favouriteRepository = Dummy.Of<IFavouriteRepository>();
         _selfServiceJsonSchemaService = Dummy.Of<ISelfServiceJsonSchemaService>();
         _configurationLevelService = Dummy.Of<IConfigurationLevelService>();
     }
@@ -24,6 +26,12 @@ public class CapabilityApplicationServiceBuilder
     public CapabilityApplicationServiceBuilder WithCapabilityRepository(ICapabilityRepository capabilityRepository)
     {
         _capabilityRepository = capabilityRepository;
+        return this;
+    }
+
+    public CapabilityApplicationServiceBuilder WithFavouriteRepository(IFavouriteRepository favouriteRepository)
+    {
+        _favouriteRepository = favouriteRepository;
         return this;
     }
 
@@ -53,6 +61,7 @@ public class CapabilityApplicationServiceBuilder
             selfAssessmentOptionRepository: Mock.Of<ISelfAssessmentOptionRepository>(),
             kafkaClusterAccessRepository: Mock.Of<IKafkaClusterAccessRepository>(),
             membershipRepository: Mock.Of<IMembershipRepository>(),
+            favouriteRepository: _favouriteRepository,
             ticketingSystem: Mock.Of<ITicketingSystem>(),
             systemTime: SystemTime.Default,
             selfServiceJsonSchemaService: _selfServiceJsonSchemaService,
