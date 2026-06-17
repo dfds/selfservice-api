@@ -19,6 +19,11 @@ public class CapabilityDto
 public class MemberDto
 {
     public required string Email { get; set; }
+
+    // The member's identifier. For regular users this is their UPN, which lets
+    // aad-aws-sync look the user up in Azure AD directly instead of guessing via
+    // email — correct even when the user's UPN differs from their email address.
+    public required string UserId { get; set; }
 }
 
 public class ContextDto

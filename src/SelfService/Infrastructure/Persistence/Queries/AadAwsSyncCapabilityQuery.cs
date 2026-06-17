@@ -37,6 +37,9 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
                         // Azure object id, so resolve the (synthetic) email from the Member record.
                         // Fall back to UserId for memberships without a matching Member row.
                         Email = emailByUserId.GetValueOrDefault(member.UserId, member.UserId),
+                        // UserId is the authoritative identifier (the UPN for regular users);
+                        // aad-aws-sync uses it to resolve the user in Azure AD directly.
+                        UserId = member.UserId.ToString(),
                     })
                     .ToArray(),
                 Contexts = awsAccounts
