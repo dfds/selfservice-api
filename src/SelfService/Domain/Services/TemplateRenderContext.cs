@@ -20,6 +20,12 @@ public record TemplateRenderContext
     public int PendingMembershipApplicationCount { get; init; }
 
     /// <summary>
+    /// Cached cost time series for <see cref="Capability"/>, used by the Capability.Cost.* variables.
+    /// Null when no cost data is available for the capability.
+    /// </summary>
+    public CapabilityCosts? Costs { get; init; }
+
+    /// <summary>
     /// Capabilities the recipient user belongs to. Used for User-targeted campaigns,
     /// in particular by the {{#each User.Capabilities}} template block.
     /// </summary>
@@ -34,4 +40,5 @@ public record UserCapabilityRef
     public List<AzureResource> AzureResources { get; init; } = new();
     public List<RequirementsMetric> RequirementScores { get; init; } = new();
     public int PendingMembershipApplicationCount { get; init; }
+    public CapabilityCosts? Costs { get; init; }
 }

@@ -7,6 +7,7 @@ using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Metrics;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Models;
 using SelfService.Tests.Builders;
@@ -321,7 +322,8 @@ public class TestEmailCampaignApplicationService
         IUserFilterService? userFilter = null,
         IRbacApplicationService? rbac = null,
         ITemplateRenderingService? templateRendering = null,
-        IServiceScopeFactory? scopeFactory = null
+        IServiceScopeFactory? scopeFactory = null,
+        AllCapabilitiesCostsCache? costsCache = null
     )
     {
         return new EmailCampaignApplicationService(
@@ -335,7 +337,8 @@ public class TestEmailCampaignApplicationService
             userFilter ?? Mock.Of<IUserFilterService>(),
             templateRendering ?? Mock.Of<ITemplateRenderingService>(),
             rbac ?? Mock.Of<IRbacApplicationService>(),
-            scopeFactory ?? Mock.Of<IServiceScopeFactory>()
+            scopeFactory ?? Mock.Of<IServiceScopeFactory>(),
+            costsCache ?? new AllCapabilitiesCostsCache()
         );
     }
 

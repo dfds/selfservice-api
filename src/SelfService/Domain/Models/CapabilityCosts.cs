@@ -22,6 +22,18 @@ public class CapabilityCosts
         CapabilityId = capabilityId;
         Costs = costs;
     }
+
+    /// <summary>
+    /// Sum of the N most recent daily cost datapoints, or null when there is no data.
+    /// The cached time series already excludes today/yesterday (incomplete days), so this
+    /// mirrors how the portal computes a rolling window total (sum of daily values).
+    /// </summary>
+    public float? SumForLastDays(int days)
+    {
+        if (Costs is null || Costs.Length == 0)
+            return null;
+        return Costs.OrderByDescending(c => c.TimeStamp).Take(days).Sum(c => c.Value);
+    }
 }
 
 public class MyCapabilityCosts

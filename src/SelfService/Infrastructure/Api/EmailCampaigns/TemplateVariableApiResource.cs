@@ -6,4 +6,5 @@ public class TemplateVariableApiResource
     public string Description { get; set; } = "";
     public string Entity { get; set; } = "";
     public string Example { get; set; } = "";
+    public string Scope { get; set; } = "";
 }
