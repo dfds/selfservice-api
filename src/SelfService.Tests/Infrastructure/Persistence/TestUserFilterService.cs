@@ -36,12 +36,12 @@ public class TestUserFilterService
         await using var databaseFactory = new InMemoryDatabaseFactory();
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
-        var capActive = A.Capability
-            .WithId(CapabilityId.CreateFrom("active-cap"))
+        var capActive = A
+            .Capability.WithId(CapabilityId.CreateFrom("active-cap"))
             .WithStatus(CapabilityStatusOptions.Active)
             .Build();
-        var capPending = A.Capability
-            .WithId(CapabilityId.CreateFrom("pending-cap"))
+        var capPending = A
+            .Capability.WithId(CapabilityId.CreateFrom("pending-cap"))
             .WithStatus(CapabilityStatusOptions.PendingDeletion)
             .Build();
         var inActiveCap = A.Member.WithUserId(UserId.Parse("alice")).WithEmail("alice@dfds.com").Build();
@@ -57,7 +57,16 @@ public class TestUserFilterService
         await dbContext.SaveChangesAsync();
 
         var result = await Sut(dbContext, new AllCapabilitiesCostsCache())
-            .ResolveUsers(FilterAudience(new { field = "status", @operator = "eq", value = "active" }));
+            .ResolveUsers(
+                FilterAudience(
+                    new
+                    {
+                        field = "status",
+                        @operator = "eq",
+                        value = "active",
+                    }
+                )
+            );
 
         Assert.Equal(new[] { inActiveCap.Id }, result.Members.Select(m => m.Id).ToArray());
     }
@@ -85,7 +94,16 @@ public class TestUserFilterService
         var cache = await CacheWith(CostsFor(expensive, 6f, 4f), CostsFor(cheap, 1f));
 
         var result = await Sut(dbContext, cache)
-            .ResolveUsers(FilterAudience(new { field = "cost", @operator = "gt", value = "2" }));
+            .ResolveUsers(
+                FilterAudience(
+                    new
+                    {
+                        field = "cost",
+                        @operator = "gt",
+                        value = "2",
+                    }
+                )
+            );
 
         Assert.Equal(new[] { onExpensive.Id }, result.Members.Select(m => m.Id).ToArray());
     }
@@ -121,8 +139,18 @@ public class TestUserFilterService
         var result = await Sut(dbContext, cache)
             .ResolveUsers(
                 FilterAudience(
-                    new { field = "email", @operator = "contains", value = "@dfds" },
-                    new { field = "cost", @operator = "gt", value = "2" }
+                    new
+                    {
+                        field = "email",
+                        @operator = "contains",
+                        value = "@dfds",
+                    },
+                    new
+                    {
+                        field = "cost",
+                        @operator = "gt",
+                        value = "2",
+                    }
                 )
             );
 
@@ -149,7 +177,16 @@ public class TestUserFilterService
         await dbContext.SaveChangesAsync();
 
         var result = await Sut(dbContext, new AllCapabilitiesCostsCache())
-            .ResolveUsers(FilterAudience(new { field = "email", @operator = "contains", value = "@dfds" }));
+            .ResolveUsers(
+                FilterAudience(
+                    new
+                    {
+                        field = "email",
+                        @operator = "contains",
+                        value = "@dfds",
+                    }
+                )
+            );
 
         Assert.Equal(new[] { alice.Id }, result.Members.Select(m => m.Id).ToArray());
     }

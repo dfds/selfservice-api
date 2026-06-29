@@ -462,8 +462,7 @@ public class TemplateRenderingService : ITemplateRenderingService
     }
 
     // Matches the portal's cost display currency (USD); "N/A" when no cost data is cached.
-    private static string FormatCost(float? value) =>
-        value is null ? "N/A" : "$" + value.Value.ToString("0.00");
+    private static string FormatCost(float? value) => value is null ? "N/A" : "$" + value.Value.ToString("0.00");
 
     private static string? ResolveRequirementScore(TemplateRenderContext ctx, string id)
     {

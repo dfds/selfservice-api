@@ -79,10 +79,8 @@ public class CapabilityFilterService : ICapabilityFilterService
     private List<Capability> ApplyCostFilters(List<Capability> capabilities, AudienceFilterCondition[] costFilters)
     {
         var costsById =
-            _costsCache
-                .GetCachedData()
-                ?.Costs.GroupBy(c => c.CapabilityId)
-                .ToDictionary(g => g.Key, g => g.First()) ?? new Dictionary<string, CapabilityCosts>();
+            _costsCache.GetCachedData()?.Costs.GroupBy(c => c.CapabilityId).ToDictionary(g => g.Key, g => g.First())
+            ?? new Dictionary<string, CapabilityCosts>();
 
         foreach (var filter in costFilters)
         {
