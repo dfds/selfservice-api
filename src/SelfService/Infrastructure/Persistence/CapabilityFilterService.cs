@@ -1,19 +1,27 @@
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Metrics;
 
 namespace SelfService.Infrastructure.Persistence;
 
 public class CapabilityFilterService : ICapabilityFilterService
 {
+    // "Monthly Cost (USD)" — sum of the last 30 daily cost datapoints, matching the
+    // portal's "Cost (last 30 days)" column / capability cost page.
+    private const int CostWindowDays = 30;
+
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     private readonly SelfServiceDbContext _dbContext;
+    private readonly AllCapabilitiesCostsCache _costsCache;
 
-    public CapabilityFilterService(SelfServiceDbContext dbContext)
+    public CapabilityFilterService(SelfServiceDbContext dbContext, AllCapabilitiesCostsCache costsCache)
     {
         _dbContext = dbContext;
+        _costsCache = costsCache;
     }
 
     public async Task<List<Capability>> ResolveCapabilities(string audienceJson)
@@ -56,7 +64,61 @@ public class CapabilityFilterService : ICapabilityFilterService
             query = ApplyFilter(query, filter);
         }
 
-        return await query.ToListAsync();
+        var capabilities = await query.ToListAsync();
+
+        // Cost filters can't be translated to SQL — cost data lives in the in-memory
+        // AllCapabilitiesCostsCache (refreshed twice daily from platform-data-api), not the
+        // database — so apply them in-memory after the DB-translatable filters have run.
+        var costFilters = filters.Where(f => f.Field?.ToLowerInvariant() == "cost").ToArray();
+        if (costFilters.Length > 0)
+            capabilities = ApplyCostFilters(capabilities, costFilters);
+
+        return capabilities;
+    }
+
+    private List<Capability> ApplyCostFilters(List<Capability> capabilities, AudienceFilterCondition[] costFilters)
+    {
+        var costsById =
+            _costsCache
+                .GetCachedData()
+                ?.Costs.GroupBy(c => c.CapabilityId)
+                .ToDictionary(g => g.Key, g => g.First()) ?? new Dictionary<string, CapabilityCosts>();
+
+        foreach (var filter in costFilters)
+        {
+            if (!float.TryParse(filter.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var threshold))
+                continue;
+
+            var op = filter.Operator;
+            capabilities = capabilities.Where(c => MatchesCost(costsById, c, op, threshold)).ToList();
+        }
+
+        return capabilities;
+    }
+
+    private static bool MatchesCost(
+        IReadOnlyDictionary<string, CapabilityCosts> costsById,
+        Capability capability,
+        string? op,
+        float threshold
+    )
+    {
+        var cost = costsById.GetValueOrDefault(capability.Id.ToString())?.SumForLastDays(CostWindowDays);
+
+        // A capability with no cost data can't satisfy a numeric cost comparison, so exclude it.
+        // This also means an empty/unpopulated cache narrows a cost-filtered audience to nothing.
+        if (cost is null)
+            return false;
+
+        return op switch
+        {
+            "eq" => cost == threshold,
+            "gte" => cost >= threshold,
+            "lte" => cost <= threshold,
+            "gt" => cost > threshold,
+            "lt" => cost < threshold,
+            _ => true,
+        };
     }
 
     private IQueryable<Capability> ApplyFilter(IQueryable<Capability> query, AudienceFilterCondition filter)

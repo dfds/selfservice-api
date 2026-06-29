@@ -26,13 +26,26 @@ public class TemplateRenderingService : ITemplateRenderingService
         Both = Capability | User,
     }
 
+    /// <summary>
+    /// Where a variable resolves. <see cref="PerCapability"/> variables describe a capability:
+    /// they resolve directly in Capability-targeted campaigns, but only inside a
+    /// {{#each User.Capabilities}} block in User-targeted campaigns. <see cref="TopLevel"/>
+    /// variables resolve at the campaign/recipient root (Member, User, Campaign, Date).
+    /// </summary>
+    private enum VarScope
+    {
+        TopLevel,
+        PerCapability,
+    }
+
     private abstract record VariableEntry(
         string Name,
         string Description,
         string Entity,
         string Example,
         bool Hidden,
-        AppliesTo Applies
+        AppliesTo Applies,
+        VarScope Scope
     );
 
     private sealed record StaticVariable(
@@ -42,8 +55,9 @@ public class TemplateRenderingService : ITemplateRenderingService
         string Example,
         Func<TemplateRenderContext, string> Resolve,
         AppliesTo Applies = AppliesTo.Capability,
-        bool Hidden = false
-    ) : VariableEntry(Name, Description, Entity, Example, Hidden, Applies);
+        bool Hidden = false,
+        VarScope Scope = VarScope.PerCapability
+    ) : VariableEntry(Name, Description, Entity, Example, Hidden, Applies, Scope);
 
     private sealed record PatternVariable(
         string Name,
@@ -54,8 +68,9 @@ public class TemplateRenderingService : ITemplateRenderingService
         Func<Match, TemplateRenderContext, string?> Resolve,
         string? FallbackOnMiss = null,
         AppliesTo Applies = AppliesTo.Capability,
-        bool Hidden = false
-    ) : VariableEntry(Name, Description, Entity, Example, Hidden, Applies);
+        bool Hidden = false,
+        VarScope Scope = VarScope.PerCapability
+    ) : VariableEntry(Name, Description, Entity, Example, Hidden, Applies, Scope);
 
     private static readonly VariableEntry[] Variables =
     {
@@ -117,18 +132,41 @@ public class TemplateRenderingService : ITemplateRenderingService
             ctx => ctx.MemberCount.ToString()
         ),
         new StaticVariable(
+            "Capability.Cost.7Days",
+            "Total cost over the last 7 days (USD)",
+            "Capability",
+            "$123.45",
+            ctx => FormatCost(ctx.Costs?.SumForLastDays(7))
+        ),
+        new StaticVariable(
+            "Capability.Cost.14Days",
+            "Total cost over the last 14 days (USD)",
+            "Capability",
+            "$246.90",
+            ctx => FormatCost(ctx.Costs?.SumForLastDays(14))
+        ),
+        new StaticVariable(
+            "Capability.Cost.30Days",
+            "Total cost over the last 30 days (USD)",
+            "Capability",
+            "$543.21",
+            ctx => FormatCost(ctx.Costs?.SumForLastDays(30))
+        ),
+        new StaticVariable(
             "Member.DisplayName",
             "Recipient display name",
             "Member",
             "Jane Doe",
-            ctx => ctx.Member?.DisplayName ?? "[Member Name]"
+            ctx => ctx.Member?.DisplayName ?? "[Member Name]",
+            Scope: VarScope.TopLevel
         ),
         new StaticVariable(
             "Member.Email",
             "Recipient email address",
             "Member",
             "jane.doe@dfds.com",
-            ctx => ctx.Member?.Email ?? "[Member Email]"
+            ctx => ctx.Member?.Email ?? "[Member Email]",
+            Scope: VarScope.TopLevel
         ),
         // --- Shared variables (both target types) ---
         new StaticVariable(
@@ -137,7 +175,8 @@ public class TemplateRenderingService : ITemplateRenderingService
             "Campaign",
             "Q1 Migration Notice",
             ctx => ctx.CampaignName,
-            Applies: AppliesTo.Both
+            Applies: AppliesTo.Both,
+            Scope: VarScope.TopLevel
         ),
         new StaticVariable(
             "Date.Today",
@@ -145,7 +184,8 @@ public class TemplateRenderingService : ITemplateRenderingService
             "Date",
             "2024-01-15",
             _ => DateTime.UtcNow.ToString("yyyy-MM-dd"),
-            Applies: AppliesTo.Both
+            Applies: AppliesTo.Both,
+            Scope: VarScope.TopLevel
         ),
         new StaticVariable(
             "Date.Year",
@@ -153,7 +193,8 @@ public class TemplateRenderingService : ITemplateRenderingService
             "Date",
             "2024",
             _ => DateTime.UtcNow.Year.ToString(),
-            Applies: AppliesTo.Both
+            Applies: AppliesTo.Both,
+            Scope: VarScope.TopLevel
         ),
         new PatternVariable(
             "Requirement.<id>",
@@ -270,7 +311,8 @@ public class TemplateRenderingService : ITemplateRenderingService
             "User",
             "user@dfds.com",
             ctx => ctx.Member?.Id.ToString() ?? "[User Id]",
-            Applies: AppliesTo.User
+            Applies: AppliesTo.User,
+            Scope: VarScope.TopLevel
         ),
         new StaticVariable(
             "User.Email",
@@ -278,7 +320,8 @@ public class TemplateRenderingService : ITemplateRenderingService
             "User",
             "jane.doe@dfds.com",
             ctx => ctx.Member?.Email ?? "[User Email]",
-            Applies: AppliesTo.User
+            Applies: AppliesTo.User,
+            Scope: VarScope.TopLevel
         ),
         new StaticVariable(
             "User.DisplayName",
@@ -286,7 +329,8 @@ public class TemplateRenderingService : ITemplateRenderingService
             "User",
             "Jane Doe",
             ctx => ctx.Member?.DisplayName ?? "[User Name]",
-            Applies: AppliesTo.User
+            Applies: AppliesTo.User,
+            Scope: VarScope.TopLevel
         ),
         new StaticVariable(
             "User.LastSeen",
@@ -294,7 +338,8 @@ public class TemplateRenderingService : ITemplateRenderingService
             "User",
             "2024-01-15",
             ctx => ctx.Member?.LastSeen?.ToString("yyyy-MM-dd") ?? "Never",
-            Applies: AppliesTo.User
+            Applies: AppliesTo.User,
+            Scope: VarScope.TopLevel
         ),
         new StaticVariable(
             "User.CapabilityCount",
@@ -302,7 +347,8 @@ public class TemplateRenderingService : ITemplateRenderingService
             "User",
             "3",
             ctx => ctx.UserCapabilities.Count.ToString(),
-            Applies: AppliesTo.User
+            Applies: AppliesTo.User,
+            Scope: VarScope.TopLevel
         ),
         new StaticVariable(
             "User.CapabilityNames",
@@ -310,7 +356,8 @@ public class TemplateRenderingService : ITemplateRenderingService
             "User",
             "Cap A, Cap B, Cap C",
             ctx => string.Join(", ", ctx.UserCapabilities.Select(uc => uc.Capability.Name)),
-            Applies: AppliesTo.User
+            Applies: AppliesTo.User,
+            Scope: VarScope.TopLevel
         ),
         // Documented as a block construct so users discover it via the variable picker.
         // Render-side handling lives in the {{#each User.Capabilities}} block pre-pass.
@@ -320,7 +367,8 @@ public class TemplateRenderingService : ITemplateRenderingService
             "User",
             "{{#each User.Capabilities}}...{{/each}}",
             _ => "",
-            Applies: AppliesTo.User
+            Applies: AppliesTo.User,
+            Scope: VarScope.TopLevel
         ),
     };
 
@@ -339,17 +387,26 @@ public class TemplateRenderingService : ITemplateRenderingService
     public IReadOnlyList<TemplateVariable> GetVariableDefinitions(EmailCampaignTargetType? targetType = null)
     {
         var resolved = targetType ?? EmailCampaignTargetType.Capability;
-        var wanted = resolved == EmailCampaignTargetType.User ? AppliesTo.User : AppliesTo.Capability;
+        var isUser = resolved == EmailCampaignTargetType.User;
 
         return Variables
             .Where(v => !v.Hidden)
-            .Where(v => (v.Applies & wanted) != 0)
+            // Capability campaigns: every variable that applies to a capability resolves directly.
+            // User campaigns: top-level user/shared variables, plus all per-capability variables
+            // (Capability.*, Requirement.*, Aws.*, Azure.*, MembershipApplications.*, Cost.*) — the
+            // latter only resolve inside a {{#each User.Capabilities}} block, flagged via Scope.
+            .Where(v =>
+                isUser
+                    ? v.Scope == VarScope.PerCapability || (v.Applies & AppliesTo.User) != 0
+                    : (v.Applies & AppliesTo.Capability) != 0
+            )
             .Select(v => new TemplateVariable
             {
                 Name = v.Name,
                 Description = v.Description,
                 Entity = v.Entity,
                 Example = v.Example,
+                Scope = v.Scope == VarScope.PerCapability ? "perCapability" : "topLevel",
             })
             .ToList();
     }
@@ -379,6 +436,7 @@ public class TemplateRenderingService : ITemplateRenderingService
                         AzureResources = entry.AzureResources,
                         RequirementScores = entry.RequirementScores,
                         PendingMembershipApplicationCount = entry.PendingMembershipApplicationCount,
+                        Costs = entry.Costs,
                     };
                     sb.Append(TokenRegex.Replace(body, m => Resolve(m.Groups[1].Value, subContext) ?? m.Value));
                 }
@@ -402,6 +460,10 @@ public class TemplateRenderingService : ITemplateRenderingService
 
         return null;
     }
+
+    // Matches the portal's cost display currency (USD); "N/A" when no cost data is cached.
+    private static string FormatCost(float? value) =>
+        value is null ? "N/A" : "$" + value.Value.ToString("0.00");
 
     private static string? ResolveRequirementScore(TemplateRenderContext ctx, string id)
     {

@@ -72,6 +72,7 @@ public class EmailCampaignController : ControllerBase
                     Description = v.Description,
                     Entity = v.Entity,
                     Example = v.Example,
+                    Scope = v.Scope,
                 })
             );
         }

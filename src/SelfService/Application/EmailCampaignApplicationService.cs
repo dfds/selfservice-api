@@ -4,6 +4,7 @@ using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Metrics;
 using SelfService.Infrastructure.Persistence.Models;
 
 namespace SelfService.Application;
@@ -21,6 +22,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
     private readonly ITemplateRenderingService _templateRenderingService;
     private readonly IRbacApplicationService _rbacApplicationService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly AllCapabilitiesCostsCache _allCapabilitiesCostsCache;
 
     public EmailCampaignApplicationService(
         IEmailCampaignRepository emailCampaignRepository,
@@ -33,7 +35,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         IUserFilterService userFilterService,
         ITemplateRenderingService templateRenderingService,
         IRbacApplicationService rbacApplicationService,
-        IServiceScopeFactory serviceScopeFactory
+        IServiceScopeFactory serviceScopeFactory,
+        AllCapabilitiesCostsCache allCapabilitiesCostsCache
     )
     {
         _emailCampaignRepository = emailCampaignRepository;
@@ -47,7 +50,20 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         _templateRenderingService = templateRenderingService;
         _rbacApplicationService = rbacApplicationService;
         _serviceScopeFactory = serviceScopeFactory;
+        _allCapabilitiesCostsCache = allCapabilitiesCostsCache;
     }
+
+    /// <summary>
+    /// Builds a capability-id → cost lookup from the in-memory cache (refreshed twice daily by
+    /// <see cref="AllCapabilitiesCostsCacheUpdater"/>). Reused for all template rendering so a
+    /// campaign send never triggers a per-capability platform-data-api/Athena query. Empty when
+    /// the cache has not been populated yet — cost variables then render "N/A".
+    /// </summary>
+    private Dictionary<string, CapabilityCosts> GetCostsById() =>
+        _allCapabilitiesCostsCache
+            .GetCachedData()
+            ?.Costs.GroupBy(c => c.CapabilityId)
+            .ToDictionary(g => g.Key, g => g.First()) ?? new Dictionary<string, CapabilityCosts>();
 
     [TransactionalBoundary, Outboxed]
     public async Task<EmailCampaign> CreateDraft(
@@ -631,6 +647,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         var requirementScores = await requirementsMetricService.GetRequirementScoresForCapabilitiesAsync(
             allCapIds.Select(id => id.ToString()).ToList()
         );
+        var costsById = GetCostsById();
 
         var result = new Dictionary<UserId, List<UserCapabilityRef>>();
         foreach (var member in members)
@@ -652,6 +669,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
                             RequirementScores =
                                 requirementScores.GetValueOrDefault(capId.ToString()) ?? new List<RequirementsMetric>(),
                             PendingMembershipApplicationCount = pending.GetValueOrDefault(capId),
+                            Costs = costsById.GetValueOrDefault(capId.ToString()),
                         }
                     );
                 }
@@ -789,6 +807,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             AzureResources = await azureResourcesTask,
             RequirementScores = scores,
             PendingMembershipApplicationCount = (await pendingAppsTask).Count(),
+            Costs = GetCostsById().GetValueOrDefault(capabilityId.ToString()),
         };
     }
 

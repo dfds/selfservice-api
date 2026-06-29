@@ -16,7 +16,8 @@ public class TestTemplateRenderingService
         AwsAccount? awsAccount = null,
         List<AzureResource>? azureResources = null,
         List<RequirementsMetric>? requirementScores = null,
-        int pendingMembershipApplicationCount = 0
+        int pendingMembershipApplicationCount = 0,
+        CapabilityCosts? costs = null
     )
     {
         return new TemplateRenderContext
@@ -29,6 +30,7 @@ public class TestTemplateRenderingService
             AzureResources = azureResources ?? new List<AzureResource>(),
             RequirementScores = requirementScores ?? new List<RequirementsMetric>(),
             PendingMembershipApplicationCount = pendingMembershipApplicationCount,
+            Costs = costs,
         };
     }
 
@@ -349,6 +351,83 @@ public class TestTemplateRenderingService
     }
 
     [Fact]
+    public void RenderTemplate_CapabilityCost_WithData_RendersUsdSumOverWindow()
+    {
+        var cap = A.Capability.Build();
+        var costs = new CapabilityCosts(
+            cap.Id,
+            new[]
+            {
+                new TimeSeries(10.00f, new DateTime(2026, 6, 20)),
+                new TimeSeries(20.50f, new DateTime(2026, 6, 21)),
+                new TimeSeries(12.95f, new DateTime(2026, 6, 22)),
+            }
+        );
+        var context = CreateContext(capability: cap, costs: costs);
+
+        var result = _sut.RenderTemplate("{{Capability.Cost.7Days}}", context);
+
+        Assert.Equal("$43.45", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_CapabilityCost_WindowsTakeMostRecentDays()
+    {
+        var cap = A.Capability.Build();
+        // 30 days of $2/day, plus one much older $1000 day that the 7/14/30-day windows exclude.
+        var points = new List<TimeSeries> { new(1000.00f, new DateTime(2026, 1, 1)) };
+        for (var d = 0; d < 30; d++)
+            points.Add(new TimeSeries(2.00f, new DateTime(2026, 6, 28).AddDays(-d)));
+        var context = CreateContext(capability: cap, costs: new CapabilityCosts(cap.Id, points.ToArray()));
+
+        var result = _sut.RenderTemplate(
+            "{{Capability.Cost.7Days}}|{{Capability.Cost.14Days}}|{{Capability.Cost.30Days}}",
+            context
+        );
+
+        Assert.Equal("$14.00|$28.00|$60.00", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_CapabilityCost_NoData_RendersNA()
+    {
+        var context = CreateContext(costs: null);
+
+        var result = _sut.RenderTemplate("{{Capability.Cost.30Days}}", context);
+
+        Assert.Equal("N/A", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_EachUserCapabilities_CostResolvesPerCapability()
+    {
+        var capA = A.Capability.WithName("Cap A").Build();
+        var capB = A.Capability.WithName("Cap B").Build();
+        var ctx = UserContext(
+            userCapabilities: new List<UserCapabilityRef>
+            {
+                new()
+                {
+                    Capability = capA,
+                    Costs = new CapabilityCosts(capA.Id, new[] { new TimeSeries(100.00f, new DateTime(2026, 6, 28)) }),
+                },
+                new()
+                {
+                    Capability = capB,
+                    Costs = new CapabilityCosts(capB.Id, new[] { new TimeSeries(5.50f, new DateTime(2026, 6, 28)) }),
+                },
+            }
+        );
+
+        var result = _sut.RenderTemplate(
+            "{{#each User.Capabilities}}[{{Capability.Name}}={{Capability.Cost.30Days}}]{{/each}}",
+            ctx
+        );
+
+        Assert.Equal("[Cap A=$100.00][Cap B=$5.50]", result);
+    }
+
+    [Fact]
     public void RenderTemplate_AllNewVariablesCombined()
     {
         var capability = A.Capability.WithJsonMetadata(AllTagsMetadata).Build();
@@ -385,6 +464,9 @@ public class TestTemplateRenderingService
             "Capability.CreatedBy",
             "Capability.RequirementScore",
             "Capability.MemberCount",
+            "Capability.Cost.7Days",
+            "Capability.Cost.14Days",
+            "Capability.Cost.30Days",
             "Member.DisplayName",
             "Member.Email",
             "Campaign.Name",
@@ -589,24 +671,34 @@ public class TestTemplateRenderingService
     }
 
     [Fact]
-    public void GetVariableDefinitions_User_OmitsCapabilityVariables()
+    public void GetVariableDefinitions_User_IncludesPerCapabilityVariablesWithScope()
     {
         var userVars = _sut.GetVariableDefinitions(EmailCampaignTargetType.User);
 
-        Assert.Contains(userVars, v => v.Name == "User.Email");
-        Assert.Contains(userVars, v => v.Name == "User.CapabilityCount");
-        Assert.Contains(userVars, v => v.Name == "Campaign.Name");
-        Assert.DoesNotContain(userVars, v => v.Name == "Capability.Name");
-        Assert.DoesNotContain(userVars, v => v.Name == "Aws.AccountId");
+        // Top-level user/shared variables resolve at the recipient/campaign root.
+        Assert.Contains(userVars, v => v.Name == "User.Email" && v.Scope == "topLevel");
+        Assert.Contains(userVars, v => v.Name == "User.CapabilityCount" && v.Scope == "topLevel");
+        Assert.Contains(userVars, v => v.Name == "Campaign.Name" && v.Scope == "topLevel");
+
+        // Capability-scoped variables now surface for use inside {{#each User.Capabilities}},
+        // flagged "perCapability" so the picker can mark them as loop-only.
+        Assert.Contains(userVars, v => v.Name == "Capability.Name" && v.Scope == "perCapability");
+        Assert.Contains(userVars, v => v.Name == "Aws.AccountId" && v.Scope == "perCapability");
+        Assert.Contains(userVars, v => v.Name == "Capability.Cost.30Days" && v.Scope == "perCapability");
+
+        // Member.* is replaced by User.* in user campaigns and must not appear.
+        Assert.DoesNotContain(userVars, v => v.Name == "Member.Email");
+        Assert.DoesNotContain(userVars, v => v.Name == "Member.DisplayName");
     }
 
     [Fact]
-    public void GetVariableDefinitions_Capability_OmitsUserVariables()
+    public void GetVariableDefinitions_Capability_OmitsUserVariables_AndScopesCostPerCapability()
     {
         var capVars = _sut.GetVariableDefinitions(EmailCampaignTargetType.Capability);
 
-        Assert.Contains(capVars, v => v.Name == "Capability.Name");
-        Assert.Contains(capVars, v => v.Name == "Member.Email");
+        Assert.Contains(capVars, v => v.Name == "Capability.Name" && v.Scope == "perCapability");
+        Assert.Contains(capVars, v => v.Name == "Capability.Cost.7Days" && v.Scope == "perCapability");
+        Assert.Contains(capVars, v => v.Name == "Member.Email" && v.Scope == "topLevel");
         Assert.DoesNotContain(capVars, v => v.Name == "User.Email");
         Assert.DoesNotContain(capVars, v => v.Name == "User.CapabilityCount");
     }

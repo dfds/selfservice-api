@@ -9,11 +9,25 @@ public class UserFilterService : IUserFilterService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    private readonly SelfServiceDbContext _dbContext;
+    // Fields resolved against the Member entity itself. Every other field is treated as
+    // capability-scoped and resolved via CapabilityFilterService (see ResolveFiltered).
+    // capabilitycostcentre is capability-scoped semantically but kept here because it's a
+    // multi-value "is one of" that CapabilityFilterService doesn't model.
+    private static readonly HashSet<string> UserScopedFields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "email",
+        "displayname",
+        "lastseen",
+        "capabilitycostcentre",
+    };
 
-    public UserFilterService(SelfServiceDbContext dbContext)
+    private readonly SelfServiceDbContext _dbContext;
+    private readonly ICapabilityFilterService _capabilityFilterService;
+
+    public UserFilterService(SelfServiceDbContext dbContext, ICapabilityFilterService capabilityFilterService)
     {
         _dbContext = dbContext;
+        _capabilityFilterService = capabilityFilterService;
     }
 
     public async Task<UserAudienceResolution> ResolveUsers(string audienceJson)
@@ -59,9 +73,41 @@ public class UserFilterService : IUserFilterService
     {
         IQueryable<Member> query = _dbContext.Members;
 
-        foreach (var filter in filters)
+        // User-scoped filters resolve directly against the Member entity.
+        var userScoped = filters.Where(f => UserScopedFields.Contains(f.Field ?? "")).ToArray();
+        foreach (var filter in userScoped)
         {
             query = ApplyFilter(query, filter);
+        }
+
+        // Capability-scoped filters (status, cost, requirement score, …) are resolved by the
+        // CapabilityFilterService into the set of matching capabilities; a user is then included
+        // if they hold a membership to at least one of them. This is recipient selection only —
+        // the rendered {{#each User.Capabilities}} loop still iterates all of a user's capabilities.
+        // Multiple capability-scoped filters AND on the same capability (CapabilityFilterService
+        // chains them on one capability query), matching the Capability target exactly. An empty
+        // cost cache resolves cost filters to zero capabilities, hence zero users.
+        var capabilityScoped = filters.Where(f => !UserScopedFields.Contains(f.Field ?? "")).ToArray();
+        if (capabilityScoped.Length > 0)
+        {
+            var capJson = JsonSerializer.Serialize(
+                new
+                {
+                    mode = "filter",
+                    filters = capabilityScoped.Select(f => new
+                    {
+                        field = f.Field,
+                        @operator = f.Operator,
+                        value = f.Value,
+                        key = f.Key,
+                    }),
+                }
+            );
+
+            var capIds = (await _capabilityFilterService.ResolveCapabilities(capJson)).Select(c => c.Id).ToList();
+            query = query.Where(m =>
+                _dbContext.Memberships.Any(ms => ms.UserId == m.Id && capIds.Contains(ms.CapabilityId))
+            );
         }
 
         return await query.ToListAsync();
@@ -163,4 +209,7 @@ internal class UserAudienceFilterCondition
     public string? Field { get; set; }
     public string? Operator { get; set; }
     public string? Value { get; set; }
+
+    // Only used by capability-scoped metadataKeyValue filters; passed through to CapabilityFilterService.
+    public string? Key { get; set; }
 }
