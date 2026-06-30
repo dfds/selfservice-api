@@ -21,6 +21,10 @@ public static class Serilog
                     .MinimumLevel.Information()
                     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                     .MinimumLevel.Override("Microsoft.IdentityModel", LogEventLevel.Warning)
+                    // MSAL routes its (Info-level) logging through Microsoft.Identity.Web's
+                    // ITokenAcquisition logger — the "MSAL 4.x … .NET … Darwin …" banner spam
+                    // on every token acquisition (e.g. the catalog token provider). Keep warnings.
+                    .MinimumLevel.Override("Microsoft.Identity.Web", LogEventLevel.Warning)
                     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
                     .MinimumLevel.Override(

@@ -5,6 +5,7 @@ using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.Catalog;
 using SelfService.Infrastructure.Api.RBAC;
 using SelfService.Infrastructure.Api.RBAC.Dto;
 using SelfService.Infrastructure.Persistence;
@@ -41,6 +42,8 @@ public class CapabilityController : ControllerBase
     private readonly IAwsEC2QueriesApplicationService _awsEC2QueriesApplicationService;
     private readonly IRbacApplicationService _rbacApplicationService;
     private readonly IRequirementsMetricService _requirementsMetricService;
+    private readonly ICatalogApplicationService _catalogApplicationService;
+    private readonly CatalogApiResourceFactory _catalogApiResourceFactory;
 
     public CapabilityController(
         ICapabilityMembersQuery membersQuery,
@@ -65,7 +68,9 @@ public class CapabilityController : ControllerBase
         ISelfAssessmentOptionRepository selfAssessmentOptionRepository,
         IAwsEC2QueriesApplicationService awsEC2QueriesApplicationService,
         IRbacApplicationService rbacApplicationService,
-        IRequirementsMetricService requirementsMetricService
+        IRequirementsMetricService requirementsMetricService,
+        ICatalogApplicationService catalogApplicationService,
+        CatalogApiResourceFactory catalogApiResourceFactory
     )
     {
         _membersQuery = membersQuery;
@@ -91,6 +96,8 @@ public class CapabilityController : ControllerBase
         _awsEC2QueriesApplicationService = awsEC2QueriesApplicationService;
         _rbacApplicationService = rbacApplicationService;
         _requirementsMetricService = requirementsMetricService;
+        _catalogApplicationService = catalogApplicationService;
+        _catalogApiResourceFactory = catalogApiResourceFactory;
     }
 
     [HttpGet("")]
@@ -295,6 +302,35 @@ public class CapabilityController : ControllerBase
         var members = await _membersQuery.FindBy(capabilityId);
 
         return Ok(_apiResourceFactory.Convert(id, members));
+    }
+
+    [HttpGet("{id:required}/deployments")]
+    [ProducesResponseType(typeof(CatalogDeploymentsApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> GetCapabilityDeployments(string id, CancellationToken cancellationToken)
+    {
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found",
+                    Detail = $"Value \"{id}\" is not a valid capability id.",
+                    Status = StatusCodes.Status404NotFound,
+                }
+            );
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound(
+                new ProblemDetails
+                {
+                    Title = "Capability not found",
+                    Detail = $"Capability \"{id}\" not found.",
+                    Status = StatusCodes.Status404NotFound,
+                }
+            );
+
+        var result = await _catalogApplicationService.GetDeploymentsForCapability(capabilityId, cancellationToken);
+        return Ok(_catalogApiResourceFactory.ConvertDeployments(capabilityId, result));
     }
 
     [HttpGet("{id:required}/awsaccount")]
