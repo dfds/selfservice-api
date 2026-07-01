@@ -14,6 +14,19 @@ public class CatalogMetaApiResource
     public bool CatalogAvailable { get; init; }
     public int ClustersQueried { get; init; }
     public int ClustersFailed { get; init; }
+
+    /// <summary>
+    /// When ssu-catalog began its scan (min across queried clusters). Null when no cluster returned
+    /// a snapshot. Informational — for the "last updated" age prefer <see cref="PublishedAt"/>.
+    /// </summary>
+    public DateTime? CollectedAt { get; init; }
+
+    /// <summary>
+    /// When ssu-catalog finished assembling the snapshot — i.e. when the data became current (min
+    /// across queried clusters). The portal renders this as the "last updated" age. Null when no
+    /// cluster returned a snapshot.
+    /// </summary>
+    public DateTime? PublishedAt { get; init; }
 }
 
 public class ContainerApiResource
@@ -70,6 +83,18 @@ public class DeploymentSourceApiResource
     public string AppName { get; init; } = "";
 }
 
+public class AppMetadataApiResource
+{
+    public string Description { get; init; } = "";
+    public IReadOnlyList<LinkRefApiResource> Links { get; init; } = Array.Empty<LinkRefApiResource>();
+}
+
+public class LinkRefApiResource
+{
+    public string Label { get; init; } = "";
+    public string Url { get; init; } = "";
+}
+
 public class KafkaTopicRefApiResource
 {
     public string Name { get; init; } = "";
@@ -98,8 +123,10 @@ public class ApplicationApiResource
     public int ReadyReplicas { get; init; }
     public IReadOnlyList<ContainerApiResource> Containers { get; init; } = Array.Empty<ContainerApiResource>();
 
-    public string RepoUrl { get; init; } = "";
+    public IReadOnlyList<string> RepoUrls { get; init; } = Array.Empty<string>();
     public DeploymentSourceApiResource? DeploymentSource { get; init; }
+
+    public AppMetadataApiResource? Metadata { get; init; }
 
     public string Owner { get; init; } = "";
     public string Contact { get; init; } = "";

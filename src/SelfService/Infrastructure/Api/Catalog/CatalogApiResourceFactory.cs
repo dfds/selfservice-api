@@ -99,6 +99,8 @@ public class CatalogApiResourceFactory
             CatalogAvailable = availability.CatalogAvailable,
             ClustersQueried = availability.ClustersQueried,
             ClustersFailed = availability.ClustersFailed,
+            CollectedAt = availability.CollectedAt,
+            PublishedAt = availability.PublishedAt,
         };
 
     private ApplicationApiResource MapApplication(ApplicationEntryDto app) =>
@@ -120,7 +122,7 @@ public class CatalogApiResourceFactory
                     ImageTag = c.ImageTag,
                 })
                 .ToList(),
-            RepoUrl = app.RepoUrl,
+            RepoUrls = app.RepoUrls,
             DeploymentSource = app.DeploymentSource is null
                 ? null
                 : new DeploymentSourceApiResource
@@ -130,6 +132,15 @@ public class CatalogApiResourceFactory
                     Path = app.DeploymentSource.Path,
                     Revision = app.DeploymentSource.Revision,
                     AppName = app.DeploymentSource.AppName,
+                },
+            Metadata = app.Metadata is null
+                ? null
+                : new AppMetadataApiResource
+                {
+                    Description = app.Metadata.Description,
+                    Links = app
+                        .Metadata.Links.Select(l => new LinkRefApiResource { Label = l.Label, Url = l.Url })
+                        .ToList(),
                 },
             Owner = app.Owner,
             Contact = app.Contact,

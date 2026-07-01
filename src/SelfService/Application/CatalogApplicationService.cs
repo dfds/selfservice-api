@@ -5,7 +5,13 @@ using SelfService.Infrastructure.Catalog;
 namespace SelfService.Application;
 
 /// <summary>Availability summary surfaced in every catalog endpoint's meta envelope.</summary>
-public sealed record CatalogAvailability(bool CatalogAvailable, int ClustersQueried, int ClustersFailed);
+public sealed record CatalogAvailability(
+    bool CatalogAvailable,
+    int ClustersQueried,
+    int ClustersFailed,
+    DateTime? CollectedAt,
+    DateTime? PublishedAt
+);
 
 /// <summary>A query result: the matching items plus the cross-cluster availability summary.</summary>
 public sealed record CatalogResult<T>(IReadOnlyList<T> Items, CatalogAvailability Availability);
@@ -189,6 +195,8 @@ public class CatalogApplicationService : ICatalogApplicationService
         var namespaces = new List<NamespaceEntryDto>();
         var dependencies = new List<DependencyEdgeDto>();
         var clustersFailed = 0;
+        var collectedTimes = new List<DateTime>();
+        var publishedTimes = new List<DateTime>();
 
         foreach (var (endpoint, snapshot) in results)
         {
@@ -211,12 +219,25 @@ public class CatalogApplicationService : ICatalogApplicationService
             apps.AddRange(snapshot.Applications);
             namespaces.AddRange(snapshot.Namespaces);
             dependencies.AddRange(snapshot.Dependencies);
+            // Skip zero-value timestamps: an older ssu-catalog that doesn't emit the field
+            // deserializes to default(DateTime) (year 1), which must not poison the min().
+            if (snapshot.CollectedAt.Year > 1)
+            {
+                collectedTimes.Add(snapshot.CollectedAt);
+            }
+            if (snapshot.PublishedAt.Year > 1)
+            {
+                publishedTimes.Add(snapshot.PublishedAt);
+            }
         }
 
         var availability = new CatalogAvailability(
             CatalogAvailable: registry.Count > 0 && clustersFailed < registry.Count,
             ClustersQueried: registry.Count,
-            ClustersFailed: clustersFailed
+            ClustersFailed: clustersFailed,
+            // Stalest snapshot bounds the freshness of the merged view; null if all clusters failed.
+            CollectedAt: collectedTimes.Count > 0 ? collectedTimes.Min() : null,
+            PublishedAt: publishedTimes.Count > 0 ? publishedTimes.Min() : null
         );
 
         // Join once: resolve each distinct capabilityId to a real Capability, keeping only owned

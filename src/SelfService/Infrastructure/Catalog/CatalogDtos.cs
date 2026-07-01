@@ -49,6 +49,7 @@ public sealed class CatalogSnapshotDto
         set => _dependencies = value ?? new();
     }
     public DateTime CollectedAt { get; set; }
+    public DateTime PublishedAt { get; set; }
     public CatalogStatsDto? Stats { get; set; }
 }
 
@@ -83,6 +84,7 @@ public sealed class ApplicationEntryDto
     private List<ServiceRefDto> _services = new();
     private List<KafkaTopicRefDto> _kafkaTopics = new();
     private List<DatabaseRefDto> _databases = new();
+    private List<string> _repoUrls = new();
 
     // Identity / join keys
     public string Cluster { get; set; } = "";
@@ -99,10 +101,15 @@ public sealed class ApplicationEntryDto
         get => _containers;
         set => _containers = value ?? new();
     }
-
-    // Deployment / repository (GitOps-derived)
-    public string RepoUrl { get; set; } = "";
+    
+    public List<string> RepoUrls
+    {
+        get => _repoUrls;
+        set => _repoUrls = value ?? new();
+    }
     public DeploymentSourceDto? DeploymentSource { get; set; }
+    
+    public AppMetadataDto? Metadata { get; set; }
 
     // Best-effort owner (may be empty)
     public string Owner { get; set; } = "";
@@ -200,6 +207,25 @@ public sealed class DeploymentSourceDto
     public string Path { get; set; } = "";
     public string Revision { get; set; } = "";
     public string AppName { get; set; } = "";
+}
+
+/// <summary>Author-declared workload metadata (dfds.cloud/description + dfds.cloud/link.*).</summary>
+public sealed class AppMetadataDto
+{
+    private List<LinkRefDto> _links = new();
+
+    public string Description { get; set; } = "";
+    public List<LinkRefDto> Links
+    {
+        get => _links;
+        set => _links = value ?? new();
+    }
+}
+
+public sealed class LinkRefDto
+{
+    public string Label { get; set; } = "";
+    public string Url { get; set; } = "";
 }
 
 public sealed class ContainerInfoDto
