@@ -252,14 +252,21 @@ public class CatalogApplicationService : ICatalogApplicationService
             .Where(n => TryAttachCapability(n.CapabilityId, capabilityNames, name => n.CapabilityName = name))
             .ToList();
 
-        // Keep dependency edges whose source namespace is capability-owned (source is the
-        // in-cluster app; targets may be external). Best-effort overlay.
+        // Keep dependency edges touching a capability-owned namespace on EITHER end.
+        // Source-owned keeps a workload's OUTBOUND edges (the in-cluster app calling an
+        // external/other target); target-owned keeps its INBOUND edges (another workload
+        // — e.g. ssu-catalog probing it, whose source is external/unowned — connecting to
+        // the owned app). A source-only filter drops every inbound edge, so the portal's
+        // connections graph shows outbound-only. Best-effort overlay.
         var ownedNamespaceKeys = ownedApps
             .Select(a => (a.Cluster, a.Namespace))
             .Concat(ownedNamespaces.Select(n => (n.Cluster, n.Name)))
             .ToHashSet();
         var ownedDependencies = dependencies
-            .Where(d => ownedNamespaceKeys.Contains((d.Source.Cluster, d.Source.Namespace)))
+            .Where(d =>
+                ownedNamespaceKeys.Contains((d.Source.Cluster, d.Source.Namespace))
+                || ownedNamespaceKeys.Contains((d.Target.Cluster, d.Target.Namespace))
+            )
             .ToList();
 
         _logger.LogDebug(

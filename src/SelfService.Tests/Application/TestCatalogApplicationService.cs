@@ -104,6 +104,65 @@ public class TestCatalogApplicationService
     }
 
     [Fact]
+    public async Task GetDependencies_keeps_edges_owned_on_either_end()
+    {
+        var capability = A.Capability.WithId(CapabilityId.Parse("team-alpha-abcde")).WithName("Team Alpha").Build();
+
+        // Nodes carry ssu-catalog's payload cluster ("local" here == the registry key);
+        // only apps/namespaces get the registry cluster re-stamped on merge.
+        DependencyNodeDto Owned() =>
+            new()
+            {
+                Cluster = "local",
+                Namespace = "team-alpha-abcde",
+                Service = "api",
+                External = false,
+            };
+        DependencyNodeDto External(string service) => new() { Service = service, External = true };
+
+        var snapshot = new CatalogSnapshotDto
+        {
+            Applications =
+            {
+                new ApplicationEntryDto
+                {
+                    Namespace = "team-alpha-abcde",
+                    Name = "api",
+                    Kind = "Deployment",
+                    CapabilityId = "team-alpha-abcde",
+                },
+            },
+            Dependencies =
+            {
+                // Outbound: owned app → external. Kept (source owned).
+                new DependencyEdgeDto { Source = Owned(), Target = External("rds.example.com") },
+                // Inbound: another workload → owned app. Kept (target owned) — this is the fix;
+                // a source-only filter would drop it and hide "who connects to me".
+                new DependencyEdgeDto { Source = External("ssu-catalog"), Target = Owned() },
+                // Neither end owned. Dropped.
+                new DependencyEdgeDto { Source = External("x"), Target = External("y") },
+            },
+        };
+
+        var catalogClient = new Mock<ICatalogClient>();
+        catalogClient.Setup(x => x.GetCatalog(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).ReturnsAsync(snapshot);
+
+        var capabilityRepository = new Mock<ICapabilityRepository>();
+        capabilityRepository
+            .Setup(x => x.GetByIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(new[] { capability });
+
+        var service = BuildService(SingleCluster(), catalogClient.Object, capabilityRepository.Object);
+
+        var result = await service.GetDependencies(new DependencyFilters());
+
+        Assert.Equal(2, result.Items.Count);
+        Assert.Contains(result.Items, d => d.Source.Service == "api" && d.Target.Service == "rds.example.com");
+        Assert.Contains(result.Items, d => d.Source.Service == "ssu-catalog" && d.Target.Service == "api");
+        Assert.DoesNotContain(result.Items, d => d.Source.Service == "x");
+    }
+
+    [Fact]
     public async Task GetDeploymentsForCapability_filters_by_capability_id()
     {
         var alpha = A.Capability.WithId(CapabilityId.Parse("team-alpha-abcde")).WithName("Team Alpha").Build();
