@@ -161,6 +161,9 @@ public class CatalogApiResourceFactory
                     Source = d.Source,
                 })
                 .ToList(),
+            Runtime = string.IsNullOrEmpty(app.Runtime) ? null : app.Runtime,
+            RequestRate = app.RequestRate,
+            ErrorRate = app.ErrorRate,
             Links = new ApplicationApiResource.ApplicationLinks { Capability = CapabilityLink(app.CapabilityId) },
         };
 

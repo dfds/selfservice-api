@@ -137,6 +137,15 @@ public sealed class ApplicationEntryDto
     public Dictionary<string, string>? Labels { get; set; }
     public Dictionary<string, string>? Annotations { get; set; }
 
+    /// <summary>Beyla's detected runtime/language (e.g. "go", "dotnet"); empty/absent when undetected.</summary>
+    public string? Runtime { get; set; }
+
+    /// <summary>Inbound HTTP throughput (req/s), Beyla-observed; null/absent when no inbound HTTP seen.</summary>
+    public double? RequestRate { get; set; }
+
+    /// <summary>5xx share of inbound traffic (0..1); meaningful only with RequestRate &gt; 0.</summary>
+    public double? ErrorRate { get; set; }
+
     /// <summary>Authoritative capability name, joined SSU-side (not part of the wire model).</summary>
     [JsonIgnore]
     public string? CapabilityName { get; set; }

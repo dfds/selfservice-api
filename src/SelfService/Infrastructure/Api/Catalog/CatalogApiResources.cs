@@ -135,6 +135,15 @@ public class ApplicationApiResource
     public IReadOnlyList<KafkaTopicRefApiResource> KafkaTopics { get; init; } = Array.Empty<KafkaTopicRefApiResource>();
     public IReadOnlyList<DatabaseRefApiResource> Databases { get; init; } = Array.Empty<DatabaseRefApiResource>();
 
+    /// <summary>Beyla's detected runtime/language; null when not detected (omitted from responses).</summary>
+    public string? Runtime { get; init; }
+
+    /// <summary>Inbound HTTP throughput (req/s), Beyla-observed; null when no inbound HTTP seen.</summary>
+    public double? RequestRate { get; init; }
+
+    /// <summary>5xx share of inbound traffic (0..1); meaningful only with RequestRate &gt; 0.</summary>
+    public double? ErrorRate { get; init; }
+
     [JsonPropertyName("_links")]
     public ApplicationLinks Links { get; init; } = new();
 
