@@ -157,6 +157,7 @@ public sealed class ServiceRefDto
     private List<string> _externalHosts = new();
     private List<RouteRefDto> _routes = new();
     private List<ApiDocInfoDto> _apiDocs = new();
+    private List<ReachabilityResultDto> _reachability = new();
 
     public string Name { get; set; } = "";
     public string Type { get; set; } = "";
@@ -180,6 +181,13 @@ public sealed class ServiceRefDto
     {
         get => _apiDocs;
         set => _apiDocs = value ?? new();
+    }
+    // Serve-time reachability overlay from ssu-catalog; omitempty on the Go side,
+    // so it arrives absent (→ empty) for hosts with no verdict.
+    public List<ReachabilityResultDto> Reachability
+    {
+        get => _reachability;
+        set => _reachability = value ?? new();
     }
 }
 
@@ -282,6 +290,18 @@ public sealed class ApiDocInfoDto
     public string Url { get; set; } = "";
     public bool ExternallyAvailable { get; set; }
     public string ExternalUrl { get; set; } = "";
+}
+
+/// <summary>Active ingress-reachability verdict per exposed host (ssu-catalog serve-time overlay).</summary>
+public sealed class ReachabilityResultDto
+{
+    public string Host { get; set; } = "";
+    public string Url { get; set; } = "";
+    public string Status { get; set; } = ""; // "reachable" | "unreachable" | "unknown"
+    public int StatusCode { get; set; }
+    public string Expected { get; set; } = "";
+    public string Reason { get; set; } = "";
+    public DateTime CheckedAt { get; set; }
 }
 
 public sealed class KafkaTopicRefDto

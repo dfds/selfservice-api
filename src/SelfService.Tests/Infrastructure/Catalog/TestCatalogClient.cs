@@ -208,6 +208,75 @@ public class TestCatalogClient
     }
 
     [Fact]
+    public async Task GetCatalog_deserializes_reachability_and_null_coalesces()
+    {
+        // First service carries a reachability overlay; the second omits it entirely
+        // (Go's omitempty drops the key). The coalescing setter must leave Reachability
+        // non-null and empty so downstream mapping/enumeration is safe.
+        const string json = """
+            {
+              "data": {
+                "cluster": "local",
+                "applications": [
+                  {
+                    "namespace": "team-alpha-abcde",
+                    "name": "api",
+                    "kind": "Deployment",
+                    "capabilityId": "team-alpha-abcde",
+                    "services": [
+                      {
+                        "name": "svc-a",
+                        "externalHosts": [ "api.example.com" ],
+                        "reachability": [
+                          {
+                            "host": "api.example.com",
+                            "url": "https://api.example.com/",
+                            "status": "reachable",
+                            "statusCode": 200,
+                            "expected": "200",
+                            "reason": "",
+                            "checkedAt": "2026-07-10T12:00:00Z"
+                          }
+                        ]
+                      },
+                      { "name": "svc-b", "reachability": null }
+                    ]
+                  }
+                ],
+                "namespaces": [],
+                "dependencies": [],
+                "collectedAt": "2026-01-01T00:00:00Z"
+              },
+              "meta": { "collectedAt": "2026-01-01T00:00:00Z", "cluster": "local" }
+            }
+            """;
+
+        var client = new CatalogClient(
+            MockHttp(HttpStatusCode.OK, json),
+            NoToken(),
+            NullLogger<CatalogClient>.Instance
+        );
+
+        var snapshot = await client.GetCatalog(new Uri("http://ssu-catalog:8080"));
+
+        Assert.NotNull(snapshot);
+        var app = Assert.Single(snapshot!.Applications);
+        Assert.Equal(2, app.Services.Count);
+
+        var svcA = app.Services[0];
+        var reach = Assert.Single(svcA.Reachability);
+        Assert.Equal("api.example.com", reach.Host);
+        Assert.Equal("reachable", reach.Status);
+        Assert.Equal(200, reach.StatusCode);
+        Assert.Equal("200", reach.Expected);
+
+        // Absent/null reachability coalesces to a non-null empty list.
+        var svcB = app.Services[1];
+        Assert.NotNull(svcB.Reachability);
+        Assert.Empty(svcB.Reachability);
+    }
+
+    [Fact]
     public async Task GetCatalog_returns_null_on_non_success_status()
     {
         var client = new CatalogClient(

@@ -63,6 +63,17 @@ public class ApiDocApiResource
     public string ExternalUrl { get; init; } = "";
 }
 
+public class ReachabilityApiResource
+{
+    public string Host { get; init; } = "";
+    public string Url { get; init; } = "";
+    public string Status { get; init; } = "";
+    public int StatusCode { get; init; }
+    public string Expected { get; init; } = "";
+    public string Reason { get; init; } = "";
+    public DateTime CheckedAt { get; init; }
+}
+
 public class ServiceApiResource
 {
     public string Name { get; init; } = "";
@@ -72,6 +83,7 @@ public class ServiceApiResource
     public IReadOnlyList<string> ExternalHosts { get; init; } = Array.Empty<string>();
     public IReadOnlyList<RouteApiResource> Routes { get; init; } = Array.Empty<RouteApiResource>();
     public IReadOnlyList<ApiDocApiResource> ApiDocs { get; init; } = Array.Empty<ApiDocApiResource>();
+    public IReadOnlyList<ReachabilityApiResource> Reachability { get; init; } = Array.Empty<ReachabilityApiResource>();
 }
 
 public class DeploymentSourceApiResource

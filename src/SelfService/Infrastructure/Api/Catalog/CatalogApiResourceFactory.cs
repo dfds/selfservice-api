@@ -204,6 +204,18 @@ public class CatalogApiResourceFactory
                     ExternalUrl = d.ExternalUrl,
                 })
                 .ToList(),
+            Reachability = svc
+                .Reachability.Select(r => new ReachabilityApiResource
+                {
+                    Host = r.Host,
+                    Url = r.Url,
+                    Status = r.Status,
+                    StatusCode = r.StatusCode,
+                    Expected = r.Expected,
+                    Reason = r.Reason,
+                    CheckedAt = r.CheckedAt,
+                })
+                .ToList(),
         };
 
     private NamespaceApiResource MapNamespace(NamespaceEntryDto ns) =>
