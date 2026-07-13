@@ -171,6 +171,27 @@ public class TemplateRenderingService : ITemplateRenderingService
                 ctx => ctx.MemberCount.ToString()
             ),
             new StaticVariable(
+                "Capability.Cost.7Days",
+                "Total cost over the last 7 days (USD) with trend",
+                "Capability",
+                "$123.45 (-5.2%)",
+                ctx => FormatCostWithTrend(ctx.Costs, 7)
+            ),
+            new StaticVariable(
+                "Capability.Cost.14Days",
+                "Total cost over the last 14 days (USD) with trend",
+                "Capability",
+                "$246.90 (-5.2%)",
+                ctx => FormatCostWithTrend(ctx.Costs, 14)
+            ),
+            new StaticVariable(
+                "Capability.Cost.30Days",
+                "Total cost over the last 30 days (USD) with trend",
+                "Capability",
+                "$543.21 (-5.2%)",
+                ctx => FormatCostWithTrend(ctx.Costs, 30)
+            ),
+            new StaticVariable(
                 "Member.DisplayName",
                 "Recipient display name",
                 "Member",
@@ -465,6 +486,65 @@ public class TemplateRenderingService : ITemplateRenderingService
 
     // Matches the portal's cost display currency (USD); "N/A" when no cost data is cached.
     private static string FormatCost(float? value) => value is null ? "N/A" : "$" + value.Value.ToString("0.00");
+
+    // Format cost with trend: "$543.21 (-5.2%)" or "$543.21 (no trend data)"
+    private static string FormatCostWithTrend(CapabilityCosts? costs, int days)
+    {
+        if (costs?.Costs == null || costs.Costs.Length == 0)
+            return "N/A";
+
+        var costValue = costs.SumForLastDays(days);
+        if (costValue == null)
+            return "N/A";
+
+        var trend = CalculateCostTrend(costs.Costs, days);
+        var costStr = "$" + costValue.Value.ToString("0.00");
+        
+        if (trend == null)
+            return costStr + " (no trend data)";
+        
+        return costStr + $" ({trend:0.0}%)";
+    }
+
+    // Calculate the trend percentage for a given period
+    // Returns null if insufficient data, otherwise the percentage change
+    private static decimal? CalculateCostTrend(TimeSeries[] costTimeSeries, int days)
+    {
+        if (costTimeSeries == null || costTimeSeries.Length == 0)
+            return null;
+
+        var now = DateTime.UtcNow;
+        var currentStart = now.AddDays(-days);
+        var previousStart = now.AddDays(-days * 2);
+
+        // Current period: past {days} days
+        var currentPeriod = costTimeSeries
+            .Where(ts => ts.TimeStamp >= currentStart && ts.TimeStamp <= now)
+            .ToArray();
+
+        // Previous period: {days} days before that
+        var previousPeriod = costTimeSeries
+            .Where(ts => ts.TimeStamp >= previousStart && ts.TimeStamp < currentStart)
+            .ToArray();
+
+        // Need data in both periods
+        if (currentPeriod.Length == 0 || previousPeriod.Length == 0)
+            return null;
+
+        var currentSum = (decimal)currentPeriod.Sum(ts => ts.Value);
+        var previousSum = (decimal)previousPeriod.Sum(ts => ts.Value);
+
+        // Both periods are zero: no change
+        if (currentSum == 0 && previousSum == 0)
+            return 0m;
+
+        // Previous was zero but current is positive: undefined growth, return null
+        if (previousSum == 0 && currentSum > 0)
+            return null;
+
+        // Calculate percentage change: ((current - previous) / previous) * 100
+        return ((currentSum - previousSum) / previousSum) * 100;
+    }
 
     private static string? ResolveRequirementScore(TemplateRenderContext ctx, string id)
     {
