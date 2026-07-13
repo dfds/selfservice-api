@@ -6,10 +6,6 @@ using SelfService.Infrastructure.Catalog;
 
 namespace SelfService.Infrastructure.Api.Catalog;
 
-/// <summary>
-/// Maps merged catalog results (<see cref="CatalogResult{T}"/> over the wire DTOs) into the
-/// SSU-facing API resources, attaching HATEOAS links via <see cref="LinkGenerator"/>.
-/// </summary>
 public class CatalogApiResourceFactory
 {
     private readonly IHttpContextAccessor _httpContextAccessor;

@@ -3,29 +3,13 @@ using SelfService.Infrastructure.Api.Capabilities;
 
 namespace SelfService.Infrastructure.Api.Catalog;
 
-// Response DTOs for the catalog HTTP surface. These are the SSU-facing shapes — the raw
-// ssu-catalog wire DTOs (Infrastructure/Catalog/CatalogDtos.cs) are never returned directly.
-// Property names serialize to camelCase (ASP.NET Core web defaults); `_links` follows the
-// HATEOAS convention used across the API.
-
-/// <summary>Availability summary surfaced in every catalog endpoint's meta envelope.</summary>
 public class CatalogMetaApiResource
 {
     public bool CatalogAvailable { get; init; }
     public int ClustersQueried { get; init; }
     public int ClustersFailed { get; init; }
 
-    /// <summary>
-    /// When ssu-catalog began its scan (min across queried clusters). Null when no cluster returned
-    /// a snapshot. Informational — for the "last updated" age prefer <see cref="PublishedAt"/>.
-    /// </summary>
     public DateTime? CollectedAt { get; init; }
-
-    /// <summary>
-    /// When ssu-catalog finished assembling the snapshot — i.e. when the data became current (min
-    /// across queried clusters). The portal renders this as the "last updated" age. Null when no
-    /// cluster returned a snapshot.
-    /// </summary>
     public DateTime? PublishedAt { get; init; }
 }
 
@@ -202,7 +186,6 @@ public class DependencyApiResource
     public string Details { get; init; } = "";
 }
 
-// ---- List envelopes: { data, meta, _links } ----
 
 public class CatalogDeploymentsApiResource
 {

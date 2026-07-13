@@ -5,11 +5,6 @@ namespace SelfService.Infrastructure.Catalog;
 
 public interface ICatalogClient
 {
-    /// <summary>
-    /// Fetches the full catalog snapshot from one cluster's ssu-catalog. Returns null on any
-    /// failure (network, non-success status, deserialization) — a failed cluster is skipped,
-    /// never fatal.
-    /// </summary>
     Task<CatalogSnapshotDto?> GetCatalog(Uri clusterUrl, CancellationToken cancellationToken = default);
 }
 

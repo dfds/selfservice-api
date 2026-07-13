@@ -2,16 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace SelfService.Infrastructure.Catalog;
 
-// DTOs mirroring ssu-catalog/internal/model/catalog.go. Deserialized with
-// PropertyNameCaseInsensitive = true, so PascalCase properties map to the
-// service's camelCase JSON without per-property attributes.
-//
-// Collection properties use null-coalescing setters. ssu-catalog is Go, where a
-// nil slice marshals to JSON `null` (not `[]`) unless tagged omitempty. A property
-// initializer (`= new()`) only applies when the JSON key is ABSENT; an explicit
-// `null` value overwrites it. The coalescing setter guarantees these are never null
-// after deserialization, so the mapper and merge/join code can enumerate freely.
-
 /// <summary>Envelope returned by every ssu-catalog endpoint: { data, meta }.</summary>
 public sealed class CatalogEnvelope<T>
 {
@@ -101,14 +91,14 @@ public sealed class ApplicationEntryDto
         get => _containers;
         set => _containers = value ?? new();
     }
-    
+
     public List<string> RepoUrls
     {
         get => _repoUrls;
         set => _repoUrls = value ?? new();
     }
     public DeploymentSourceDto? DeploymentSource { get; set; }
-    
+
     public AppMetadataDto? Metadata { get; set; }
 
     // Best-effort owner (may be empty)
@@ -137,16 +127,12 @@ public sealed class ApplicationEntryDto
     public Dictionary<string, string>? Labels { get; set; }
     public Dictionary<string, string>? Annotations { get; set; }
 
-    /// <summary>Beyla's detected runtime/language (e.g. "go", "dotnet"); empty/absent when undetected.</summary>
     public string? Runtime { get; set; }
 
-    /// <summary>Inbound HTTP throughput (req/s), Beyla-observed; null/absent when no inbound HTTP seen.</summary>
     public double? RequestRate { get; set; }
 
-    /// <summary>5xx share of inbound traffic (0..1); meaningful only with RequestRate &gt; 0.</summary>
     public double? ErrorRate { get; set; }
 
-    /// <summary>Authoritative capability name, joined SSU-side (not part of the wire model).</summary>
     [JsonIgnore]
     public string? CapabilityName { get; set; }
 }
@@ -182,8 +168,6 @@ public sealed class ServiceRefDto
         get => _apiDocs;
         set => _apiDocs = value ?? new();
     }
-    // Serve-time reachability overlay from ssu-catalog; omitempty on the Go side,
-    // so it arrives absent (→ empty) for hosts with no verdict.
     public List<ReachabilityResultDto> Reachability
     {
         get => _reachability;
@@ -226,7 +210,6 @@ public sealed class DeploymentSourceDto
     public string AppName { get; set; } = "";
 }
 
-/// <summary>Author-declared workload metadata (dfds.cloud/description + dfds.cloud/link.*).</summary>
 public sealed class AppMetadataDto
 {
     private List<LinkRefDto> _links = new();
@@ -292,7 +275,6 @@ public sealed class ApiDocInfoDto
     public string ExternalUrl { get; set; } = "";
 }
 
-/// <summary>Active ingress-reachability verdict per exposed host (ssu-catalog serve-time overlay).</summary>
 public sealed class ReachabilityResultDto
 {
     public string Host { get; set; } = "";

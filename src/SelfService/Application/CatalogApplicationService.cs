@@ -4,7 +4,6 @@ using SelfService.Infrastructure.Catalog;
 
 namespace SelfService.Application;
 
-/// <summary>Availability summary surfaced in every catalog endpoint's meta envelope.</summary>
 public sealed record CatalogAvailability(
     bool CatalogAvailable,
     int ClustersQueried,
@@ -13,7 +12,6 @@ public sealed record CatalogAvailability(
     DateTime? PublishedAt
 );
 
-/// <summary>A query result: the matching items plus the cross-cluster availability summary.</summary>
 public sealed record CatalogResult<T>(IReadOnlyList<T> Items, CatalogAvailability Availability);
 
 public sealed record ApplicationFilters(
@@ -43,22 +41,13 @@ public interface ICatalogApplicationService
     );
 }
 
-/// <summary>
-/// Caching proxy over the per-cluster ssu-catalog services. On cache miss it fans out one
-/// full-snapshot fetch per cluster, concatenates, then once joins on capabilityId against the
-/// authoritative Capability data (filtering to capability-owned apps and attaching the name). All
-/// query methods read from the single cached merged structure. No persistence.
-/// </summary>
+/// Caching proxy over the per-cluster ssu-catalog services. On cache miss it does a
+/// full-snapshot fetch per cluster, concatenates, then once joins on capabilityId against Capability data (filtering to capability-owned apps and attaching the name). All
+/// query methods read from the single cached merged structure. Only stored in-memory
 public class CatalogApplicationService : ICatalogApplicationService
 {
     private const string CacheKey = "catalog:merged";
     private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(45);
-
-    // The cross-cluster fan-out populates a shared, cached snapshot, so its lifetime must not be
-    // tied to any single inbound request. Binding it to a request's RequestAborted token meant a
-    // browser reload/navigation mid-fetch cancelled the upstream read (TaskCanceledException →
-    // SocketException ECANCELED), which was then misreported as a failed cluster. Give the fetch
-    // its own bounded budget instead so a genuinely hung upstream is still capped.
     private static readonly TimeSpan FetchTimeout = TimeSpan.FromSeconds(20);
 
     private readonly CatalogConfig _config;
@@ -160,9 +149,6 @@ public class CatalogApplicationService : ICatalogApplicationService
 
     private static bool HasDocs(ApplicationEntryDto app) => app.Services.Any(s => s.ApiDocs.Count > 0);
 
-    // Deliberately takes no CancellationToken: the populated snapshot is cached and shared across
-    // all callers, so the fan-out must not inherit any one request's RequestAborted. Each fetch
-    // gets an independent timeout budget instead (see FetchTimeout).
     private Task<MergedCatalog> GetMerged()
     {
         return _cache.GetOrCreateAsync(
@@ -180,7 +166,6 @@ public class CatalogApplicationService : ICatalogApplicationService
     {
         var registry = _config.Clusters;
 
-        // Single full-snapshot fetch per cluster (decision 9); per-cluster failure → null.
         var fetches = registry
             .Select(async endpoint =>
             {
@@ -206,7 +191,6 @@ public class CatalogApplicationService : ICatalogApplicationService
                 continue;
             }
 
-            // Stamp the registry cluster name (authoritative) onto every entry.
             foreach (var app in snapshot.Applications)
             {
                 app.Cluster = endpoint.Cluster;
@@ -219,8 +203,6 @@ public class CatalogApplicationService : ICatalogApplicationService
             apps.AddRange(snapshot.Applications);
             namespaces.AddRange(snapshot.Namespaces);
             dependencies.AddRange(snapshot.Dependencies);
-            // Skip zero-value timestamps: an older ssu-catalog that doesn't emit the field
-            // deserializes to default(DateTime) (year 1), which must not poison the min().
             if (snapshot.CollectedAt.Year > 1)
             {
                 collectedTimes.Add(snapshot.CollectedAt);
@@ -235,13 +217,10 @@ public class CatalogApplicationService : ICatalogApplicationService
             CatalogAvailable: registry.Count > 0 && clustersFailed < registry.Count,
             ClustersQueried: registry.Count,
             ClustersFailed: clustersFailed,
-            // Stalest snapshot bounds the freshness of the merged view; null if all clusters failed.
             CollectedAt: collectedTimes.Count > 0 ? collectedTimes.Min() : null,
             PublishedAt: publishedTimes.Count > 0 ? publishedTimes.Min() : null
         );
 
-        // Join once: resolve each distinct capabilityId to a real Capability, keeping only owned
-        // apps/namespaces and attaching the authoritative name.
         var capabilityNames = await ResolveCapabilityNames(apps, namespaces);
 
         var ownedApps = apps.Where(a =>
@@ -252,12 +231,6 @@ public class CatalogApplicationService : ICatalogApplicationService
             .Where(n => TryAttachCapability(n.CapabilityId, capabilityNames, name => n.CapabilityName = name))
             .ToList();
 
-        // Keep dependency edges touching a capability-owned namespace on EITHER end.
-        // Source-owned keeps a workload's OUTBOUND edges (the in-cluster app calling an
-        // external/other target); target-owned keeps its INBOUND edges (another workload
-        // — e.g. ssu-catalog probing it, whose source is external/unowned — connecting to
-        // the owned app). A source-only filter drops every inbound edge, so the portal's
-        // connections graph shows outbound-only. Best-effort overlay.
         var ownedNamespaceKeys = ownedApps
             .Select(a => (a.Cluster, a.Namespace))
             .Concat(ownedNamespaces.Select(n => (n.Cluster, n.Name)))

@@ -3,12 +3,7 @@ using SelfService.Application;
 
 namespace SelfService.Infrastructure.Api.Catalog;
 
-/// <summary>
-/// Cross-cluster, capability-scoped view of the ssu-catalog application catalog. All endpoints
-/// are open reads (authenticated, no special permission) and always return 200 — when the
-/// upstream catalog is unreachable the payload carries empty <c>data</c> plus
-/// <c>meta.catalogAvailable = false</c> (the unavailability contract).
-/// </summary>
+// TODO, add service catalogue specific RBAC scopes
 [Route("catalog")]
 [Produces("application/json")]
 [ApiController]

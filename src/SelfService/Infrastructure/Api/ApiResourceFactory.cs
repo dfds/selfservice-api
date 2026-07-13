@@ -627,7 +627,6 @@ public class ApiResourceFactory
 
     private ResourceLink CreateDeploymentsLinkFor(Capability capability)
     {
-        // Open read (like members): the link is always present so the portal section always renders.
         return new ResourceLink(
             href: _linkGenerator.GetUriByAction(
                 httpContext: HttpContext,

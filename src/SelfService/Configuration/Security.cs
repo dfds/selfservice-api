@@ -13,16 +13,10 @@ public static class Security
         builder
             .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"))
-            // Enables ITokenAcquisition so selfservice-api can acquire a client-credentials
-            // (app-only) token as its own service principal to call ssu-catalog downstream.
-            // In local dev SS_CATALOG_SCOPE is empty, so no token is acquired (see CatalogTokenProvider).
             .EnableTokenAcquisitionToCallDownstreamApi()
             .AddInMemoryTokenCaches();
 
         builder.Services.AddAuthorization();
-
-        // NOTE: enable to debug authentication issues
-        // IdentityModelEventSource.ShowPII = true;
 
         AutoRegisterAuthorizationHandlers(builder);
     }

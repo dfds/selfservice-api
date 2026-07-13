@@ -41,7 +41,7 @@ public static class DependencyInjection
                 conf.AddOtlpExporter();
                 conf.AddPrometheusHttpListener(conf =>
                 {
-                    conf.UriPrefixes = new string[] { "http://localhost:8888/" };
+                    conf.UriPrefixes = new string[] { "http://*:8888/" };
                 });
             });
     }

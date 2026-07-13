@@ -191,14 +191,11 @@ public static class Domain
             client.BaseAddress = confluentGatewayApiEndpoint;
         });
 
-        // ssu-catalog integration — caching proxy, no persistence. The endpoint registry is
-        // per-cluster (SS_CATALOG_ENDPOINTS); the downstream scope is shared (SS_CATALOG_SCOPE).
         var catalogEndpoints = CatalogConfig.ParseEndpoints(builder.Configuration["SS_CATALOG_ENDPOINTS"]);
         var catalogScope = builder.Configuration["SS_CATALOG_SCOPE"];
         builder.Services.AddSingleton(new CatalogConfig(catalogEndpoints, catalogScope));
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<ICatalogTokenProvider, CatalogTokenProvider>();
-        // No BaseAddress: CatalogClient calls each per-cluster URL from the registry explicitly.
         builder.Services.AddHttpClient<ICatalogClient, CatalogClient>();
         builder.Services.AddTransient<ICatalogApplicationService, CatalogApplicationService>();
     }
