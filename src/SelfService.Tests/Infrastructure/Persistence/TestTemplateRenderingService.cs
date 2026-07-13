@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Moq;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Persistence;
@@ -8,7 +11,17 @@ namespace SelfService.Tests.Infrastructure.Persistence;
 
 public class TestTemplateRenderingService
 {
-    private readonly TemplateRenderingService _sut = new();
+    private readonly TemplateRenderingService _sut;
+
+    public TestTemplateRenderingService()
+    {
+        var configMock = new Mock<IConfiguration>();
+        configMock.Setup(c => c["SS_PORTAL_BASE_URL"]).Returns("localhost:3001");
+
+        var loggerMock = new Mock<ILogger<TemplateRenderingService>>();
+
+        _sut = new TemplateRenderingService(configMock.Object, loggerMock.Object);
+    }
 
     private static TemplateRenderContext CreateContext(
         Capability? capability = null,

@@ -300,10 +300,13 @@ public class TestEmailCampaignApplicationService
             (typeof(IRequirementsMetricService), metricService.Object)
         );
 
+        var configMock = new Mock<IConfiguration>();
+        configMock.Setup(c => c["SS_PORTAL_BASE_URL"]).Returns("localhost:3001");
+
         var sut = BuildService(
             campaignRepo: campaignRepo.Object,
             userFilter: userFilter.Object,
-            templateRendering: new TemplateRenderingService(),
+            templateRendering: new TemplateRenderingService(configMock.Object),
             scopeFactory: scopeFactory
         );
 
