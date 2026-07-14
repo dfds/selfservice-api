@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Moq;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
@@ -18,9 +17,7 @@ public class TestTemplateRenderingService
         var configMock = new Mock<IConfiguration>();
         configMock.Setup(c => c["SS_PORTAL_BASE_URL"]).Returns("localhost:3001");
 
-        var loggerMock = new Mock<ILogger<TemplateRenderingService>>();
-
-        _sut = new TemplateRenderingService(configMock.Object, loggerMock.Object);
+        _sut = new TemplateRenderingService(configMock.Object);
     }
 
     private static TemplateRenderContext CreateContext(
@@ -380,17 +377,25 @@ public class TestTemplateRenderingService
 
         var result = _sut.RenderTemplate("{{Capability.Cost.7Days}}", context);
 
-        Assert.Equal("$43.45", result);
+        Assert.Equal("$43.45 (no trend data)", result);
     }
 
     [Fact]
     public void RenderTemplate_CapabilityCost_WindowsTakeMostRecentDays()
     {
         var cap = A.Capability.Build();
-        // 30 days of $2/day, plus one much older $1000 day that the 7/14/30-day windows exclude.
-        var points = new List<TimeSeries> { new(1000.00f, new DateTime(2026, 1, 1)) };
-        for (var d = 0; d < 30; d++)
-            points.Add(new TimeSeries(2.00f, new DateTime(2026, 6, 28).AddDays(-d)));
+        // 60 days of data: first 30 days at $1/day, last 30 days at $2/day
+        var points = new List<TimeSeries>();
+        var now = DateTime.UtcNow;
+
+        // Prior 30-day period (60-30 days ago): $1/day = $30 total
+        for (var d = 59; d >= 30; d--)
+            points.Add(new TimeSeries(1.00f, now.AddDays(-d)));
+
+        // Current 30-day period (last 30 days): $2/day = $60 total
+        for (var d = 29; d >= 0; d--)
+            points.Add(new TimeSeries(2.00f, now.AddDays(-d)));
+
         var context = CreateContext(capability: cap, costs: new CapabilityCosts(cap.Id, points.ToArray()));
 
         var result = _sut.RenderTemplate(
@@ -398,7 +403,118 @@ public class TestTemplateRenderingService
             context
         );
 
-        Assert.Equal("$14.00|$28.00|$60.00", result);
+        // 7-day: current=$14 (days 0-6 at $2), prior=$14 (days 7-13 still at $2), trend=0%
+        // 14-day: current=$28 (days 0-13 at $2), prior=$28 (days 14-27 still at $2), trend=0%
+        // 30-day: current=$60 (days 0-29 at $2), prior=$30 (days 30-59 at $1), trend=100%
+        Assert.Equal("$14.00 (0.0%)|$28.00 (0.0%)|$60.00 (100.0%)", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_CapabilityCost_DifferentTrendsPerWindow()
+    {
+        var cap = A.Capability.Build();
+        // Data fluctuates every 7 days: $300, $200, $150, $100, $80, $50, $40, $30 per day
+        var points = new List<TimeSeries>();
+        var now = DateTime.UtcNow;
+        var dailyAmounts = new[] { 300f, 200f, 150f, 100f, 80f, 50f, 40f, 30f };
+
+        for (var week = 0; week < 8; week++)
+        {
+            var dailyAmount = dailyAmounts[week];
+            for (var day = 0; day < 7; day++)
+            {
+                points.Add(new TimeSeries(dailyAmount, now.AddDays(-(week * 7 + day))));
+            }
+        }
+
+        var context = CreateContext(capability: cap, costs: new CapabilityCosts(cap.Id, points.ToArray()));
+
+        var result = _sut.RenderTemplate(
+            "{{Capability.Cost.7Days}}|{{Capability.Cost.14Days}}|{{Capability.Cost.30Days}}",
+            context
+        );
+
+        // 7-day: current=$2100 (7×$300), prior=$1400 (7×$200), trend=50%
+        // 14-day: current=$3500 (7×$300 + 7×$200), prior=$1750 (7×$150 + 7×$100), trend=100%
+        // 30-day: current=$5410 (7×$300 + 7×$200 + 7×$150 + 7×$100 + 2×$80), prior=$1240 (5×$80 + 7×$50 + 7×$40 + 7×$30), trend=336.3%
+        Assert.Equal("$2100.00 (50.0%)|$3500.00 (100.0%)|$5410.00 (336.3%)", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_CapabilityCost_NoTrendData_InsufficientPriorPeriod()
+    {
+        var cap = A.Capability.Build();
+        var now = DateTime.UtcNow;
+        // Only 30 days of data (current period), no prior period
+        var points = new List<TimeSeries>();
+        for (var d = 29; d >= 0; d--)
+            points.Add(new TimeSeries(2.00f, now.AddDays(-d)));
+
+        var context = CreateContext(capability: cap, costs: new CapabilityCosts(cap.Id, points.ToArray()));
+        var result = _sut.RenderTemplate("{{Capability.Cost.30Days}}", context);
+
+        Assert.Equal("$60.00 (no trend data)", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_CapabilityCost_NoTrendData_PreviousPeriodZeroButCurrentPositive()
+    {
+        var cap = A.Capability.Build();
+        var now = DateTime.UtcNow;
+        // Prior 30 days: $0, Current 30 days: $60 (undefined growth → no trend data)
+        var points = new List<TimeSeries>();
+        for (var d = 59; d >= 30; d--)
+            points.Add(new TimeSeries(0.00f, now.AddDays(-d)));
+        for (var d = 29; d >= 0; d--)
+            points.Add(new TimeSeries(2.00f, now.AddDays(-d)));
+
+        var context = CreateContext(capability: cap, costs: new CapabilityCosts(cap.Id, points.ToArray()));
+        var result = _sut.RenderTemplate("{{Capability.Cost.30Days}}", context);
+
+        Assert.Equal("$60.00 (no trend data)", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_CapabilityCost_ZeroTrend_BothPeriodsZero()
+    {
+        var cap = A.Capability.Build();
+        var now = DateTime.UtcNow;
+        // Both periods zero: trend should show 0%
+        var points = new List<TimeSeries>();
+        for (var d = 59; d >= 0; d--)
+            points.Add(new TimeSeries(0.00f, now.AddDays(-d)));
+
+        var context = CreateContext(capability: cap, costs: new CapabilityCosts(cap.Id, points.ToArray()));
+        var result = _sut.RenderTemplate("{{Capability.Cost.30Days}}", context);
+
+        Assert.Equal("$0.00 (0.0%)", result);
+    }
+
+    [Fact]
+    public void RenderTemplate_CapabilityCost_WithTrendData_CalculatesPercentageChange()
+    {
+        var cap = A.Capability.Build();
+        var now = DateTime.UtcNow;
+
+        // Create 14 days of continuous data: days 13-0 (from oldest to newest)
+        // Days 13-7 (prior period): $10/day = $70 total
+        // Days 6-0 (current period): $20/day = $140 total
+        // Trend: ($140 - $70) / $70 * 100 = 100%
+        var points = new List<TimeSeries>();
+        for (var d = 13; d >= 7; d--)
+            points.Add(new TimeSeries(10.00f, now.AddDays(-d)));
+        for (var d = 6; d >= 0; d--)
+            points.Add(new TimeSeries(20.00f, now.AddDays(-d)));
+
+        var costs = new CapabilityCosts(cap.Id, points.ToArray());
+        var context = CreateContext(capability: cap, costs: costs);
+
+        var result = _sut.RenderTemplate("{{Capability.Cost.7Days}}", context);
+
+        // Current 7-day: days 0-6 = 7 × $20 = $140
+        // Prior 7-day: days 7-13 = 7 × $10 = $70
+        // Trend: ($140 - $70) / $70 * 100 = 100%
+        Assert.Equal("$140.00 (100.0%)", result);
     }
 
     [Fact]
@@ -437,7 +553,7 @@ public class TestTemplateRenderingService
             ctx
         );
 
-        Assert.Equal("[Cap A=$100.00][Cap B=$5.50]", result);
+        Assert.Equal("[Cap A=$100.00 (no trend data)][Cap B=$5.50 (no trend data)]", result);
     }
 
     [Fact]
@@ -471,6 +587,7 @@ public class TestTemplateRenderingService
         {
             "Capability.Id",
             "Capability.Name",
+            "Capability.NameLink",
             "Capability.Description",
             "Capability.Status",
             "Capability.CreatedAt",

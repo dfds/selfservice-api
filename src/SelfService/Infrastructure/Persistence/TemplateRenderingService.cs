@@ -2,7 +2,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 
@@ -24,7 +23,6 @@ public class TemplateRenderingService : ITemplateRenderingService
     private readonly VariableEntry[] _variables;
     private readonly Dictionary<string, StaticVariable> _byName;
     private readonly PatternVariable[] _patterns;
-    private readonly ILogger<TemplateRenderingService> _logger;
 
     [Flags]
     private enum AppliesTo
@@ -80,16 +78,11 @@ public class TemplateRenderingService : ITemplateRenderingService
         VarScope Scope = VarScope.PerCapability
     ) : VariableEntry(Name, Description, Entity, Example, Hidden, Applies, Scope);
 
-    public TemplateRenderingService(IConfiguration configuration, ILogger<TemplateRenderingService> logger)
+    public TemplateRenderingService(IConfiguration configuration)
     {
-        _logger = logger;
         _portalBaseUrl =
             configuration["SS_PORTAL_BASE_URL"]
             ?? throw new InvalidOperationException("SS_PORTAL_BASE_URL configuration is required but not set.");
-        _logger.LogInformation(
-            "TemplateRenderingService initialized with portal base URL: {PortalBaseUrl}",
-            _portalBaseUrl
-        );
         _variables = InitializeVariables();
         _byName = _variables.OfType<StaticVariable>().ToDictionary(v => v.Name);
         _patterns = _variables.OfType<PatternVariable>().ToArray();
@@ -196,14 +189,16 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "Recipient display name",
                 "Member",
                 "Jane Doe",
-                ctx => ctx.Member?.DisplayName ?? "[Member Name]"
+                ctx => ctx.Member?.DisplayName ?? "[Member Name]",
+                Scope: VarScope.TopLevel
             ),
             new StaticVariable(
                 "Member.Email",
                 "Recipient email address",
                 "Member",
                 "jane.doe@dfds.com",
-                ctx => ctx.Member?.Email ?? "[Member Email]"
+                ctx => ctx.Member?.Email ?? "[Member Email]",
+                Scope: VarScope.TopLevel
             ),
             // --- Shared variables (both target types) ---
             new StaticVariable(
@@ -212,7 +207,8 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "Campaign",
                 "Q1 Migration Notice",
                 ctx => ctx.CampaignName,
-                Applies: AppliesTo.Both
+                Applies: AppliesTo.Both,
+                Scope: VarScope.TopLevel
             ),
             new StaticVariable(
                 "Date.Today",
@@ -220,7 +216,8 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "Date",
                 "2024-01-15",
                 _ => DateTime.UtcNow.ToString("yyyy-MM-dd"),
-                Applies: AppliesTo.Both
+                Applies: AppliesTo.Both,
+                Scope: VarScope.TopLevel
             ),
             new StaticVariable(
                 "Date.Year",
@@ -228,7 +225,8 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "Date",
                 "2024",
                 _ => DateTime.UtcNow.Year.ToString(),
-                Applies: AppliesTo.Both
+                Applies: AppliesTo.Both,
+                Scope: VarScope.TopLevel
             ),
             new PatternVariable(
                 "Requirement.<id>",
@@ -346,7 +344,8 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "User",
                 "user@dfds.com",
                 ctx => ctx.Member?.Id.ToString() ?? "[User Id]",
-                Applies: AppliesTo.User
+                Applies: AppliesTo.User,
+                Scope: VarScope.TopLevel
             ),
             new StaticVariable(
                 "User.Email",
@@ -354,7 +353,8 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "User",
                 "jane.doe@dfds.com",
                 ctx => ctx.Member?.Email ?? "[User Email]",
-                Applies: AppliesTo.User
+                Applies: AppliesTo.User,
+                Scope: VarScope.TopLevel
             ),
             new StaticVariable(
                 "User.DisplayName",
@@ -362,7 +362,8 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "User",
                 "Jane Doe",
                 ctx => ctx.Member?.DisplayName ?? "[User Name]",
-                Applies: AppliesTo.User
+                Applies: AppliesTo.User,
+                Scope: VarScope.TopLevel
             ),
             new StaticVariable(
                 "User.LastSeen",
@@ -370,7 +371,8 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "User",
                 "2024-01-15",
                 ctx => ctx.Member?.LastSeen?.ToString("yyyy-MM-dd") ?? "Never",
-                Applies: AppliesTo.User
+                Applies: AppliesTo.User,
+                Scope: VarScope.TopLevel
             ),
             new StaticVariable(
                 "User.CapabilityCount",
@@ -378,7 +380,8 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "User",
                 "3",
                 ctx => ctx.UserCapabilities.Count.ToString(),
-                Applies: AppliesTo.User
+                Applies: AppliesTo.User,
+                Scope: VarScope.TopLevel
             ),
             new StaticVariable(
                 "User.CapabilityNames",
@@ -386,7 +389,8 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "User",
                 "Cap A, Cap B, Cap C",
                 ctx => string.Join(", ", ctx.UserCapabilities.Select(uc => uc.Capability.Name)),
-                Applies: AppliesTo.User
+                Applies: AppliesTo.User,
+                Scope: VarScope.TopLevel
             ),
             // Documented as a block construct so users discover it via the variable picker.
             // Render-side handling lives in the {{#each User.Capabilities}} block pre-pass.
@@ -396,7 +400,8 @@ public class TemplateRenderingService : ITemplateRenderingService
                 "User",
                 "{{#each User.Capabilities}}...{{/each}}",
                 _ => "",
-                Applies: AppliesTo.User
+                Applies: AppliesTo.User,
+                Scope: VarScope.TopLevel
             ),
         };
     }
@@ -499,10 +504,10 @@ public class TemplateRenderingService : ITemplateRenderingService
 
         var trend = CalculateCostTrend(costs.Costs, days);
         var costStr = "$" + costValue.Value.ToString("0.00");
-        
+
         if (trend == null)
             return costStr + " (no trend data)";
-        
+
         return costStr + $" ({trend:0.0}%)";
     }
 
@@ -518,9 +523,7 @@ public class TemplateRenderingService : ITemplateRenderingService
         var previousStart = now.AddDays(-days * 2);
 
         // Current period: past {days} days
-        var currentPeriod = costTimeSeries
-            .Where(ts => ts.TimeStamp >= currentStart && ts.TimeStamp <= now)
-            .ToArray();
+        var currentPeriod = costTimeSeries.Where(ts => ts.TimeStamp >= currentStart && ts.TimeStamp <= now).ToArray();
 
         // Previous period: {days} days before that
         var previousPeriod = costTimeSeries
