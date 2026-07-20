@@ -41,6 +41,7 @@ public class CapabilityDetailsApiResource
         public ResourceLink SelfAssessments { get; set; }
         public ResourceLink RequirementScore { get; set; }
         public ResourceLink ServicePrincipalMembers { get; set; }
+        public ResourceLink Deployments { get; set; }
 
         public CapabilityDetailsLinks(
             ResourceLink self,
@@ -60,7 +61,8 @@ public class CapabilityDetailsApiResource
             ResourceLink configurationLevel,
             ResourceLink selfAssessments,
             ResourceLink requirementScore,
-            ResourceLink servicePrincipalMembers
+            ResourceLink servicePrincipalMembers,
+            ResourceLink deployments
         )
         {
             Self = self;
@@ -81,6 +83,7 @@ public class CapabilityDetailsApiResource
             SelfAssessments = selfAssessments;
             RequirementScore = requirementScore;
             ServicePrincipalMembers = servicePrincipalMembers;
+            Deployments = deployments;
         }
     }
 

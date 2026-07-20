@@ -625,6 +625,20 @@ public class ApiResourceFactory
         );
     }
 
+    private ResourceLink CreateDeploymentsLinkFor(Capability capability)
+    {
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetCapabilityDeployments),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "related",
+            allow: Allow.Get
+        );
+    }
+
     private ResourceLink CreateClusterAccessLinkFor(Capability capability)
     {
         return new ResourceLink(
@@ -789,7 +803,8 @@ public class ApiResourceFactory
                 configurationLevel: CreateConfigurationLevelLinkFor(capability),
                 selfAssessments: await CreateSelfAssessmentsLinkFor(capability),
                 requirementScore: CreateRequirementScoreLinkFor(capability),
-                servicePrincipalMembers: await CreateServicePrincipalMembersLinkFor(capability)
+                servicePrincipalMembers: await CreateServicePrincipalMembersLinkFor(capability),
+                deployments: CreateDeploymentsLinkFor(capability)
             )
         );
     }
