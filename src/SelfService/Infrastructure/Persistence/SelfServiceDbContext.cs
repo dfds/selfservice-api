@@ -45,6 +45,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<Capability> Capabilities => Set<Capability>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<Membership> Memberships => Set<Membership>();
+    public DbSet<MissingMemberRecord> MissingMemberRecords => Set<MissingMemberRecord>();
     public DbSet<Favourite> Favourites => Set<Favourite>();
 
     public DbSet<MembershipApplication> MembershipApplications => Set<MembershipApplication>();
