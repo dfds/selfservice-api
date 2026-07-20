@@ -8,6 +8,7 @@ using SelfService.Infrastructure.Api.Metrics;
 using SelfService.Infrastructure.Api.Prometheus;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.BackgroundJobs;
+using SelfService.Infrastructure.Catalog;
 using SelfService.Infrastructure.Kafka;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
@@ -189,5 +190,13 @@ public static class Domain
         {
             client.BaseAddress = confluentGatewayApiEndpoint;
         });
+
+        var catalogEndpoints = CatalogConfig.ParseEndpoints(builder.Configuration["SS_CATALOG_ENDPOINTS"]);
+        var catalogScope = builder.Configuration["SS_CATALOG_SCOPE"];
+        builder.Services.AddSingleton(new CatalogConfig(catalogEndpoints, catalogScope));
+        builder.Services.AddMemoryCache();
+        builder.Services.AddScoped<ICatalogTokenProvider, CatalogTokenProvider>();
+        builder.Services.AddHttpClient<ICatalogClient, CatalogClient>();
+        builder.Services.AddTransient<ICatalogApplicationService, CatalogApplicationService>();
     }
 }

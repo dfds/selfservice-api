@@ -12,12 +12,11 @@ public static class Security
     {
         builder
             .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+            .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"))
+            .EnableTokenAcquisitionToCallDownstreamApi()
+            .AddInMemoryTokenCaches();
 
         builder.Services.AddAuthorization();
-
-        // NOTE: enable to debug authentication issues
-        // IdentityModelEventSource.ShowPII = true;
 
         AutoRegisterAuthorizationHandlers(builder);
     }

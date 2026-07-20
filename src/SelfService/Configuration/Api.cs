@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using SelfService.Infrastructure.Api;
+using SelfService.Infrastructure.Api.Catalog;
 
 namespace SelfService.Configuration;
 
@@ -33,5 +34,6 @@ public static class Api
             });
 
         builder.Services.AddTransient<ApiResourceFactory>();
+        builder.Services.AddTransient<CatalogApiResourceFactory>();
     }
 }
