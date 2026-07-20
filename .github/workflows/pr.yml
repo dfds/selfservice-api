@@ -1,0 +1,38 @@
+name: selfservice-api PR
+
+on:
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selfservice-api-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and test
+    # Only run for PRs from branches in this repo (i.e. org members with write
+    # access), not from forks — avoids strangers burning runners on a public repo.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out selfservice-api
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        run: make clean-restore-build
+
+      - name: Test
+        run: make tests
