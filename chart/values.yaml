@@ -14,11 +14,7 @@ image:
 app:
   config:
     gitSecretRef: selfservice-git
-    kafkaSecretRef: kafka-credentials
-    topdeskSecretRef: selfservice-api-topdesk
-    msgraphSecretRef: selfservice-api-msgraph
-    platformdataSecretRef: selfservice-api-platformdata
-    selfserviceApiOtelRef: selfservice-api-otel
+    primarySecretRef: selfservice-api
     ecrPullPermissionAwsOrganizationId: ""
 
   podAnnotations: {}
