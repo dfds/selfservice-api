@@ -155,10 +155,7 @@ public class TestCatalogClient
         var snapshot = await client.GetCatalog(new Uri("http://ssu-catalog:8080"));
 
         var both = snapshot!.Applications.Single(a => a.Name == "gitops-plus-declared");
-        Assert.Equal(
-            new[] { "https://github.com/dfds/ssu-apps", "https://github.com/dfds/api" },
-            both.RepoUrls
-        );
+        Assert.Equal(new[] { "https://github.com/dfds/ssu-apps", "https://github.com/dfds/api" }, both.RepoUrls);
         Assert.Equal("https://github.com/dfds/ssu-apps", both.DeploymentSource!.RepoUrl);
 
         var none = snapshot.Applications.Single(a => a.Name == "no-repos");

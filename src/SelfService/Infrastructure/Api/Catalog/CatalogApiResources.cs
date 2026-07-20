@@ -186,7 +186,6 @@ public class DependencyApiResource
     public string Details { get; init; } = "";
 }
 
-
 public class CatalogDeploymentsApiResource
 {
     public IReadOnlyList<ApplicationApiResource> Data { get; init; } = Array.Empty<ApplicationApiResource>();

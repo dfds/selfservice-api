@@ -28,7 +28,6 @@ public class TestCatalogApplicationService
     private static CatalogConfig SingleCluster(string cluster = "local") =>
         new(new[] { new CatalogClusterEndpoint(cluster, new Uri("http://ssu-catalog:8080")) }, scope: "");
 
-
     [Fact]
     public void ParseEndpoints_parses_cluster_url_csv()
     {
@@ -52,7 +51,6 @@ public class TestCatalogApplicationService
     {
         Assert.Empty(CatalogConfig.ParseEndpoints(raw));
     }
-
 
     [Fact]
     public async Task Merge_keeps_only_capability_owned_apps_and_joins_name()
@@ -246,7 +244,6 @@ public class TestCatalogApplicationService
         Assert.Equal("undocumented", Assert.Single(withoutDocs.Items).Name);
     }
 
-
     [Fact]
     public async Task All_clusters_fail_reports_unavailable_with_no_items()
     {
@@ -269,7 +266,6 @@ public class TestCatalogApplicationService
         Assert.Equal(1, result.Availability.ClustersQueried);
         Assert.Equal(1, result.Availability.ClustersFailed);
     }
-
 
     [Fact]
     public async Task TokenProvider_unconfigured_scope_returns_null_without_acquiring()
