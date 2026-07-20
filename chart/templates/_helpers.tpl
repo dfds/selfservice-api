@@ -49,6 +49,8 @@ Common labels
 {{- define "selfservice-api.labels" -}}
 {{ include "selfservice-api.selectorLabels" . }}
 {{- if eq .Values.managedByHelm true }}
+app.kubernetes.io/name: {{ include "selfservice-api.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -63,6 +65,8 @@ Common labels
 {{- define "selfservice-api-gendis.labels" -}}
 {{ include "selfservice-api-gendis.selectorLabels" . }}
 {{- if eq .Values.managedByHelm true }}
+app.kubernetes.io/name: {{ include "selfservice-api.name" . }}-gendis
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -76,8 +80,6 @@ Selector labels
 */}}
 {{- define "selfservice-api.selectorLabels" -}}
 app: {{ include "selfservice-api.fullname" . }}
-app.kubernetes.io/name: {{ include "selfservice-api.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
@@ -85,8 +87,6 @@ Selector labels gendis
 */}}
 {{- define "selfservice-api-gendis.selectorLabels" -}}
 app: {{ include "selfservice-api.fullname" . }}-gendis
-app.kubernetes.io/name: {{ include "selfservice-api.name" . }}-gendis
-app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
