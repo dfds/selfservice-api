@@ -12,7 +12,7 @@ spec:
       {{- include "selfservice-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.app.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -23,7 +23,9 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if or .Values.serviceAccount.create .Values.serviceAccount.name }}
       serviceAccountName: {{ include "selfservice-api.serviceAccountName" . }}
+      {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -31,13 +33,14 @@ spec:
       initContainers:
         - name: dbmigration
           image: "{{ .Values.dbMigration.image.repository }}:{{ .Values.dbMigration.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.dbMigration.image.pullPolicy }}
           envFrom:
             - secretRef:
                 name: {{ .Values.dbMigration.secretRef }}
       volumes:
         - name: selfservice-git
           secret:
-            secretName: selfservice-git
+            secretName: {{ .Values.app.config.gitSecretRef }}
       containers:
         - name: app
           {{- with .Values.securityContext }}
@@ -111,6 +114,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "selfservice-api-gendis.labels" . | nindent 4 }}
+    {{- with .Values.gendis.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -118,18 +124,23 @@ spec:
       {{- include "selfservice-api-gendis.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.gendis.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
         {{- include "selfservice-api-gendis.selectorLabels" . | nindent 8 }}
+        {{- with .Values.gendis.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if or .Values.gendis.serviceAccount.create .Values.gendis.serviceAccount.name }}
       serviceAccountName: {{ include "selfservice-api-gendis.serviceAccountName" . }}
+      {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -141,7 +152,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.gendis.image.repository }}:{{ .Values.gendis.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.gendis.image.pullPolicy }}
           {{- with .Values.gendis.environment }}
           env:
             {{- toYaml . | nindent 12}}

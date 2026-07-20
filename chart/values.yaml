@@ -13,13 +13,15 @@ image:
 
 app:
   config:
+    gitSecretRef: selfservice-git
     kafkaSecretRef: kafka-credentials
     topdeskSecretRef: selfservice-api-topdesk
     msgraphSecretRef: selfservice-api-msgraph
     platformdataSecretRef: selfservice-api-platformdata
     selfserviceApiOtelRef: selfservice-api-otel
-    ecrPullPermissionAwsAccountId: "123456789"
-    ecrPullPermissionAwsBackupAccountId: "987654321"
+    ecrPullPermissionAwsOrganizationId: ""
+
+  podAnnotations: {}
 
   environment:
     - name: SS_CONNECTION_STRING
@@ -65,7 +67,10 @@ app:
 
 gendis:
   enabled: true
-  fullNameOverrride: ""
+  fullnameOverride: ""
+  labels: {}
+  podAnnotations: {}
+  podLabels: {}
   image:
     repository: dfdsdk/dafda-gendis
     pullPolicy: Always
@@ -92,7 +97,7 @@ gendis:
       cpu: "200m"
   serviceAccount:
     # Specifies whether a service account should be created
-    create: true
+    create: false
     # Annotations to add to the service account
     annotations: {}
     # The name of the service account to use.
@@ -121,8 +126,6 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-podAnnotations: {}
-
 podSecurityContext: {}
   # fsGroup: 2000
 
@@ -146,14 +149,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   match: Host(`localhost`)
-  matches:
-    - name: selfservice-api
-      match: Host(`build.dfds.cloud`) && PathPrefix(`/api`)
-      priority: 101
-      prefix: "/api"
-    - name: selfservice-api-pub
-      match: Host(`api.hellman.oxygen.dfds.cloud`) && PathPrefix(`/ssu/api`)
-      prefix: "/ssu/api"
+  matches: []
   middlewares: []
   services: []
   routes: []
