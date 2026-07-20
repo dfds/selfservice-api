@@ -15,6 +15,9 @@ concurrency:
 jobs:
   test:
     name: Build and test
+    # Only run for PRs from branches in this repo (i.e. org members with write
+    # access), not from forks — avoids strangers burning runners on a public repo.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-22.04
     defaults:
       run:
