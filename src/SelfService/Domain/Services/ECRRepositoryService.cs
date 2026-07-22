@@ -40,7 +40,7 @@ public class ECRRepositoryService : IECRRepositoryService
     {
         return _ecrRepositoryRepository.HasRepository(repositoryName);
     }
-
+cloud
     public Task<IEnumerable<ECRRepository>> GetAllECRRepositories()
     {
         return _ecrRepositoryRepository.GetAll();
