@@ -934,12 +934,7 @@ public class Permission
             new(RbacNamespace.Rbac, "create", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "update", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "delete", "Manage RBAC", RbacAccessType.Global),
-            new(
-                RbacNamespace.ServiceCatalogue,
-                "read",
-                "Read service catalogue resources",
-                RbacAccessType.Global
-            ),
+            new(RbacNamespace.ServiceCatalogue, "read", "Read service catalogue resources", RbacAccessType.Global),
             new(
                 RbacNamespace.SystemLegacy,
                 "read",
@@ -952,30 +947,10 @@ public class Permission
                 "View deleted capabilities",
                 RbacAccessType.Global
             ),
-            new(
-                RbacNamespace.SystemAdmin,
-                "unset-capability-tags",
-                "Unset capability tags",
-                RbacAccessType.Global
-            ),
-            new(
-                RbacNamespace.SystemAdmin,
-                "create-demo-recording",
-                "Create demo recordings",
-                RbacAccessType.Global
-            ),
-            new(
-                RbacNamespace.SystemAdmin,
-                "update-demo-recording",
-                "Update demo recordings",
-                RbacAccessType.Global
-            ),
-            new(
-                RbacNamespace.SystemAdmin,
-                "delete-demo-recording",
-                "Delete demo recordings",
-                RbacAccessType.Global
-            ),
+            new(RbacNamespace.SystemAdmin, "unset-capability-tags", "Unset capability tags", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "create-demo-recording", "Create demo recordings", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "update-demo-recording", "Update demo recordings", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "delete-demo-recording", "Delete demo recordings", RbacAccessType.Global),
             new(
                 RbacNamespace.SystemAdmin,
                 "manage-permission-matrix",
@@ -1000,18 +975,8 @@ public class Permission
                 "Manage self-assessment options",
                 RbacAccessType.Global
             ),
-            new(
-                RbacNamespace.SystemAdmin,
-                "create-release-notes",
-                "Create release notes",
-                RbacAccessType.Global
-            ),
-            new(
-                RbacNamespace.SystemAdmin,
-                "update-release-note",
-                "Update release note",
-                RbacAccessType.Global
-            ),
+            new(RbacNamespace.SystemAdmin, "create-release-notes", "Create release notes", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "update-release-note", "Update release note", RbacAccessType.Global),
             new(
                 RbacNamespace.SystemAdmin,
                 "toggle-release-note-is-active",
@@ -1024,12 +989,7 @@ public class Permission
                 "List draft release notes",
                 RbacAccessType.Global
             ),
-            new(
-                RbacNamespace.SystemAdmin,
-                "remove-release-note",
-                "Remove release note",
-                RbacAccessType.Global
-            ),
+            new(RbacNamespace.SystemAdmin, "remove-release-note", "Remove release note", RbacAccessType.Global),
             new(RbacNamespace.SystemAdmin, "create-event", "Create events", RbacAccessType.Global),
             new(RbacNamespace.SystemAdmin, "update-event", "Update events", RbacAccessType.Global),
             new(RbacNamespace.SystemAdmin, "delete-event", "Delete events", RbacAccessType.Global),

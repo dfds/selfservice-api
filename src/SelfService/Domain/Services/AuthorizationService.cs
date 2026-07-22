@@ -310,13 +310,7 @@ public class AuthorizationService : IAuthorizationService
         {
             return false;
         }
-        return await HasPermission(
-            userId,
-            RbacAccessType.Capability,
-            RbacNamespace.Aws,
-            "read",
-            account.CapabilityId
-        );
+        return await HasPermission(userId, RbacAccessType.Capability, RbacNamespace.Aws, "read", account.CapabilityId);
     }
 
     public async Task<bool> CanViewAwsAccountInformation(UserId userId, CapabilityId capabilityId)
@@ -330,13 +324,7 @@ public class AuthorizationService : IAuthorizationService
             return false;
         }
 
-        return await HasPermission(
-            userId,
-            RbacAccessType.Capability,
-            RbacNamespace.Aws,
-            "read",
-            account.CapabilityId
-        );
+        return await HasPermission(userId, RbacAccessType.Capability, RbacNamespace.Aws, "read", account.CapabilityId);
     }
 
     public async Task<bool> CanRequestAwsAccount(UserId userId, CapabilityId capabilityId)
@@ -359,24 +347,12 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanRequestAzureResource(UserId userId, CapabilityId capabilityId, string environment)
     {
-        return await HasPermission(
-            userId,
-            RbacAccessType.Capability,
-            RbacNamespace.Azure,
-            "create",
-            capabilityId
-        );
+        return await HasPermission(userId, RbacAccessType.Capability, RbacNamespace.Azure, "create", capabilityId);
     }
 
     public async Task<bool> CanRequestAzureResources(UserId userId, CapabilityId capabilityId)
     {
-        return await HasPermission(
-            userId,
-            RbacAccessType.Capability,
-            RbacNamespace.Azure,
-            "create",
-            capabilityId
-        );
+        return await HasPermission(userId, RbacAccessType.Capability, RbacNamespace.Azure, "create", capabilityId);
     }
 
     public async Task<bool> CanLeave(UserId userId, CapabilityId capabilityId)
@@ -551,13 +527,7 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task<bool> CanSeeAwsAccountId(PortalUser portalUser, CapabilityId capabilityId)
     {
-        return await HasPermission(
-            portalUser.Id,
-            RbacAccessType.Capability,
-            RbacNamespace.Aws,
-            "read",
-            capabilityId
-        );
+        return await HasPermission(portalUser.Id, RbacAccessType.Capability, RbacNamespace.Aws, "read", capabilityId);
     }
 
     public async Task<bool> CanRetryCreatingMessageContract(PortalUser portalUser, MessageContractId messageContractId)

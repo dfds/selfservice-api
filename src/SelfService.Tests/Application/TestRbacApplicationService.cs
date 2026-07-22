@@ -758,5 +758,4 @@ public class TestRbacApplicationService
         );
         */
     }
-
 }
