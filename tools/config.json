@@ -1,57 +1,302 @@
 {
     "debug": true,
-    "apiUrl": "http://localhost:8080",
-    "cloudengineers": [
-        "andfris@dfds.com"
+    "apiUrl": "https://ssu-preview.hellman.oxygen.dfds.cloud/api",
+    "groups": [
+        {
+            "name": "CloudEngineers",
+            "existingId": "BA0AA734-206D-454E-AC95-14855B6901E4",
+            "roles": [
+                {
+                    "roleName": "CloudEngineer",
+                    "scope": "Global"
+                }
+            ],
+            "members": [
+                "andfris@dfds.com",
+                "emcla@dfds.com"
+            ]
+        },
+        {
+            "name": "BatchCapabilityCreators",
+            "existingId": "899F8F9E-3F7E-4EF3-A2CD-2E1DDA78E40A",
+            "roles": [
+                {
+                    "roleName": "BatchCapabilityCreator",
+                    "scope": "Global"
+                }
+            ],
+            "members": []
+        },
+        {
+            "name": "ServiceCatalogueReaders",
+            "existingId": "7D3D7498-9075-4D1B-B6C1-AF6E95788C3B",
+            "roles": [
+                {
+                    "roleName": "ServiceCatalogueReader",
+                    "scope": "Global"
+                }
+            ],
+            "members": []
+        }
     ],
-    "cloudengineerRoles": [{
-        "roleName": "Owner",
-        "scope": "Global"
-    }],
     "roles": [
         {
             "name": "Owner",
+            "existingId": "36202DFB-D106-440D-8B99-F11BC8D77C9C",
             "permissions": {
-                "topics": ["create", "read-public", "read-private", "update", "delete"],
-                "capability-management": ["receive-alerts", "receive-cost", "request-deletion", "manage-permissions", "read-self-assess", "create-self-assess"],
-                "capability-membership-management": ["create", "delete", "read", "read-requests", "manage-requests"],
-                "tags-and-metadata": ["create", "read", "update", "delete"],
-                "aws": ["create", "read", "manage-provider", "read-provider"],
-                "finout": ["read-dashboards", "manage-dashboards", "manage-alerts", "read-alerts"],
-                "azure": ["create", "read", "read-provider", "manage-provider"],
-                "rbac": ["create", "read", "update", "delete"]
+                "topics": [
+                    "create",
+                    "read-public",
+                    "read-private",
+                    "update",
+                    "delete"
+                ],
+                "capability-management": [
+                    "receive-alerts",
+                    "receive-cost",
+                    "request-deletion",
+                    "manage-permissions",
+                    "read-self-assess",
+                    "create-self-assess"
+                ],
+                "capability-membership-management": [
+                    "create",
+                    "delete",
+                    "read",
+                    "read-requests",
+                    "manage-requests"
+                ],
+                "tags-and-metadata": [
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+                ],
+                "aws": [
+                    "create",
+                    "read",
+                    "manage-provider",
+                    "read-provider"
+                ],
+                "finout": [
+                    "read-dashboards",
+                    "manage-dashboards",
+                    "manage-alerts",
+                    "read-alerts"
+                ],
+                "azure": [
+                    "create",
+                    "read",
+                    "read-provider",
+                    "manage-provider"
+                ],
+                "rbac": [
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+                ]
             }
         },
         {
             "name": "Contributor",
+            "existingId": "2C561A6D-90F4-4649-80B3-76A854A64EA2",
             "permissions": {
-                "topics": ["create", "read-public", "read-private", "update", "delete"],
-                "capability-management": ["receive-alerts"],
-                "capability-membership-management": ["create", "read", "read-requests", "manage-requests"],
-                "tags-and-metadata": ["create", "read", "update", "delete"],
-                "aws": ["create", "read", "manage-provider", "read-provider"],
-                "finout": ["read-dashboards", "manage-dashboards", "manage-alerts", "read-alerts"],
-                "azure": ["create", "read", "read-provider", "manage-provider"]
+                "topics": [
+                    "create",
+                    "read-public",
+                    "read-private",
+                    "update",
+                    "delete"
+                ],
+                "capability-management": [
+                    "receive-alerts"
+                ],
+                "capability-membership-management": [
+                    "create",
+                    "read",
+                    "read-requests",
+                    "manage-requests"
+                ],
+                "tags-and-metadata": [
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+                ],
+                "aws": [
+                    "create",
+                    "read",
+                    "manage-provider",
+                    "read-provider"
+                ],
+                "finout": [
+                    "read-dashboards",
+                    "manage-dashboards",
+                    "manage-alerts",
+                    "read-alerts"
+                ],
+                "azure": [
+                    "create",
+                    "read",
+                    "read-provider",
+                    "manage-provider"
+                ]
             }
         },
         {
             "name": "Reader",
+            "existingId": "22DAB91B-C2D8-4840-A173-1416EF1B882D",
             "permissions": {
-                "topics": ["read-public", "read-private"],
-                "capability-membership-management": ["read", "read-requests"],
-                "tags-and-metadata": ["read"],
-                "aws": ["read", "read-provider"],
-                "finout": ["read-dashboards", "read-alerts"],
-                "azure": ["read", "read-provider"]
+                "topics": [
+                    "read-public",
+                    "read-private"
+                ],
+                "capability-membership-management": [
+                    "read",
+                    "read-requests"
+                ],
+                "tags-and-metadata": [
+                    "read"
+                ],
+                "aws": [
+                    "read",
+                    "read-provider"
+                ],
+                "finout": [
+                    "read-dashboards",
+                    "read-alerts"
+                ],
+                "azure": [
+                    "read",
+                    "read-provider"
+                ]
             }
         },
         {
             "name": "Guest",
+            "existingId": "F67CACC9-8DD4-4481-AC15-00B5DD83B046",
             "permissions": {
-                "topics": ["read-public"],
-                "capability-membership-management": ["read"],
-                "tags-and-metadata": ["read"],
-                "finout": ["read-dashboards"]
+                "topics": [
+                    "read-public"
+                ],
+                "capability-membership-management": [
+                    "read"
+                ],
+                "tags-and-metadata": [
+                    "read"
+                ],
+                "finout": [
+                    "read-dashboards"
+                ]
+            }
+        },
+        {
+            "name": "CloudEngineer",
+            "existingId": "5E32EE6A-1A73-4ACF-9C61-90E4D0D59261",
+            "permissions": {
+                "topics": [
+                    "create",
+                    "read-public",
+                    "read-private",
+                    "update",
+                    "delete"
+                ],
+                "capability-management": [
+                    "receive-alerts",
+                    "receive-cost",
+                    "request-deletion",
+                    "manage-permissions",
+                    "read-self-assess",
+                    "create-self-assess",
+                    "batch-create-capabilities"
+                ],
+                "capability-membership-management": [
+                    "create",
+                    "delete",
+                    "read",
+                    "read-requests",
+                    "manage-requests"
+                ],
+                "tags-and-metadata": [
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+                ],
+                "aws": [
+                    "create",
+                    "read",
+                    "manage-provider",
+                    "read-provider"
+                ],
+                "finout": [
+                    "read-dashboards",
+                    "manage-dashboards",
+                    "manage-alerts",
+                    "read-alerts"
+                ],
+                "azure": [
+                    "create",
+                    "read",
+                    "read-provider",
+                    "manage-provider"
+                ],
+                "rbac": [
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+                ],
+                "service-catalogue": [
+                    "read"
+                ],
+                "system-legacy": [
+                    "read"
+                ],
+                "system-admin": [
+                    "view-deleted-capabilities",
+                    "unset-capability-tags",
+                    "create-demo-recording",
+                    "update-demo-recording",
+                    "delete-demo-recording",
+                    "manage-permission-matrix",
+                    "synchronize-aws-ecr-and-database-ecr",
+                    "bypass-membership-approvals",
+                    "manage-self-assessment-options",
+                    "create-release-notes",
+                    "update-release-note",
+                    "toggle-release-note-is-active",
+                    "list-draft-release-notes",
+                    "remove-release-note",
+                    "create-event",
+                    "update-event",
+                    "delete-event",
+                    "create-news-item",
+                    "update-news-item",
+                    "delete-news-item",
+                    "get-user-emails",
+                    "delete-membership-application-as-admin",
+                    "retry-creating-message-contract"
+                ]
+            }
+        },
+        {
+            "name": "BatchCapabilityCreator",
+            "existingId": "6A2EE52C-6A9B-4A2A-B9C8-5851DD2D9A6F",
+            "permissions": {
+                "capability-management": [
+                    "batch-create-capabilities"
+                ]
+            }
+        },
+        {
+            "name": "ServiceCatalogueReader",
+            "existingId": "A983CF2E-772E-437D-B9D8-5DDF769339D3",
+            "permissions": {
+                "service-catalogue": [
+                    "read"
+                ]
             }
         }
     ]

@@ -36,7 +36,7 @@ public interface IAuthorizationService
     Task<bool> CanGetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId);
     Task<bool> CanSetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId);
     bool CanBypassMembershipApprovals(PortalUser portalUser);
-    bool CanBatchCreateCapabilities(PortalUser portalUser, UserId userId);
+    bool CanBatchCreateCapabilities(PortalUser portalUser);
     Task<bool> CanDeleteMembershipApplication(
         PortalUser portalUser,
         UserId userId,
