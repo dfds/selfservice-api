@@ -172,7 +172,8 @@ public class RbacApplicationService : IRbacApplicationService
             user,
             () =>
                 _permissionGrantRepository.GetAllWithPredicate(p =>
-                    p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
+                    p.AssignedEntityType == AssignedEntityType.User
+                    && string.Equals(p.AssignedEntityId, user, StringComparison.OrdinalIgnoreCase)
                 )
         );
     }
@@ -184,7 +185,8 @@ public class RbacApplicationService : IRbacApplicationService
             user,
             () =>
                 _roleGrantRepository.GetAllWithPredicate(p =>
-                    p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
+                    p.AssignedEntityType == AssignedEntityType.User
+                    && string.Equals(p.AssignedEntityId, user, StringComparison.OrdinalIgnoreCase)
                 )
         );
     }
@@ -205,7 +207,8 @@ public class RbacApplicationService : IRbacApplicationService
             groupId,
             () =>
                 _permissionGrantRepository.GetAllWithPredicate(p =>
-                    p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
+                    p.AssignedEntityType == AssignedEntityType.Group
+                    && string.Equals(p.AssignedEntityId, groupId, StringComparison.OrdinalIgnoreCase)
                 )
         );
     }
@@ -217,7 +220,8 @@ public class RbacApplicationService : IRbacApplicationService
             roleId,
             () =>
                 _permissionGrantRepository.GetAllWithPredicate(p =>
-                    p.AssignedEntityType == AssignedEntityType.Role && p.AssignedEntityId == roleId
+                    p.AssignedEntityType == AssignedEntityType.Role
+                    && string.Equals(p.AssignedEntityId, roleId, StringComparison.OrdinalIgnoreCase)
                 )
         );
     }
@@ -266,7 +270,8 @@ public class RbacApplicationService : IRbacApplicationService
             groupId,
             () =>
                 _roleGrantRepository.GetAllWithPredicate(p =>
-                    p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
+                    p.AssignedEntityType == AssignedEntityType.Group
+                    && string.Equals(p.AssignedEntityId, groupId, StringComparison.OrdinalIgnoreCase)
                 )
         );
     }
