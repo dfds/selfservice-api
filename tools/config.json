@@ -1,6 +1,6 @@
 {
     "debug": true,
-    "apiUrl": "http://localhost:8080",
+    "apiUrl": "https://ssu-preview.hellman.oxygen.dfds.cloud/api",
     "groups": [
         {
             "name": "CloudEngineers",

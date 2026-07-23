@@ -4,6 +4,7 @@ using SelfService.Infrastructure.Api.RBAC;
 
 namespace SelfService.Infrastructure.Api.Catalog;
 
+// RbacConfig "id" is not used in this controller, but is required to satisfy the RbacConfig attribute. The controller is protected by RequiresPermission attributes on each action.
 [Route("catalog")]
 [RbacConfig(nameof(RbacObjectType.Global), "id")]
 [Produces("application/json")]
@@ -23,7 +24,7 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet("applications")]
-    [RequiresPermission("service-catalogue", "service-catalogue-read")]
+    [RequiresPermission("service-catalogue", "read")]
     [ProducesResponseType(typeof(CatalogApplicationsApiResource), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetApplications(
         [FromQuery] string? capabilityId,
@@ -47,7 +48,7 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet("namespaces")]
-    [RequiresPermission("service-catalogue", "service-catalogue-read")]
+    [RequiresPermission("service-catalogue", "read")]
     [ProducesResponseType(typeof(CatalogNamespacesApiResource), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetNamespaces(CancellationToken cancellationToken)
     {
@@ -56,7 +57,7 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet("dependencies")]
-    [RequiresPermission("service-catalogue", "service-catalogue-read")]
+    [RequiresPermission("service-catalogue", "read")]
     [ProducesResponseType(typeof(CatalogDependenciesApiResource), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDependencies(
         [FromQuery] string? @namespace,

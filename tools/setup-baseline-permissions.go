@@ -135,7 +135,16 @@ func main() {
 				log.Printf("- WARNING: role '%s' has unexpected permission '%s' in namespace '%s'. Please review manually.", role.Name, p, namespace)
 			}
 			for _, p := range missingPermissions {
-				grantPermission(config, "Role", roleId, namespace, p)
+				if err := grantPermission(config, "Role", roleId, namespace, p); err != nil {
+					log.Fatalf(
+						"failed to grant missing permission for role '%s' (roleId='%s', namespace='%s', permission='%s'): %v",
+						role.Name,
+						roleId,
+						namespace,
+						p,
+						err,
+					)
+				}
 			}
 		}
 	}
@@ -176,7 +185,8 @@ func main() {
 
 	for _, groupSpec := range managedGroups {
 		ensureGroupRoles(config, groupSpec, availableGroups, availableRoles)
-		ensureGroupMembers(config, groupSpec, availableGroups)
+		//ensureGroupMembers(config, groupSpec, availableGroups)
+		log.Printf("Skipping member synchronization for group '%s' (members are managed manually).", groupSpec.Name)
 	}
 
 	if config.Debug {
@@ -732,7 +742,7 @@ func normalizePermissionMap(input map[string][]string) map[string][]string {
 	return output
 }
 
-func grantPermission(config *Config, entityType, entityId, namespace, permission string) {
+func grantPermission(config *Config, entityType, entityId, namespace, permission string) error {
 	url := fmt.Sprintf("%s/rbac/permission/grant", config.ApiUrl)
 
 	payload := PermissionGrantCreation{
@@ -744,6 +754,17 @@ func grantPermission(config *Config, entityType, entityId, namespace, permission
 		Resource:           "*",
 	}
 	body, _ := json.Marshal(payload)
+	if config.Debug {
+		log.Printf(
+			">> Granting missing permission: entityType='%s', entityId='%s', namespace='%s', permission='%s', type='%s', resource='%s'",
+			entityType,
+			entityId,
+			namespace,
+			permission,
+			payload.Type,
+			payload.Resource,
+		)
+	}
 
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	req.Header.Set("Authorization", "Bearer "+config.AccessToken)
@@ -752,17 +773,20 @@ func grantPermission(config *Config, entityType, entityId, namespace, permission
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatalf("failed to grant permission: %v", err)
+		return err
 	}
 	defer resp.Body.Close()
+	responseBody, _ := ioutil.ReadAll(resp.Body)
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent {
-		log.Fatalf("failed to grant permission, [error code %d]", resp.StatusCode)
+		return fmt.Errorf("status=%d response=%q", resp.StatusCode, string(responseBody))
 	}
 
 	if config.Debug {
 		log.Printf("- Granted missing permission '%s' in namespace '%s' to %s (%s).", permission, namespace, entityType, entityId)
 	}
+
+	return nil
 }
 
 func differences(a, b []string) (onlyInA, onlyInB []string) {
