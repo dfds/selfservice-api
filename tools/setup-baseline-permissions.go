@@ -45,6 +45,12 @@ func main() {
 	}
 
 	for _, role := range config.Roles {
+		if shouldSkipRole(role.Name) {
+			if config.Debug {
+				log.Printf("Skipping role '%s' in baseline sync (managed implicitly by API semantics).", role.Name)
+			}
+			continue
+		}
 		if _, exists := availableRoles[strings.ToLower(role.Name)]; !exists {
 			log.Printf("required role '%s' does not exist in the system; creating it...", role)
 			createRole(config, role)
@@ -55,6 +61,9 @@ func main() {
 	for name := range availableRoles {
 		found := false
 		for _, role := range config.Roles {
+			if shouldSkipRole(role.Name) {
+				continue
+			}
 			if strings.EqualFold(name, role.Name) {
 				found = true
 				break
@@ -89,6 +98,13 @@ func main() {
 	*/
 
 	for _, role := range config.Roles {
+		if shouldSkipRole(role.Name) {
+			if config.Debug {
+				log.Printf(">> Skipping permissions verification for role: %s", role.Name)
+			}
+			continue
+		}
+
 		if config.Debug {
 			log.Printf(">> Verifying permissions for role: %s", role.Name)
 		}
@@ -103,18 +119,17 @@ func main() {
 			log.Fatalf("failed to fetch permissions for role '%s': %v", role.Name, err)
 		}
 
-		for namespace, perms := range role.Permissions {
-			expectedPerms, ok := role.Permissions[namespace]
-			if !ok {
-				log.Printf("- WARNING: role '%s' has unexpected namespace '%s' with permissions %v. Please review manually.", role.Name, namespace, perms)
-				continue
-			}
-			// if namespace exists in current permissions else empty slice
-			existingPerms, okExisting := permissions[namespace]
-			if !okExisting {
-				existingPerms = []string{}
-			}
+		normalizedExpected := normalizePermissionMap(role.Permissions)
+		normalizedExisting := normalizePermissionMap(permissions)
 
+		for namespace, existingPerms := range normalizedExisting {
+			if _, ok := normalizedExpected[namespace]; !ok {
+				log.Printf("- WARNING: role '%s' has unexpected namespace '%s' with permissions %v. Please review manually.", role.Name, namespace, existingPerms)
+			}
+		}
+
+		for namespace, expectedPerms := range normalizedExpected {
+			existingPerms := normalizedExisting[namespace]
 			extraPermissions, missingPermissions := differences(existingPerms, expectedPerms)
 			for _, p := range extraPermissions {
 				log.Printf("- WARNING: role '%s' has unexpected permission '%s' in namespace '%s'. Please review manually.", role.Name, p, namespace)
@@ -133,27 +148,7 @@ func main() {
 		log.Println(">> Consolidating groups...")
 	}
 
-	managedGroups := []ManagedGroup{
-		{
-			Name:    "CloudEngineers",
-			Roles:   config.CloudEngineerRoles,
-			Members: config.Cloudengineers,
-		},
-		{
-			Name: "BatchCapabilityCreators",
-			Roles: []RoleBinding{
-				{RoleName: "BatchCapabilityCreator", Scope: "Global"},
-			},
-			Members: config.BatchCapabilityCreators,
-		},
-		{
-			Name: "ServiceCatalogueReaders",
-			Roles: []RoleBinding{
-				{RoleName: "ServiceCatalogueReader", Scope: "Global"},
-			},
-			Members: config.ServiceCatalogueReaders,
-		},
-	}
+	managedGroups := resolveManagedGroups(config)
 
 	availableGroups, err := fetchGroups(config)
 	if err != nil {
@@ -174,8 +169,8 @@ func main() {
 
 	if config.Debug {
 		log.Println("Now Available groups:")
-		for name, id := range availableGroups {
-			log.Printf(" - %s (ID: %s)", name, id)
+		for name, group := range availableGroups {
+			log.Printf(" - %s (ID: %s)", name, group.ID)
 		}
 	}
 
@@ -221,9 +216,16 @@ type ManagedGroup struct {
 	Members []string
 }
 
+type ManagedGroupConfig struct {
+	Name    string        `json:"name"`
+	Roles   []RoleBinding `json:"roles"`
+	Members []string      `json:"members"`
+}
+
 type Config struct {
 	Debug                   bool          `json:"debug"`
 	ApiUrl                  string        `json:"apiUrl"`
+	Groups                  []ManagedGroupConfig `json:"groups"`
 	Cloudengineers          []string      `json:"cloudengineers"`
 	BatchCapabilityCreators []string      `json:"batchCapabilityCreators"`
 	ServiceCatalogueReaders []string      `json:"serviceCatalogueReaders"`
@@ -488,7 +490,7 @@ func assignRole(config *Config, roleId, assignedEntityType, assignedEntityId, as
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent {
 		b, _ := ioutil.ReadAll(resp.Body)
 		return fmt.Errorf("failed to assign role: %s, [error code %d]", string(b), resp.StatusCode)
 	}
@@ -536,7 +538,12 @@ func ensureGroupRoles(config *Config, groupSpec ManagedGroup, availableGroups ma
 
 	existingRoleGrants := make(map[string]RoleAssignment)
 	for _, assignment := range roleAssignments {
-		key := fmt.Sprintf("%s|%s|%s", assignment.RoleId, strings.ToLower(assignment.Type), assignment.Resource)
+		key := fmt.Sprintf(
+			"%s|%s|%s",
+			assignment.RoleId,
+			strings.ToLower(strings.TrimSpace(assignment.Type)),
+			normalizeGrantResource(assignment.Type, assignment.Resource),
+		)
 		existingRoleGrants[key] = assignment
 	}
 
@@ -552,11 +559,17 @@ func ensureGroupRoles(config *Config, groupSpec ManagedGroup, availableGroups ma
 			assignmentType = "Global"
 		}
 
-		key := fmt.Sprintf("%s|%s|*", roleID, strings.ToLower(assignmentType))
+		key := fmt.Sprintf(
+			"%s|%s|%s",
+			roleID,
+			strings.ToLower(assignmentType),
+			normalizeGrantResource(assignmentType, "*"),
+		)
 		expectedRoleGrants[key] = binding
 
 		if _, granted := existingRoleGrants[key]; !granted {
-			if err := assignRole(config, roleID, "Group", group.ID, assignmentType, "*"); err != nil {
+			resource := normalizeGrantResource(assignmentType, "*")
+			if err := assignRole(config, roleID, "Group", group.ID, assignmentType, resource); err != nil {
 				log.Fatalf("failed to assign role '%s' to group '%s': %v", binding.RoleName, groupSpec.Name, err)
 			}
 			if config.Debug {
@@ -570,6 +583,45 @@ func ensureGroupRoles(config *Config, groupSpec ManagedGroup, availableGroups ma
 			log.Printf("- WARNING: group '%s' has unexpected role assignment (roleId='%s', type='%s', resource='%s'). Please review manually.", groupSpec.Name, assignment.RoleId, assignment.Type, assignment.Resource)
 		}
 	}
+}
+
+func resolveManagedGroups(config *Config) []ManagedGroup {
+	if len(config.Groups) > 0 {
+		groups := make([]ManagedGroup, 0, len(config.Groups))
+		for _, g := range config.Groups {
+			groups = append(groups, ManagedGroup{Name: g.Name, Roles: g.Roles, Members: g.Members})
+		}
+		return groups
+	}
+
+	return []ManagedGroup{
+		{
+			Name:    "CloudEngineers",
+			Roles:   config.CloudEngineerRoles,
+			Members: config.Cloudengineers,
+		},
+		{
+			Name: "BatchCapabilityCreators",
+			Roles: []RoleBinding{
+				{RoleName: "BatchCapabilityCreator", Scope: "Global"},
+			},
+			Members: config.BatchCapabilityCreators,
+		},
+		{
+			Name: "ServiceCatalogueReaders",
+			Roles: []RoleBinding{
+				{RoleName: "ServiceCatalogueReader", Scope: "Global"},
+			},
+			Members: config.ServiceCatalogueReaders,
+		},
+	}
+}
+
+func normalizeGrantResource(scope, resource string) string {
+	if strings.EqualFold(strings.TrimSpace(scope), "Global") {
+		return ""
+	}
+	return strings.TrimSpace(resource)
 }
 
 func ensureGroupMembers(config *Config, groupSpec ManagedGroup, availableGroups map[string]Group) {
@@ -639,10 +691,45 @@ func fetchPermissionsForRole(config *Config, roleId string) (map[string][]string
 
 	permissionMap := make(map[string][]string)
 	for _, p := range permissions {
+		// Baseline script manages global role permissions only.
+		if !strings.EqualFold(p.Type, "Global") {
+			continue
+		}
 		permissionMap[p.Namespace] = append(permissionMap[p.Namespace], p.Permission)
 	}
 
 	return permissionMap, nil
+}
+
+func shouldSkipRole(roleName string) bool {
+	return strings.EqualFold(strings.TrimSpace(roleName), "Guest")
+}
+
+func normalizePermissionMap(input map[string][]string) map[string][]string {
+	output := make(map[string][]string, len(input))
+	for namespace, permissions := range input {
+		ns := strings.TrimSpace(strings.ToLower(namespace))
+		if ns == "" {
+			continue
+		}
+
+		seen := map[string]struct{}{}
+		normalized := make([]string, 0, len(permissions))
+		for _, permission := range permissions {
+			p := strings.TrimSpace(strings.ToLower(permission))
+			if p == "" {
+				continue
+			}
+			if _, exists := seen[p]; exists {
+				continue
+			}
+			seen[p] = struct{}{}
+			normalized = append(normalized, p)
+		}
+
+		output[ns] = normalized
+	}
+	return output
 }
 
 func grantPermission(config *Config, entityType, entityId, namespace, permission string) {
