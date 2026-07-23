@@ -24,7 +24,6 @@ public class when_getting_membership_application_for_applicant : IAsyncLifetime
         application.ReplaceService<IMembershipApplicationQuery>(
             new StubMembershipApplicationQuery(_aMembershipApplication)
         );
-        /*
         application.ReplaceService<IRbacPermissionGrantRepository>(
             new StubRbacPermissionGrantRepository(
                 permissions: new[]
@@ -40,7 +39,6 @@ public class when_getting_membership_application_for_applicant : IAsyncLifetime
                 }
             )
         );
-        */
         application.ReplaceService<IRbacRoleGrantRepository>(new StubRbacRoleGrantRepository());
         application.ReplaceService<IPermissionQuery>(new StubPermissionQuery());
 

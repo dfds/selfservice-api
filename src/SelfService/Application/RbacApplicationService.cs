@@ -35,12 +35,6 @@ public class RbacApplicationService : IRbacApplicationService
         _cache = new RbacCache();
     }
 
-    /*
-        [Note 2025-09-18 by andfris]
-        The permission checks in this service are commented out for now, as they interfere with bootstrapping
-        and with the Cloud Engineer role which is supposed to have blanket permissions.
-    */
-
     public async Task<PermittedResponse> IsUserPermitted(string user, List<Permission> permissions, string objectId)
     {
         var resp = new PermittedResponse();
@@ -178,7 +172,8 @@ public class RbacApplicationService : IRbacApplicationService
             user,
             () =>
                 _permissionGrantRepository.GetAllWithPredicate(p =>
-                    p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
+                    p.AssignedEntityType == AssignedEntityType.User
+                    && string.Equals(p.AssignedEntityId, user, StringComparison.OrdinalIgnoreCase)
                 )
         );
     }
@@ -190,7 +185,8 @@ public class RbacApplicationService : IRbacApplicationService
             user,
             () =>
                 _roleGrantRepository.GetAllWithPredicate(p =>
-                    p.AssignedEntityType == AssignedEntityType.User && p.AssignedEntityId == user
+                    p.AssignedEntityType == AssignedEntityType.User
+                    && string.Equals(p.AssignedEntityId, user, StringComparison.OrdinalIgnoreCase)
                 )
         );
     }
@@ -211,7 +207,8 @@ public class RbacApplicationService : IRbacApplicationService
             groupId,
             () =>
                 _permissionGrantRepository.GetAllWithPredicate(p =>
-                    p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
+                    p.AssignedEntityType == AssignedEntityType.Group
+                    && string.Equals(p.AssignedEntityId, groupId, StringComparison.OrdinalIgnoreCase)
                 )
         );
     }
@@ -223,7 +220,8 @@ public class RbacApplicationService : IRbacApplicationService
             roleId,
             () =>
                 _permissionGrantRepository.GetAllWithPredicate(p =>
-                    p.AssignedEntityType == AssignedEntityType.Role && p.AssignedEntityId == roleId
+                    p.AssignedEntityType == AssignedEntityType.Role
+                    && string.Equals(p.AssignedEntityId, roleId, StringComparison.OrdinalIgnoreCase)
                 )
         );
     }
@@ -272,7 +270,8 @@ public class RbacApplicationService : IRbacApplicationService
             groupId,
             () =>
                 _roleGrantRepository.GetAllWithPredicate(p =>
-                    p.AssignedEntityType == AssignedEntityType.Group && p.AssignedEntityId == groupId
+                    p.AssignedEntityType == AssignedEntityType.Group
+                    && string.Equals(p.AssignedEntityId, groupId, StringComparison.OrdinalIgnoreCase)
                 )
         );
     }
@@ -838,6 +837,8 @@ public class Permission
     public RbacNamespace Namespace { get; set; } = RbacNamespace.Default;
     public RbacAccessType AccessType { get; set; } = RbacAccessType.Capability;
 
+    // Canonical catalog of known RBAC permissions exposed by the application.
+    // The database stores the actual permission grants (who/what has which permission and scope).
     public static List<Permission> BootstrapPermissions()
     {
         var permissions = new List<Permission>
@@ -938,10 +939,85 @@ public class Permission
             new(RbacNamespace.Rbac, "create", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "update", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "delete", "Manage RBAC", RbacAccessType.Global),
+            new(RbacNamespace.ServiceCatalogue, "read", "Read service catalogue resources", RbacAccessType.Global),
             new(
                 RbacNamespace.SystemLegacy,
                 "read",
                 "Read legacy system data (e.g. AAD-AWS sync capability list)",
+                RbacAccessType.Global
+            ),
+            new(
+                RbacNamespace.SystemAdmin,
+                "view-deleted-capabilities",
+                "View deleted capabilities",
+                RbacAccessType.Global
+            ),
+            new(RbacNamespace.SystemAdmin, "unset-capability-tags", "Unset capability tags", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "create-demo-recording", "Create demo recordings", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "update-demo-recording", "Update demo recordings", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "delete-demo-recording", "Delete demo recordings", RbacAccessType.Global),
+            new(
+                RbacNamespace.SystemAdmin,
+                "manage-permission-matrix",
+                "Manage permission matrix",
+                RbacAccessType.Global
+            ),
+            new(
+                RbacNamespace.SystemAdmin,
+                "synchronize-aws-ecr-and-database-ecr",
+                "Synchronize AWS ECR and database ECR",
+                RbacAccessType.Global
+            ),
+            new(
+                RbacNamespace.SystemAdmin,
+                "bypass-membership-approvals",
+                "Bypass membership approvals",
+                RbacAccessType.Global
+            ),
+            new(
+                RbacNamespace.SystemAdmin,
+                "manage-self-assessment-options",
+                "Manage self-assessment options",
+                RbacAccessType.Global
+            ),
+            new(RbacNamespace.SystemAdmin, "create-release-notes", "Create release notes", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "update-release-note", "Update release note", RbacAccessType.Global),
+            new(
+                RbacNamespace.SystemAdmin,
+                "toggle-release-note-is-active",
+                "Toggle release note active state",
+                RbacAccessType.Global
+            ),
+            new(
+                RbacNamespace.SystemAdmin,
+                "list-draft-release-notes",
+                "List draft release notes",
+                RbacAccessType.Global
+            ),
+            new(RbacNamespace.SystemAdmin, "remove-release-note", "Remove release note", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "create-event", "Create events", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "update-event", "Update events", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "delete-event", "Delete events", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "create-news-item", "Create news items", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "update-news-item", "Update news items", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "delete-news-item", "Delete news items", RbacAccessType.Global),
+            new(RbacNamespace.SystemAdmin, "get-user-emails", "Get user emails", RbacAccessType.Global),
+            new(
+                RbacNamespace.CapabilityManagement,
+                "batch-create-capabilities",
+                "Create capabilities in batch as administrator",
+                RbacAccessType.Global
+            ),
+            new(
+                RbacNamespace.SystemAdmin,
+                "delete-membership-application-as-admin",
+                "Delete membership applications as administrator",
+                RbacAccessType.Global
+            ),
+            new(
+                RbacNamespace.SystemAdmin,
+                "retry-creating-message-contract",
+                "Retry failed message contract creation as administrator",
                 RbacAccessType.Global
             ),
         };

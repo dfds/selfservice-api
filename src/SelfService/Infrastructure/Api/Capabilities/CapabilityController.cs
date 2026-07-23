@@ -1774,12 +1774,12 @@ public class CapabilityController : ControllerBase
             return Unauthorized();
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.CanBatchCreateCapabilities(portalUser, userId))
+        if (!_authorizationService.CanBatchCreateCapabilities(portalUser))
             return Unauthorized(
                 new ProblemDetails
                 {
                     Title = "User unauthorized",
-                    Detail = "Only cloud engineers and selected users can create capabilities in batch.",
+                    Detail = "Missing permission to create capabilities in batch.",
                 }
             );
 
