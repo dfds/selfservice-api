@@ -125,9 +125,16 @@ public class StubRbacApplicationService : IRbacApplicationService
         throw new NotImplementedException();
     }
 
-    public Task GrantRoleGrant(string user, RbacRoleGrant roleGrant)
+    /// <summary>
+    /// Grants recorded by <see cref="GrantRoleGrant"/>. Route tests assert on this to prove a request
+    /// was rejected by the controller before it ever reached the service.
+    /// </summary>
+    public List<RbacRoleGrant> GrantedRoleGrants { get; } = new();
+
+    public Task GrantRoleGrant(string user, RbacRoleGrant roleGrant, bool userInitiated = false)
     {
-        throw new NotImplementedException();
+        GrantedRoleGrants.Add(roleGrant);
+        return Task.CompletedTask;
     }
 
     public Task<BulkGrantResult<RbacRoleGrant>> GrantRoleGrants(string user, List<RbacRoleGrant> grants)

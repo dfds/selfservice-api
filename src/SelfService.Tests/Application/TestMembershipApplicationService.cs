@@ -127,6 +127,9 @@ public class TestMembershipApplicationService
 
         Assert.NotNull(added);
         Assert.True(added!.IsFinalized);
-        rbacService.Verify(x => x.GrantRoleGrant(userId.ToString(), It.IsAny<RbacRoleGrant>()), Times.Once);
+        rbacService.Verify(
+            x => x.GrantRoleGrant(userId.ToString(), It.IsAny<RbacRoleGrant>(), It.IsAny<bool>()),
+            Times.Once
+        );
     }
 }

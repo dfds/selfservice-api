@@ -439,24 +439,79 @@ public class RbacApplicationService : IRbacApplicationService
         _cache.Reset();
     }
 
-    [TransactionalBoundary]
-    public async Task GrantRoleGrant(string user, RbacRoleGrant roleGrant)
+    // Resolves the same grant sources as IsUserPermitted (direct user grants, group grants and
+    // role-derived grants) but only accepts matches whose scope is Global. IsUserPermitted cannot
+    // express this: it ignores AccessType when matching, so a capability Owner whose role grant is
+    // rewritten to Capability/<their-capability> would satisfy a "global" check there.
+    private async Task<bool> HasGlobalPermission(string user, RbacNamespace ns, string name)
     {
-        //PermittedResponse? canUserCreateGlobalRbac;
-        switch (roleGrant.Type)
+        var userPermissions = await GetPermissionGrantsForUser(user);
+        var userRoles = await GetRoleGrantsForUser(user);
+
+        var groupPermissions = await _cache.GetOrAddAsync(
+            CacheConst.UserGroupPermissions,
+            user,
+            () => _permissionQuery.FindUserGroupPermissionsByUserId(user)
+        );
+        var groupRoles = await _cache.GetOrAddAsync(
+            CacheConst.UserGroupRoles,
+            user,
+            () => _permissionQuery.FindUserGroupRolesByUserId(user)
+        );
+
+        var combinedPermissions = userPermissions.Concat(groupPermissions).ToList();
+        var combinedRoles = userRoles.Concat(groupRoles).ToList();
+        combinedPermissions.AddRange(await GetPermissionGrantsForRoleGrants(combinedRoles));
+
+        return combinedPermissions.Any(p =>
+            p.Type == RbacAccessType.Global && p.Namespace == ns && p.Permission == name
+        );
+    }
+
+    [TransactionalBoundary]
+    public async Task GrantRoleGrant(string user, RbacRoleGrant roleGrant, bool userInitiated = false)
+    {
+        if (userInitiated)
         {
-            case var a when a == RbacAccessType.Global:
-                /*
-                canUserCreateGlobalRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
-                    roleGrant.Resource ?? ""
-                );
-                if (!canUserCreateGlobalRbac.Permitted())
+            var globalAdmin = await HasGlobalPermission(user, RbacNamespace.Rbac, "create");
+            if (!globalAdmin)
+            {
+                // A caller without global rbac/create may only grant within a capability they manage.
+                if (roleGrant.Type != RbacAccessType.Capability)
                 {
                     throw new UnauthorizedAccessException();
                 }
-                */
+
+                var canManage = (
+                    await IsUserPermitted(
+                        user,
+                        new List<Permission>
+                        {
+                            new(
+                                RbacNamespace.CapabilityManagement,
+                                "manage-permissions",
+                                "",
+                                RbacAccessType.Capability
+                            ),
+                        },
+                        roleGrant.Resource ?? ""
+                    )
+                ).Permitted();
+
+                var userGrantsToSelf =
+                    roleGrant.AssignedEntityType == AssignedEntityType.User
+                    && string.Equals(roleGrant.AssignedEntityId, user, StringComparison.OrdinalIgnoreCase);
+
+                if (!canManage || userGrantsToSelf)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+        }
+
+        switch (roleGrant.Type)
+        {
+            case var a when a == RbacAccessType.Global:
                 await _roleGrantRepository.Add(
                     RbacRoleGrant.New(
                         roleGrant.RoleId,
@@ -469,32 +524,6 @@ public class RbacApplicationService : IRbacApplicationService
 
                 break;
             case var a when a == RbacAccessType.Capability:
-                /*
-                canUserCreateGlobalRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
-                    roleGrant.Resource ?? ""
-                );
-                var canUserCreateCapabilityRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission>
-                    {
-                        new(RbacNamespace.CapabilityManagement, "manage-permissions", "", RbacAccessType.Capability),
-                    },
-                    roleGrant.Resource ?? ""
-                );
-                var userGrantsToSelf = canUserCreateGlobalRbac.Permitted()
-                    ? false
-                    : user == roleGrant.AssignedEntityId && roleGrant.AssignedEntityType == AssignedEntityType.User;
-
-                if (
-                    (!canUserCreateGlobalRbac.Permitted() && !canUserCreateCapabilityRbac.Permitted())
-                    || userGrantsToSelf
-                )
-                {
-                    throw new UnauthorizedAccessException();
-                }
-                */
                 if (roleGrant.Resource == null)
                 {
                     throw new BadHttpRequestException("Capability ID is required for capability role grants");
