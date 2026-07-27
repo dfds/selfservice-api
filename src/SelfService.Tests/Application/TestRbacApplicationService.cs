@@ -758,7 +758,7 @@ public class TestRbacApplicationService
         );
         */
     }
-    
+
     private static RbacPermissionGrant UserGrant(RbacAccessType type, string resource) =>
         new(
             id: RbacPermissionGrantId.New(),
