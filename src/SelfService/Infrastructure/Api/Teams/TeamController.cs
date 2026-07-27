@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Capabilities;
+using SelfService.Infrastructure.Api.RBAC;
 
 namespace SelfService.Infrastructure.Api.Teams;
 
 [Route("teams")]
 [Produces("application/json")]
 [ApiController]
+[RbacConfig(nameof(RbacObjectType.Global), "id")]
 public class TeamController : ControllerBase
 {
     private readonly ITeamApplicationService _teamApplicationService;
@@ -52,8 +54,10 @@ public class TeamController : ControllerBase
     }
 
     [HttpPost("")]
+    [RequiresPermission("system-admin", "manage-teams")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> AddTeam([FromBody] AddTeamRequest request)
     {
         if (!User.TryGetUserId(out var userId))
@@ -92,8 +96,10 @@ public class TeamController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [RequiresPermission("system-admin", "manage-teams")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> RemoveTeam([FromRoute] string id)
     {
         if (!TeamId.TryParse(id, out var teamId))
@@ -109,8 +115,10 @@ public class TeamController : ControllerBase
     }
 
     [HttpPost("{id}/capability-links/{capabilityId}")]
+    [RequiresPermission("system-admin", "manage-teams")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> AddLinkToCapability([FromRoute] string id, [FromRoute] string capabilityId)
     {
         if (!TeamId.TryParse(id, out var teamId))
@@ -144,8 +152,10 @@ public class TeamController : ControllerBase
     }
 
     [HttpDelete("{id}/capability-links/{capabilityId}")]
+    [RequiresPermission("system-admin", "manage-teams")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> RemoveLinkToCapability([FromRoute] string id, [FromRoute] string capabilityId)
     {
         if (!TeamId.TryParse(id, out var teamId))

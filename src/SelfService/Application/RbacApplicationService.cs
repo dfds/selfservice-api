@@ -1049,6 +1049,7 @@ public class Permission
                 "Retry failed message contract creation as administrator",
                 RbacAccessType.Global
             ),
+            new(RbacNamespace.SystemAdmin, "manage-teams", "Create, delete and link teams", RbacAccessType.Global),
         };
 
         return permissions;
