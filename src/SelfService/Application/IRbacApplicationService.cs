@@ -28,7 +28,15 @@ public interface IRbacApplicationService
     Task GrantPermission(string user, RbacPermissionGrant permissionGrant);
     Task<BulkGrantResult<RbacPermissionGrant>> GrantPermissions(string user, List<RbacPermissionGrant> grants);
     Task RevokePermission(string user, string id);
-    Task GrantRoleGrant(string user, RbacRoleGrant roleGrant);
+
+    /// <param name="userInitiated">
+    /// True when <paramref name="roleGrant"/> came from a caller-supplied request body rather than a
+    /// platform workflow. Enables authorization: global grants are refused, the caller must hold
+    /// capability-management/manage-permissions on roleGrant.Resource (or global rbac/create), and
+    /// self-grants are refused. Defaults to false, which preserves the trusted behaviour used by
+    /// capability bootstrap, membership approval, bulk import and the global /rbac endpoints.
+    /// </param>
+    Task GrantRoleGrant(string user, RbacRoleGrant roleGrant, bool userInitiated = false);
     Task<BulkGrantResult<RbacRoleGrant>> GrantRoleGrants(string user, List<RbacRoleGrant> grants);
     Task<RbacRoleGrant?> RevokeRoleGrant(string user, string id);
     Task RevokeCapabilityRoleGrant(UserId userId, CapabilityId capabilityId);

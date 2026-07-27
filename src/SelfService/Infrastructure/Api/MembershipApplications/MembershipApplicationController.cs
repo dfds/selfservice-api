@@ -217,8 +217,66 @@ public class MembershipApplicationController : ControllerBase
             );
         }
 
+        // A caller-supplied grant may only target the capability of the application being approved,
+        // and only at capability scope — this endpoint has no RBAC gate of its own.
+        if (request != null)
+        {
+            if (
+                !string.IsNullOrEmpty(request.Type)
+                && (
+                    !RbacAccessType.TryParse(request.Type, out var requestedType)
+                    || requestedType != RbacAccessType.Capability
+                )
+            )
+            {
+                return BadRequest(
+                    new ProblemDetails
+                    {
+                        Title = "Invalid role grant type",
+                        Detail = "Only capability-scoped role grants can be created through this endpoint.",
+                        Status = StatusCodes.Status400BadRequest,
+                    }
+                );
+            }
+
+            if (
+                !string.IsNullOrEmpty(request.Resource)
+                && !string.Equals(
+                    request.Resource,
+                    application.CapabilityId.ToString(),
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                return BadRequest(
+                    new ProblemDetails
+                    {
+                        Title = "Resource does not match capability",
+                        Detail = $"The role grant resource must be \"{application.CapabilityId}\" or omitted.",
+                        Status = StatusCodes.Status400BadRequest,
+                    }
+                );
+            }
+
+            if (!RbacRoleId.TryParse(request.RoleId, out _))
+            {
+                return BadRequest(
+                    new ProblemDetails
+                    {
+                        Title = "Invalid role id",
+                        Detail = $"Value \"{request.RoleId}\" is not a valid role id.",
+                        Status = StatusCodes.Status400BadRequest,
+                    }
+                );
+            }
+        }
+
         try
         {
+            // Approve first: it runs its own CanApproveMembershipApplications check and does not depend
+            // on the role grant, so an unauthorized caller cannot commit a grant on the way through.
+            await _membershipApplicationService.ApproveMembershipApplication(membershipApplicationId, userId);
+
             // If request is null, create a legal RbacRoleGrant for Reader role
             if (request == null)
             {
@@ -253,9 +311,15 @@ public class MembershipApplicationController : ControllerBase
             }
             else
             {
-                await _rbacApplicationService.GrantRoleGrant(userId.ToString(), request.IntoDomainModel());
+                var suppliedGrant = Domain.Models.RbacRoleGrant.New(
+                    RbacRoleId.Parse(request.RoleId),
+                    request.AssignedEntityType,
+                    request.AssignedEntityId,
+                    RbacAccessType.Capability,
+                    application.CapabilityId.ToString()
+                );
+                await _rbacApplicationService.GrantRoleGrant(userId.ToString(), suppliedGrant, userInitiated: true);
             }
-            await _membershipApplicationService.ApproveMembershipApplication(membershipApplicationId, userId);
         }
         catch (EntityNotFoundException<MembershipApplication>)
         {
@@ -277,6 +341,10 @@ public class MembershipApplicationController : ControllerBase
                         $"User \"{userId}\" is not authorized to approve membership application \"{membershipApplicationId}\".",
                 }
             );
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden);
         }
         return NoContent();
     }

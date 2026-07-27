@@ -1703,14 +1703,76 @@ public class CapabilityController : ControllerBase
 
     [HttpPost("{id:required}/roles/grant")]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [RequiresPermission("rbac", "create")]
-    public async Task<IActionResult> GrantRole([FromBody] RbacRoleGrant roleGrant)
+    public async Task<IActionResult> GrantRole(string id, [FromBody] RbacRoleGrant roleGrant)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        await _rbacApplicationService.GrantRoleGrant(userId.ToString(), roleGrant.IntoDomainModel());
+        // The request was authorized as capability-scoped rbac/create on {id}, so the body must not be
+        // allowed to name a different scope or a different capability.
+        if (
+            !RbacAccessType.TryParse(roleGrant.Type ?? "", out var accessType)
+            || accessType != RbacAccessType.Capability
+        )
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid role grant type",
+                    Detail = "Only capability-scoped role grants can be created through this endpoint.",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+        }
+
+        if (
+            !string.IsNullOrEmpty(roleGrant.Resource)
+            && !string.Equals(roleGrant.Resource, id, StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Resource does not match capability",
+                    Detail = $"The role grant resource must be \"{id}\" or omitted.",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+        }
+
+        if (!RbacRoleId.TryParse(roleGrant.RoleId, out var roleId))
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid role id",
+                    Detail = $"Value \"{roleGrant.RoleId}\" is not a valid role id.",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+        }
+
+        var grant = Domain.Models.RbacRoleGrant.New(
+            roleId,
+            roleGrant.AssignedEntityType,
+            roleGrant.AssignedEntityId,
+            RbacAccessType.Capability,
+            id
+        );
+
+        try
+        {
+            await _rbacApplicationService.GrantRoleGrant(userId.ToString(), grant, userInitiated: true);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden);
+        }
+
         return Created();
     }
 

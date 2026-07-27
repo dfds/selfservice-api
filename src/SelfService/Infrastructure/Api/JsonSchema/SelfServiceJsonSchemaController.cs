@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
+using SelfService.Infrastructure.Api.RBAC;
 
 namespace SelfService.Infrastructure.Api.JsonSchema;
 
 [Route("json-schema")]
 [Produces("application/json")]
 [ApiController]
+[RbacConfig(nameof(RbacObjectType.Global), "id")]
 public class SelfServiceJsonSchemaController : ControllerBase
 {
     private readonly ISelfServiceJsonSchemaService _selfServiceJsonSchemaService;
@@ -58,9 +60,11 @@ public class SelfServiceJsonSchemaController : ControllerBase
     }
 
     [HttpPost("{id:required}")]
+    [RequiresPermission("system-admin", "manage-json-schemas")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<IActionResult> AddSchema(string id, [FromBody] AddSelfServiceJsonSchemaRequest? request)
     {
