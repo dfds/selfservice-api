@@ -277,7 +277,8 @@
                     "delete-news-item",
                     "get-user-emails",
                     "delete-membership-application-as-admin",
-                    "retry-creating-message-contract"
+                    "retry-creating-message-contract",
+                    "manage-json-schemas"
                 ]
             }
         },

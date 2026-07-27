@@ -1050,6 +1050,12 @@ public class Permission
                 RbacAccessType.Global
             ),
             new(RbacNamespace.SystemAdmin, "manage-teams", "Create, delete and link teams", RbacAccessType.Global),
+            new(
+                RbacNamespace.SystemAdmin,
+                "manage-json-schemas",
+                "Publish json schema versions",
+                RbacAccessType.Global
+            ),
         };
 
         return permissions;
