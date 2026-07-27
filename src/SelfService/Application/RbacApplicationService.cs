@@ -38,7 +38,7 @@ public class RbacApplicationService : IRbacApplicationService
     public async Task<PermittedResponse> IsUserPermitted(string user, List<Permission> permissions, string objectId)
     {
         var resp = new PermittedResponse();
-        permissions.ForEach(p => resp.PermissionMatrix.Add($"{p.Namespace}-{p.Name}", new PermissionMatrix(p)));
+        permissions.ForEach(p => resp.PermissionMatrix.TryAdd($"{p.Namespace}-{p.Name}", new PermissionMatrix(p)));
 
         // user level
         var userPermissions = await GetPermissionGrantsForUser(user);
