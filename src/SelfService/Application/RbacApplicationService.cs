@@ -87,7 +87,9 @@ public class RbacApplicationService : IRbacApplicationService
                 .ToList();
         }
 
-        var accessGrantingPermissionGrants = combinedPermissions.FindAll(p =>
+        // Shared by both grant sources below (direct/group grants and role-derived grants) so the
+        // matching rule cannot drift between them.
+        bool Evaluate(RbacPermissionGrant p)
         {
             var policyGrantsAccess = false;
             if (p.Type != RbacAccessType.Global && (p.Resource is null || !p.Resource.Equals(objectId)))
@@ -97,7 +99,13 @@ public class RbacApplicationService : IRbacApplicationService
 
             permissions.ForEach(pm =>
             {
-                if (pm.Namespace == p.Namespace && pm.Name == p.Permission)
+                // Scope is a hierarchy: a Global grant satisfies a capability-scoped check, but a
+                // capability-scoped grant must never satisfy a Global one
+                if (
+                    pm.Namespace == p.Namespace
+                    && pm.Name == p.Permission
+                    && (pm.AccessType != RbacAccessType.Global || p.Type == RbacAccessType.Global)
+                )
                 {
                     resp.PermissionMatrix[$"{p.Namespace}-{p.Permission}"].Permitted = true;
                     policyGrantsAccess = true;
@@ -105,32 +113,14 @@ public class RbacApplicationService : IRbacApplicationService
             });
 
             return policyGrantsAccess;
-        });
-        resp.PermissionGrants = accessGrantingPermissionGrants;
+        }
+
+        resp.PermissionGrants = combinedPermissions.FindAll(Evaluate);
 
         // New - handling mapping roles to permissions
         var permissionsFromRoles = await GetPermissionGrantsForRoleGrants(combinedRoles);
 
-        accessGrantingPermissionGrants = permissionsFromRoles.FindAll(p =>
-        {
-            var policyGrantsAccess = false;
-            if (p.Type != RbacAccessType.Global && (p.Resource is null || !p.Resource.Equals(objectId)))
-            {
-                return false;
-            }
-
-            permissions.ForEach(pm =>
-            {
-                if (pm.Namespace == p.Namespace && pm.Name == p.Permission)
-                {
-                    resp.PermissionMatrix[$"{p.Namespace}-{p.Permission}"].Permitted = true;
-                    policyGrantsAccess = true;
-                }
-            });
-
-            return policyGrantsAccess;
-        });
-        resp.PermissionGrants.AddRange(accessGrantingPermissionGrants);
+        resp.PermissionGrants.AddRange(permissionsFromRoles.FindAll(Evaluate));
 
         return resp;
     }
@@ -440,9 +430,7 @@ public class RbacApplicationService : IRbacApplicationService
     }
 
     // Resolves the same grant sources as IsUserPermitted (direct user grants, group grants and
-    // role-derived grants) but only accepts matches whose scope is Global. IsUserPermitted cannot
-    // express this: it ignores AccessType when matching, so a capability Owner whose role grant is
-    // rewritten to Capability/<their-capability> would satisfy a "global" check there.
+    // role-derived grants) but only accepts matches whose scope is Global.
     private async Task<bool> HasGlobalPermission(string user, RbacNamespace ns, string name)
     {
         var userPermissions = await GetPermissionGrantsForUser(user);

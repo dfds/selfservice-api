@@ -758,4 +758,139 @@ public class TestRbacApplicationService
         );
         */
     }
+    
+    private static RbacPermissionGrant UserGrant(RbacAccessType type, string resource) =>
+        new(
+            id: RbacPermissionGrantId.New(),
+            createdAt: DateTime.Now,
+            assignedEntityType: AssignedEntityType.User,
+            assignedEntityId: "test01@dfds.cloud",
+            @namespace: RbacNamespace.Rbac,
+            permission: "create",
+            type: type,
+            resource: resource
+        );
+
+    private static Permission RbacCreate(RbacAccessType accessType) =>
+        new()
+        {
+            Namespace = RbacNamespace.Rbac,
+            Name = "create",
+            AccessType = accessType,
+        };
+
+    [Fact]
+    public async Task CapabilityScopedGrantDoesNotSatisfyGlobalCheck()
+    {
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant> { UserGrant(RbacAccessType.Capability, "test01") },
+            new List<RbacRoleGrant>()
+        );
+        var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
+
+        // The object id matches the grant's resource exactly — before the fix that alone was enough.
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted("test01@dfds.cloud", [RbacCreate(RbacAccessType.Global)], "test01")
+            ).Permitted()
+        );
+
+        // The same grant still answers the capability-scoped question it was issued for.
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted("test01@dfds.cloud", [RbacCreate(RbacAccessType.Capability)], "test01")
+            ).Permitted()
+        );
+    }
+
+    [Fact]
+    public async Task GlobalGrantSatisfiesBothCapabilityAndGlobalChecks()
+    {
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant> { UserGrant(RbacAccessType.Global, "") },
+            new List<RbacRoleGrant>()
+        );
+        var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted("test01@dfds.cloud", [RbacCreate(RbacAccessType.Global)], "test01")
+            ).Permitted()
+        );
+
+        // This is how the CloudEngineers group keeps working: its role grant is Global, and the
+        // routes it reaches are largely capability-scoped.
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted("test01@dfds.cloud", [RbacCreate(RbacAccessType.Capability)], "test01")
+            ).Permitted()
+        );
+    }
+
+    [Fact]
+    public async Task RoleDerivedGrantsFollowTheSameScopeHierarchy()
+    {
+        // GetPermissionGrantsForRoleGrants stamps the role grant's type/resource onto every
+        // permission of the role, so the second FindAll pass needs its own coverage.
+        var capabilityRoleId = RbacRoleId.New();
+        var globalRoleId = RbacRoleId.New();
+
+        RbacPermissionGrant RolePermission(RbacRoleId roleId) =>
+            new(
+                id: RbacPermissionGrantId.New(),
+                createdAt: DateTime.Now,
+                assignedEntityType: AssignedEntityType.Role,
+                assignedEntityId: roleId.ToString(),
+                @namespace: RbacNamespace.Rbac,
+                permission: "create",
+                type: RbacAccessType.Global,
+                resource: ""
+            );
+
+        RbacRoleGrant RoleGrant(RbacRoleId roleId, string user, RbacAccessType type, string resource) =>
+            new(
+                id: RbacRoleGrantId.New(),
+                roleId: roleId,
+                createdAt: DateTime.Now,
+                assignedEntityType: AssignedEntityType.User,
+                assignedEntityId: user,
+                type: type,
+                resource: resource
+            );
+
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant> { RolePermission(capabilityRoleId), RolePermission(globalRoleId) },
+            new List<RbacRoleGrant>
+            {
+                RoleGrant(capabilityRoleId, "owner@dfds.cloud", RbacAccessType.Capability, "test01"),
+                RoleGrant(globalRoleId, "admin@dfds.cloud", RbacAccessType.Global, ""),
+            }
+        );
+        var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
+
+        Assert.False(
+            (
+                await rbacSvc.IsUserPermitted("owner@dfds.cloud", [RbacCreate(RbacAccessType.Global)], "test01")
+            ).Permitted()
+        );
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted("owner@dfds.cloud", [RbacCreate(RbacAccessType.Capability)], "test01")
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted("admin@dfds.cloud", [RbacCreate(RbacAccessType.Global)], "test01")
+            ).Permitted()
+        );
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted("admin@dfds.cloud", [RbacCreate(RbacAccessType.Capability)], "test01")
+            ).Permitted()
+        );
+    }
 }
