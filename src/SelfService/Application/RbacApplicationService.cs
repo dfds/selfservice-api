@@ -498,7 +498,7 @@ public class RbacApplicationService : IRbacApplicationService
                         new List<Permission>
                         {
                             new(
-                                RbacNamespace.CapabilityManagement,
+                                RbacNamespace.Capability,
                                 "manage-permissions",
                                 "",
                                 RbacAccessType.Capability

@@ -1,7 +1,7 @@
 import csv
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 
 
@@ -15,7 +15,7 @@ def new_uuid():
 
 
 def now_iso():
-    return datetime.utcnow().isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def stable_uuid(kind, name):
@@ -24,7 +24,8 @@ def stable_uuid(kind, name):
 
 
 def load_config():
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    # utf-8-sig transparently handles files saved with or without BOM.
+    with open(CONFIG_PATH, "r", encoding="utf-8-sig") as f:
         return json.load(f)
 
 

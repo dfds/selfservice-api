@@ -590,7 +590,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "owner@bar.com",
-                    [new Permission { Namespace = RbacNamespace.Capability, Name = "create" }],
+                    [new Permission { Namespace = RbacNamespace.Capability, Name = "invite-member" }],
                     "bar"
                 )
             ).Permitted()
@@ -600,7 +600,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "owner@bar.com",
-                    [new Permission { Namespace = RbacNamespace.Capability, Name = "delete" }],
+                    [new Permission { Namespace = RbacNamespace.Capability, Name = "remove-member" }],
                     "bar"
                 )
             ).Permitted()
@@ -625,7 +625,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "contributor@bar.com",
-                    [new Permission { Namespace = RbacNamespace.Capability, Name = "delete" }],
+                    [new Permission { Namespace = RbacNamespace.Capability, Name = "remove-member" }],
                     "bar"
                 )
             ).Permitted()
@@ -665,7 +665,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "contributor@bar.com",
-                    [new Permission { Namespace = RbacNamespace.Capability, Name = "create" }],
+                    [new Permission { Namespace = RbacNamespace.Capability, Name = "invite-member" }],
                     "bar"
                 )
             ).Permitted()
@@ -710,7 +710,7 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted(
                     "reader@bar.com",
-                    [new Permission { Namespace = RbacNamespace.Capability, Name = "delete" }],
+                    [new Permission { Namespace = RbacNamespace.Capability, Name = "remove-member" }],
                     "bar"
                 )
             ).Permitted()
