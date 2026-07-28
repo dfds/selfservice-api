@@ -307,6 +307,7 @@ public class CapabilityController : ControllerBase
     [HttpGet("{id:required}/deployments")]
     [ProducesResponseType(typeof(CatalogDeploymentsApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [RequiresPermission("service-catalogue", "read")]
     public async Task<IActionResult> GetCapabilityDeployments(string id, CancellationToken cancellationToken)
     {
         if (!CapabilityId.TryParse(id, out var capabilityId))
