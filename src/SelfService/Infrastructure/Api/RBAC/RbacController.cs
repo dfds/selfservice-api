@@ -87,9 +87,42 @@ public class RbacController : ControllerBase
 
     [HttpGet("get-assignable-roles")]
     [ProducesResponseType(typeof(List<RbacRoleDTO>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAssignableRoles()
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    public async Task<IActionResult> GetAssignableRoles([FromQuery] string? scope)
     {
+        var capabilityRoleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Owner",
+            "Contributor",
+            "Reader",
+        };
+
         var roles = await _rbacApplicationService.GetAssignableRoles();
+        switch (scope?.Trim().ToLowerInvariant())
+        {
+            case null:
+            case "":
+            case "capability":
+                roles = roles
+                    .Where(r => r.Type == RbacAccessType.Capability || capabilityRoleNames.Contains(r.Name))
+                    .ToList();
+                break;
+            case "system":
+            case "global":
+                roles = roles
+                    .Where(r => r.Type != RbacAccessType.Capability && !capabilityRoleNames.Contains(r.Name))
+                    .ToList();
+                break;
+            default:
+                return BadRequest(
+                    new ProblemDetails
+                    {
+                        Title = "Invalid scope",
+                        Detail = "Valid values are capability, system, global, or omitted.",
+                    }
+                );
+        }
+
         List<RbacRoleDTO> toRbacDTO(List<RbacRole> roles)
         {
             return roles.Select(role => RbacRoleDTO.FromRbacRole(role)).ToList();
