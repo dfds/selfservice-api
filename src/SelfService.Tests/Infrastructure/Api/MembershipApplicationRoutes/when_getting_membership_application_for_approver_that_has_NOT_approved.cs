@@ -30,7 +30,7 @@ public class when_getting_membership_application_for_approver_that_has_NOT_appro
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
                         "foo@bar.com",
-                        RbacNamespace.CapabilityMembershipManagement,
+                        RbacNamespace.Capability,
                         "read-requests",
                         RbacAccessType.Capability,
                         "foo"
@@ -38,7 +38,7 @@ public class when_getting_membership_application_for_approver_that_has_NOT_appro
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
                         "foo@bar.com",
-                        RbacNamespace.CapabilityMembershipManagement,
+                        RbacNamespace.Capability,
                         "manage-requests",
                         RbacAccessType.Capability,
                         "foo"

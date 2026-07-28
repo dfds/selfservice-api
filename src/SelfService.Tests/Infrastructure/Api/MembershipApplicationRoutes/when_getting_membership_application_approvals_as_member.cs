@@ -29,7 +29,7 @@ public class when_getting_membership_application_approvals_as_member : IAsyncLif
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
                         "foo@bar.com",
-                        RbacNamespace.CapabilityMembershipManagement,
+                        RbacNamespace.Capability,
                         "read-requests",
                         RbacAccessType.Capability,
                         "foo"
@@ -37,7 +37,7 @@ public class when_getting_membership_application_approvals_as_member : IAsyncLif
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
                         "foo@bar.com",
-                        RbacNamespace.CapabilityMembershipManagement,
+                        RbacNamespace.Capability,
                         "manage-requests",
                         RbacAccessType.Capability,
                         "foo"

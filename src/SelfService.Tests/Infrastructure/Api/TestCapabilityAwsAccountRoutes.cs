@@ -133,7 +133,7 @@ public class TestCapabilityAwsAccountRoutes
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
                         "foo@bar.com",
-                        RbacNamespace.CapabilityManagement,
+                        RbacNamespace.Capability,
                         "read",
                         RbacAccessType.Capability,
                         stubCapability.Id.ToString()

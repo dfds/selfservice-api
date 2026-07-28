@@ -284,7 +284,7 @@ public class TestCapabilityMembershipApplicationRoutes
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
                         "foo@bar.com",
-                        RbacNamespace.CapabilityMembershipManagement,
+                        RbacNamespace.Capability,
                         "read-requests",
                         RbacAccessType.Capability,
                         stubCapability.Id.ToString()
@@ -341,7 +341,7 @@ public class TestCapabilityMembershipApplicationRoutes
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
                         "foo@bar.com",
-                        RbacNamespace.CapabilityMembershipManagement,
+                        RbacNamespace.Capability,
                         "read-requests",
                         RbacAccessType.Capability,
                         "foo"
@@ -382,7 +382,7 @@ public class TestCapabilityMembershipApplicationRoutes
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
                         "foo@bar.com",
-                        RbacNamespace.CapabilityMembershipManagement,
+                        RbacNamespace.Capability,
                         "read-requests",
                         RbacAccessType.Capability,
                         "foo"
@@ -426,7 +426,7 @@ public class TestCapabilityMembershipApplicationRoutes
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
                         "foo@bar.com",
-                        RbacNamespace.CapabilityMembershipManagement,
+                        RbacNamespace.Capability,
                         "read-requests",
                         RbacAccessType.Capability,
                         "foo"

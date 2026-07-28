@@ -54,15 +54,15 @@ public class when_getting_public_topics_as_a_cloud_engineer : IAsyncLifetime
                         AssignedEntityType.User,
                         "foo@bar.com",
                         RbacNamespace.Topics,
-                        "delete",
+                        "delete-public",
                         RbacAccessType.Global,
                         "*"
                     ),
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
                         "foo@bar.com",
-                        RbacNamespace.TopicsPublic,
-                        "delete",
+                        RbacNamespace.Topics,
+                        "delete-public",
                         RbacAccessType.Global,
                         "*"
                     ),

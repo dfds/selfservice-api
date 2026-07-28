@@ -541,7 +541,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [RequiresPermission("capability-management", "read-self-assess")]
+    [RequiresPermission("capability", "read-self-assess")]
     public async Task<IActionResult> GetSelfAssessments(string id)
     {
         if (!User.TryGetUserId(out var userId))
@@ -566,7 +566,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [RequiresPermission("capability-management", "create-self-assess")]
+    [RequiresPermission("capability", "create-self-assess")]
     public async Task<IActionResult> UpdateSelfAssessment(
         string id,
         [FromBody] SelfAssessmentRequest selfAssessmentRequest
@@ -1156,7 +1156,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [RequiresPermission("capability-management", "request-deletion")]
+    [RequiresPermission("capability", "request-deletion")]
     public async Task<IActionResult> RequestCapabilityDeletion(string id, UserId user)
     {
         // Verify user and fetch userId
@@ -1214,7 +1214,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [RequiresPermission("capability-management", "request-deletion")]
+    [RequiresPermission("capability", "request-deletion")]
     public async Task<IActionResult> CancelCapabilityDeletionRequest(string id)
     {
         // Verify user and fetch userId
@@ -1557,7 +1557,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [RequiresPermission("capability-management", "read-self-assess")]
+    [RequiresPermission("capability", "read-self-assess")]
     public async Task<IActionResult> GetSelfAssessmentOptions()
     {
         if (!User.TryGetUserId(out var userId))
@@ -1604,7 +1604,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
-    [RequiresPermission("capability-management", "create-self-assess")]
+    [RequiresPermission("capability", "create-self-assess")]
     public async Task<IActionResult> UpdateSelfAssessmentOption(
         [FromRoute] string id,
         [FromBody] UpdateSelfAssessmentOptionRequest request

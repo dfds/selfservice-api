@@ -31,20 +31,22 @@
                     "read-public",
                     "read-private",
                     "update",
-                    "delete"
+                    "delete",
+                    "retry-creating-message-contract"
                 ],
-                "capability-management": [
+                "demos": [
+                    "read-signups"
+                ],
+                "capability": [
                     "receive-alerts",
                     "receive-cost",
                     "request-deletion",
                     "manage-permissions",
                     "read-self-assess",
-                    "create-self-assess"
-                ],
-                "capability-membership-management": [
-                    "create",
-                    "delete",
-                    "read",
+                    "create-self-assess",
+                    "invite-member",
+                    "remove-member",
+                    "read-members",
                     "read-requests",
                     "manage-requests"
                 ],
@@ -91,12 +93,10 @@
                     "update",
                     "delete"
                 ],
-                "capability-management": [
-                    "receive-alerts"
-                ],
-                "capability-membership-management": [
-                    "create",
-                    "read",
+                "capability": [
+                    "receive-alerts",
+                    "invite-member",
+                    "read-members",
                     "read-requests",
                     "manage-requests"
                 ],
@@ -134,8 +134,8 @@
                     "read-public",
                     "read-private"
                 ],
-                "capability-membership-management": [
-                    "read",
+                "capability": [
+                    "read-members",
                     "read-requests"
                 ],
                 "tags-and-metadata": [
@@ -162,8 +162,8 @@
                 "topics": [
                     "read-public"
                 ],
-                "capability-membership-management": [
-                    "read"
+                "capability": [
+                    "read-members"
                 ],
                 "tags-and-metadata": [
                     "read"
@@ -184,19 +184,20 @@
                     "update",
                     "delete"
                 ],
-                "capability-management": [
+                "capability": [
                     "receive-alerts",
                     "receive-cost",
                     "request-deletion",
                     "manage-permissions",
                     "read-self-assess",
                     "create-self-assess",
-                    "batch-create-capabilities"
-                ],
-                "capability-membership-management": [
-                    "create",
-                    "delete",
-                    "read",
+                    "batch-create-capabilities",
+                    "view-deleted-capabilities",
+                    "bypass-membership-approvals",
+                    "unset-capability-tags",
+                    "invite-member",
+                    "remove-member",
+                    "read-members",
                     "read-requests",
                     "manage-requests"
                 ],
@@ -237,14 +238,10 @@
                     "read"
                 ],
                 "system-admin": [
-                    "view-deleted-capabilities",
-                    "unset-capability-tags",
                     "create-demo-recording",
                     "update-demo-recording",
                     "delete-demo-recording",
-                    "manage-permission-matrix",
                     "synchronize-aws-ecr-and-database-ecr",
-                    "bypass-membership-approvals",
                     "manage-self-assessment-options",
                     "create-release-notes",
                     "update-release-note",
@@ -257,9 +254,7 @@
                     "create-news-item",
                     "update-news-item",
                     "delete-news-item",
-                    "get-user-emails",
-                    "delete-membership-application-as-admin",
-                    "retry-creating-message-contract"
+                    "get-user-emails"
                 ]
             }
         },
@@ -267,7 +262,7 @@
             "name": "BatchCapabilityCreator",
             "existingId": "6A2EE52C-6A9B-4A2A-B9C8-5851DD2D9A6F",
             "permissions": {
-                "capability-management": [
+                "capability": [
                     "batch-create-capabilities"
                 ]
             }

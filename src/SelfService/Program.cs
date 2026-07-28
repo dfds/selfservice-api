@@ -32,7 +32,7 @@ try
     builder.AddRbac();
     builder.Services.AddTransient<Impersonation.ImpersonationMiddleware>();
     builder.Services.AddTransient<UserActionMiddleware>();
-    builder.Services.AddTransient<UserImpersonation>();
+    builder.Services.AddTransient<ReducedPermissionsMiddleware>();
 
     // **PLEASE NOTE** : keep this as the last configuration!
     builder.ConfigureAspects();
@@ -56,7 +56,7 @@ try
 
     app.UseMemberAutoProvisioner();
     app.UseUserActionMiddleware();
-    app.UseUserImpersonationMiddleware();
+    app.UseReducedPermissionsMiddleware();
     app.UseAuthCheckerMiddleware();
 
     app.Run();

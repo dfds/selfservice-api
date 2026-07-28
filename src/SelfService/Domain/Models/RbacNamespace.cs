@@ -6,17 +6,20 @@ namespace SelfService.Domain.Models;
 [JsonConverter(typeof(RbacNamespaceJsonConverter))]
 public class RbacNamespace : ValueObject
 {
-    // topics, capability-management, capability-membership-management, tags-and-metadata, aws, finout, azure, rbac, service-catalogue, system-admin, system-legacy
     public static readonly RbacNamespace Topics = new("topics");
-    public static readonly RbacNamespace TopicsPublic = new("topics-public");
-    public static readonly RbacNamespace CapabilityManagement = new("capability-management");
-    public static readonly RbacNamespace CapabilityMembershipManagement = new("capability-membership-management");
+    public static readonly RbacNamespace Capability = new("capability");
     public static readonly RbacNamespace TagsAndMetadata = new("tags-and-metadata");
     public static readonly RbacNamespace Aws = new("aws");
     public static readonly RbacNamespace Finout = new("finout");
     public static readonly RbacNamespace Azure = new("azure");
     public static readonly RbacNamespace Rbac = new("rbac");
     public static readonly RbacNamespace ServiceCatalogue = new("service-catalogue");
+    public static readonly RbacNamespace Demos = new("demos");
+    public static readonly RbacNamespace ReleaseNotes = new("release-notes");
+    public static readonly RbacNamespace Events = new("events");
+    public static readonly RbacNamespace News = new("news");
+    public static readonly RbacNamespace Users = new("users");
+    public static readonly RbacNamespace SelfAssessment = new("self-assessment");
     public static readonly RbacNamespace SystemAdmin = new("system-admin");
     public static readonly RbacNamespace SystemLegacy = new("system-legacy");
 
@@ -57,14 +60,8 @@ public class RbacNamespace : ValueObject
             case "topics":
                 rbacNamespace = Topics;
                 break;
-            case "topics-public":
-                rbacNamespace = TopicsPublic;
-                break;
-            case "capability-management":
-                rbacNamespace = CapabilityManagement;
-                break;
-            case "capability-membership-management":
-                rbacNamespace = CapabilityMembershipManagement;
+            case "capability":
+                rbacNamespace = Capability;
                 break;
             case "tags-and-metadata":
                 rbacNamespace = TagsAndMetadata;
@@ -83,6 +80,24 @@ public class RbacNamespace : ValueObject
                 break;
             case "service-catalogue":
                 rbacNamespace = ServiceCatalogue;
+                break;
+            case "demos":
+                rbacNamespace = Demos;
+                break;
+            case "release-notes":
+                rbacNamespace = ReleaseNotes;
+                break;
+            case "events":
+                rbacNamespace = Events;
+                break;
+            case "news":
+                rbacNamespace = News;
+                break;
+            case "users":
+                rbacNamespace = Users;
+                break;
+            case "self-assessment":
+                rbacNamespace = SelfAssessment;
                 break;
             case "system-admin":
                 rbacNamespace = SystemAdmin;
