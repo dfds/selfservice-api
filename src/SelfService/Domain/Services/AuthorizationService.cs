@@ -192,13 +192,7 @@ public class AuthorizationService : IAuthorizationService
             );
         }
 
-        return (
-            await _rbacApplicationService.IsUserPermitted(
-                userId,
-                permissionsToCheck,
-                resourceId
-            )
-        ).Permitted();
+        return (await _rbacApplicationService.IsUserPermitted(userId, permissionsToCheck, resourceId)).Permitted();
     }
 
     public async Task<bool> CanReadConsumers(PortalUser portalUser, KafkaTopic kafkaTopic)
@@ -423,7 +417,12 @@ public class AuthorizationService : IAuthorizationService
 
     public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
     {
-        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.SystemAdmin, "synchronize-aws-ecr-and-database-ecr");
+        return HasPermission(
+            portalUser,
+            RbacAccessType.Global,
+            RbacNamespace.SystemAdmin,
+            "synchronize-aws-ecr-and-database-ecr"
+        );
     }
 
     public async Task<bool> CanGetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
@@ -462,17 +461,17 @@ public class AuthorizationService : IAuthorizationService
 
     public bool CanBypassMembershipApprovals(PortalUser portalUser)
     {
-        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Capability, "bypass-membership-approvals");
-    }
-
-    public bool CanBatchCreateCapabilities(PortalUser portalUser)
-    {
         return HasPermission(
             portalUser,
             RbacAccessType.Global,
             RbacNamespace.Capability,
-            "batch-create-capabilities"
+            "bypass-membership-approvals"
         );
+    }
+
+    public bool CanBatchCreateCapabilities(PortalUser portalUser)
+    {
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Capability, "batch-create-capabilities");
     }
 
     public async Task<bool> CanDeleteMembershipApplication(
@@ -579,7 +578,12 @@ public class AuthorizationService : IAuthorizationService
 
     public bool CanManageSelfAssessmentOptions(PortalUser portalUser)
     {
-        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.SelfAssessment, "manage-self-assessment-options");
+        return HasPermission(
+            portalUser,
+            RbacAccessType.Global,
+            RbacNamespace.SelfAssessment,
+            "manage-self-assessment-options"
+        );
     }
 
     public bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser)
@@ -594,7 +598,12 @@ public class AuthorizationService : IAuthorizationService
 
     public bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser)
     {
-        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.ReleaseNotes, "toggle-release-note-is-active");
+        return HasPermission(
+            portalUser,
+            RbacAccessType.Global,
+            RbacNamespace.ReleaseNotes,
+            "toggle-release-note-is-active"
+        );
     }
 
     public bool IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser)

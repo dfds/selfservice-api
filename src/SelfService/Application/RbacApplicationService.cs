@@ -72,7 +72,9 @@ public class RbacApplicationService : IRbacApplicationService
 
         if (ReducedPermissionsRequested())
         {
-            combinedPermissions = combinedPermissions.Where(permission => permission.Type != RbacAccessType.Global).ToList();
+            combinedPermissions = combinedPermissions
+                .Where(permission => permission.Type != RbacAccessType.Global)
+                .ToList();
             combinedRoles = combinedRoles.Where(role => role.Type != RbacAccessType.Global).ToList();
         }
 
@@ -144,7 +146,9 @@ public class RbacApplicationService : IRbacApplicationService
 
     private bool ReducedPermissionsRequested()
     {
-        return _httpContextAccessor.HttpContext?.Items.ContainsKey(ReducedPermissionsMiddleware.ReducedPermissionsContextKey) == true;
+        return _httpContextAccessor.HttpContext?.Items.ContainsKey(
+                ReducedPermissionsMiddleware.ReducedPermissionsContextKey
+            ) == true;
     }
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleGrants(List<RbacRoleGrant> roleGrants)
@@ -497,12 +501,7 @@ public class RbacApplicationService : IRbacApplicationService
                         user,
                         new List<Permission>
                         {
-                            new(
-                                RbacNamespace.Capability,
-                                "manage-permissions",
-                                "",
-                                RbacAccessType.Capability
-                            ),
+                            new(RbacNamespace.Capability, "manage-permissions", "", RbacAccessType.Capability),
                         },
                         roleGrant.Resource ?? ""
                     )
@@ -889,30 +888,15 @@ public class Permission
             new(RbacNamespace.Topics, "delete", "Delete topics", RbacAccessType.Capability),
             new(RbacNamespace.Topics, "delete-public", "Delete public topics", RbacAccessType.Capability),
             new(RbacNamespace.Capability, "receive-alerts", "Receive Alarms", RbacAccessType.Capability),
-            new(
-                RbacNamespace.Capability,
-                "receive-cost",
-                "Receive cost summary reports",
-                RbacAccessType.Capability
-            ),
-            new(
-                RbacNamespace.Capability,
-                "request-deletion",
-                "Request Capability deletion",
-                RbacAccessType.Capability
-            ),
+            new(RbacNamespace.Capability, "receive-cost", "Receive cost summary reports", RbacAccessType.Capability),
+            new(RbacNamespace.Capability, "request-deletion", "Request Capability deletion", RbacAccessType.Capability),
             new(
                 RbacNamespace.Capability,
                 "manage-permissions",
                 "Manage Capability permissions",
                 RbacAccessType.Capability
             ),
-            new(
-                RbacNamespace.Capability,
-                "read-self-assess",
-                "Self assessment permissions",
-                RbacAccessType.Capability
-            ),
+            new(RbacNamespace.Capability, "read-self-assess", "Self assessment permissions", RbacAccessType.Capability),
             new(
                 RbacNamespace.Capability,
                 "create-self-assess",
@@ -986,7 +970,12 @@ public class Permission
                 "Read legacy system data (e.g. AAD-AWS sync capability list)",
                 RbacAccessType.Global
             ),
-            new(RbacNamespace.Capability, "view-deleted-capabilities", "View deleted capabilities", RbacAccessType.Global),
+            new(
+                RbacNamespace.Capability,
+                "view-deleted-capabilities",
+                "View deleted capabilities",
+                RbacAccessType.Global
+            ),
             new(RbacNamespace.Capability, "unset-capability-tags", "Unset capability tags", RbacAccessType.Global),
             new(RbacNamespace.Demos, "create", "Create demo recordings", RbacAccessType.Global),
             new(RbacNamespace.Demos, "update", "Update demo recordings", RbacAccessType.Global),
@@ -998,7 +987,12 @@ public class Permission
                 "Synchronize AWS ECR and database ECR",
                 RbacAccessType.Global
             ),
-            new(RbacNamespace.Capability, "bypass-membership-approvals", "Bypass membership approvals", RbacAccessType.Global),
+            new(
+                RbacNamespace.Capability,
+                "bypass-membership-approvals",
+                "Bypass membership approvals",
+                RbacAccessType.Global
+            ),
             new(
                 RbacNamespace.SelfAssessment,
                 "manage-self-assessment-options",
