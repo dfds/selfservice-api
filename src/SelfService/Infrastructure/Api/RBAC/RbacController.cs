@@ -764,7 +764,8 @@ public class RbacController : ControllerBase
                 roleGrants.Select(g => new PermissionMatrixGrantDto(
                     role.Id.ToString(),
                     g.Namespace.ToString(),
-                    g.Permission
+                    g.Permission,
+                    g.Type.ToString()
                 ))
             );
         }
@@ -868,7 +869,7 @@ public class RbacController : ControllerBase
 
 public record PermissionDto(string Namespace, string Name, string Description, string AccessType);
 
-public record PermissionMatrixGrantDto(string RoleId, string Namespace, string Permission);
+public record PermissionMatrixGrantDto(string RoleId, string Namespace, string Permission, string AccessType);
 
 public record SetRolePermissionEntry(string Namespace, string Name, string? AccessType = null);
 
