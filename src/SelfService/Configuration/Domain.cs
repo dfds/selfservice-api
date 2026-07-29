@@ -197,6 +197,8 @@ public static class Domain
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<ICatalogTokenProvider, CatalogTokenProvider>();
         builder.Services.AddHttpClient<ICatalogClient, CatalogClient>();
+        builder.Services.AddTransient<ICatalogFetcher, CatalogFetcher>();
+        builder.Services.AddSingleton<CatalogSnapshotCache>();
         builder.Services.AddTransient<ICatalogApplicationService, CatalogApplicationService>();
     }
 }

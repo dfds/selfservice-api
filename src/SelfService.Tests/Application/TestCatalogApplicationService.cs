@@ -1,4 +1,5 @@
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using SelfService.Application;
@@ -13,15 +14,31 @@ public class TestCatalogApplicationService
     private static CatalogApplicationService BuildService(
         CatalogConfig config,
         ICatalogClient catalogClient,
-        ICapabilityRepository capabilityRepository
+        ICapabilityRepository capabilityRepository,
+        TimeSpan? ttl = null
+    ) => new(BuildCache(config, catalogClient, capabilityRepository, ttl));
+
+    /// The cache resolves the fetcher from a scope of its own, so tests wire a small
+    /// real container around the mocks rather than handing it a fetcher directly.
+    private static CatalogSnapshotCache BuildCache(
+        CatalogConfig config,
+        ICatalogClient catalogClient,
+        ICapabilityRepository capabilityRepository,
+        TimeSpan? ttl = null
     )
     {
-        return new CatalogApplicationService(
-            config,
-            catalogClient,
-            capabilityRepository,
-            new MemoryCache(new MemoryCacheOptions()),
-            NullLogger<CatalogApplicationService>.Instance
+        var services = new ServiceCollection();
+        services.AddSingleton(config);
+        services.AddSingleton(catalogClient);
+        services.AddSingleton(capabilityRepository);
+        services.AddSingleton<ILogger<CatalogFetcher>>(NullLogger<CatalogFetcher>.Instance);
+        services.AddTransient<ICatalogFetcher, CatalogFetcher>();
+        var provider = services.BuildServiceProvider();
+
+        return new CatalogSnapshotCache(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            NullLogger<CatalogSnapshotCache>.Instance,
+            ttl ?? CatalogSnapshotCache.DefaultTtl
         );
     }
 
@@ -266,6 +283,112 @@ public class TestCatalogApplicationService
         Assert.Equal(1, result.Availability.ClustersQueried);
         Assert.Equal(1, result.Availability.ClustersFailed);
     }
+
+    [Fact]
+    public async Task Expired_snapshot_is_served_without_waiting_for_the_refresh()
+    {
+        var capability = A.Capability.WithId(CapabilityId.Parse("team-alpha-abcde")).WithName("Team Alpha").Build();
+        var refreshReached = new TaskCompletionSource();
+        var releaseRefresh = new TaskCompletionSource();
+        var calls = 0;
+
+        var catalogClient = new Mock<ICatalogClient>();
+        catalogClient
+            .Setup(x => x.GetCatalog(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+            .Returns(
+                async (Uri _, CancellationToken _) =>
+                {
+                    // Every fetch after the first one hangs, standing in for a slow fan-out.
+                    if (Interlocked.Increment(ref calls) > 1)
+                    {
+                        refreshReached.TrySetResult();
+                        await releaseRefresh.Task;
+                    }
+                    return SingleAppSnapshot();
+                }
+            );
+
+        var capabilityRepository = new Mock<ICapabilityRepository>();
+        capabilityRepository
+            .Setup(x => x.GetByIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(new[] { capability });
+
+        // Zero TTL: the snapshot is stale the moment it lands.
+        var service = BuildService(
+            SingleCluster(),
+            catalogClient.Object,
+            capabilityRepository.Object,
+            ttl: TimeSpan.Zero
+        );
+
+        await service.ListApplications(new ApplicationFilters()); // cold start — this one does wait
+
+        // The snapshot is now expired, so this call kicks off a refresh that will not
+        // complete. It must still return, from the stale data, rather than block on it.
+        var stale = await service.ListApplications(new ApplicationFilters()).WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.Equal("api", Assert.Single(stale.Items).Name);
+        await refreshReached.Task.WaitAsync(TimeSpan.FromSeconds(10)); // the refresh did start
+        releaseRefresh.SetResult();
+    }
+
+    [Fact]
+    public async Task Cold_callers_share_a_single_fetch()
+    {
+        var capability = A.Capability.WithId(CapabilityId.Parse("team-alpha-abcde")).WithName("Team Alpha").Build();
+        var firstCallReached = new TaskCompletionSource();
+        var releaseFirstCall = new TaskCompletionSource();
+        var calls = 0;
+
+        var catalogClient = new Mock<ICatalogClient>();
+        catalogClient
+            .Setup(x => x.GetCatalog(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+            .Returns(
+                async (Uri _, CancellationToken _) =>
+                {
+                    if (Interlocked.Increment(ref calls) == 1)
+                    {
+                        firstCallReached.TrySetResult();
+                        await releaseFirstCall.Task;
+                    }
+                    return SingleAppSnapshot();
+                }
+            );
+
+        var capabilityRepository = new Mock<ICapabilityRepository>();
+        capabilityRepository
+            .Setup(x => x.GetByIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(new[] { capability });
+
+        var service = BuildService(SingleCluster(), catalogClient.Object, capabilityRepository.Object);
+
+        var first = service.ListApplications(new ApplicationFilters());
+        await firstCallReached.Task.WaitAsync(TimeSpan.FromSeconds(10)); // a fetch is in flight
+        var second = service.ListApplications(new ApplicationFilters()); // arrives mid-fetch
+        releaseFirstCall.SetResult();
+
+        await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(10));
+
+        // The second caller queued on the refresh gate and read the snapshot the first
+        // one produced — an expiry must not fan out once per concurrent request.
+        Assert.Equal(1, calls);
+        Assert.Equal("api", Assert.Single((await second).Items).Name);
+    }
+
+    private static CatalogSnapshotDto SingleAppSnapshot() =>
+        new()
+        {
+            Applications =
+            {
+                new ApplicationEntryDto
+                {
+                    Namespace = "team-alpha-abcde",
+                    Name = "api",
+                    Kind = "Deployment",
+                    CapabilityId = "team-alpha-abcde",
+                },
+            },
+        };
 
     [Fact]
     public async Task TokenProvider_unconfigured_scope_returns_null_without_acquiring()
