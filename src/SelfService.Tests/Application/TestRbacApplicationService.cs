@@ -37,6 +37,34 @@ public class RbacTestData
         var fixture = new RbacInMemoryTestFixture(databaseFactory, dbContext, application);
         return fixture;
     }
+
+    public static async Task<RbacRoleId> SeedGuestRole(
+        SelfServiceDbContext dbContext,
+        params (RbacNamespace Namespace, string Name, RbacAccessType Type)[] permissions
+    )
+    {
+        var guest = RbacRole.New("system", "Guest", "Role: Guest", RbacAccessType.Global);
+        dbContext.RbacRoles.Add(guest);
+
+        foreach (var p in permissions)
+        {
+            dbContext.RbacPermissionGrants.Add(
+                new RbacPermissionGrant(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.Role,
+                    assignedEntityId: guest.Id.ToString(),
+                    @namespace: p.Namespace,
+                    permission: p.Name,
+                    type: p.Type,
+                    resource: ""
+                )
+            );
+        }
+
+        await dbContext.SaveChangesAsync();
+        return guest.Id;
+    }
 }
 
 public class RbacInMemoryTestFixture
@@ -741,12 +769,8 @@ public class TestRbacApplicationService
             ).Permitted()
         );
 
-        /*
-            Reading public topics is allowed for everyone
-            This is currently handled outside of RBAC in the application logic
-            [04-11-2025, andfris] Leaving this test here as a reminder
-        */
-        /*
+        // Reading public topics is allowed for everyone. This now comes from RBAC itself: topics/read-public
+        // is one of the Guest role's grants, and Guest is the baseline every user holds implicitly.
         Assert.True(
             (
                 await rbacSvc.IsUserPermitted(
@@ -756,7 +780,6 @@ public class TestRbacApplicationService
                 )
             ).Permitted()
         );
-        */
     }
 
     private static RbacPermissionGrant UserGrant(RbacAccessType type, string resource) =>
@@ -891,6 +914,205 @@ public class TestRbacApplicationService
             (
                 await rbacSvc.IsUserPermitted("admin@dfds.cloud", [RbacCreate(RbacAccessType.Capability)], "test01")
             ).Permitted()
+        );
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Guest baseline
+    // ---------------------------------------------------------------------------------------------
+
+    private const string Nobody = "nobody@dfds.cloud";
+
+    private static Permission CatalogueRead(RbacAccessType accessType) =>
+        new()
+        {
+            Namespace = RbacNamespace.ServiceCatalogue,
+            Name = "read",
+            AccessType = accessType,
+        };
+
+    private static Permission TopicsReadPublic(RbacAccessType accessType) =>
+        new()
+        {
+            Namespace = RbacNamespace.Topics,
+            Name = "read-public",
+            AccessType = accessType,
+        };
+
+    private static async Task<IRbacApplicationService> EmptyFixtureWithGuest(
+        params (RbacNamespace Namespace, string Name, RbacAccessType Type)[] guestPermissions
+    )
+    {
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant>(),
+            new List<RbacRoleGrant>(),
+            new List<RbacGroup>()
+        );
+        await RbacTestData.SeedGuestRole(fixture.DbContext, guestPermissions);
+        return fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
+    }
+
+    [Fact]
+    public async Task GuestBaselineSatisfiesGlobalScopedChecks()
+    {
+        var rbacSvc = await EmptyFixtureWithGuest(
+            (RbacNamespace.ServiceCatalogue, "read", RbacAccessType.Global)
+        );
+
+        // A Global-scoped controller has no {id} route value, so AuthChecker passes a null objectId.
+        Assert.True((await rbacSvc.IsUserPermitted(Nobody, [CatalogueRead(RbacAccessType.Global)], null!)).Permitted());
+        Assert.True((await rbacSvc.IsUserPermitted(Nobody, [CatalogueRead(RbacAccessType.Global)], "")).Permitted());
+    }
+
+    [Fact]
+    public async Task GuestBaselineAppliesToAnyCapability()
+    {
+        var rbacSvc = await EmptyFixtureWithGuest((RbacNamespace.Topics, "read-public", RbacAccessType.Capability));
+
+        Assert.True(
+            (await rbacSvc.IsUserPermitted(Nobody, [TopicsReadPublic(RbacAccessType.Capability)], "cap-a")).Permitted()
+        );
+        Assert.True(
+            (await rbacSvc.IsUserPermitted(Nobody, [TopicsReadPublic(RbacAccessType.Capability)], "cap-b")).Permitted()
+        );
+    }
+
+    [Fact]
+    public async Task GuestBaselineStillAppliesWhenUserHoldsACapabilityRole()
+    {
+        var readerRoleId = RbacRoleId.New();
+
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant>
+            {
+                new(
+                    id: RbacPermissionGrantId.New(),
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.Role,
+                    assignedEntityId: readerRoleId.ToString(),
+                    @namespace: RbacNamespace.Topics,
+                    permission: "read-private",
+                    type: RbacAccessType.Global,
+                    resource: ""
+                ),
+            },
+            new List<RbacRoleGrant>
+            {
+                new(
+                    id: RbacRoleGrantId.New(),
+                    roleId: readerRoleId,
+                    createdAt: DateTime.Now,
+                    assignedEntityType: AssignedEntityType.User,
+                    assignedEntityId: "reader@dfds.cloud",
+                    type: RbacAccessType.Capability,
+                    resource: "bar"
+                ),
+            },
+            new List<RbacGroup>()
+        );
+        await RbacTestData.SeedGuestRole(
+            fixture.DbContext,
+            (RbacNamespace.Topics, "read-public", RbacAccessType.Capability)
+        );
+        var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted(
+                    "reader@dfds.cloud",
+                    [
+                        new Permission
+                        {
+                            Namespace = RbacNamespace.Topics,
+                            Name = "read-private",
+                            AccessType = RbacAccessType.Capability,
+                        },
+                    ],
+                    "bar"
+                )
+            ).Permitted()
+        );
+
+        Assert.True(
+            (
+                await rbacSvc.IsUserPermitted("reader@dfds.cloud", [TopicsReadPublic(RbacAccessType.Capability)], "bar")
+            ).Permitted()
+        );
+    }
+
+    [Fact]
+    public async Task GuestBaselineIsAdditiveNeverSubtractive()
+    {
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant> { UserGrant(RbacAccessType.Global, "") },
+            new List<RbacRoleGrant>(),
+            new List<RbacGroup>()
+        );
+        await RbacTestData.SeedGuestRole(
+            fixture.DbContext,
+            (RbacNamespace.Topics, "read-public", RbacAccessType.Capability)
+        );
+        var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
+
+        var own = await rbacSvc.IsUserPermitted("test01@dfds.cloud", [RbacCreate(RbacAccessType.Global)], "test01");
+        Assert.True(own.Permitted());
+        Assert.NotEmpty(own.PermissionGrants);
+
+        var baseline = await rbacSvc.IsUserPermitted(
+            "test01@dfds.cloud",
+            [TopicsReadPublic(RbacAccessType.Capability)],
+            "test01"
+        );
+        Assert.True(baseline.Permitted());
+        Assert.NotEmpty(baseline.PermissionGrants);
+    }
+
+    [Fact]
+    public async Task CapabilityScopedGuestGrantDoesNotSatisfyGlobalCheck()
+    {
+        var rbacSvc = await EmptyFixtureWithGuest((RbacNamespace.Topics, "read-public", RbacAccessType.Capability));
+
+        Assert.False(
+            (await rbacSvc.IsUserPermitted(Nobody, [TopicsReadPublic(RbacAccessType.Global)], "cap-a")).Permitted()
+        );
+    }
+
+    [Fact]
+    public async Task GuestGrantScopeIgnoresTheStoredTypeColumn()
+    {
+        // what Guest reaches.
+        var storedGlobal = await EmptyFixtureWithGuest(
+            (RbacNamespace.ServiceCatalogue, "read", RbacAccessType.Global)
+        );
+        var storedCapability = await EmptyFixtureWithGuest(
+            (RbacNamespace.ServiceCatalogue, "read", RbacAccessType.Capability)
+        );
+
+        Assert.True(
+            (await storedGlobal.IsUserPermitted(Nobody, [CatalogueRead(RbacAccessType.Global)], null!)).Permitted()
+        );
+        Assert.True(
+            (await storedCapability.IsUserPermitted(Nobody, [CatalogueRead(RbacAccessType.Global)], null!)).Permitted()
+        );
+    }
+
+    [Fact]
+    public async Task NoGuestRoleMeansNoBaseline()
+    {
+        var fixture = await RbacTestData.NewInMemoryFixture(
+            true,
+            new List<RbacPermissionGrant>(),
+            new List<RbacRoleGrant>(),
+            new List<RbacGroup>()
+        );
+        var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
+
+        Assert.False((await rbacSvc.IsUserPermitted(Nobody, [CatalogueRead(RbacAccessType.Global)], null!)).Permitted());
+        Assert.False(
+            (await rbacSvc.IsUserPermitted(Nobody, [TopicsReadPublic(RbacAccessType.Capability)], "cap-a")).Permitted()
         );
     }
 }
