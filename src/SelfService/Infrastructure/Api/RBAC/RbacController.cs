@@ -75,7 +75,9 @@ public class RbacController : ControllerBase
 
         var groups = await _rbacApplicationService.GetGroupsForUser(userId);
 
-        return Ok(_apiResourceFactory.Convert(combinedPermissions, combinedRoles, groups));
+        var baselinePermissions = await _permissionQuery.FindGuestPermissions();
+
+        return Ok(_apiResourceFactory.Convert(combinedPermissions, combinedRoles, groups, baselinePermissions));
     }
 
     [HttpGet("get-assignable-permissions")]

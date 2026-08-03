@@ -1751,20 +1751,25 @@ public class ApiResourceFactory
     public RbacMeApiResource Convert(
         List<RbacPermissionGrant> permissionGrants,
         List<RbacRoleGrant> roleGrants,
-        List<RbacGroup> groups
+        List<RbacGroup> groups,
+        List<RbacPermissionGrant> baselinePermissionGrants
     )
     {
-        var mappedPermissionGrants = permissionGrants.Select(x => new RBAC.Dto.RbacPermissionGrant
-        {
-            Id = x.Id.ToString(),
-            AssignedEntityId = x.AssignedEntityId,
-            AssignedEntityType = x.AssignedEntityType,
-            CreatedAt = x.CreatedAt,
-            Namespace = x.Namespace,
-            Permission = x.Permission,
-            Resource = x.Resource,
-            Type = x.Type.ToString(),
-        });
+        RBAC.Dto.RbacPermissionGrant MapPermissionGrant(RbacPermissionGrant x) =>
+            new()
+            {
+                Id = x.Id.ToString(),
+                AssignedEntityId = x.AssignedEntityId,
+                AssignedEntityType = x.AssignedEntityType,
+                CreatedAt = x.CreatedAt,
+                Namespace = x.Namespace,
+                Permission = x.Permission,
+                Resource = x.Resource,
+                Type = x.Type.ToString(),
+            };
+
+        var mappedPermissionGrants = permissionGrants.Select(MapPermissionGrant);
+        var mappedBaselinePermissionGrants = baselinePermissionGrants.Select(MapPermissionGrant);
 
         var mappedRoleGrants = roleGrants.Select(x => new RBAC.Dto.RbacRoleGrant
         {
@@ -1821,7 +1826,8 @@ public class ApiResourceFactory
             },
             permissionGrants: mappedPermissionGrants.ToArray(),
             roleGrants: mappedRoleGrants.ToArray(),
-            groups: mappedGroups.ToArray()
+            groups: mappedGroups.ToArray(),
+            baselinePermissionGrants: mappedBaselinePermissionGrants.ToArray()
         );
 
         return payload;

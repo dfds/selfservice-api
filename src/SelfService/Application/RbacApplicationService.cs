@@ -35,6 +35,13 @@ public class RbacApplicationService : IRbacApplicationService
         _cache = new RbacCache();
     }
 
+    private static readonly Dictionary<string, RbacAccessType> DeclaredScopes = Permission
+        .BootstrapPermissions()
+        .ToDictionary(p => $"{p.Namespace}-{p.Name}", p => p.AccessType);
+
+    private static RbacAccessType DeclaredScopeOf(RbacNamespace ns, string name) =>
+        DeclaredScopes.TryGetValue($"{ns}-{name}", out var t) ? t : RbacAccessType.Capability;
+
     public async Task<PermittedResponse> IsUserPermitted(string user, List<Permission> permissions, string objectId)
     {
         var resp = new PermittedResponse();
@@ -59,33 +66,31 @@ public class RbacApplicationService : IRbacApplicationService
         var combinedPermissions = userPermissions.Concat(groupPermissions).ToList();
         var combinedRoles = userRoles.Concat(groupRoles).ToList();
 
-        // If the user has no explicit capability role for this resource, apply Guest role permissions as default
-        var isCapabilityCheck = permissions.Any(p => p.AccessType == RbacAccessType.Capability);
-        if (
-            isCapabilityCheck
-            && !combinedRoles.Any(rg => rg.Type == RbacAccessType.Capability && rg.Resource == objectId)
-        )
-        {
-            var guestPermissions = await _cache.GetOrAddAsync(
-                CacheConst.GuestPermissions,
-                "global",
-                () => _permissionQuery.FindGuestPermissions()
-            );
-            combinedPermissions = combinedPermissions
-                .Concat(
-                    guestPermissions.Select(p => new RbacPermissionGrant(
-                        p.Id,
-                        p.CreatedAt,
-                        p.AssignedEntityType,
-                        p.AssignedEntityId,
-                        p.Namespace,
-                        p.Permission,
-                        RbacAccessType.Capability,
-                        objectId
-                    ))
-                )
-                .ToList();
-        }
+        // Guest is the baseline role every user holds implicitly
+        var guestPermissions = await _cache.GetOrAddAsync(
+            CacheConst.GuestPermissions,
+            "global",
+            () => _permissionQuery.FindGuestPermissions()
+        );
+
+        combinedPermissions = combinedPermissions
+            .Concat(
+                guestPermissions.Select(g =>
+                {
+                    var scope = DeclaredScopeOf(g.Namespace, g.Permission);
+                    return new RbacPermissionGrant(
+                        g.Id,
+                        g.CreatedAt,
+                        g.AssignedEntityType,
+                        g.AssignedEntityId,
+                        g.Namespace,
+                        g.Permission,
+                        scope,
+                        scope == RbacAccessType.Global ? "" : (objectId ?? "")
+                    );
+                })
+            )
+            .ToList();
 
         // Shared by both grant sources below (direct/group grants and role-derived grants) so the
         // matching rule cannot drift between them.
@@ -285,8 +290,8 @@ public class RbacApplicationService : IRbacApplicationService
         return await GetAllRolesInternal();
     }
 
-    // Returns roles that can be assigned to capability members. Guest is excluded as it is a system-level
-    // default role applied implicitly to users without an explicit capability role.
+    // Returns roles that can be assigned to capability members. Guest is excluded as it is the baseline
+    // role held implicitly by every user — assigning it to anyone would be a no-op.
     public async Task<List<RbacRole>> GetAssignableRoles()
     {
         var allRoles = await GetAllRolesInternal();
@@ -521,7 +526,7 @@ public class RbacApplicationService : IRbacApplicationService
                 if (guestRoleCheck != null && roleGrant.RoleId == guestRoleCheck.Id)
                 {
                     throw new BadHttpRequestException(
-                        "Guest role cannot be directly assigned to a capability. It is the implicit default role for users without an explicit capability role."
+                        "Guest role cannot be directly assigned to a capability. It is the baseline role held implicitly by every user, so granting it would have no effect."
                     );
                 }
 
