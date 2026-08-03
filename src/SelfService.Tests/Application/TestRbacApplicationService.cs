@@ -956,9 +956,7 @@ public class TestRbacApplicationService
     [Fact]
     public async Task GuestBaselineSatisfiesGlobalScopedChecks()
     {
-        var rbacSvc = await EmptyFixtureWithGuest(
-            (RbacNamespace.ServiceCatalogue, "read", RbacAccessType.Global)
-        );
+        var rbacSvc = await EmptyFixtureWithGuest((RbacNamespace.ServiceCatalogue, "read", RbacAccessType.Global));
 
         // A Global-scoped controller has no {id} route value, so AuthChecker passes a null objectId.
         Assert.True((await rbacSvc.IsUserPermitted(Nobody, [CatalogueRead(RbacAccessType.Global)], null!)).Permitted());
@@ -1084,9 +1082,7 @@ public class TestRbacApplicationService
     public async Task GuestGrantScopeIgnoresTheStoredTypeColumn()
     {
         // what Guest reaches.
-        var storedGlobal = await EmptyFixtureWithGuest(
-            (RbacNamespace.ServiceCatalogue, "read", RbacAccessType.Global)
-        );
+        var storedGlobal = await EmptyFixtureWithGuest((RbacNamespace.ServiceCatalogue, "read", RbacAccessType.Global));
         var storedCapability = await EmptyFixtureWithGuest(
             (RbacNamespace.ServiceCatalogue, "read", RbacAccessType.Capability)
         );
@@ -1110,7 +1106,9 @@ public class TestRbacApplicationService
         );
         var rbacSvc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
 
-        Assert.False((await rbacSvc.IsUserPermitted(Nobody, [CatalogueRead(RbacAccessType.Global)], null!)).Permitted());
+        Assert.False(
+            (await rbacSvc.IsUserPermitted(Nobody, [CatalogueRead(RbacAccessType.Global)], null!)).Permitted()
+        );
         Assert.False(
             (await rbacSvc.IsUserPermitted(Nobody, [TopicsReadPublic(RbacAccessType.Capability)], "cap-a")).Permitted()
         );
