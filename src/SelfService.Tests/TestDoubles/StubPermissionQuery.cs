@@ -5,7 +5,13 @@ namespace SelfService.Tests.TestDoubles;
 
 public class StubPermissionQuery : IPermissionQuery
 {
-    public StubPermissionQuery() { }
+    private readonly List<RbacPermissionGrant> _guestPermissions;
+
+    // Defaults to an empty guest baseline so existing tests see no implicit permissions.
+    public StubPermissionQuery(List<RbacPermissionGrant>? guestPermissions = null)
+    {
+        _guestPermissions = guestPermissions ?? new List<RbacPermissionGrant>();
+    }
 
     public Task<IList<RbacPermissionGrant>> FindUserGroupPermissionsByUserId(string userId)
     {
@@ -19,6 +25,6 @@ public class StubPermissionQuery : IPermissionQuery
 
     public Task<List<RbacPermissionGrant>> FindGuestPermissions()
     {
-        return Task.FromResult(new List<RbacPermissionGrant>());
+        return Task.FromResult(_guestPermissions);
     }
 }
