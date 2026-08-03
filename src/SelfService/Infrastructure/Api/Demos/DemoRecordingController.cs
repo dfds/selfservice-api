@@ -181,8 +181,8 @@ public class DemoRecordingController : ControllerBase
             );
         }
 
-        var isCloudEngineer = _authorizationService.CanSynchronizeAwsECRAndDatabaseECR(User.ToPortalUser());
-        if (!isCloudEngineer)
+        var canReadSignups = _authorizationService.CanReadDemoSignups(User.ToPortalUser());
+        if (!canReadSignups)
             return Unauthorized();
 
         return Ok(_apiResourceFactory.Convert(await _demoApplicationService.GetActiveSignups()));

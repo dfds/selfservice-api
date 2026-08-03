@@ -51,6 +51,7 @@ public interface IAuthorizationService
     bool CanCreateDemoRecording(PortalUser portalUser);
     bool CanUpdateDemoRecording(PortalUser portalUser);
     bool CanDeleteDemoRecording(PortalUser portalUser);
+    bool CanReadDemoSignups(PortalUser portalUser);
 
     bool CanCreateEvent(PortalUser portalUser);
     bool CanUpdateEvent(PortalUser portalUser);

@@ -1,4 +1,4 @@
-{
+﻿{
     "debug": true,
     "apiUrl": "https://ssu-preview.hellman.oxygen.dfds.cloud/api",
     "groups": [
@@ -14,6 +14,45 @@
             "members": [
                 "andfris@dfds.com",
                 "emcla@dfds.com"
+            ]
+        },
+        {
+            "name": "CapabilityOwnersBar",
+            "roles": [
+                {
+                    "roleName": "Owner",
+                    "scope": "Capability",
+                    "resource": "bar"
+                }
+            ],
+            "members": [
+                "owner@bar.com"
+            ]
+        },
+        {
+            "name": "CapabilityContributorsBar",
+            "roles": [
+                {
+                    "roleName": "Contributor",
+                    "scope": "Capability",
+                    "resource": "bar"
+                }
+            ],
+            "members": [
+                "contributor@bar.com"
+            ]
+        },
+        {
+            "name": "CapabilityReadersBar",
+            "roles": [
+                {
+                    "roleName": "Reader",
+                    "scope": "Capability",
+                    "resource": "bar"
+                }
+            ],
+            "members": [
+                "reader@bar.com"
             ]
         },
         {
@@ -49,20 +88,22 @@
                     "read-public",
                     "read-private",
                     "update",
-                    "delete"
+                    "delete",
+                    "retry-creating-message-contract"
                 ],
-                "capability-management": [
+                "demos": [
+                    "read-signups"
+                ],
+                "capability": [
                     "receive-alerts",
                     "receive-cost",
                     "request-deletion",
                     "manage-permissions",
                     "read-self-assess",
-                    "create-self-assess"
-                ],
-                "capability-membership-management": [
-                    "create",
-                    "delete",
-                    "read",
+                    "create-self-assess",
+                    "invite-member",
+                    "remove-member",
+                    "read-members",
                     "read-requests",
                     "manage-requests"
                 ],
@@ -109,12 +150,10 @@
                     "update",
                     "delete"
                 ],
-                "capability-management": [
-                    "receive-alerts"
-                ],
-                "capability-membership-management": [
-                    "create",
-                    "read",
+                "capability": [
+                    "receive-alerts",
+                    "invite-member",
+                    "read-members",
                     "read-requests",
                     "manage-requests"
                 ],
@@ -152,8 +191,8 @@
                     "read-public",
                     "read-private"
                 ],
-                "capability-membership-management": [
-                    "read",
+                "capability": [
+                    "read-members",
                     "read-requests"
                 ],
                 "tags-and-metadata": [
@@ -180,8 +219,8 @@
                 "topics": [
                     "read-public"
                 ],
-                "capability-membership-management": [
-                    "read"
+                "capability": [
+                    "read-members"
                 ],
                 "tags-and-metadata": [
                     "read"
@@ -200,21 +239,30 @@
                     "read-public",
                     "read-private",
                     "update",
-                    "delete"
+                    "delete",
+                    "delete-public",
+                    "retry-creating-message-contract"
                 ],
-                "capability-management": [
+                "demos": [
+                    "create",
+                    "update",
+                    "delete",
+                    "read-signups"
+                ],
+                "capability": [
                     "receive-alerts",
                     "receive-cost",
                     "request-deletion",
                     "manage-permissions",
                     "read-self-assess",
                     "create-self-assess",
-                    "batch-create-capabilities"
-                ],
-                "capability-membership-management": [
-                    "create",
-                    "delete",
-                    "read",
+                    "batch-create-capabilities",
+                    "view-deleted-capabilities",
+                    "bypass-membership-approvals",
+                    "unset-capability-tags",
+                    "invite-member",
+                    "remove-member",
+                    "read-members",
                     "read-requests",
                     "manage-requests"
                 ],
@@ -254,30 +302,31 @@
                 "system-legacy": [
                     "read"
                 ],
-                "system-admin": [
-                    "view-deleted-capabilities",
-                    "unset-capability-tags",
-                    "create-demo-recording",
-                    "update-demo-recording",
-                    "delete-demo-recording",
-                    "manage-permission-matrix",
-                    "synchronize-aws-ecr-and-database-ecr",
-                    "bypass-membership-approvals",
-                    "manage-self-assessment-options",
-                    "create-release-notes",
-                    "update-release-note",
+                "self-assessment": [
+                    "manage-self-assessment-options"
+                ],
+                "release-notes": [
+                    "create",
+                    "update",
                     "toggle-release-note-is-active",
                     "list-draft-release-notes",
-                    "remove-release-note",
-                    "create-event",
-                    "update-event",
-                    "delete-event",
-                    "create-news-item",
-                    "update-news-item",
-                    "delete-news-item",
-                    "get-user-emails",
-                    "delete-membership-application-as-admin",
-                    "retry-creating-message-contract",
+                    "delete"
+                ],
+                "events": [
+                    "create",
+                    "update",
+                    "delete"
+                ],
+                "news": [
+                    "create",
+                    "update",
+                    "delete"
+                ],
+                "users": [
+                    "read"
+                ],
+                "system-admin": [
+                    "synchronize-aws-ecr-and-database-ecr",
                     "manage-json-schemas"
                 ]
             }
@@ -286,7 +335,7 @@
             "name": "BatchCapabilityCreator",
             "existingId": "6A2EE52C-6A9B-4A2A-B9C8-5851DD2D9A6F",
             "permissions": {
-                "capability-management": [
+                "capability": [
                     "batch-create-capabilities"
                 ]
             }

@@ -3,6 +3,7 @@ using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
+using SelfService.Infrastructure.Api;
 using SelfService.Infrastructure.Persistence;
 
 namespace SelfService.Application;
@@ -15,6 +16,7 @@ public class RbacApplicationService : IRbacApplicationService
     private readonly IRbacGroupRepository _groupRepository;
     private readonly IPermissionQuery _permissionQuery;
     private readonly IRbacRoleRepository _roleRepository;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly RbacCache _cache;
 
     public RbacApplicationService(
@@ -23,7 +25,8 @@ public class RbacApplicationService : IRbacApplicationService
         IRbacGroupMemberRepository groupMemberRepository,
         IRbacGroupRepository groupRepository,
         IPermissionQuery permissionQuery,
-        IRbacRoleRepository roleRepository
+        IRbacRoleRepository roleRepository,
+        IHttpContextAccessor httpContextAccessor
     )
     {
         _permissionGrantRepository = permissionGrantRepository;
@@ -32,13 +35,21 @@ public class RbacApplicationService : IRbacApplicationService
         _groupRepository = groupRepository;
         _permissionQuery = permissionQuery;
         _roleRepository = roleRepository;
+        _httpContextAccessor = httpContextAccessor;
         _cache = new RbacCache();
     }
 
     public async Task<PermittedResponse> IsUserPermitted(string user, List<Permission> permissions, string objectId)
     {
         var resp = new PermittedResponse();
-        permissions.ForEach(p => resp.PermissionMatrix.TryAdd($"{p.Namespace}-{p.Name}", new PermissionMatrix(p)));
+        permissions.ForEach(p =>
+        {
+            var key = $"{p.Namespace}-{p.Name}";
+            if (!resp.PermissionMatrix.ContainsKey(key))
+            {
+                resp.PermissionMatrix[key] = new PermissionMatrix(p);
+            }
+        });
 
         // user level
         var userPermissions = await GetPermissionGrantsForUser(user);
@@ -58,6 +69,14 @@ public class RbacApplicationService : IRbacApplicationService
 
         var combinedPermissions = userPermissions.Concat(groupPermissions).ToList();
         var combinedRoles = userRoles.Concat(groupRoles).ToList();
+
+        if (ReducedPermissionsRequested())
+        {
+            combinedPermissions = combinedPermissions
+                .Where(permission => permission.Type != RbacAccessType.Global)
+                .ToList();
+            combinedRoles = combinedRoles.Where(role => role.Type != RbacAccessType.Global).ToList();
+        }
 
         // If the user has no explicit capability role for this resource, apply Guest role permissions as default
         var isCapabilityCheck = permissions.Any(p => p.AccessType == RbacAccessType.Capability);
@@ -123,6 +142,13 @@ public class RbacApplicationService : IRbacApplicationService
         resp.PermissionGrants.AddRange(permissionsFromRoles.FindAll(Evaluate));
 
         return resp;
+    }
+
+    private bool ReducedPermissionsRequested()
+    {
+        return _httpContextAccessor.HttpContext?.Items.ContainsKey(
+                ReducedPermissionsMiddleware.ReducedPermissionsContextKey
+            ) == true;
     }
 
     public async Task<List<RbacPermissionGrant>> GetPermissionGrantsForRoleGrants(List<RbacRoleGrant> roleGrants)
@@ -296,21 +322,13 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task GrantPermission(string user, RbacPermissionGrant permissionGrant)
     {
-        //PermittedResponse? canUserCreateGlobalRbac;
         switch (permissionGrant.Type)
         {
             case var a when a == RbacAccessType.Global:
-                /*
-                canUserCreateGlobalRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
-                    permissionGrant.Resource ?? ""
-                );
-                if (!canUserCreateGlobalRbac.Permitted())
+                if (!await HasGlobalPermission(user, RbacNamespace.Rbac, "create"))
                 {
                     throw new UnauthorizedAccessException();
                 }
-                */
                 await _permissionGrantRepository.Add(
                     RbacPermissionGrant.New(
                         permissionGrant.AssignedEntityType,
@@ -324,26 +342,11 @@ public class RbacApplicationService : IRbacApplicationService
 
                 break;
             case var a when a == RbacAccessType.Capability:
-                /*
-                canUserCreateGlobalRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
-                    permissionGrant.Resource ?? ""
-                );
-                var canUserCreateCapabilityRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission>
-                    {
-                        new(RbacNamespace.CapabilityManagement, "manage-permissions", "", RbacAccessType.Capability),
-                    },
-                    permissionGrant.Resource ?? ""
-                );
-
-                if (!canUserCreateGlobalRbac.Permitted() && !canUserCreateCapabilityRbac.Permitted())
+                if (!await HasCapabilityManagePermissions(user, permissionGrant.Resource ?? ""))
                 {
                     throw new UnauthorizedAccessException();
                 }
-                */
+
                 await _permissionGrantRepository.Add(
                     RbacPermissionGrant.New(
                         permissionGrant.AssignedEntityType,
@@ -385,17 +388,10 @@ public class RbacApplicationService : IRbacApplicationService
         if (permissionLookup == null)
             throw new Exception("Permission grant not found");
 
-        PermittedResponse? canUserCreateGlobalRbac;
         switch (permissionLookup.Type)
         {
             case var a when a == RbacAccessType.Global:
-
-                canUserCreateGlobalRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
-                    permissionLookup.Resource ?? ""
-                );
-                if (!canUserCreateGlobalRbac.Permitted())
+                if (!await HasGlobalPermission(user, RbacNamespace.Rbac, "delete"))
                 {
                     throw new UnauthorizedAccessException();
                 }
@@ -403,24 +399,11 @@ public class RbacApplicationService : IRbacApplicationService
                 await _permissionGrantRepository.Remove(permissionLookup.Id);
                 break;
             case var a when a == RbacAccessType.Capability:
-                canUserCreateGlobalRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
-                    permissionLookup.Resource ?? ""
-                );
-                var canUserCreateCapabilityRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission>
-                    {
-                        new(RbacNamespace.CapabilityManagement, "manage-permissions", "", RbacAccessType.Capability),
-                    },
-                    permissionLookup.Resource ?? ""
-                );
-
-                if (!canUserCreateGlobalRbac.Permitted() && !canUserCreateCapabilityRbac.Permitted())
+                if (!await HasCapabilityManagePermissions(user, permissionLookup.Resource ?? ""))
                 {
                     throw new UnauthorizedAccessException();
                 }
+
                 await _permissionGrantRepository.Remove(permissionLookup.Id);
                 break;
             default:
@@ -456,6 +439,25 @@ public class RbacApplicationService : IRbacApplicationService
         );
     }
 
+    private async Task<bool> HasCapabilityManagePermissions(string user, string capabilityId)
+    {
+        if (string.IsNullOrWhiteSpace(capabilityId))
+        {
+            return false;
+        }
+
+        return (
+            await IsUserPermitted(
+                user,
+                new List<Permission>
+                {
+                    new(RbacNamespace.Capability, "manage-permissions", "", RbacAccessType.Capability),
+                },
+                capabilityId
+            )
+        ).Permitted();
+    }
+
     [TransactionalBoundary]
     public async Task GrantRoleGrant(string user, RbacRoleGrant roleGrant, bool userInitiated = false)
     {
@@ -470,21 +472,7 @@ public class RbacApplicationService : IRbacApplicationService
                     throw new UnauthorizedAccessException();
                 }
 
-                var canManage = (
-                    await IsUserPermitted(
-                        user,
-                        new List<Permission>
-                        {
-                            new(
-                                RbacNamespace.CapabilityManagement,
-                                "manage-permissions",
-                                "",
-                                RbacAccessType.Capability
-                            ),
-                        },
-                        roleGrant.Resource ?? ""
-                    )
-                ).Permitted();
+                var canManage = await HasCapabilityManagePermissions(user, roleGrant.Resource ?? "");
 
                 var userGrantsToSelf =
                     roleGrant.AssignedEntityType == AssignedEntityType.User
@@ -571,17 +559,10 @@ public class RbacApplicationService : IRbacApplicationService
         if (roleGrant == null)
             throw new Exception("Role grant not found");
 
-        PermittedResponse? canUserDeleteGlobalRbac;
         switch (roleGrant.Type)
         {
             case var a when a == RbacAccessType.Global:
-
-                canUserDeleteGlobalRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
-                    roleGrant.Resource ?? ""
-                );
-                if (!canUserDeleteGlobalRbac.Permitted())
+                if (!await HasGlobalPermission(user, RbacNamespace.Rbac, "delete"))
                 {
                     throw new UnauthorizedAccessException();
                 }
@@ -589,25 +570,11 @@ public class RbacApplicationService : IRbacApplicationService
                 await _roleGrantRepository.Remove(roleGrant.Id);
                 break;
             case var a when a == RbacAccessType.Capability:
-
-                canUserDeleteGlobalRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
-                    roleGrant.Resource ?? ""
-                );
-                var canUserDeleteCapabilityRbac = await IsUserPermitted(
-                    user,
-                    new List<Permission>
-                    {
-                        new(RbacNamespace.CapabilityManagement, "manage-permissions", "", RbacAccessType.Capability),
-                    },
-                    roleGrant.Resource ?? ""
-                );
-
-                if (!canUserDeleteGlobalRbac.Permitted() && !canUserDeleteCapabilityRbac.Permitted())
+                if (!await HasCapabilityManagePermissions(user, roleGrant.Resource ?? ""))
                 {
                     throw new UnauthorizedAccessException();
                 }
+
                 await _roleGrantRepository.Remove(roleGrant.Id);
                 break;
             default:
@@ -634,17 +601,10 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task<RbacRole> CreateRole(string user, RbacRole role)
     {
-        /*
-        var canUserCreateGlobalRbac = await IsUserPermitted(
-            user,
-            new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
-            ""
-        );
-        if (!canUserCreateGlobalRbac.Permitted())
+        if (!await HasGlobalPermission(user, RbacNamespace.Rbac, "create"))
         {
             throw new UnauthorizedAccessException();
         }
-        */
 
         var newRole = RbacRole.New(
             ownerId: role.OwnerId,
@@ -668,12 +628,7 @@ public class RbacApplicationService : IRbacApplicationService
     public async Task DeleteRole(string user, string roleId)
     {
         _cache.Reset();
-        var canUserDeleteGlobalRbac = await IsUserPermitted(
-            user,
-            new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
-            ""
-        );
-        if (!canUserDeleteGlobalRbac.Permitted())
+        if (!await HasGlobalPermission(user, RbacNamespace.Rbac, "delete"))
         {
             throw new UnauthorizedAccessException();
         }
@@ -689,17 +644,10 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task<RbacGroup> CreateGroup(string user, RbacGroup group)
     {
-        /*
-        var canUserCreateGlobalRbac = await IsUserPermitted(
-            user,
-            new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
-            ""
-        );
-        if (!canUserCreateGlobalRbac.Permitted())
+        if (!await HasGlobalPermission(user, RbacNamespace.Rbac, "create"))
         {
             throw new UnauthorizedAccessException();
         }
-        */
 
         var newGroup = RbacGroup.New(name: group.Name, description: group.Description, members: group.Members);
         await _groupRepository.Add(newGroup);
@@ -711,12 +659,7 @@ public class RbacApplicationService : IRbacApplicationService
     public async Task DeleteGroup(string user, string groupId)
     {
         _cache.Reset();
-        var canUserDeleteGlobalRbac = await IsUserPermitted(
-            user,
-            new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
-            ""
-        );
-        if (!canUserDeleteGlobalRbac.Permitted())
+        if (!await HasGlobalPermission(user, RbacNamespace.Rbac, "delete"))
         {
             throw new UnauthorizedAccessException();
         }
@@ -731,17 +674,10 @@ public class RbacApplicationService : IRbacApplicationService
     [TransactionalBoundary]
     public async Task<RbacGroupMember> GrantGroupGrant(string user, RbacGroupMember membership)
     {
-        /*
-        var canUserCreateGlobalRbac = await IsUserPermitted(
-            user,
-            new List<Permission> { new(RbacNamespace.Rbac, "create", "", RbacAccessType.Global) },
-            ""
-        );
-        if (!canUserCreateGlobalRbac.Permitted())
+        if (!await HasGlobalPermission(user, RbacNamespace.Rbac, "create"))
         {
             throw new UnauthorizedAccessException();
         }
-        */
 
         var group = await _groupRepository.FindById(RbacGroupId.Parse(membership.GroupId));
         if (group == null)
@@ -758,12 +694,7 @@ public class RbacApplicationService : IRbacApplicationService
     public async Task RevokeGroupGrant(string user, RbacGroupMember membership)
     {
         _cache.Reset();
-        var canUserDeleteGlobalRbac = await IsUserPermitted(
-            user,
-            new List<Permission> { new(RbacNamespace.Rbac, "delete", "", RbacAccessType.Global) },
-            ""
-        );
-        if (!canUserDeleteGlobalRbac.Permitted())
+        if (!await HasGlobalPermission(user, RbacNamespace.Rbac, "delete"))
         {
             throw new UnauthorizedAccessException();
         }
@@ -795,9 +726,9 @@ public class RbacApplicationService : IRbacApplicationService
             {
                 new()
                 {
-                    Namespace = RbacNamespace.CapabilityManagement,
+                    Namespace = RbacNamespace.Capability,
                     Name = "manage-permissions",
-                    AccessType = RbacAccessType.Global,
+                    AccessType = RbacAccessType.Capability,
                 },
                 new()
                 {
@@ -865,48 +796,34 @@ public class Permission
             new(RbacNamespace.Topics, "read-public", "Read public topics", RbacAccessType.Capability),
             new(RbacNamespace.Topics, "update", "Update topics", RbacAccessType.Capability),
             new(RbacNamespace.Topics, "delete", "Delete topics", RbacAccessType.Capability),
-            new(RbacNamespace.CapabilityManagement, "receive-alerts", "Receive Alarms", RbacAccessType.Capability),
+            new(RbacNamespace.Topics, "delete-public", "Delete public topics", RbacAccessType.Capability),
+            new(RbacNamespace.Capability, "receive-alerts", "Receive Alarms", RbacAccessType.Capability),
+            new(RbacNamespace.Capability, "receive-cost", "Receive cost summary reports", RbacAccessType.Capability),
+            new(RbacNamespace.Capability, "request-deletion", "Request Capability deletion", RbacAccessType.Capability),
             new(
-                RbacNamespace.CapabilityManagement,
-                "receive-cost",
-                "Receive cost summary reports",
-                RbacAccessType.Capability
-            ),
-            new(
-                RbacNamespace.CapabilityManagement,
-                "request-deletion",
-                "Request Capability deletion",
-                RbacAccessType.Capability
-            ),
-            new(
-                RbacNamespace.CapabilityManagement,
+                RbacNamespace.Capability,
                 "manage-permissions",
                 "Manage Capability permissions",
                 RbacAccessType.Capability
             ),
+            new(RbacNamespace.Capability, "read-self-assess", "Self assessment permissions", RbacAccessType.Capability),
             new(
-                RbacNamespace.CapabilityManagement,
-                "read-self-assess",
-                "Self assessment permissions",
-                RbacAccessType.Capability
-            ),
-            new(
-                RbacNamespace.CapabilityManagement,
+                RbacNamespace.Capability,
                 "create-self-assess",
                 "Self assessment permissions",
                 RbacAccessType.Capability
             ),
-            new(RbacNamespace.CapabilityMembershipManagement, "create", "Invite new member", RbacAccessType.Capability),
-            new(RbacNamespace.CapabilityMembershipManagement, "delete", "Remove member", RbacAccessType.Capability),
-            new(RbacNamespace.CapabilityMembershipManagement, "read", "See member list", RbacAccessType.Capability),
+            new(RbacNamespace.Capability, "invite-member", "Invite new member", RbacAccessType.Capability),
+            new(RbacNamespace.Capability, "remove-member", "Remove member", RbacAccessType.Capability),
+            new(RbacNamespace.Capability, "read-members", "See member list", RbacAccessType.Capability),
             new(
-                RbacNamespace.CapabilityMembershipManagement,
+                RbacNamespace.Capability,
                 "read-requests",
                 "Read invitation/application requests",
                 RbacAccessType.Capability
             ),
             new(
-                RbacNamespace.CapabilityMembershipManagement,
+                RbacNamespace.Capability,
                 "manage-requests",
                 "Approve/decline member requests",
                 RbacAccessType.Capability
@@ -917,8 +834,8 @@ public class Permission
             new(RbacNamespace.TagsAndMetadata, "delete", "Delete", RbacAccessType.Capability),
             new(RbacNamespace.Aws, "create", "Create context/cloud resources", RbacAccessType.Capability),
             new(RbacNamespace.Aws, "read", "Read context/cloud resources", RbacAccessType.Capability),
-            new(RbacNamespace.Aws, "manage-provider", "Read resources in AWS account", RbacAccessType.Capability),
-            new(RbacNamespace.Aws, "read-provider", "Manage resources in AWS account", RbacAccessType.Capability),
+            new(RbacNamespace.Aws, "manage-provider", "Manage resources in AWS account", RbacAccessType.Capability),
+            new(RbacNamespace.Aws, "read-provider", "Read resources in AWS account", RbacAccessType.Capability),
             new(RbacNamespace.Finout, "read-dashboards", "See all DFDS dashboards", RbacAccessType.Global),
             new(
                 RbacNamespace.Finout,
@@ -964,21 +881,16 @@ public class Permission
                 RbacAccessType.Global
             ),
             new(
-                RbacNamespace.SystemAdmin,
+                RbacNamespace.Capability,
                 "view-deleted-capabilities",
                 "View deleted capabilities",
                 RbacAccessType.Global
             ),
-            new(RbacNamespace.SystemAdmin, "unset-capability-tags", "Unset capability tags", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "create-demo-recording", "Create demo recordings", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "update-demo-recording", "Update demo recordings", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "delete-demo-recording", "Delete demo recordings", RbacAccessType.Global),
-            new(
-                RbacNamespace.SystemAdmin,
-                "manage-permission-matrix",
-                "Manage permission matrix",
-                RbacAccessType.Global
-            ),
+            new(RbacNamespace.Capability, "unset-capability-tags", "Unset capability tags", RbacAccessType.Global),
+            new(RbacNamespace.Demos, "create", "Create demo recordings", RbacAccessType.Global),
+            new(RbacNamespace.Demos, "update", "Update demo recordings", RbacAccessType.Global),
+            new(RbacNamespace.Demos, "delete", "Delete demo recordings", RbacAccessType.Global),
+            new(RbacNamespace.Demos, "read-signups", "Read demo signups", RbacAccessType.Global),
             new(
                 RbacNamespace.SystemAdmin,
                 "synchronize-aws-ecr-and-database-ecr",
@@ -986,53 +898,53 @@ public class Permission
                 RbacAccessType.Global
             ),
             new(
-                RbacNamespace.SystemAdmin,
+                RbacNamespace.Capability,
                 "bypass-membership-approvals",
                 "Bypass membership approvals",
                 RbacAccessType.Global
             ),
             new(
-                RbacNamespace.SystemAdmin,
+                RbacNamespace.SelfAssessment,
                 "manage-self-assessment-options",
                 "Manage self-assessment options",
                 RbacAccessType.Global
             ),
-            new(RbacNamespace.SystemAdmin, "create-release-notes", "Create release notes", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "update-release-note", "Update release note", RbacAccessType.Global),
+            new(RbacNamespace.ReleaseNotes, "create", "Create release notes", RbacAccessType.Global),
+            new(RbacNamespace.ReleaseNotes, "update", "Update release note", RbacAccessType.Global),
             new(
-                RbacNamespace.SystemAdmin,
+                RbacNamespace.ReleaseNotes,
                 "toggle-release-note-is-active",
                 "Toggle release note active state",
                 RbacAccessType.Global
             ),
             new(
-                RbacNamespace.SystemAdmin,
+                RbacNamespace.ReleaseNotes,
                 "list-draft-release-notes",
                 "List draft release notes",
                 RbacAccessType.Global
             ),
-            new(RbacNamespace.SystemAdmin, "remove-release-note", "Remove release note", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "create-event", "Create events", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "update-event", "Update events", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "delete-event", "Delete events", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "create-news-item", "Create news items", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "update-news-item", "Update news items", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "delete-news-item", "Delete news items", RbacAccessType.Global),
-            new(RbacNamespace.SystemAdmin, "get-user-emails", "Get user emails", RbacAccessType.Global),
+            new(RbacNamespace.ReleaseNotes, "delete", "Remove release note", RbacAccessType.Global),
+            new(RbacNamespace.Events, "create", "Create events", RbacAccessType.Global),
+            new(RbacNamespace.Events, "update", "Update events", RbacAccessType.Global),
+            new(RbacNamespace.Events, "delete", "Delete events", RbacAccessType.Global),
+            new(RbacNamespace.News, "create", "Create news items", RbacAccessType.Global),
+            new(RbacNamespace.News, "update", "Update news items", RbacAccessType.Global),
+            new(RbacNamespace.News, "delete", "Delete news items", RbacAccessType.Global),
+            new(RbacNamespace.Users, "read", "Get user emails", RbacAccessType.Global),
             new(
-                RbacNamespace.CapabilityManagement,
+                RbacNamespace.Capability,
+                "manage-requests",
+                "Approve/decline member requests across capabilities",
+                RbacAccessType.Global
+            ),
+            new(
+                RbacNamespace.Capability,
                 "batch-create-capabilities",
                 "Create capabilities in batch as administrator",
                 RbacAccessType.Global
             ),
             new(
-                RbacNamespace.SystemAdmin,
-                "delete-membership-application-as-admin",
-                "Delete membership applications as administrator",
-                RbacAccessType.Global
-            ),
-            new(
-                RbacNamespace.SystemAdmin,
+                RbacNamespace.Topics,
                 "retry-creating-message-contract",
                 "Retry failed message contract creation as administrator",
                 RbacAccessType.Global

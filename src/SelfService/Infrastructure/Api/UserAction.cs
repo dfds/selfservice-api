@@ -90,9 +90,9 @@ public static class MiddlewareExtensions
         return app.UseMiddleware<UserActionMiddleware>();
     }
 
-    public static IApplicationBuilder UseUserImpersonationMiddleware(this IApplicationBuilder app)
+    public static IApplicationBuilder UseReducedPermissionsMiddleware(this IApplicationBuilder app)
     {
-        return app.UseMiddleware<UserImpersonation>();
+        return app.UseMiddleware<ReducedPermissionsMiddleware>();
     }
 }
 

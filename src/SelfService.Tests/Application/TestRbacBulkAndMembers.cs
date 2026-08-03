@@ -14,7 +14,17 @@ public class TestRbacBulkAndMembers
             populateDatabase: true,
             rbacRoleGrantsSeed: new List<RbacRoleGrant>(),
             rbacGroupSeed: new List<RbacGroup>(),
-            rbacPermissionGrantsSeed: new List<RbacPermissionGrant>()
+            rbacPermissionGrantsSeed: new List<RbacPermissionGrant>
+            {
+                RbacPermissionGrant.New(
+                    AssignedEntityType.User,
+                    "ce@dfds.com",
+                    RbacNamespace.Rbac,
+                    "create",
+                    RbacAccessType.Global,
+                    ""
+                ),
+            }
         );
         var svc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
 
@@ -45,9 +55,12 @@ public class TestRbacBulkAndMembers
         await fixture.DbContext.SaveChangesAsync();
 
         var allGrants = await fixture.DbContext.RbacPermissionGrants.ToListAsync();
-        Assert.Equal(2, allGrants.Count);
-        Assert.Contains(allGrants, g => g.AssignedEntityId == "alice@dfds.com");
-        Assert.Contains(allGrants, g => g.AssignedEntityId == "bob@dfds.com");
+        var createdByBulk = allGrants
+            .Where(g => g.AssignedEntityId == "alice@dfds.com" || g.AssignedEntityId == "bob@dfds.com")
+            .ToList();
+        Assert.Equal(2, createdByBulk.Count);
+        Assert.Contains(createdByBulk, g => g.AssignedEntityId == "alice@dfds.com");
+        Assert.Contains(createdByBulk, g => g.AssignedEntityId == "bob@dfds.com");
     }
 
     [Fact]
@@ -57,7 +70,17 @@ public class TestRbacBulkAndMembers
             populateDatabase: true,
             rbacRoleGrantsSeed: new List<RbacRoleGrant>(),
             rbacGroupSeed: new List<RbacGroup>(),
-            rbacPermissionGrantsSeed: new List<RbacPermissionGrant>()
+            rbacPermissionGrantsSeed: new List<RbacPermissionGrant>
+            {
+                RbacPermissionGrant.New(
+                    AssignedEntityType.User,
+                    "ce@dfds.com",
+                    RbacNamespace.Rbac,
+                    "create",
+                    RbacAccessType.Global,
+                    ""
+                ),
+            }
         );
         var svc = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!;
 
@@ -94,7 +117,17 @@ public class TestRbacBulkAndMembers
 
         var fixture = await RbacTestData.NewInMemoryFixture(
             populateDatabase: true,
-            rbacPermissionGrantsSeed: new List<RbacPermissionGrant>(),
+            rbacPermissionGrantsSeed: new List<RbacPermissionGrant>
+            {
+                RbacPermissionGrant.New(
+                    AssignedEntityType.User,
+                    "ce@dfds.com",
+                    RbacNamespace.Rbac,
+                    "create",
+                    RbacAccessType.Global,
+                    ""
+                ),
+            },
             rbacRoleGrantsSeed: new List<RbacRoleGrant>(),
             rbacGroupSeed: new List<RbacGroup> { seedGroup }
         );

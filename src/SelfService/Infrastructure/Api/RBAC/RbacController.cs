@@ -764,7 +764,8 @@ public class RbacController : ControllerBase
                 roleGrants.Select(g => new PermissionMatrixGrantDto(
                     role.Id.ToString(),
                     g.Namespace.ToString(),
-                    g.Permission
+                    g.Permission,
+                    g.Type.ToString()
                 ))
             );
         }
@@ -801,11 +802,45 @@ public class RbacController : ControllerBase
             );
 
         var allPermissions = Permission.BootstrapPermissions();
-        var unknownPermissions = request
-            .Permissions.Where(p =>
-                !allPermissions.Any(ap => ap.Namespace.ToString() == p.Namespace && ap.Name == p.Name)
-            )
-            .ToList();
+        var unknownPermissions = new List<SetRolePermissionEntry>();
+        var ambiguousPermissions = new List<SetRolePermissionEntry>();
+        var entries = new List<RolePermissionEntry>();
+
+        foreach (var p in request.Permissions)
+        {
+            var matches = allPermissions
+                .Where(ap => ap.Namespace.ToString() == p.Namespace && ap.Name == p.Name)
+                .ToList();
+
+            if (!matches.Any())
+            {
+                unknownPermissions.Add(p);
+                continue;
+            }
+
+            if (!string.IsNullOrWhiteSpace(p.AccessType))
+            {
+                matches = matches
+                    .Where(ap =>
+                        string.Equals(ap.AccessType.ToString(), p.AccessType, StringComparison.OrdinalIgnoreCase)
+                    )
+                    .ToList();
+
+                if (!matches.Any())
+                {
+                    unknownPermissions.Add(p);
+                    continue;
+                }
+            }
+            else if (matches.Count > 1)
+            {
+                ambiguousPermissions.Add(p);
+                continue;
+            }
+
+            var matching = matches.Single();
+            entries.Add(new RolePermissionEntry(matching.Namespace, matching.Name, matching.AccessType));
+        }
 
         if (unknownPermissions.Any())
             return BadRequest(
@@ -813,17 +848,19 @@ public class RbacController : ControllerBase
                 {
                     Title = "Unknown permissions",
                     Detail =
-                        $"The following permissions are not recognised: {string.Join(", ", unknownPermissions.Select(p => $"{p.Namespace}/{p.Name}"))}",
+                        $"The following permissions are not recognised: {string.Join(", ", unknownPermissions.Select(p => string.IsNullOrWhiteSpace(p.AccessType) ? $"{p.Namespace}/{p.Name}" : $"{p.Namespace}/{p.Name}/{p.AccessType}"))}",
                 }
             );
 
-        var entries = request
-            .Permissions.Select(p =>
-            {
-                var matching = allPermissions.First(ap => ap.Namespace.ToString() == p.Namespace && ap.Name == p.Name);
-                return new RolePermissionEntry(matching.Namespace, matching.Name, matching.AccessType);
-            })
-            .ToList();
+        if (ambiguousPermissions.Any())
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Ambiguous permissions",
+                    Detail =
+                        $"The following permissions match multiple access types and must include AccessType: {string.Join(", ", ambiguousPermissions.Select(p => $"{p.Namespace}/{p.Name}"))}",
+                }
+            );
 
         await _rbacApplicationService.SetPermissionsForRole(roleId, entries);
         return NoContent();
@@ -832,9 +869,9 @@ public class RbacController : ControllerBase
 
 public record PermissionDto(string Namespace, string Name, string Description, string AccessType);
 
-public record PermissionMatrixGrantDto(string RoleId, string Namespace, string Permission);
+public record PermissionMatrixGrantDto(string RoleId, string Namespace, string Permission, string AccessType);
 
-public record SetRolePermissionEntry(string Namespace, string Name);
+public record SetRolePermissionEntry(string Namespace, string Name, string? AccessType = null);
 
 public record SetRolePermissionsRequest(List<SetRolePermissionEntry> Permissions);
 

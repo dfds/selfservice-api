@@ -224,6 +224,11 @@ public class StubAuthorizationService : IAuthorizationService
         return _authorized;
     }
 
+    public bool CanReadDemoSignups(PortalUser portalUser)
+    {
+        return _authorized;
+    }
+
     public bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser)
     {
         return _authorized;

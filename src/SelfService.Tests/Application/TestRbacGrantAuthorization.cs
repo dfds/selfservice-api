@@ -55,7 +55,7 @@ public class TestRbacGrantAuthorization
             RbacPermissionGrant.New(
                 AssignedEntityType.Role,
                 ownerRole.Id.ToString(),
-                RbacNamespace.CapabilityManagement,
+                RbacNamespace.Capability,
                 "manage-permissions",
                 RbacAccessType.Capability,
                 ""

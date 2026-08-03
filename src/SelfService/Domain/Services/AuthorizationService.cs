@@ -14,7 +14,6 @@ public class AuthorizationService : IAuthorizationService
     private readonly IMessageContractRepository _messageContractRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
     private readonly IMembershipApplicationRepository _membershipApplicationRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IRbacApplicationService _rbacApplicationService;
 
     public AuthorizationService(
@@ -26,7 +25,6 @@ public class AuthorizationService : IAuthorizationService
         IMessageContractRepository messageContractRepository,
         IKafkaTopicRepository kafkaTopicRepository,
         IMembershipApplicationRepository membershipApplicationRepository,
-        IHttpContextAccessor httpContextAccessor,
         IRbacApplicationService rbacApplicationService
     )
     {
@@ -39,7 +37,6 @@ public class AuthorizationService : IAuthorizationService
         _messageContractRepository = messageContractRepository;
         _kafkaTopicRepository = kafkaTopicRepository;
         _membershipApplicationRepository = membershipApplicationRepository;
-        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<bool> CanAddTopic(UserId userId, CapabilityId capabilityId, KafkaClusterId clusterId)
@@ -91,8 +88,8 @@ public class AuthorizationService : IAuthorizationService
             return await HasPermission(
                 portalUser.Id,
                 RbacAccessType.Capability,
-                RbacNamespace.TopicsPublic,
-                "delete",
+                RbacNamespace.Topics,
+                "delete-public",
                 kafkaTopic.CapabilityId
             );
         }
@@ -108,40 +105,32 @@ public class AuthorizationService : IAuthorizationService
 
     public bool CanViewDeletedCapabilities(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "view-deleted-capabilities");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Capability, "view-deleted-capabilities");
     }
 
     public bool CanUnsetCapabilityTags(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "unset-capability-tags");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Capability, "unset-capability-tags");
     }
 
     public bool CanCreateDemoRecording(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "create-demo-recording");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Demos, "create");
     }
 
     public bool CanUpdateDemoRecording(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "update-demo-recording");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Demos, "update");
     }
 
     public bool CanDeleteDemoRecording(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "delete-demo-recording");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Demos, "delete");
     }
 
-    private bool IsCloudEngineerEnabled(PortalUser portalUser, string permissionName)
+    public bool CanReadDemoSignups(PortalUser portalUser)
     {
-        if (
-            _httpContextAccessor.HttpContext != null
-            && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions")
-        )
-        {
-            return false;
-        }
-
-        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.SystemAdmin, permissionName);
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Demos, "read-signups");
     }
 
     private bool HasPermission(
@@ -180,21 +169,30 @@ public class AuthorizationService : IAuthorizationService
         string resourceId = ""
     )
     {
-        return (
-            await _rbacApplicationService.IsUserPermitted(
-                userId,
-                new List<Permission>
+        var permissionsToCheck = new List<Permission>
+        {
+            new()
+            {
+                Namespace = permissionNamespace,
+                Name = permissionName,
+                AccessType = scope,
+            },
+        };
+
+        // Any non-global scope should also be satisfied by equivalent global grants.
+        if (scope != RbacAccessType.Global)
+        {
+            permissionsToCheck.Add(
+                new()
                 {
-                    new()
-                    {
-                        Namespace = permissionNamespace,
-                        Name = permissionName,
-                        AccessType = scope,
-                    },
-                },
-                resourceId
-            )
-        ).Permitted();
+                    Namespace = permissionNamespace,
+                    Name = permissionName,
+                    AccessType = RbacAccessType.Global,
+                }
+            );
+        }
+
+        return (await _rbacApplicationService.IsUserPermitted(userId, permissionsToCheck, resourceId)).Permitted();
     }
 
     public async Task<bool> CanReadConsumers(PortalUser portalUser, KafkaTopic kafkaTopic)
@@ -260,7 +258,7 @@ public class AuthorizationService : IAuthorizationService
         var hasReadRequestsPermission = await HasPermission(
             userId,
             RbacAccessType.Capability,
-            RbacNamespace.CapabilityMembershipManagement,
+            RbacNamespace.Capability,
             "read-requests",
             application.CapabilityId
         );
@@ -273,7 +271,7 @@ public class AuthorizationService : IAuthorizationService
         return await HasPermission(
             userId,
             RbacAccessType.Capability,
-            RbacNamespace.CapabilityMembershipManagement,
+            RbacNamespace.Capability,
             "manage-requests",
             application.CapabilityId
         );
@@ -284,7 +282,7 @@ public class AuthorizationService : IAuthorizationService
         return await HasPermission(
             userId,
             RbacAccessType.Capability,
-            RbacNamespace.CapabilityMembershipManagement,
+            RbacNamespace.Capability,
             "manage-requests",
             capabilityId
         );
@@ -395,7 +393,7 @@ public class AuthorizationService : IAuthorizationService
         return await HasPermission(
             userId,
             RbacAccessType.Capability,
-            RbacNamespace.CapabilityMembershipManagement,
+            RbacNamespace.Capability,
             "read-requests",
             capabilityId
         );
@@ -406,7 +404,7 @@ public class AuthorizationService : IAuthorizationService
         return await HasPermission(
             userId,
             RbacAccessType.Capability,
-            RbacNamespace.CapabilityManagement,
+            RbacNamespace.Capability,
             "request-deletion",
             capabilityId
         );
@@ -414,12 +412,17 @@ public class AuthorizationService : IAuthorizationService
 
     public bool CanManagePermissionMatrix(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "manage-permission-matrix");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Rbac, "update");
     }
 
     public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "synchronize-aws-ecr-and-database-ecr");
+        return HasPermission(
+            portalUser,
+            RbacAccessType.Global,
+            RbacNamespace.SystemAdmin,
+            "synchronize-aws-ecr-and-database-ecr"
+        );
     }
 
     public async Task<bool> CanGetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
@@ -458,17 +461,17 @@ public class AuthorizationService : IAuthorizationService
 
     public bool CanBypassMembershipApprovals(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "bypass-membership-approvals");
+        return HasPermission(
+            portalUser,
+            RbacAccessType.Global,
+            RbacNamespace.Capability,
+            "bypass-membership-approvals"
+        );
     }
 
     public bool CanBatchCreateCapabilities(PortalUser portalUser)
     {
-        return HasPermission(
-            portalUser,
-            RbacAccessType.Global,
-            RbacNamespace.CapabilityManagement,
-            "batch-create-capabilities"
-        );
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Capability, "batch-create-capabilities");
     }
 
     public async Task<bool> CanDeleteMembershipApplication(
@@ -481,15 +484,13 @@ public class AuthorizationService : IAuthorizationService
         var hasPermission = await HasPermission(
             portalUser.Id,
             RbacAccessType.Capability,
-            RbacNamespace.CapabilityMembershipManagement,
+            RbacNamespace.Capability,
             "manage-requests",
             membershipApp.CapabilityId
         );
         var isApplicant = membershipApp.Applicant == userId;
 
-        return isApplicant
-            || hasPermission
-            || IsCloudEngineerEnabled(portalUser, "delete-membership-application-as-admin");
+        return isApplicant || hasPermission;
     }
 
     public async Task<bool> CanRemoveMember(UserId requesterId, CapabilityId capabilityId)
@@ -497,8 +498,8 @@ public class AuthorizationService : IAuthorizationService
         return await HasPermission(
             requesterId,
             RbacAccessType.Capability,
-            RbacNamespace.CapabilityMembershipManagement,
-            "delete",
+            RbacNamespace.Capability,
+            "remove-member",
             capabilityId
         );
     }
@@ -508,8 +509,8 @@ public class AuthorizationService : IAuthorizationService
         return await HasPermission(
             userId,
             RbacAccessType.Capability,
-            RbacNamespace.CapabilityMembershipManagement,
-            "create",
+            RbacNamespace.Capability,
+            "invite-member",
             capabilityId
         );
     }
@@ -519,8 +520,8 @@ public class AuthorizationService : IAuthorizationService
         return await HasPermission(
             userId,
             RbacAccessType.Capability,
-            RbacNamespace.CapabilityMembershipManagement,
-            "read",
+            RbacNamespace.Capability,
+            "read-requests",
             capabilityId
         );
     }
@@ -545,9 +546,14 @@ public class AuthorizationService : IAuthorizationService
             "update",
             kafkaTopic.CapabilityId
         );
-        bool isCloudEngineer = IsCloudEngineerEnabled(portalUser, "retry-creating-message-contract");
+        bool hasGlobalRetryPermission = HasPermission(
+            portalUser,
+            RbacAccessType.Global,
+            RbacNamespace.Topics,
+            "retry-creating-message-contract"
+        );
 
-        return isCloudEngineer || canCreateMessageContract;
+        return hasGlobalRetryPermission || canCreateMessageContract;
     }
 
     public async Task<bool> CanSelfAssess(UserId userId, CapabilityId capabilityId)
@@ -572,66 +578,76 @@ public class AuthorizationService : IAuthorizationService
 
     public bool CanManageSelfAssessmentOptions(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "manage-self-assessment-options");
+        return HasPermission(
+            portalUser,
+            RbacAccessType.Global,
+            RbacNamespace.SelfAssessment,
+            "manage-self-assessment-options"
+        );
     }
 
     public bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "create-release-notes");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.ReleaseNotes, "create");
     }
 
     public bool IsAuthorizedToUpdateReleaseNote(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "update-release-note");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.ReleaseNotes, "update");
     }
 
     public bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "toggle-release-note-is-active");
+        return HasPermission(
+            portalUser,
+            RbacAccessType.Global,
+            RbacNamespace.ReleaseNotes,
+            "toggle-release-note-is-active"
+        );
     }
 
     public bool IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "list-draft-release-notes");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.ReleaseNotes, "list-draft-release-notes");
     }
 
     public bool IsAuthorizedToRemoveReleaseNote(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "remove-release-note");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.ReleaseNotes, "delete");
     }
 
     public bool CanCreateEvent(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "create-event");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Events, "create");
     }
 
     public bool CanUpdateEvent(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "update-event");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Events, "update");
     }
 
     public bool CanDeleteEvent(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "delete-event");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Events, "delete");
     }
 
     public bool CanCreateNewsItem(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "create-news-item");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.News, "create");
     }
 
     public bool CanUpdateNewsItem(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "update-news-item");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.News, "update");
     }
 
     public bool CanDeleteNewsItem(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "delete-news-item");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.News, "delete");
     }
 
     public bool CanGetUserEmails(PortalUser portalUser)
     {
-        return IsCloudEngineerEnabled(portalUser, "get-user-emails");
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.Users, "read");
     }
 }
