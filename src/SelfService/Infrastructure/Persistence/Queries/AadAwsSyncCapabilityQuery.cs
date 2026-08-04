@@ -103,8 +103,8 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
         {
             if (grant.Resource != null && rolesById.TryGetValue(grant.RoleId, out var role))
             {
-                var capabilityId = new CapabilityId(grant.Resource);
-                var userId = new UserId(grant.AssignedEntityId);
+                var capabilityId = CapabilityId.CreateFrom(grant.Resource);
+                var userId = UserId.Parse(grant.AssignedEntityId);
                 result[(capabilityId, userId)] = role.Name;
             }
         }
