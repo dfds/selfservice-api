@@ -15,6 +15,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
     private readonly RequirementsDbContext _requirementsDbContext;
 
     private static readonly string[] PlaceholderCategories = Array.Empty<string>();
+    private const string RogueCostCentreName = "rogue";
 
     private static readonly string[] Categories =
     {
@@ -79,25 +80,39 @@ public class ComplianceApplicationService : IComplianceApplicationService
     public async Task<CostCentreComplianceResult> GetCostCentreCompliance(string costCentre)
     {
         var details = await GetCostCentreComplianceDetails(costCentre);
-        return new CostCentreComplianceResult
-        {
-            CostCentre = details.CostCentre,
-            TotalCapabilities = details.TotalCapabilities,
-            CompliantCount = details.CompliantCount,
-            NonCompliantCount = details.NonCompliantCount,
-            Categories = details.Categories,
-        };
+        return ToCostCentreComplianceResult(details);
     }
 
     public async Task<CostCentreComplianceDetailsResult> GetCostCentreComplianceDetails(string costCentre)
     {
+        return await BuildComplianceDetailsForCapabilities(
+            costCentre,
+            c => string.Equals(ExtractCostCentre(c.JsonMetadata), costCentre, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    public async Task<CostCentreComplianceResult> GetRogueCapabilitiesCompliance()
+    {
+        var details = await GetRogueCapabilitiesComplianceDetails();
+        return ToCostCentreComplianceResult(details);
+    }
+
+    public async Task<CostCentreComplianceDetailsResult> GetRogueCapabilitiesComplianceDetails()
+    {
+        return await BuildComplianceDetailsForCapabilities(
+            RogueCostCentreName,
+            c => string.IsNullOrWhiteSpace(ExtractCostCentre(c.JsonMetadata))
+        );
+    }
+
+    private async Task<CostCentreComplianceDetailsResult> BuildComplianceDetailsForCapabilities(
+        string costCentreLabel,
+        Func<Capability, bool> filter
+    )
+    {
         var activeCapabilities = await _capabilityRepository.GetAllActive();
 
-        var matchingCapabilities = activeCapabilities
-            .Where(c =>
-                string.Equals(ExtractCostCentre(c.JsonMetadata), costCentre, StringComparison.OrdinalIgnoreCase)
-            )
-            .ToList();
+        var matchingCapabilities = activeCapabilities.Where(filter).ToList();
 
         var capabilityIds = matchingCapabilities.Select(c => c.Id.ToString()).ToList();
         var allMetrics = await _requirementsDbContext
@@ -161,13 +176,25 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
         return new CostCentreComplianceDetailsResult
         {
-            CostCentre = costCentre,
+            CostCentre = costCentreLabel,
             TotalCapabilities = matchingCapabilities.Count,
             CompliantCount = capabilityResults.Count(r => r.OverallStatus == ComplianceStatus.Compliant),
             NonCompliantCount = capabilityResults.Count(r => r.OverallStatus == ComplianceStatus.NonCompliant),
             UnknownCount = capabilityResults.Count(r => r.OverallStatus == ComplianceStatus.Unknown),
             Categories = categoryBreakdowns,
             Capabilities = capabilityResults,
+        };
+    }
+
+    private static CostCentreComplianceResult ToCostCentreComplianceResult(CostCentreComplianceDetailsResult details)
+    {
+        return new CostCentreComplianceResult
+        {
+            CostCentre = details.CostCentre,
+            TotalCapabilities = details.TotalCapabilities,
+            CompliantCount = details.CompliantCount,
+            NonCompliantCount = details.NonCompliantCount,
+            Categories = details.Categories,
         };
     }
 

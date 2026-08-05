@@ -457,4 +457,58 @@ public class TestComplianceApplicationService
         var costCentreItem = tagsCategory.Items.First(i => i.Name == "dfds.cost.centre");
         Assert.Equal("missing", costCentreItem.Status);
     }
+
+    [Fact]
+    public async Task GetRogueCapabilitiesCompliance_FiltersCapabilitiesWithoutCostCentre()
+    {
+        var withCostCentre = A
+            .Capability.WithId(CapabilityId.CreateFrom("cost-centre-cap"))
+            .WithJsonMetadata(AllTagsPresent)
+            .Build();
+        var missingCostCentre = A
+            .Capability.WithId(CapabilityId.CreateFrom("missing-cost-centre-cap"))
+            .WithJsonMetadata("""{"dfds.businessCapability": "Platform"}""")
+            .Build();
+        var emptyCostCentre = A
+            .Capability.WithId(CapabilityId.CreateFrom("empty-cost-centre-cap"))
+            .WithJsonMetadata("""{"dfds.cost.centre": ""}""")
+            .Build();
+
+        var repo = new Mock<ICapabilityRepository>();
+        repo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { withCostCentre, missingCostCentre, emptyCostCentre });
+
+        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+
+        var result = await service.GetRogueCapabilitiesCompliance();
+
+        Assert.Equal("rogue", result.CostCentre);
+        Assert.Equal(2, result.TotalCapabilities);
+    }
+
+    [Fact]
+    public async Task GetRogueCapabilitiesComplianceDetails_MatchesAggregateCounts()
+    {
+        var rogueCap = A
+            .Capability.WithId(CapabilityId.CreateFrom("rogue-cap"))
+            .WithJsonMetadata("""{"dfds.businessCapability": "Platform"}""")
+            .Build();
+        var nonRogueCap = A
+            .Capability.WithId(CapabilityId.CreateFrom("non-rogue-cap"))
+            .WithJsonMetadata(AllTagsPresent)
+            .Build();
+
+        var repo = new Mock<ICapabilityRepository>();
+        repo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { rogueCap, nonRogueCap });
+
+        var service = A.ComplianceApplicationService.WithCapabilityRepository(repo.Object).Build();
+
+        var details = await service.GetRogueCapabilitiesComplianceDetails();
+        var aggregate = await service.GetRogueCapabilitiesCompliance();
+
+        Assert.Equal("rogue", details.CostCentre);
+        Assert.Single(details.Capabilities);
+        Assert.Equal(aggregate.TotalCapabilities, details.TotalCapabilities);
+        Assert.Equal(aggregate.CompliantCount, details.CompliantCount);
+        Assert.Equal(aggregate.NonCompliantCount, details.NonCompliantCount);
+    }
 }
