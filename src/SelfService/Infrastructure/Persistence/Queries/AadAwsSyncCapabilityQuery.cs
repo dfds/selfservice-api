@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
+using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.System;
 
 namespace SelfService.Infrastructure.Persistence.Queries;
@@ -30,6 +31,7 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
                 Name = capability.Name,
                 RootId = capability.Id,
                 Description = capability.Description,
+                RemoveUsersFromGroup = !TagComplianceEvaluator.Evaluate(capability.JsonMetadata).IsCompliant,
                 JsonMetadata = capability.JsonMetadata,
                 Members = memberships
                     .Select<Membership, MemberDto>(member => new MemberDto
