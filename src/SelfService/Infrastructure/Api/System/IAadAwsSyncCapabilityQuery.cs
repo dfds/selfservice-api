@@ -24,6 +24,10 @@ public class MemberDto
     // aad-aws-sync look the user up in Azure AD directly instead of guessing via
     // email — correct even when the user's UPN differs from their email address.
     public required string UserId { get; set; }
+
+    // Whether the member has access to modify and interact with third-party services.
+    // True if their role is Owner or Contributor, false otherwise.
+    public required bool HasAccessToThirdParty { get; set; }
 }
 
 public class ContextDto
