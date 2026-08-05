@@ -130,7 +130,8 @@ public class NewsController : ControllerBase
             dueDate: request.DueDate,
             isHighlighted: false,
             createdBy: userId,
-            createdAt: DateTime.UtcNow
+            createdAt: DateTime.UtcNow,
+            frontpageSummary: request.FrontpageSummary
         );
 
         var created = await _newsItemService.CreateNewsItem(newsItem);

@@ -9,6 +9,7 @@ public class NewsItemApiResource
     public NewsItemId Id { get; private set; }
     public string Title { get; private set; }
     public string Body { get; private set; }
+    public string? FrontpageSummary { get; private set; }
     public DateTime DueDate { get; private set; }
     public bool IsHighlighted { get; private set; }
     public bool IsRelevant { get; private set; }
@@ -33,6 +34,7 @@ public class NewsItemApiResource
         NewsItemId id,
         string title,
         string body,
+        string? frontpageSummary,
         DateTime dueDate,
         bool isHighlighted,
         bool isRelevant,
@@ -45,6 +47,7 @@ public class NewsItemApiResource
         Id = id;
         Title = title;
         Body = body;
+        FrontpageSummary = frontpageSummary;
         DueDate = dueDate;
         IsHighlighted = isHighlighted;
         IsRelevant = isRelevant;

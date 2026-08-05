@@ -39,7 +39,7 @@ public class NewsItemService : INewsItemService
             await _newsItemRepository.FindById(id)
             ?? throw new KeyNotFoundException($"News item with id '{id}' not found.");
 
-        newsItem.Update(updateRequest.Title, updateRequest.Body, updateRequest.DueDate, DateTime.UtcNow);
+        newsItem.Update(updateRequest.Title, updateRequest.Body, updateRequest.DueDate, DateTime.UtcNow, updateRequest.FrontpageSummary);
     }
 
     [TransactionalBoundary]
