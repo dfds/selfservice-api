@@ -45,4 +45,18 @@ public class ComplianceController : ControllerBase
         var result = await _complianceService.GetCostCentreComplianceDetails(costCentre);
         return Ok(CostCentreComplianceDetailsApiResource.From(result));
     }
+
+    [HttpGet("rogue-capabilities")]
+    public async Task<IActionResult> GetRogueCapabilitiesCompliance()
+    {
+        var result = await _complianceService.GetRogueCapabilitiesCompliance();
+        return Ok(CostCentreComplianceApiResource.From(result));
+    }
+
+    [HttpGet("rogue-capabilities/details")]
+    public async Task<IActionResult> GetRogueCapabilitiesComplianceDetails()
+    {
+        var result = await _complianceService.GetRogueCapabilitiesComplianceDetails();
+        return Ok(CostCentreComplianceDetailsApiResource.From(result));
+    }
 }
