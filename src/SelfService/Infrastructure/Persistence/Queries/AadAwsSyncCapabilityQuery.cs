@@ -19,6 +19,7 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
         var allMemberships = await GetAllMembershipByCapability();
         var emailByUserId = await GetEmailByUserId();
         var allAwsAccounts = await GetAllAwsAccountsByCapability();
+        var rolesByCapabilityAndUserId = await GetRolesByCapabilityAndUserId();
 
         return from capability in allCapabilities
             let memberships = allMemberships[capability.Id]
@@ -40,6 +41,10 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
                         // UserId is the authoritative identifier (the UPN for regular users);
                         // aad-aws-sync uses it to resolve the user in Azure AD directly.
                         UserId = member.UserId.ToString(),
+                        // User has access to third-party services if their role is Owner or Contributor
+                        HasAccessToThirdParty =
+                            rolesByCapabilityAndUserId.TryGetValue((capability.Id, member.UserId), out var role)
+                            && (role == "Owner" || role == "Contributor"),
                     })
                     .ToArray(),
                 Contexts = awsAccounts
@@ -76,5 +81,34 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
     {
         var awsAccounts = await _context.AwsAccounts.ToListAsync();
         return awsAccounts.ToLookup(x => x.CapabilityId);
+    }
+
+    private async Task<Dictionary<(CapabilityId, UserId), string>> GetRolesByCapabilityAndUserId()
+    {
+        // Fetch all role grants for users with capability-scoped roles
+        var roleGrants = await _context
+            .RbacRoleGrants.Where(x =>
+                x.Type == RbacAccessType.Capability && x.AssignedEntityType == AssignedEntityType.User
+            )
+            .ToListAsync();
+
+        // Fetch all roles
+        var roles = await _context.RbacRoles.ToListAsync();
+        var rolesById = roles.ToDictionary(x => x.Id);
+
+        // Map (capabilityId, userId) -> roleName
+        var result = new Dictionary<(CapabilityId, UserId), string>();
+
+        foreach (var grant in roleGrants)
+        {
+            if (grant.Resource != null && rolesById.TryGetValue(grant.RoleId, out var role))
+            {
+                var capabilityId = CapabilityId.CreateFrom(grant.Resource);
+                var userId = UserId.Parse(grant.AssignedEntityId);
+                result[(capabilityId, userId)] = role.Name;
+            }
+        }
+
+        return result;
     }
 }
