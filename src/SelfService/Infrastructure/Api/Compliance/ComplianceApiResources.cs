@@ -146,3 +146,99 @@ public class CostCentreCapabilityComplianceApiResource
         };
     }
 }
+
+public class RequirementsComplianceApiResource
+{
+    public List<RequirementComplianceSummaryApiResource> Items { get; set; } = new();
+
+    public static RequirementsComplianceApiResource From(RequirementsComplianceResult result)
+    {
+        return new RequirementsComplianceApiResource
+        {
+            Items = result.Items.Select(RequirementComplianceSummaryApiResource.From).ToList(),
+        };
+    }
+}
+
+public class RequirementComplianceSummaryApiResource
+{
+    public string RequirementId { get; set; } = null!;
+    public string CategoryName { get; set; } = null!;
+    public string? DisplayName { get; set; }
+    public string? Description { get; set; }
+    public string? HelpUrl { get; set; }
+    public int TotalCapabilities { get; set; }
+    public int CompliantCount { get; set; }
+    public int NonCompliantCount { get; set; }
+    public int UnknownCount { get; set; }
+
+    public static RequirementComplianceSummaryApiResource From(RequirementComplianceSummaryResult result)
+    {
+        return new RequirementComplianceSummaryApiResource
+        {
+            RequirementId = result.RequirementId,
+            CategoryName = result.CategoryName,
+            DisplayName = result.DisplayName,
+            Description = result.Description,
+            HelpUrl = result.HelpUrl,
+            TotalCapabilities = result.TotalCapabilities,
+            CompliantCount = result.CompliantCount,
+            NonCompliantCount = result.NonCompliantCount,
+            UnknownCount = result.UnknownCount,
+        };
+    }
+}
+
+public class RequirementComplianceDetailsApiResource
+{
+    public string RequirementId { get; set; } = null!;
+    public string CategoryName { get; set; } = null!;
+    public string? DisplayName { get; set; }
+    public string? Description { get; set; }
+    public string? HelpUrl { get; set; }
+    public int TotalCapabilities { get; set; }
+    public int CompliantCount { get; set; }
+    public int NonCompliantCount { get; set; }
+    public int UnknownCount { get; set; }
+    public List<RequirementCapabilityComplianceApiResource> Capabilities { get; set; } = new();
+
+    public static RequirementComplianceDetailsApiResource From(RequirementComplianceDetailsResult result)
+    {
+        return new RequirementComplianceDetailsApiResource
+        {
+            RequirementId = result.RequirementId,
+            CategoryName = result.CategoryName,
+            DisplayName = result.DisplayName,
+            Description = result.Description,
+            HelpUrl = result.HelpUrl,
+            TotalCapabilities = result.TotalCapabilities,
+            CompliantCount = result.CompliantCount,
+            NonCompliantCount = result.NonCompliantCount,
+            UnknownCount = result.UnknownCount,
+            Capabilities = result.Capabilities.Select(RequirementCapabilityComplianceApiResource.From).ToList(),
+        };
+    }
+}
+
+public class RequirementCapabilityComplianceApiResource
+{
+    public string CapabilityId { get; set; } = null!;
+    public string CapabilityName { get; set; } = null!;
+    public string? JsonMetadata { get; set; }
+    public string Status { get; set; } = null!;
+    public double? Score { get; set; }
+    public List<ComplianceCategoryItemApiResource> Items { get; set; } = new();
+
+    public static RequirementCapabilityComplianceApiResource From(RequirementCapabilityComplianceResult result)
+    {
+        return new RequirementCapabilityComplianceApiResource
+        {
+            CapabilityId = result.CapabilityId,
+            CapabilityName = result.CapabilityName,
+            JsonMetadata = result.JsonMetadata,
+            Status = result.Status.ToString(),
+            Score = result.Score,
+            Items = result.Items.Select(ComplianceCategoryItemApiResource.From).ToList(),
+        };
+    }
+}

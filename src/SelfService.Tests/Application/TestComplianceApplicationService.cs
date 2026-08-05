@@ -511,4 +511,76 @@ public class TestComplianceApplicationService
         Assert.Equal(aggregate.CompliantCount, details.CompliantCount);
         Assert.Equal(aggregate.NonCompliantCount, details.NonCompliantCount);
     }
+
+    [Fact]
+    public async Task GetRequirementsCompliance_ReturnsKnownRequirementsAndCounts()
+    {
+        var k8sCapId = CapabilityId.CreateFrom("k8s-cap");
+        var nonK8sCapId = CapabilityId.CreateFrom("non-k8s-cap");
+        var k8sCap = A.Capability.WithId(k8sCapId).WithJsonMetadata(AllTagsPresent).Build();
+        var nonK8sCap = A.Capability.WithId(nonK8sCapId).WithJsonMetadata(AllTagsPresent).Build();
+
+        var capabilityRepo = new Mock<ICapabilityRepository>();
+        capabilityRepo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { k8sCap, nonK8sCap });
+
+        var service = A
+            .ComplianceApplicationService.WithCapabilityRepository(capabilityRepo.Object)
+            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(k8sCapId))
+            .Build();
+
+        var result = await service.GetRequirementsCompliance();
+
+        Assert.Equal(5, result.Items.Count);
+
+        var tags = result.Items.Single(i => i.RequirementId == "tags");
+        Assert.Equal("Tags", tags.CategoryName);
+        Assert.Equal(2, tags.TotalCapabilities);
+
+        var externalSecrets = result.Items.Single(i => i.RequirementId == "external-secrets");
+        Assert.Equal("External Secrets", externalSecrets.CategoryName);
+        Assert.Equal(1, externalSecrets.TotalCapabilities);
+    }
+
+    [Fact]
+    public async Task GetRequirementComplianceDetails_Tags_ReturnsCapabilityLevelData()
+    {
+        var compliantCap = A
+            .Capability.WithId(CapabilityId.CreateFrom("compliant-cap"))
+            .WithJsonMetadata(AllTagsPresent)
+            .Build();
+        var nonCompliantCap = A
+            .Capability.WithId(CapabilityId.CreateFrom("non-compliant-cap"))
+            .WithJsonMetadata(EmptyMetadata)
+            .Build();
+
+        var capabilityRepo = new Mock<ICapabilityRepository>();
+        capabilityRepo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { compliantCap, nonCompliantCap });
+
+        var service = A.ComplianceApplicationService.WithCapabilityRepository(capabilityRepo.Object).Build();
+
+        var result = await service.GetRequirementComplianceDetails("tags");
+
+        Assert.Equal("tags", result.RequirementId);
+        Assert.Equal("Tags", result.CategoryName);
+        Assert.Equal(2, result.TotalCapabilities);
+        Assert.Equal(2, result.Capabilities.Count);
+        Assert.Contains(result.Capabilities, c => c.Status == ComplianceStatus.Compliant);
+        Assert.Contains(result.Capabilities, c => c.Status == ComplianceStatus.NonCompliant);
+        Assert.All(result.Capabilities, c => Assert.NotEmpty(c.Items));
+    }
+
+    [Fact]
+    public async Task GetRequirementComplianceDetails_UnknownRequirement_ThrowsKeyNotFoundException()
+    {
+        var capability = A.Capability.WithId(CapabilityId.CreateFrom("cap-1")).WithJsonMetadata(AllTagsPresent).Build();
+
+        var capabilityRepo = new Mock<ICapabilityRepository>();
+        capabilityRepo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { capability });
+
+        var service = A.ComplianceApplicationService.WithCapabilityRepository(capabilityRepo.Object).Build();
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            service.GetRequirementComplianceDetails("not-a-real-requirement")
+        );
+    }
 }

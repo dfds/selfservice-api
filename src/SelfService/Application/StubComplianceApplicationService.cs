@@ -13,6 +13,15 @@ public class StubComplianceApplicationService : IComplianceApplicationService
     private static readonly string[] PlaceholderCategories = Array.Empty<string>();
     private const string RogueCostCentreName = "rogue";
 
+    private static readonly RequirementDefinition[] RequirementDefinitions =
+    {
+        new("tags", "Tags"),
+        new("external-secrets", "External Secrets"),
+        new("irsa-mutual-trust", "IRSA Mutual Trust"),
+        new("workload-liveness-and-readiness-probes", "Workload Liveness and Readiness Probes"),
+        new("ecr-pull-policy", "ECR pull policy"),
+    };
+
     public StubComplianceApplicationService(
         ICapabilityRepository capabilityRepository,
         IAwsAccountRepository awsAccountRepository
@@ -134,6 +143,30 @@ public class StubComplianceApplicationService : IComplianceApplicationService
         );
     }
 
+    public async Task<RequirementsComplianceResult> GetRequirementsCompliance()
+    {
+        var allCapabilitiesDetails = await BuildComplianceDetailsForCapabilities("all", _ => true);
+
+        return new RequirementsComplianceResult
+        {
+            Items = RequirementDefinitions
+                .Select(definition => BuildRequirementSummary(definition, allCapabilitiesDetails.Capabilities))
+                .ToList(),
+        };
+    }
+
+    public async Task<RequirementComplianceDetailsResult> GetRequirementComplianceDetails(string requirementId)
+    {
+        var definition = FindRequirementDefinition(requirementId);
+        if (definition == null)
+        {
+            throw new KeyNotFoundException($"Unknown compliance requirement id '{requirementId}'.");
+        }
+
+        var allCapabilitiesDetails = await BuildComplianceDetailsForCapabilities("all", _ => true);
+        return BuildRequirementDetails(definition, allCapabilitiesDetails.Capabilities);
+    }
+
     private async Task<CostCentreComplianceDetailsResult> BuildComplianceDetailsForCapabilities(
         string costCentreLabel,
         Func<Capability, bool> filter
@@ -253,6 +286,86 @@ public class StubComplianceApplicationService : IComplianceApplicationService
         };
     }
 
+    private static RequirementComplianceSummaryResult BuildRequirementSummary(
+        RequirementDefinition definition,
+        List<CostCentreCapabilityComplianceResult> capabilities
+    )
+    {
+        var categories = capabilities
+            .Select(capability => capability.Categories.FirstOrDefault(category => category.CategoryName == definition.CategoryName))
+            .Where(category => category != null)
+            .Select(category => category!)
+            .ToList();
+
+        var metadataSource = categories.FirstOrDefault();
+
+        return new RequirementComplianceSummaryResult
+        {
+            RequirementId = definition.RequirementId,
+            CategoryName = definition.CategoryName,
+            DisplayName = metadataSource?.DisplayName ?? definition.CategoryName,
+            Description = metadataSource?.Description,
+            HelpUrl = metadataSource?.HelpUrl,
+            TotalCapabilities = categories.Count,
+            CompliantCount = categories.Count(category => category.Status == ComplianceStatus.Compliant),
+            NonCompliantCount = categories.Count(category => category.Status == ComplianceStatus.NonCompliant),
+            UnknownCount = categories.Count(category => category.Status == ComplianceStatus.Unknown),
+        };
+    }
+
+    private static RequirementComplianceDetailsResult BuildRequirementDetails(
+        RequirementDefinition definition,
+        List<CostCentreCapabilityComplianceResult> capabilities
+    )
+    {
+        var capabilityCategories = capabilities
+            .Select(capability =>
+            {
+                var matchingCategory = capability.Categories.FirstOrDefault(category => category.CategoryName == definition.CategoryName);
+                return new { capability, matchingCategory };
+            })
+            .Where(item => item.matchingCategory is not null)
+            .Select(item => new
+            {
+                item.capability,
+                category = item.matchingCategory!,
+            })
+            .ToList();
+
+        var metadataSource = capabilityCategories.Select(item => item.category).FirstOrDefault();
+
+        return new RequirementComplianceDetailsResult
+        {
+            RequirementId = definition.RequirementId,
+            CategoryName = definition.CategoryName,
+            DisplayName = metadataSource?.DisplayName ?? definition.CategoryName,
+            Description = metadataSource?.Description,
+            HelpUrl = metadataSource?.HelpUrl,
+            TotalCapabilities = capabilityCategories.Count,
+            CompliantCount = capabilityCategories.Count(item => item.category.Status == ComplianceStatus.Compliant),
+            NonCompliantCount = capabilityCategories.Count(item => item.category.Status == ComplianceStatus.NonCompliant),
+            UnknownCount = capabilityCategories.Count(item => item.category.Status == ComplianceStatus.Unknown),
+            Capabilities = capabilityCategories
+                .Select(item => new RequirementCapabilityComplianceResult
+                {
+                    CapabilityId = item.capability.CapabilityId,
+                    CapabilityName = item.capability.CapabilityName,
+                    JsonMetadata = item.capability.JsonMetadata,
+                    Status = item.category.Status,
+                    Score = item.category.Score,
+                    Items = item.category.Items,
+                })
+                .ToList(),
+        };
+    }
+
+    private static RequirementDefinition? FindRequirementDefinition(string requirementId)
+    {
+        return RequirementDefinitions.FirstOrDefault(definition =>
+            string.Equals(definition.RequirementId, requirementId, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
     private async Task<bool> HasKubernetesContext(CapabilityId capabilityId)
     {
         var awsAccount = await _awsAccountRepository.FindBy(capabilityId);
@@ -289,4 +402,6 @@ public class StubComplianceApplicationService : IComplianceApplicationService
         var jsonObject = JsonNode.Parse(jsonMetadata)?.AsObject();
         return jsonObject?["dfds.cost.centre"]?.ToString();
     }
+
+    private sealed record RequirementDefinition(string RequirementId, string CategoryName);
 }
