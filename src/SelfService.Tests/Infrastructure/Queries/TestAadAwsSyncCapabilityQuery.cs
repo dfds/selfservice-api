@@ -7,7 +7,7 @@ public class TestAadAwsSyncCapabilityQuery
 {
     [Fact]
     [Trait("Category", "InMemoryDatabase")]
-    public async Task sets_remove_users_from_group_based_on_tag_compliance()
+    public async Task returns_empty_members_for_non_compliant_capabilities()
     {
         using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
@@ -37,8 +37,26 @@ public class TestAadAwsSyncCapabilityQuery
             .WithJsonMetadata("{}")
             .Build();
 
+        var compliantMember = A.Member.WithUserId(UserId.Parse("compliant-user")).Build();
+        var nonCompliantMember = A.Member.WithUserId(UserId.Parse("non-compliant-user")).Build();
+
+        var compliantMembership = A.Membership
+            .WithCapabilityId(compliantCapability.Id)
+            .WithUserId(compliantMember.Id)
+            .Build();
+
+        var nonCompliantMembership = A.Membership
+            .WithCapabilityId(nonCompliantCapability.Id)
+            .WithUserId(nonCompliantMember.Id)
+            .Build();
+
         await dbContext.Capabilities.AddRangeAsync(
             new[] { compliantCapability, nonCompliantCapability },
+            cancellationTokenSource.Token
+        );
+        await dbContext.Members.AddRangeAsync(new[] { compliantMember, nonCompliantMember }, cancellationTokenSource.Token);
+        await dbContext.Memberships.AddRangeAsync(
+            new[] { compliantMembership, nonCompliantMembership },
             cancellationTokenSource.Token
         );
         await dbContext.SaveChangesAsync(cancellationTokenSource.Token);
@@ -46,7 +64,9 @@ public class TestAadAwsSyncCapabilityQuery
         var sut = new AadAwsSyncCapabilityQuery(dbContext);
         var result = (await sut.GetCapabilities()).ToDictionary(x => x.Id);
 
-        Assert.False(result[compliantCapability.Id].RemoveUsersFromGroup);
-        Assert.True(result[nonCompliantCapability.Id].RemoveUsersFromGroup);
+        Assert.Single(result[compliantCapability.Id].Members);
+        Assert.Equal(compliantMember.Id.ToString(), result[compliantCapability.Id].Members[0].UserId);
+
+        Assert.Empty(result[nonCompliantCapability.Id].Members);
     }
 }

@@ -25,30 +25,32 @@ public class AadAwsSyncCapabilityQuery : IAadAwsSyncCapabilityQuery
         return from capability in allCapabilities
             let memberships = allMemberships[capability.Id]
             let awsAccounts = allAwsAccounts[capability.Id]
+            let isTagCompliant = TagComplianceEvaluator.Evaluate(capability.JsonMetadata).IsCompliant
             select new CapabilityDto
             {
                 Id = capability.Id,
                 Name = capability.Name,
                 RootId = capability.Id,
                 Description = capability.Description,
-                RemoveUsersFromGroup = !TagComplianceEvaluator.Evaluate(capability.JsonMetadata).IsCompliant,
                 JsonMetadata = capability.JsonMetadata,
-                Members = memberships
-                    .Select<Membership, MemberDto>(member => new MemberDto
-                    {
-                        // Membership.UserId is the member's id; for service principals this is the
-                        // Azure object id, so resolve the (synthetic) email from the Member record.
-                        // Fall back to UserId for memberships without a matching Member row.
-                        Email = emailByUserId.GetValueOrDefault(member.UserId, member.UserId),
-                        // UserId is the authoritative identifier (the UPN for regular users);
-                        // aad-aws-sync uses it to resolve the user in Azure AD directly.
-                        UserId = member.UserId.ToString(),
-                        // User has access to third-party services if their role is Owner or Contributor
-                        HasAccessToThirdParty =
-                            rolesByCapabilityAndUserId.TryGetValue((capability.Id, member.UserId), out var role)
-                            && (role == "Owner" || role == "Contributor"),
-                    })
-                    .ToArray(),
+                Members = isTagCompliant
+                    ? memberships
+                        .Select<Membership, MemberDto>(member => new MemberDto
+                        {
+                            // Membership.UserId is the member's id; for service principals this is the
+                            // Azure object id, so resolve the (synthetic) email from the Member record.
+                            // Fall back to UserId for memberships without a matching Member row.
+                            Email = emailByUserId.GetValueOrDefault(member.UserId, member.UserId),
+                            // UserId is the authoritative identifier (the UPN for regular users);
+                            // aad-aws-sync uses it to resolve the user in Azure AD directly.
+                            UserId = member.UserId.ToString(),
+                            // User has access to third-party services if their role is Owner or Contributor
+                            HasAccessToThirdParty =
+                                rolesByCapabilityAndUserId.TryGetValue((capability.Id, member.UserId), out var role)
+                                && (role == "Owner" || role == "Contributor"),
+                        })
+                        .ToArray()
+                    : Array.Empty<MemberDto>(),
                 Contexts = awsAccounts
                     .Select<AwsAccount, ContextDto>(context => new ContextDto
                     {

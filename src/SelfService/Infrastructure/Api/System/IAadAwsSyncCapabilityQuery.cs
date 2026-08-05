@@ -11,7 +11,6 @@ public class CapabilityDto
     public required string Name { get; set; }
     public required string RootId { get; set; }
     public required string Description { get; set; }
-    public required bool RemoveUsersFromGroup { get; set; }
     public required MemberDto[] Members { get; set; }
     public required ContextDto[] Contexts { get; set; }
     public required string JsonMetadata { get; set; }
