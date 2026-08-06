@@ -4,6 +4,7 @@ public class NewsItem : Entity<NewsItemId>
 {
     public string Title { get; private set; }
     public string Body { get; private set; }
+    public string? FrontpageSummary { get; private set; }
     public DateTime DueDate { get; private set; }
     public bool IsHighlighted { get; private set; }
     public string CreatedBy { get; private set; }
@@ -17,19 +18,27 @@ public class NewsItem : Entity<NewsItemId>
         DateTime dueDate,
         bool isHighlighted,
         string createdBy,
-        DateTime createdAt
+        DateTime createdAt,
+        string? frontpageSummary = null
     )
         : base(id)
     {
         Title = title;
         Body = body;
+        FrontpageSummary = frontpageSummary;
         DueDate = dueDate;
         IsHighlighted = isHighlighted;
         CreatedBy = createdBy;
         CreatedAt = createdAt;
     }
 
-    public void Update(string? title, string? body, DateTime? dueDate, DateTime modifiedAt)
+    public void Update(
+        string? title,
+        string? body,
+        DateTime? dueDate,
+        DateTime modifiedAt,
+        string? frontpageSummary = null
+    )
     {
         if (!string.IsNullOrWhiteSpace(title))
         {
@@ -45,6 +54,8 @@ public class NewsItem : Entity<NewsItemId>
         {
             DueDate = dueDate.Value;
         }
+
+        FrontpageSummary = frontpageSummary;
 
         ModifiedAt = modifiedAt;
     }
