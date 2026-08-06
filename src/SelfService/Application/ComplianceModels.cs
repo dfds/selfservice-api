@@ -69,9 +69,26 @@ public class CostCentreCapabilityComplianceResult
     public List<ComplianceCategoryResult> Categories { get; set; } = new();
 }
 
+public class ComplianceSummaryResult
+{
+    public int TotalCapabilities { get; set; }
+    public int FullyCompliantCapabilities { get; set; }
+    public int NonCompliantCapabilities { get; set; }
+    public int UnknownCapabilities { get; set; }
+}
+
 public class RequirementsComplianceResult
 {
     public List<RequirementComplianceSummaryResult> Items { get; set; } = new();
+}
+
+public class RequirementByCostCentreResult
+{
+    public string? CostCentre { get; set; }
+    public int TotalCapabilities { get; set; }
+    public int CompliantCount { get; set; }
+    public int NonCompliantCount { get; set; }
+    public int UnknownCount { get; set; }
 }
 
 public class RequirementComplianceSummaryResult
@@ -85,6 +102,7 @@ public class RequirementComplianceSummaryResult
     public int CompliantCount { get; set; }
     public int NonCompliantCount { get; set; }
     public int UnknownCount { get; set; }
+    public List<RequirementByCostCentreResult> ByCostCentre { get; set; } = new();
 }
 
 public class RequirementComplianceDetailsResult : RequirementComplianceSummaryResult

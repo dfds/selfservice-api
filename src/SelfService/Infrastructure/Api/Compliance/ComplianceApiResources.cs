@@ -2,6 +2,25 @@ using SelfService.Application;
 
 namespace SelfService.Infrastructure.Api.Compliance;
 
+public class ComplianceSummaryApiResource
+{
+    public int TotalCapabilities { get; set; }
+    public int FullyCompliantCapabilities { get; set; }
+    public int NonCompliantCapabilities { get; set; }
+    public int UnknownCapabilities { get; set; }
+
+    public static ComplianceSummaryApiResource From(ComplianceSummaryResult result)
+    {
+        return new ComplianceSummaryApiResource
+        {
+            TotalCapabilities = result.TotalCapabilities,
+            FullyCompliantCapabilities = result.FullyCompliantCapabilities,
+            NonCompliantCapabilities = result.NonCompliantCapabilities,
+            UnknownCapabilities = result.UnknownCapabilities,
+        };
+    }
+}
+
 public class CapabilityComplianceApiResource
 {
     public string CapabilityId { get; set; } = null!;
@@ -160,6 +179,27 @@ public class RequirementsComplianceApiResource
     }
 }
 
+public class RequirementByCostCentreApiResource
+{
+    public string? CostCentre { get; set; }
+    public int TotalCapabilities { get; set; }
+    public int CompliantCount { get; set; }
+    public int NonCompliantCount { get; set; }
+    public int UnknownCount { get; set; }
+
+    public static RequirementByCostCentreApiResource From(RequirementByCostCentreResult result)
+    {
+        return new RequirementByCostCentreApiResource
+        {
+            CostCentre = result.CostCentre,
+            TotalCapabilities = result.TotalCapabilities,
+            CompliantCount = result.CompliantCount,
+            NonCompliantCount = result.NonCompliantCount,
+            UnknownCount = result.UnknownCount,
+        };
+    }
+}
+
 public class RequirementComplianceSummaryApiResource
 {
     public string RequirementId { get; set; } = null!;
@@ -171,6 +211,7 @@ public class RequirementComplianceSummaryApiResource
     public int CompliantCount { get; set; }
     public int NonCompliantCount { get; set; }
     public int UnknownCount { get; set; }
+    public List<RequirementByCostCentreApiResource> ByCostCentre { get; set; } = new();
 
     public static RequirementComplianceSummaryApiResource From(RequirementComplianceSummaryResult result)
     {
@@ -185,6 +226,7 @@ public class RequirementComplianceSummaryApiResource
             CompliantCount = result.CompliantCount,
             NonCompliantCount = result.NonCompliantCount,
             UnknownCount = result.UnknownCount,
+            ByCostCentre = result.ByCostCentre.Select(RequirementByCostCentreApiResource.From).ToList(),
         };
     }
 }
