@@ -4,6 +4,7 @@ namespace SelfService.Application;
 
 public interface IComplianceApplicationService
 {
+    Task<ComplianceSummaryResult> GetComplianceSummary();
     Task<CapabilityComplianceResult> GetCapabilityCompliance(CapabilityId capabilityId);
     Task<CostCentreComplianceResult> GetCostCentreCompliance(string costCentre);
     Task<CostCentreComplianceDetailsResult> GetCostCentreComplianceDetails(string costCentre);

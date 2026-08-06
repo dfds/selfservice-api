@@ -17,6 +17,13 @@ public class ComplianceController : ControllerBase
         _complianceService = complianceService;
     }
 
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetComplianceSummary()
+    {
+        var result = await _complianceService.GetComplianceSummary();
+        return Ok(ComplianceSummaryApiResource.From(result));
+    }
+
     [HttpGet("capabilities/{id}")]
     public async Task<IActionResult> GetCapabilityCompliance([FromRoute] string id)
     {
