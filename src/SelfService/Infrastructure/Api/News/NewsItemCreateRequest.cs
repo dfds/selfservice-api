@@ -10,6 +10,8 @@ public class NewsItemCreateRequest
     [Required]
     public string? Body { get; set; }
 
+    public string? FrontpageSummary { get; set; }
+
     [Required]
     public DateTime DueDate { get; set; }
 }

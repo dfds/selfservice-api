@@ -654,6 +654,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.Title);
             cfg.Property(x => x.Body);
+            cfg.Property(x => x.FrontpageSummary);
             cfg.Property(x => x.DueDate);
             cfg.Property(x => x.IsHighlighted);
             cfg.Property(x => x.CreatedBy);

@@ -2140,6 +2140,7 @@ public class ApiResourceFactory
             id: newsItem.Id,
             title: newsItem.Title,
             body: newsItem.Body,
+            frontpageSummary: newsItem.FrontpageSummary,
             dueDate: newsItem.DueDate,
             isHighlighted: newsItem.IsHighlighted,
             isRelevant: newsItem.IsRelevant(),
