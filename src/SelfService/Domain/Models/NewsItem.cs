@@ -32,7 +32,13 @@ public class NewsItem : Entity<NewsItemId>
         CreatedAt = createdAt;
     }
 
-    public void Update(string? title, string? body, DateTime? dueDate, DateTime modifiedAt, string? frontpageSummary = null)
+    public void Update(
+        string? title,
+        string? body,
+        DateTime? dueDate,
+        DateTime modifiedAt,
+        string? frontpageSummary = null
+    )
     {
         if (!string.IsNullOrWhiteSpace(title))
         {
