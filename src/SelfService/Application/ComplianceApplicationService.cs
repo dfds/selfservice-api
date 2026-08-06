@@ -114,6 +114,18 @@ public class ComplianceApplicationService : IComplianceApplicationService
         );
     }
 
+    public async Task<ComplianceSummaryResult> GetComplianceSummary()
+    {
+        var all = await BuildComplianceDetailsForCapabilities("all", _ => true);
+        return new ComplianceSummaryResult
+        {
+            TotalCapabilities = all.TotalCapabilities,
+            FullyCompliantCapabilities = all.CompliantCount,
+            NonCompliantCapabilities = all.NonCompliantCount,
+            UnknownCapabilities = all.UnknownCount,
+        };
+    }
+
     public async Task<RequirementsComplianceResult> GetRequirementsCompliance()
     {
         var allCapabilitiesDetails = await BuildComplianceDetailsForCapabilities("all", _ => true);
@@ -236,15 +248,30 @@ public class ComplianceApplicationService : IComplianceApplicationService
         List<CostCentreCapabilityComplianceResult> capabilities
     )
     {
-        var categories = capabilities
-            .Select(capability =>
-                capability.Categories.FirstOrDefault(category => category.CategoryName == definition.CategoryName)
-            )
-            .Where(category => category != null)
-            .Select(category => category!)
+        var matched = capabilities
+            .Select(cap => new
+            {
+                cap,
+                category = cap.Categories.FirstOrDefault(c => c.CategoryName == definition.CategoryName),
+            })
+            .Where(x => x.category != null)
+            .Select(x => new { x.cap, category = x.category! })
             .ToList();
 
-        var metadataSource = categories.FirstOrDefault();
+        var metadataSource = matched.Select(x => x.category).FirstOrDefault();
+
+        var byCostCentre = matched
+            .GroupBy(x => ExtractCostCentre(x.cap.JsonMetadata))
+            .OrderBy(g => g.Key)
+            .Select(g => new RequirementByCostCentreResult
+            {
+                CostCentre = g.Key,
+                TotalCapabilities = g.Count(),
+                CompliantCount = g.Count(x => x.category.Status == ComplianceStatus.Compliant),
+                NonCompliantCount = g.Count(x => x.category.Status == ComplianceStatus.NonCompliant),
+                UnknownCount = g.Count(x => x.category.Status == ComplianceStatus.Unknown),
+            })
+            .ToList();
 
         return new RequirementComplianceSummaryResult
         {
@@ -253,10 +280,11 @@ public class ComplianceApplicationService : IComplianceApplicationService
             DisplayName = metadataSource?.DisplayName ?? definition.CategoryName,
             Description = metadataSource?.Description,
             HelpUrl = metadataSource?.HelpUrl,
-            TotalCapabilities = categories.Count,
-            CompliantCount = categories.Count(category => category.Status == ComplianceStatus.Compliant),
-            NonCompliantCount = categories.Count(category => category.Status == ComplianceStatus.NonCompliant),
-            UnknownCount = categories.Count(category => category.Status == ComplianceStatus.Unknown),
+            TotalCapabilities = matched.Count,
+            CompliantCount = matched.Count(x => x.category.Status == ComplianceStatus.Compliant),
+            NonCompliantCount = matched.Count(x => x.category.Status == ComplianceStatus.NonCompliant),
+            UnknownCount = matched.Count(x => x.category.Status == ComplianceStatus.Unknown),
+            ByCostCentre = byCostCentre,
         };
     }
 
