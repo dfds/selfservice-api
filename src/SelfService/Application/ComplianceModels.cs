@@ -68,3 +68,36 @@ public class CostCentreCapabilityComplianceResult
     public ComplianceStatus OverallStatus { get; set; }
     public List<ComplianceCategoryResult> Categories { get; set; } = new();
 }
+
+public class RequirementsComplianceResult
+{
+    public List<RequirementComplianceSummaryResult> Items { get; set; } = new();
+}
+
+public class RequirementComplianceSummaryResult
+{
+    public string RequirementId { get; set; } = null!;
+    public string CategoryName { get; set; } = null!;
+    public string? DisplayName { get; set; }
+    public string? Description { get; set; }
+    public string? HelpUrl { get; set; }
+    public int TotalCapabilities { get; set; }
+    public int CompliantCount { get; set; }
+    public int NonCompliantCount { get; set; }
+    public int UnknownCount { get; set; }
+}
+
+public class RequirementComplianceDetailsResult : RequirementComplianceSummaryResult
+{
+    public List<RequirementCapabilityComplianceResult> Capabilities { get; set; } = new();
+}
+
+public class RequirementCapabilityComplianceResult
+{
+    public string CapabilityId { get; set; } = null!;
+    public string CapabilityName { get; set; } = null!;
+    public string? JsonMetadata { get; set; }
+    public ComplianceStatus Status { get; set; }
+    public double? Score { get; set; }
+    public List<ComplianceCategoryItem> Items { get; set; } = new();
+}
