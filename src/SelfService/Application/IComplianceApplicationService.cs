@@ -9,4 +9,6 @@ public interface IComplianceApplicationService
     Task<CostCentreComplianceDetailsResult> GetCostCentreComplianceDetails(string costCentre);
     Task<CostCentreComplianceResult> GetRogueCapabilitiesCompliance();
     Task<CostCentreComplianceDetailsResult> GetRogueCapabilitiesComplianceDetails();
+    Task<RequirementsComplianceResult> GetRequirementsCompliance();
+    Task<RequirementComplianceDetailsResult> GetRequirementComplianceDetails(string requirementId);
 }

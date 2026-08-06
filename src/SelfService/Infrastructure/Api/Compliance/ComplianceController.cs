@@ -59,4 +59,25 @@ public class ComplianceController : ControllerBase
         var result = await _complianceService.GetRogueCapabilitiesComplianceDetails();
         return Ok(CostCentreComplianceDetailsApiResource.From(result));
     }
+
+    [HttpGet("requirements")]
+    public async Task<IActionResult> GetRequirementsCompliance()
+    {
+        var result = await _complianceService.GetRequirementsCompliance();
+        return Ok(RequirementsComplianceApiResource.From(result));
+    }
+
+    [HttpGet("requirements/{id}")]
+    public async Task<IActionResult> GetRequirementComplianceDetails([FromRoute] string id)
+    {
+        try
+        {
+            var result = await _complianceService.GetRequirementComplianceDetails(id);
+            return Ok(RequirementComplianceDetailsApiResource.From(result));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
 }
