@@ -579,8 +579,8 @@ public class TestComplianceApplicationService
 
         var service = A.ComplianceApplicationService.WithCapabilityRepository(capabilityRepo.Object).Build();
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-            service.GetRequirementComplianceDetails("not-a-real-requirement")
+        await Assert.ThrowsAsync<KeyNotFoundException>(
+            () => service.GetRequirementComplianceDetails("not-a-real-requirement")
         );
     }
 }

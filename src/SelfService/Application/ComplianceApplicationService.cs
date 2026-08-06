@@ -237,7 +237,9 @@ public class ComplianceApplicationService : IComplianceApplicationService
     )
     {
         var categories = capabilities
-            .Select(capability => capability.Categories.FirstOrDefault(category => category.CategoryName == definition.CategoryName))
+            .Select(capability =>
+                capability.Categories.FirstOrDefault(category => category.CategoryName == definition.CategoryName)
+            )
             .Where(category => category != null)
             .Select(category => category!)
             .ToList();
@@ -266,15 +268,13 @@ public class ComplianceApplicationService : IComplianceApplicationService
         var capabilityCategories = capabilities
             .Select(capability =>
             {
-                var matchingCategory = capability.Categories.FirstOrDefault(category => category.CategoryName == definition.CategoryName);
+                var matchingCategory = capability.Categories.FirstOrDefault(category =>
+                    category.CategoryName == definition.CategoryName
+                );
                 return new { capability, matchingCategory };
             })
             .Where(item => item.matchingCategory is not null)
-            .Select(item => new
-            {
-                item.capability,
-                category = item.matchingCategory!,
-            })
+            .Select(item => new { item.capability, category = item.matchingCategory! })
             .ToList();
 
         var metadataSource = capabilityCategories.Select(item => item.category).FirstOrDefault();
@@ -288,7 +288,9 @@ public class ComplianceApplicationService : IComplianceApplicationService
             HelpUrl = metadataSource?.HelpUrl,
             TotalCapabilities = capabilityCategories.Count,
             CompliantCount = capabilityCategories.Count(item => item.category.Status == ComplianceStatus.Compliant),
-            NonCompliantCount = capabilityCategories.Count(item => item.category.Status == ComplianceStatus.NonCompliant),
+            NonCompliantCount = capabilityCategories.Count(item =>
+                item.category.Status == ComplianceStatus.NonCompliant
+            ),
             UnknownCount = capabilityCategories.Count(item => item.category.Status == ComplianceStatus.Unknown),
             Capabilities = capabilityCategories
                 .Select(item => new RequirementCapabilityComplianceResult
