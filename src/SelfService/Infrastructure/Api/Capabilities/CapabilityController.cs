@@ -22,6 +22,7 @@ public class CapabilityController : ControllerBase
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IAuthorizationService _authorizationService;
     private readonly IAwsAccountApplicationService _awsAccountApplicationService;
+    private readonly IKubernetesAccessApplicationService _kubernetesAccessApplicationService;
     private readonly IAzureResourceApplicationService _azureResourceApplicationService;
     private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly IAzureResourceRepository _azureResourceRepository;
@@ -30,6 +31,7 @@ public class CapabilityController : ControllerBase
     private readonly IKafkaClusterAccessRepository _kafkaClusterAccessRepository;
     private readonly IKafkaClusterRepository _kafkaClusterRepository;
     private readonly IKafkaTopicRepository _kafkaTopicRepository;
+    private readonly IKubernetesAccessRepository _kubernetesAccessRepository;
     private readonly ITeamApplicationService _teamApplicationService;
     private readonly ILogger<CapabilityController> _logger;
     private readonly IMembershipApplicationService _membershipApplicationService;
@@ -56,6 +58,8 @@ public class CapabilityController : ControllerBase
         IAwsAccountRepository awsAccountRepository,
         IAzureResourceRepository azureResourceRepository,
         IAwsAccountApplicationService awsAccountApplicationService,
+        IKubernetesAccessApplicationService kubernetesAccessApplicationService,
+        IKubernetesAccessRepository kubernetesAccessRepository,
         IAzureResourceApplicationService azureResourceApplicationService,
         IMembershipApplicationService membershipApplicationService,
         IMembershipRepository membershipRepository,
@@ -83,6 +87,8 @@ public class CapabilityController : ControllerBase
         _awsAccountRepository = awsAccountRepository;
         _azureResourceRepository = azureResourceRepository;
         _awsAccountApplicationService = awsAccountApplicationService;
+        _kubernetesAccessApplicationService = kubernetesAccessApplicationService;
+        _kubernetesAccessRepository = kubernetesAccessRepository;
         _azureResourceApplicationService = azureResourceApplicationService;
         _membershipApplicationService = membershipApplicationService;
         _membershipRepository = membershipRepository;
@@ -334,8 +340,8 @@ public class CapabilityController : ControllerBase
         return Ok(_catalogApiResourceFactory.ConvertDeployments(capabilityId, result));
     }
 
-    [HttpGet("{id:required}/awsaccount")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [HttpGet("{id:required}/awsaccounts")]
+    [ProducesResponseType(typeof(AwsAccountsApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [RequiresPermission("aws", "read")]
@@ -353,11 +359,8 @@ public class CapabilityController : ControllerBase
         if (!await _authorizationService.CanViewAwsAccount(userId, capabilityId))
             return Unauthorized();
 
-        var account = await _awsAccountRepository.FindBy(capabilityId);
-        if (account is null)
-            return NotFound();
-
-        return Ok(await _apiResourceFactory.Convert(account));
+        var accounts = await _awsAccountRepository.GetAllBy(capabilityId);
+        return Ok(await _apiResourceFactory.ConvertToCollection(accounts, capabilityId));
     }
 
     [HttpPost("{id:required}/awsaccount")]
@@ -366,7 +369,7 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
     [RequiresPermission("aws", "create")]
-    public async Task<IActionResult> RequestAwsAccount(string id)
+    public async Task<IActionResult> RequestAwsAccount(string id, [FromBody] NewAwsAccountRequest request)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -377,12 +380,26 @@ public class CapabilityController : ControllerBase
         if (!await _capabilityRepository.Exists(capabilityId))
             return NotFound();
 
+        if (request?.environment == null)
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid metadata",
+                    Detail = "Metadata missing environment",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+
         if (!await _authorizationService.CanRequestAwsAccount(userId, capabilityId))
             return Unauthorized();
 
         try
         {
-            var awsAccountId = await _awsAccountApplicationService.RequestAwsAccount(capabilityId, userId);
+            var awsAccountId = await _awsAccountApplicationService.RequestAwsAccount(
+                capabilityId,
+                request.environment,
+                userId
+            );
 
             var account = await _awsAccountRepository.Get(awsAccountId);
 
@@ -392,10 +409,21 @@ public class CapabilityController : ControllerBase
         {
             return Conflict();
         }
+        catch (AwsAccountLimitExceededException ex)
+        {
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "AWS Account Limit Exceeded",
+                    Detail = ex.Message,
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+        }
     }
 
     [HttpGet("{id:required}/awsaccount/information")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<AwsAccountInformationApiResource>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [RequiresPermission("aws", "read")]
@@ -410,40 +438,124 @@ public class CapabilityController : ControllerBase
         if (!await _capabilityRepository.Exists(capabilityId))
             return NotFound();
 
-        if (!await _authorizationService.CanViewAwsAccount(userId, capabilityId))
+        if (!await _authorizationService.CanViewAwsAccountInformation(userId, capabilityId))
             return Unauthorized();
 
-        var account = await _awsAccountRepository.FindBy(capabilityId);
-        if (account is null)
+        var accounts = await _awsAccountRepository.GetAllBy(capabilityId);
+        var completedAccounts = accounts
+            .Where(a => a.Status == AwsAccountStatus.Completed && a.Registration.AccountId is not null)
+            .ToList();
+
+        var results = new List<AwsAccountInformationApiResource>();
+        foreach (var account in completedAccounts)
+        {
+            try
+            {
+                var vpcs = await _awsEC2QueriesApplicationService.GetVPCsAsync(
+                    account.Registration.AccountId!.ToString()
+                );
+                var accountInformation = new AwsAccountInformation(account.Id, capabilityId, vpcs);
+                results.Add(await _apiResourceFactory.Convert(accountInformation));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new ProblemDetails
+                    {
+                        Title = "Error",
+                        Detail = ex.Message,
+                        Status = StatusCodes.Status500InternalServerError,
+                    }
+                );
+            }
+        }
+
+        return Ok(results);
+    }
+
+    [HttpGet("{id:required}/kubernetes-access")]
+    [ProducesResponseType(typeof(List<KubernetesAccessApiResource>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [RequiresPermission("kubernetes", "read")]
+    public async Task<IActionResult> GetKubernetesAccesses(string id)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
             return NotFound();
 
-        if (account.Registration is null || account.Registration?.AccountId is null)
-        {
+        if (!await _capabilityRepository.Exists(capabilityId))
             return NotFound();
-        }
+
+        if (!await _authorizationService.CanViewKubernetesAccess(userId, capabilityId))
+            return Unauthorized();
+
+        var accesses = await _kubernetesAccessRepository.GetAllBy(capabilityId);
+        return Ok(await _apiResourceFactory.ConvertKubernetesAccesses(accesses, capabilityId));
+    }
+
+    [HttpPost("{id:required}/kubernetes-access")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [RequiresPermission("kubernetes", "create")]
+    public async Task<IActionResult> RequestKubernetesAccess(string id, [FromBody] NewKubernetesAccessRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        if (!CapabilityId.TryParse(id, out var capabilityId))
+            return NotFound();
+
+        if (!await _capabilityRepository.Exists(capabilityId))
+            return NotFound();
+
+        if (request?.AwsAccountId == null)
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid request",
+                    Detail = "AwsAccountId is required",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+
+        if (!AwsAccountId.TryParse(request.AwsAccountId, out var awsAccountId))
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Invalid request",
+                    Detail = $"Value \"{request.AwsAccountId}\" is not a valid AWS account id",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+
+        if (!await _authorizationService.CanRequestKubernetesAccess(userId, capabilityId))
+            return Unauthorized();
 
         try
         {
-            var vpcs = _awsEC2QueriesApplicationService.GetVPCsAsync(account.Registration.AccountId.ToString());
-            var accountInformation = new AwsAccountInformation(account.Id, capabilityId, await vpcs);
-            return Ok(await _apiResourceFactory.Convert(accountInformation));
+            var account = await _awsAccountRepository.Get(awsAccountId);
+
+            if (account.CapabilityId != capabilityId)
+                return NotFound();
+
+            await _kubernetesAccessApplicationService.RequestKubernetesAccess(awsAccountId, userId);
+
+            return Ok();
         }
-        catch (Exception ex)
+        catch (EntityNotFoundException)
         {
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new ProblemDetails
-                {
-                    Title = "Error",
-                    Detail = ex.Message,
-                    Status = StatusCodes.Status500InternalServerError,
-                }
-            );
+            return NotFound();
         }
     }
 
     [HttpGet("{id:required}/azureresources")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AzureResourcesApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [RequiresPermission("azure", "read")]
@@ -465,7 +577,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("{id:required}/azureresources")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AzureResourceApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
@@ -539,7 +651,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpGet("{id:required}/self-assessments")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SelfAssessmentListApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [RequiresPermission("capability-management", "read-self-assess")]
@@ -564,7 +676,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("{id:required}/self-assessments")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [RequiresPermission("capability-management", "create-self-assess")]
@@ -610,7 +722,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpGet("{id:required}/azureresources/{rid:required}")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AzureResourceApiResource), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [RequiresPermission("azure", "read")]
@@ -1555,7 +1667,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpGet("self-assessment-options")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<SelfAssessmentOptionApiResource>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [RequiresPermission("capability-management", "read-self-assess")]
@@ -1575,7 +1687,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("self-assessment-options")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> AddSelfAssessmentOption([FromBody] AddSelfAssessmentOptionRequest request)
@@ -1601,7 +1713,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("self-assessment-options/{id}/update")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
@@ -1641,7 +1753,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("self-assessment-options/{id}/activate")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
@@ -1672,7 +1784,7 @@ public class CapabilityController : ControllerBase
     }
 
     [HttpPost("self-assessment-options/{id}/deactivate")]
-    [ProducesResponseType(typeof(AwsAccountApiResource), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]

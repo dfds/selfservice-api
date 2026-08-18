@@ -290,41 +290,27 @@ public class AuthorizationService : IAuthorizationService
         );
     }
 
-    public async Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId)
+    public Task<bool> CanViewAwsAccount(UserId userId, CapabilityId capabilityId)
     {
-        var canReadAwsAccount = await HasPermission(
-            userId,
-            RbacAccessType.Capability,
-            RbacNamespace.Aws,
-            "read",
-            capabilityId
-        );
-
-        return (await _awsAccountRepository.Exists(capabilityId)) && canReadAwsAccount;
+        return HasPermission(userId, RbacAccessType.Capability, RbacNamespace.Aws, "read", capabilityId);
     }
 
     public async Task<bool> CanViewAwsAccount(UserId userId, AwsAccountId accountId)
     {
-        var account = await _awsAccountRepository.Get(accountId);
-        if (account == null)
-        {
+        var account = await _awsAccountRepository.FindBy(accountId);
+        if (account is null)
             return false;
-        }
+
         return await HasPermission(userId, RbacAccessType.Capability, RbacNamespace.Aws, "read", account.CapabilityId);
     }
 
     public async Task<bool> CanViewAwsAccountInformation(UserId userId, CapabilityId capabilityId)
     {
-        var account = await _awsAccountRepository.FindBy(capabilityId);
-        if (account is null)
+        var accounts = await _awsAccountRepository.GetAllBy(capabilityId);
+        if (!accounts.Any(a => a.Status == AwsAccountStatus.Completed))
             return false;
 
-        if (!(account.Status == AwsAccountStatus.Completed))
-        {
-            return false;
-        }
-
-        return await HasPermission(userId, RbacAccessType.Capability, RbacNamespace.Aws, "read", account.CapabilityId);
+        return await HasPermission(userId, RbacAccessType.Capability, RbacNamespace.Aws, "read", capabilityId);
     }
 
     public async Task<bool> CanRequestAwsAccount(UserId userId, CapabilityId capabilityId)
@@ -337,7 +323,32 @@ public class AuthorizationService : IAuthorizationService
             capabilityId
         );
 
-        return (!await _awsAccountRepository.Exists(capabilityId)) && canCreateAwsAccount;
+        var accountCount = await _awsAccountRepository.CountBy(capabilityId);
+        return canCreateAwsAccount && accountCount < AwsAccountConfiguration.MaxAccountsPerCapability;
+    }
+
+    public async Task<bool> CanRequestKubernetesAccess(UserId userId, CapabilityId capabilityId)
+    {
+        var canCreateKubernetesAccess = await HasPermission(
+            userId,
+            RbacAccessType.Capability,
+            RbacNamespace.Kubernetes,
+            "create",
+            capabilityId
+        );
+
+        if (!canCreateKubernetesAccess)
+        {
+            return false;
+        }
+
+        var accounts = await _awsAccountRepository.GetAllBy(capabilityId);
+        return accounts.Any(a => a.Status == AwsAccountStatus.Completed);
+    }
+
+    public Task<bool> CanViewKubernetesAccess(UserId userId, CapabilityId capabilityId)
+    {
+        return HasPermission(userId, RbacAccessType.Capability, RbacNamespace.Kubernetes, "read", capabilityId);
     }
 
     public async Task<bool> CanViewAzureResources(UserId userId, CapabilityId capabilityId)

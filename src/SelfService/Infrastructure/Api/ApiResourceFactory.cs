@@ -2,6 +2,7 @@
 using Amazon.EC2.Model;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
+using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
@@ -28,6 +29,7 @@ public class ApiResourceFactory
     private readonly IMembershipQuery _membershipQuery;
     private readonly ICapabilityDeletionStatusQuery _capabilityDeletionStatusQuery;
     private readonly IAwsAccountIdQuery _awsAccountIdQuery;
+    private readonly IAwsAccountRepository _awsAccountRepository;
 
     public ApiResourceFactory(
         IHttpContextAccessor httpContextAccessor,
@@ -35,7 +37,8 @@ public class ApiResourceFactory
         IAuthorizationService authorizationService,
         IMembershipQuery membershipQuery,
         ICapabilityDeletionStatusQuery capabilityDeletionStatusQuery,
-        IAwsAccountIdQuery awsAccountIdQuery
+        IAwsAccountIdQuery awsAccountIdQuery,
+        IAwsAccountRepository awsAccountRepository
     )
     {
         _httpContextAccessor = httpContextAccessor;
@@ -44,6 +47,7 @@ public class ApiResourceFactory
         _membershipQuery = membershipQuery;
         _capabilityDeletionStatusQuery = capabilityDeletionStatusQuery;
         _awsAccountIdQuery = awsAccountIdQuery;
+        _awsAccountRepository = awsAccountRepository;
     }
 
     private HttpContext HttpContext =>
@@ -704,6 +708,36 @@ public class ApiResourceFactory
         );
     }
 
+    private async Task<ResourceLink> CreateKubernetesAccessLinkFor(Capability capability)
+    {
+        var allowedInteractions = Allow.None;
+        var capabilityMarkedForDeletion = await _capabilityDeletionStatusQuery.IsPendingDeletion(capability.Id);
+
+        if (await _authorizationService.CanViewKubernetesAccess(CurrentUser, capability.Id))
+        {
+            allowedInteractions += Get;
+        }
+
+        if (
+            await _authorizationService.CanRequestKubernetesAccess(CurrentUser, capability.Id)
+            && !capabilityMarkedForDeletion
+        )
+        {
+            allowedInteractions += Post;
+        }
+
+        return new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.GetKubernetesAccesses),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capability.Id }
+            ) ?? "",
+            rel: "related",
+            allow: allowedInteractions
+        );
+    }
+
     private async Task<ResourceLink> CreateAzureResourcesLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
@@ -793,6 +827,7 @@ public class ApiResourceFactory
                 leaveCapability: await CreateLeaveCapabilityLinkFor(capability),
                 awsAccount: await CreateAwsAccountLinkFor(capability),
                 awsAccountInformation: await CreateAwsAccountInformationLinkFor(capability),
+                kubernetesAccess: await CreateKubernetesAccessLinkFor(capability),
                 azureResources: await CreateAzureResourcesLinkFor(capability),
                 requestCapabilityDeletion: await CreateRequestDeletionLinkFor(capability),
                 cancelCapabilityDeletionRequest: await CreateCancelDeletionRequestLinkFor(capability),
@@ -855,9 +890,9 @@ public class ApiResourceFactory
 
         return new AwsAccountApiResource(
             id: account.Id,
+            environment: account.Environment,
             accountId: account.Registration.AccountId?.ToString(),
             roleEmail: account.Registration.RoleEmail,
-            @namespace: account.KubernetesLink.Namespace,
             status: Convert(account.Status),
             links: new AwsAccountApiResource.AwsAccountLinks(
                 self: new ResourceLink(
@@ -872,6 +907,106 @@ public class ApiResourceFactory
                 )
             )
         );
+    }
+
+    public async Task<AwsAccountsApiResource> ConvertToCollection(List<AwsAccount> accounts, CapabilityId capabilityId)
+    {
+        var items = new List<AwsAccountItemApiResource>();
+        foreach (var account in accounts)
+        {
+            var allowedInteractions = Allow.None;
+            if (await _authorizationService.CanViewAwsAccount(CurrentUser, account.CapabilityId))
+            {
+                allowedInteractions += Get;
+            }
+
+            items.Add(
+                new AwsAccountItemApiResource(
+                    id: account.Id,
+                    environment: account.Environment,
+                    accountId: account.Registration.AccountId?.ToString(),
+                    roleEmail: account.Registration.RoleEmail,
+                    status: Convert(account.Status),
+                    links: new AwsAccountItemApiResource.AwsAccountItemLinks(
+                        self: new ResourceLink(
+                            href: _linkGenerator.GetUriByAction(
+                                httpContext: HttpContext,
+                                action: nameof(CapabilityController.GetCapabilityAwsAccount),
+                                controller: GetNameOf<CapabilityController>(),
+                                values: new { id = account.CapabilityId }
+                            ) ?? "",
+                            rel: "self",
+                            allow: allowedInteractions
+                        )
+                    )
+                )
+            );
+        }
+
+        var canRequest = await _authorizationService.CanRequestAwsAccount(CurrentUser, capabilityId);
+        var requestAccountLink = new ResourceLink(
+            href: _linkGenerator.GetUriByAction(
+                httpContext: HttpContext,
+                action: nameof(CapabilityController.RequestAwsAccount),
+                controller: GetNameOf<CapabilityController>(),
+                values: new { id = capabilityId }
+            ) ?? "",
+            rel: "related",
+            allow: canRequest ? Allow.Post : Allow.None
+        );
+
+        var collectionLinks = new AwsAccountsApiResource.AwsAccountsLinks(
+            self: new ResourceLink(
+                href: _linkGenerator.GetUriByAction(
+                    httpContext: HttpContext,
+                    action: nameof(CapabilityController.GetCapabilityAwsAccount),
+                    controller: GetNameOf<CapabilityController>(),
+                    values: new { id = capabilityId }
+                ) ?? "",
+                rel: "self",
+                allow: Allow.Get
+            ),
+            requestAccount: requestAccountLink
+        );
+
+        return new AwsAccountsApiResource(
+            accounts: items,
+            accountLimit: AwsAccountConfiguration.MaxAccountsPerCapability,
+            links: collectionLinks
+        );
+    }
+
+    public Task<List<KubernetesAccessApiResource>> ConvertKubernetesAccesses(
+        List<KubernetesAccess> accesses,
+        CapabilityId capabilityId
+    )
+    {
+        var items = accesses
+            .Select(a => new KubernetesAccessApiResource(
+                id: a.Id,
+                capabilityId: a.CapabilityId,
+                environment: a.Environment,
+                awsAccountId: a.AwsAccountId?.ToString(),
+                @namespace: a.Namespace,
+                status: a.Status.ToString(),
+                requestedAt: a.RequestedAt,
+                requestedBy: a.RequestedBy,
+                links: new KubernetesAccessApiResource.KubernetesAccessLinks(
+                    self: new ResourceLink(
+                        href: _linkGenerator.GetUriByAction(
+                            httpContext: HttpContext,
+                            action: nameof(CapabilityController.GetKubernetesAccesses),
+                            controller: GetNameOf<CapabilityController>(),
+                            values: new { id = capabilityId }
+                        ) ?? "",
+                        rel: "self",
+                        allow: Allow.Get
+                    )
+                )
+            ))
+            .ToList();
+
+        return Task.FromResult(items);
     }
 
     public async Task<AwsAccountInformationApiResource> Convert(AwsAccountInformation information)

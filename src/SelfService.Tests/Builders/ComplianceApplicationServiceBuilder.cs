@@ -11,6 +11,7 @@ public class ComplianceApplicationServiceBuilder
     private ICapabilityRepository _capabilityRepository;
     private IAwsAccountRepository _awsAccountRepository;
     private IMembershipRepository _membershipRepository;
+    private IKubernetesAccessRepository _kubernetesAccessRepository;
     private RequirementsDbContext? _requirementsDbContext;
 
     public ComplianceApplicationServiceBuilder()
@@ -18,6 +19,7 @@ public class ComplianceApplicationServiceBuilder
         _capabilityRepository = Dummy.Of<ICapabilityRepository>();
         _awsAccountRepository = DefaultAwsAccountRepository();
         _membershipRepository = DefaultMembershipRepository();
+        _kubernetesAccessRepository = DefaultKubernetesAccessRepository();
     }
 
     public ComplianceApplicationServiceBuilder WithCapabilityRepository(ICapabilityRepository capabilityRepository)
@@ -29,6 +31,14 @@ public class ComplianceApplicationServiceBuilder
     public ComplianceApplicationServiceBuilder WithAwsAccountRepository(IAwsAccountRepository awsAccountRepository)
     {
         _awsAccountRepository = awsAccountRepository;
+        return this;
+    }
+
+    public ComplianceApplicationServiceBuilder WithKubernetesAccessRepository(
+        IKubernetesAccessRepository kubernetesAccessRepository
+    )
+    {
+        _kubernetesAccessRepository = kubernetesAccessRepository;
         return this;
     }
 
@@ -52,6 +62,7 @@ public class ComplianceApplicationServiceBuilder
                 _capabilityRepository,
                 _awsAccountRepository,
                 _membershipRepository,
+                _kubernetesAccessRepository,
                 _requirementsDbContext
             );
         }
@@ -59,7 +70,8 @@ public class ComplianceApplicationServiceBuilder
         return new StubComplianceApplicationService(
             _capabilityRepository,
             _awsAccountRepository,
-            _membershipRepository
+            _membershipRepository,
+            _kubernetesAccessRepository
         );
     }
 
@@ -77,6 +89,14 @@ public class ComplianceApplicationServiceBuilder
         var mock = new Mock<IMembershipRepository>();
         mock.Setup(r => r.GetMemberCountsByCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
             .ReturnsAsync(new Dictionary<CapabilityId, int>());
+        return mock.Object;
+    }
+
+    private static IKubernetesAccessRepository DefaultKubernetesAccessRepository()
+    {
+        var mock = new Mock<IKubernetesAccessRepository>();
+        mock.Setup(r => r.GetAllBy(It.IsAny<CapabilityId>())).ReturnsAsync(new List<KubernetesAccess>());
+        mock.Setup(r => r.GetAllBy(It.IsAny<IEnumerable<CapabilityId>>())).ReturnsAsync(new List<KubernetesAccess>());
         return mock.Object;
     }
 }

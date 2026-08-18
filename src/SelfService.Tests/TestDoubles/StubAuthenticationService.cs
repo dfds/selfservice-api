@@ -109,6 +109,16 @@ public class StubAuthorizationService : IAuthorizationService
         return await Task.FromResult(_authorized);
     }
 
+    public async Task<bool> CanRequestKubernetesAccess(UserId userId, CapabilityId capabilityId)
+    {
+        return await Task.FromResult(_authorized);
+    }
+
+    public async Task<bool> CanViewKubernetesAccess(UserId userId, CapabilityId capabilityId)
+    {
+        return await Task.FromResult(_authorized);
+    }
+
     public async Task<bool> CanViewAzureResources(UserId userId, CapabilityId capabilityId)
     {
         return await Task.FromResult(_authorized);

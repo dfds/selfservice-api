@@ -15,11 +15,13 @@ public class K8sNamespaceCreatedAndAwsArnConnected
 
 public class K8sNamespaceCreatedAndAwsArnConnectedHandler : IMessageHandler<K8sNamespaceCreatedAndAwsArnConnected>
 {
-    private readonly IAwsAccountApplicationService _awsAccountApplicationService;
+    private readonly IKubernetesAccessApplicationService _kubernetesAccessApplicationService;
 
-    public K8sNamespaceCreatedAndAwsArnConnectedHandler(IAwsAccountApplicationService awsAccountApplicationService)
+    public K8sNamespaceCreatedAndAwsArnConnectedHandler(
+        IKubernetesAccessApplicationService kubernetesAccessApplicationService
+    )
     {
-        _awsAccountApplicationService = awsAccountApplicationService;
+        _kubernetesAccessApplicationService = kubernetesAccessApplicationService;
     }
 
     public Task Handle(K8sNamespaceCreatedAndAwsArnConnected message, MessageHandlerContext context)
@@ -29,6 +31,11 @@ public class K8sNamespaceCreatedAndAwsArnConnectedHandler : IMessageHandler<K8sN
             throw new InvalidOperationException($"Invalid AwsAccountId {message.ContextId}");
         }
 
-        return _awsAccountApplicationService.LinkKubernetesNamespace(id, message.NamespaceName);
+        if (message.NamespaceName is null)
+        {
+            throw new InvalidOperationException("NamespaceName is required");
+        }
+
+        return _kubernetesAccessApplicationService.GrantKubernetesAccess(id, message.NamespaceName);
     }
 }
