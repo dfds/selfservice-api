@@ -26,7 +26,7 @@ public class K8sNamespaceCreatedAndAwsArnConnectedHandler : IMessageHandler<K8sN
 
     public Task Handle(K8sNamespaceCreatedAndAwsArnConnected message, MessageHandlerContext context)
     {
-        if (!AwsAccountId.TryParse(message.ContextId, out var id))
+        if (!AwsAccountId.TryParse(message.ContextId, out var awsAccountId))
         {
             throw new InvalidOperationException($"Invalid AwsAccountId {message.ContextId}");
         }
@@ -36,6 +36,6 @@ public class K8sNamespaceCreatedAndAwsArnConnectedHandler : IMessageHandler<K8sN
             throw new InvalidOperationException("NamespaceName is required");
         }
 
-        return _kubernetesAccessApplicationService.GrantKubernetesAccess(id, message.NamespaceName);
+        return _kubernetesAccessApplicationService.GrantKubernetesAccess(awsAccountId, message.NamespaceName);
     }
 }
