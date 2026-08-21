@@ -39,6 +39,13 @@ public static class ConsumerConfiguration
                 );
 
             options
+                .ForTopic($"{SelfServicePrefix}.kubernetes")
+                .Register<KubernetesAccessRequested>(
+                    messageType: KubernetesAccessRequested.EventType,
+                    keySelector: x => x.ContextId!
+                );
+
+            options
                 .ForTopic($"{SelfServicePrefix}.azureresourcegroup")
                 .Register<AzureResourceRequested>(
                     messageType: AzureResourceRequested.EventType,
