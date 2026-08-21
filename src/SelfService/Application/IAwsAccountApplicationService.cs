@@ -5,8 +5,7 @@ namespace SelfService.Application;
 
 public interface IAwsAccountApplicationService
 {
-    Task<AwsAccountId> RequestAwsAccount(CapabilityId capabilityId, UserId requestedBy);
+    Task<AwsAccountId> RequestAwsAccount(CapabilityId capabilityId, string environment, UserId requestedBy);
     Task RegisterRealAwsAccount(AwsAccountId id, RealAwsAccountId realAwsAccountId, string? roleEmail);
-    Task LinkKubernetesNamespace(AwsAccountId id, string? @namespace);
     public Task PublishResourceManifestToGit(AwsAccountRequested awsAccountRequested);
 }

@@ -281,13 +281,6 @@ public class TemplateRenderingService : ITemplateRenderingService
                 ctx => ctx.AwsAccount?.Status.ToString() ?? "N/A"
             ),
             new StaticVariable(
-                "Aws.Namespace",
-                "Kubernetes namespace linked to AWS account",
-                "AwsAccount",
-                "my-capability-abc12",
-                ctx => ctx.AwsAccount?.KubernetesLink.Namespace ?? "N/A"
-            ),
-            new StaticVariable(
                 "Aws.RoleEmail",
                 "AWS account role email",
                 "AwsAccount",

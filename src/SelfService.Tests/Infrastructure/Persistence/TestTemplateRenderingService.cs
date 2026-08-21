@@ -254,18 +254,14 @@ public class TestTemplateRenderingService
     {
         var awsAccount = A.AwsAccount.Build();
         awsAccount.RegisterRealAwsAccount("123456789012", "aws.role@dfds.com", DateTime.UtcNow);
-        awsAccount.LinkKubernetesNamespace("my-capability-ns", DateTime.UtcNow);
         var context = CreateContext(awsAccount: awsAccount);
 
         var result = _sut.RenderTemplate(
-            "Account: {{Aws.AccountId}}, Status: {{Aws.Status}}, NS: {{Aws.Namespace}}, Email: {{Aws.RoleEmail}}",
+            "Account: {{Aws.AccountId}}, Status: {{Aws.Status}}, Email: {{Aws.RoleEmail}}",
             context
         );
 
-        Assert.Equal(
-            "Account: 123456789012, Status: Completed, NS: my-capability-ns, Email: aws.role@dfds.com",
-            result
-        );
+        Assert.Equal("Account: 123456789012, Status: Completed, Email: aws.role@dfds.com", result);
     }
 
     [Fact]
@@ -274,11 +270,11 @@ public class TestTemplateRenderingService
         var context = CreateContext(awsAccount: null);
 
         var result = _sut.RenderTemplate(
-            "Account: {{Aws.AccountId}}, Status: {{Aws.Status}}, NS: {{Aws.Namespace}}, Email: {{Aws.RoleEmail}}",
+            "Account: {{Aws.AccountId}}, Status: {{Aws.Status}}, Email: {{Aws.RoleEmail}}",
             context
         );
 
-        Assert.Equal("Account: N/A, Status: N/A, NS: N/A, Email: N/A", result);
+        Assert.Equal("Account: N/A, Status: N/A, Email: N/A", result);
     }
 
     [Fact]
@@ -607,7 +603,6 @@ public class TestTemplateRenderingService
             "Requirement.<id>.HelpUrl",
             "Aws.AccountId",
             "Aws.Status",
-            "Aws.Namespace",
             "Aws.RoleEmail",
             "Azure.ResourceCount",
             "Azure.Environments",

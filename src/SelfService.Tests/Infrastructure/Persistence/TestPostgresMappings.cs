@@ -75,7 +75,6 @@ public class TestPostgresMappings
             "foo@foo.com",
             new DateTime(2000, 1, 1)
         );
-        stub.LinkKubernetesNamespace("the-namespace", new DateTime(2000, 1, 1));
 
         // write
         await dbContext.AwsAccounts.AddAsync(stub);

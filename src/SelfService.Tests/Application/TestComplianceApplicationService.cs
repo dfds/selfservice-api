@@ -27,24 +27,25 @@ public class TestComplianceApplicationService
 
     private const string EmptyMetadata = "{}";
 
-    private static IAwsAccountRepository AwsAccountRepoWithK8sLinkFor(params CapabilityId[] capabilityIds)
+    private static IKubernetesAccessRepository KubernetesAccessRepoWithActiveFor(params CapabilityId[] capabilityIds)
     {
-        var mock = new Mock<IAwsAccountRepository>();
-        mock.Setup(r => r.FindBy(It.IsAny<CapabilityId>())).ReturnsAsync((AwsAccount?)null);
-        var linkedAccounts = new List<AwsAccount>();
-        foreach (var capId in capabilityIds)
-        {
-            var account = AwsAccount.RequestNew(capId, DateTime.UtcNow, "test@dfds.com");
-            account.LinkKubernetesNamespace($"ns-{capId}", DateTime.UtcNow);
-            linkedAccounts.Add(account);
-            mock.Setup(r => r.FindBy(capId)).ReturnsAsync(account);
-        }
-        mock.Setup(r => r.GetByCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
+        var mock = new Mock<IKubernetesAccessRepository>();
+        var activeAccesses = capabilityIds
+            .Select(capId =>
+            {
+                var access = KubernetesAccess.Request(capId, "prod", null, null, DateTime.UtcNow, "test@dfds.com");
+                access.GrantAccess($"ns-{capId}", DateTime.UtcNow);
+                return access;
+            })
+            .ToList();
+        mock.Setup(r => r.GetAllBy(It.IsAny<CapabilityId>()))
+            .ReturnsAsync((CapabilityId id) => activeAccesses.Where(a => a.CapabilityId == id).ToList());
+        mock.Setup(r => r.GetAllBy(It.IsAny<IEnumerable<CapabilityId>>()))
             .ReturnsAsync(
                 (IEnumerable<CapabilityId> ids) =>
                 {
                     var idSet = ids.Select(i => i.ToString()).ToHashSet();
-                    return linkedAccounts.Where(a => idSet.Contains(a.CapabilityId.ToString())).ToList();
+                    return activeAccesses.Where(a => idSet.Contains(a.CapabilityId.ToString())).ToList();
                 }
             );
         return mock.Object;
@@ -134,7 +135,7 @@ public class TestComplianceApplicationService
 
         var service = A
             .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
-            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(capabilityId))
+            .WithKubernetesAccessRepository(KubernetesAccessRepoWithActiveFor(capabilityId))
             .Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
@@ -187,7 +188,7 @@ public class TestComplianceApplicationService
 
         var service = A
             .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
-            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(capabilityId))
+            .WithKubernetesAccessRepository(KubernetesAccessRepoWithActiveFor(capabilityId))
             .Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
@@ -219,23 +220,16 @@ public class TestComplianceApplicationService
     }
 
     [Fact]
-    public async Task GetCapabilityCompliance_AwsAccountWithoutKubernetesLink_OnlyTagsCategoryReturned()
+    public async Task GetCapabilityCompliance_NoKubernetesAccess_OnlyTagsCategoryReturned()
     {
         var capabilityId = CapabilityId.CreateFrom("test-cap");
         var capability = A.Capability.WithId(capabilityId).WithJsonMetadata(AllTagsPresent).Build();
-        var unlinkedAccount = AwsAccount.RequestNew(capabilityId, DateTime.UtcNow, "test@dfds.com");
-        // No call to LinkKubernetesNamespace — KubernetesLink stays Unlinked.
 
         var capabilityRepo = new Mock<ICapabilityRepository>();
         capabilityRepo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(capability);
 
-        var awsRepo = new Mock<IAwsAccountRepository>();
-        awsRepo.Setup(r => r.FindBy(capabilityId)).ReturnsAsync(unlinkedAccount);
-
-        var service = A
-            .ComplianceApplicationService.WithCapabilityRepository(capabilityRepo.Object)
-            .WithAwsAccountRepository(awsRepo.Object)
-            .Build();
+        // Default builder has no active KubernetesAccess records
+        var service = A.ComplianceApplicationService.WithCapabilityRepository(capabilityRepo.Object).Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
 
@@ -343,7 +337,7 @@ public class TestComplianceApplicationService
 
         var service = A
             .ComplianceApplicationService.WithCapabilityRepository(capabilityRepo.Object)
-            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(k8sCapId))
+            .WithKubernetesAccessRepository(KubernetesAccessRepoWithActiveFor(k8sCapId))
             .Build();
 
         var result = await service.GetCostCentreCompliance("ti-platform");
@@ -379,7 +373,7 @@ public class TestComplianceApplicationService
 
         var service = A
             .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
-            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(capabilityId))
+            .WithKubernetesAccessRepository(KubernetesAccessRepoWithActiveFor(capabilityId))
             .Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
@@ -399,7 +393,7 @@ public class TestComplianceApplicationService
 
         var service = A
             .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
-            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(capabilityId))
+            .WithKubernetesAccessRepository(KubernetesAccessRepoWithActiveFor(capabilityId))
             .Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
@@ -419,7 +413,7 @@ public class TestComplianceApplicationService
 
         var service = A
             .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
-            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(capabilityId))
+            .WithKubernetesAccessRepository(KubernetesAccessRepoWithActiveFor(capabilityId))
             .Build();
 
         var result = await service.GetCapabilityCompliance(capabilityId);
@@ -525,7 +519,7 @@ public class TestComplianceApplicationService
 
         var service = A
             .ComplianceApplicationService.WithCapabilityRepository(capabilityRepo.Object)
-            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(k8sCapId))
+            .WithKubernetesAccessRepository(KubernetesAccessRepoWithActiveFor(k8sCapId))
             .Build();
 
         var result = await service.GetRequirementsCompliance();

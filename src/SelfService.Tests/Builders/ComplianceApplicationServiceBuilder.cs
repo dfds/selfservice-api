@@ -10,12 +10,14 @@ public class ComplianceApplicationServiceBuilder
 {
     private ICapabilityRepository _capabilityRepository;
     private IAwsAccountRepository _awsAccountRepository;
+    private IKubernetesAccessRepository _kubernetesAccessRepository;
     private RequirementsDbContext? _requirementsDbContext;
 
     public ComplianceApplicationServiceBuilder()
     {
         _capabilityRepository = Dummy.Of<ICapabilityRepository>();
         _awsAccountRepository = DefaultAwsAccountRepository();
+        _kubernetesAccessRepository = DefaultKubernetesAccessRepository();
     }
 
     public ComplianceApplicationServiceBuilder WithCapabilityRepository(ICapabilityRepository capabilityRepository)
@@ -27,6 +29,14 @@ public class ComplianceApplicationServiceBuilder
     public ComplianceApplicationServiceBuilder WithAwsAccountRepository(IAwsAccountRepository awsAccountRepository)
     {
         _awsAccountRepository = awsAccountRepository;
+        return this;
+    }
+
+    public ComplianceApplicationServiceBuilder WithKubernetesAccessRepository(
+        IKubernetesAccessRepository kubernetesAccessRepository
+    )
+    {
+        _kubernetesAccessRepository = kubernetesAccessRepository;
         return this;
     }
 
@@ -43,11 +53,16 @@ public class ComplianceApplicationServiceBuilder
             return new ComplianceApplicationService(
                 _capabilityRepository,
                 _awsAccountRepository,
+                _kubernetesAccessRepository,
                 _requirementsDbContext
             );
         }
 
-        return new StubComplianceApplicationService(_capabilityRepository, _awsAccountRepository);
+        return new StubComplianceApplicationService(
+            _capabilityRepository,
+            _awsAccountRepository,
+            _kubernetesAccessRepository
+        );
     }
 
     private static IAwsAccountRepository DefaultAwsAccountRepository()
@@ -56,6 +71,14 @@ public class ComplianceApplicationServiceBuilder
         mock.Setup(r => r.FindBy(It.IsAny<CapabilityId>())).ReturnsAsync((AwsAccount?)null);
         mock.Setup(r => r.GetByCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
             .ReturnsAsync(new List<AwsAccount>());
+        return mock.Object;
+    }
+
+    private static IKubernetesAccessRepository DefaultKubernetesAccessRepository()
+    {
+        var mock = new Mock<IKubernetesAccessRepository>();
+        mock.Setup(r => r.GetAllBy(It.IsAny<CapabilityId>())).ReturnsAsync(new List<KubernetesAccess>());
+        mock.Setup(r => r.GetAllBy(It.IsAny<IEnumerable<CapabilityId>>())).ReturnsAsync(new List<KubernetesAccess>());
         return mock.Object;
     }
 }

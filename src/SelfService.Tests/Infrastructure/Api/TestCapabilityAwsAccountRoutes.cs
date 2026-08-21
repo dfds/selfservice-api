@@ -111,7 +111,7 @@ public class TestCapabilityAwsAccountRoutes
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
-        Assert.Equal(new[] { "GET" }, allowValues);
+        Assert.Equal(new[] { "GET", "POST" }, allowValues);
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public class TestCapabilityAwsAccountRoutes
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
-        Assert.Equal(new[] { "POST" }, allowValues);
+        Assert.Equal(new[] { "GET", "POST" }, allowValues);
     }
 
     [Fact]
@@ -257,7 +257,7 @@ public class TestCapabilityAwsAccountRoutes
             .Select(x => x.GetString() ?? "")
             .ToArray();
 
-        Assert.Equal(new[] { "GET" }, allowValues);
+        Assert.Equal(new[] { "GET", "POST" }, allowValues);
     }
 
     [Fact]
@@ -270,6 +270,7 @@ public class TestCapabilityAwsAccountRoutes
             .WithAwsAccountRepository(new StubAwsAccountRepository(stubAwsAccount))
             .WithCapabilityRepository(new StubCapabilityRepository(stubCapability))
             .WithMembershipQuery(new StubMembershipQuery(hasActiveMembership: true))
+            .WithCapabilityDeletionStatusQuery(new StubCapabilityDeletionStatusQuery(isPendingDeletion: true))
             .Build();
         /*
         application.ReplaceService<IRbacPermissionGrantRepository>(
