@@ -10,12 +10,14 @@ public class ComplianceApplicationServiceBuilder
 {
     private ICapabilityRepository _capabilityRepository;
     private IAwsAccountRepository _awsAccountRepository;
+    private IMembershipRepository _membershipRepository;
     private RequirementsDbContext? _requirementsDbContext;
 
     public ComplianceApplicationServiceBuilder()
     {
         _capabilityRepository = Dummy.Of<ICapabilityRepository>();
         _awsAccountRepository = DefaultAwsAccountRepository();
+        _membershipRepository = DefaultMembershipRepository();
     }
 
     public ComplianceApplicationServiceBuilder WithCapabilityRepository(ICapabilityRepository capabilityRepository)
@@ -36,6 +38,12 @@ public class ComplianceApplicationServiceBuilder
         return this;
     }
 
+    public ComplianceApplicationServiceBuilder WithMembershipRepository(IMembershipRepository membershipRepository)
+    {
+        _membershipRepository = membershipRepository;
+        return this;
+    }
+
     public IComplianceApplicationService Build()
     {
         if (_requirementsDbContext != null)
@@ -43,11 +51,16 @@ public class ComplianceApplicationServiceBuilder
             return new ComplianceApplicationService(
                 _capabilityRepository,
                 _awsAccountRepository,
+                _membershipRepository,
                 _requirementsDbContext
             );
         }
 
-        return new StubComplianceApplicationService(_capabilityRepository, _awsAccountRepository);
+        return new StubComplianceApplicationService(
+            _capabilityRepository,
+            _awsAccountRepository,
+            _membershipRepository
+        );
     }
 
     private static IAwsAccountRepository DefaultAwsAccountRepository()
@@ -56,6 +69,14 @@ public class ComplianceApplicationServiceBuilder
         mock.Setup(r => r.FindBy(It.IsAny<CapabilityId>())).ReturnsAsync((AwsAccount?)null);
         mock.Setup(r => r.GetByCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
             .ReturnsAsync(new List<AwsAccount>());
+        return mock.Object;
+    }
+
+    private static IMembershipRepository DefaultMembershipRepository()
+    {
+        var mock = new Mock<IMembershipRepository>();
+        mock.Setup(r => r.GetMemberCountsByCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(new Dictionary<CapabilityId, int>());
         return mock.Object;
     }
 }

@@ -12,10 +12,12 @@ public class ComplianceApplicationService : IComplianceApplicationService
 {
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IAwsAccountRepository _awsAccountRepository;
+    private readonly IMembershipRepository _membershipRepository;
     private readonly RequirementsDbContext _requirementsDbContext;
 
     private static readonly string[] PlaceholderCategories = Array.Empty<string>();
     private const string RogueCostCentreName = "rogue";
+    private const string OrphanedLabel = "orphaned";
 
     private static readonly string[] Categories =
     {
@@ -38,11 +40,13 @@ public class ComplianceApplicationService : IComplianceApplicationService
     public ComplianceApplicationService(
         ICapabilityRepository capabilityRepository,
         IAwsAccountRepository awsAccountRepository,
+        IMembershipRepository membershipRepository,
         RequirementsDbContext requirementsDbContext
     )
     {
         _capabilityRepository = capabilityRepository;
         _awsAccountRepository = awsAccountRepository;
+        _membershipRepository = membershipRepository;
         _requirementsDbContext = requirementsDbContext;
     }
 
@@ -114,6 +118,26 @@ public class ComplianceApplicationService : IComplianceApplicationService
         );
     }
 
+    public async Task<CostCentreComplianceResult> GetOrphanedCapabilitiesCompliance()
+    {
+        var details = await GetOrphanedCapabilitiesComplianceDetails();
+        return ToCostCentreComplianceResult(details);
+    }
+
+    public async Task<CostCentreComplianceDetailsResult> GetOrphanedCapabilitiesComplianceDetails()
+    {
+        var activeCapabilities = (await _capabilityRepository.GetAllActive()).ToList();
+        var memberCounts = await _membershipRepository.GetMemberCountsByCapabilityIds(
+            activeCapabilities.Select(c => c.Id)
+        );
+
+        return await BuildComplianceDetailsForCapabilities(
+            OrphanedLabel,
+            c => memberCounts.GetValueOrDefault(c.Id, 0) == 0,
+            activeCapabilities
+        );
+    }
+
     public async Task<ComplianceSummaryResult> GetComplianceSummary()
     {
         var all = await BuildComplianceDetailsForCapabilities("all", _ => true);
@@ -152,10 +176,11 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     private async Task<CostCentreComplianceDetailsResult> BuildComplianceDetailsForCapabilities(
         string costCentreLabel,
-        Func<Capability, bool> filter
+        Func<Capability, bool> filter,
+        List<Capability>? activeCapabilities = null
     )
     {
-        var activeCapabilities = await _capabilityRepository.GetAllActive();
+        activeCapabilities ??= (await _capabilityRepository.GetAllActive()).ToList();
 
         var matchingCapabilities = activeCapabilities.Where(filter).ToList();
 
