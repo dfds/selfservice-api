@@ -10,6 +10,8 @@ public interface IComplianceApplicationService
     Task<CostCentreComplianceDetailsResult> GetCostCentreComplianceDetails(string costCentre);
     Task<CostCentreComplianceResult> GetRogueCapabilitiesCompliance();
     Task<CostCentreComplianceDetailsResult> GetRogueCapabilitiesComplianceDetails();
+    Task<CostCentreComplianceResult> GetOrphanedCapabilitiesCompliance();
+    Task<CostCentreComplianceDetailsResult> GetOrphanedCapabilitiesComplianceDetails();
     Task<RequirementsComplianceResult> GetRequirementsCompliance();
     Task<RequirementComplianceDetailsResult> GetRequirementComplianceDetails(string requirementId);
 }

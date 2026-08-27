@@ -50,6 +50,20 @@ public class TestComplianceApplicationService
         return mock.Object;
     }
 
+    private static IMembershipRepository MembershipRepoWithCounts(
+        params (CapabilityId capabilityId, int count)[] counts
+    )
+    {
+        var mock = new Mock<IMembershipRepository>();
+        var countMap = counts.ToDictionary(x => x.capabilityId, x => x.count);
+        mock.Setup(r => r.GetMemberCountsByCapabilityIds(It.IsAny<IEnumerable<CapabilityId>>()))
+            .ReturnsAsync(
+                (IEnumerable<CapabilityId> ids) =>
+                    ids.Distinct().Where(id => countMap.ContainsKey(id)).ToDictionary(id => id, id => countMap[id])
+            );
+        return mock.Object;
+    }
+
     [Fact]
     public async Task GetCapabilityCompliance_AllTagsPresent_TagsCategoryCompliant()
     {
@@ -507,6 +521,67 @@ public class TestComplianceApplicationService
 
         Assert.Equal("rogue", details.CostCentre);
         Assert.Single(details.Capabilities);
+        Assert.Equal(aggregate.TotalCapabilities, details.TotalCapabilities);
+        Assert.Equal(aggregate.CompliantCount, details.CompliantCount);
+        Assert.Equal(aggregate.NonCompliantCount, details.NonCompliantCount);
+    }
+
+    [Fact]
+    public async Task GetOrphanedCapabilitiesCompliance_FiltersCapabilitiesWithoutMembers()
+    {
+        var orphanedCap = A
+            .Capability.WithId(CapabilityId.CreateFrom("orphaned-cap"))
+            .WithJsonMetadata(AllTagsPresent)
+            .Build();
+        var nonOrphanedCap = A
+            .Capability.WithId(CapabilityId.CreateFrom("non-orphaned-cap"))
+            .WithJsonMetadata(AllTagsPresent)
+            .Build();
+
+        var repo = new Mock<ICapabilityRepository>();
+        repo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { orphanedCap, nonOrphanedCap });
+
+        var membershipRepo = MembershipRepoWithCounts((nonOrphanedCap.Id, 2));
+
+        var service = A
+            .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
+            .WithMembershipRepository(membershipRepo)
+            .Build();
+
+        var result = await service.GetOrphanedCapabilitiesCompliance();
+
+        Assert.Equal("orphaned", result.CostCentre);
+        Assert.Equal(1, result.TotalCapabilities);
+    }
+
+    [Fact]
+    public async Task GetOrphanedCapabilitiesComplianceDetails_MatchesAggregateCounts()
+    {
+        var orphanedCap = A
+            .Capability.WithId(CapabilityId.CreateFrom("orphaned-cap"))
+            .WithJsonMetadata(AllTagsPresent)
+            .Build();
+        var nonOrphanedCap = A
+            .Capability.WithId(CapabilityId.CreateFrom("non-orphaned-cap"))
+            .WithJsonMetadata(AllTagsPresent)
+            .Build();
+
+        var repo = new Mock<ICapabilityRepository>();
+        repo.Setup(r => r.GetAllActive()).ReturnsAsync(new[] { orphanedCap, nonOrphanedCap });
+
+        var membershipRepo = MembershipRepoWithCounts((nonOrphanedCap.Id, 1));
+
+        var service = A
+            .ComplianceApplicationService.WithCapabilityRepository(repo.Object)
+            .WithMembershipRepository(membershipRepo)
+            .Build();
+
+        var details = await service.GetOrphanedCapabilitiesComplianceDetails();
+        var aggregate = await service.GetOrphanedCapabilitiesCompliance();
+
+        Assert.Equal("orphaned", details.CostCentre);
+        Assert.Single(details.Capabilities);
+        Assert.Equal(orphanedCap.Id.ToString(), details.Capabilities[0].CapabilityId);
         Assert.Equal(aggregate.TotalCapabilities, details.TotalCapabilities);
         Assert.Equal(aggregate.CompliantCount, details.CompliantCount);
         Assert.Equal(aggregate.NonCompliantCount, details.NonCompliantCount);
