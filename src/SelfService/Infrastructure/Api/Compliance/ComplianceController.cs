@@ -67,6 +67,20 @@ public class ComplianceController : ControllerBase
         return Ok(CostCentreComplianceDetailsApiResource.From(result));
     }
 
+    [HttpGet("orphaned-capabilities")]
+    public async Task<IActionResult> GetOrphanedCapabilitiesCompliance()
+    {
+        var result = await _complianceService.GetOrphanedCapabilitiesCompliance();
+        return Ok(CostCentreComplianceApiResource.From(result));
+    }
+
+    [HttpGet("orphaned-capabilities/details")]
+    public async Task<IActionResult> GetOrphanedCapabilitiesComplianceDetails()
+    {
+        var result = await _complianceService.GetOrphanedCapabilitiesComplianceDetails();
+        return Ok(CostCentreComplianceDetailsApiResource.From(result));
+    }
+
     [HttpGet("requirements")]
     public async Task<IActionResult> GetRequirementsCompliance()
     {
