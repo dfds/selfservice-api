@@ -14,8 +14,8 @@ public class TestAadAwsSyncCapabilityQuery
         await using var databaseFactory = new InMemoryDatabaseFactory();
         var dbContext = await databaseFactory.CreateSelfServiceDbContext();
 
-        var compliantCapability = A.Capability
-            .WithId(CapabilityId.CreateFrom("compliant-capability"))
+        var compliantCapability = A
+            .Capability.WithId(CapabilityId.CreateFrom("compliant-capability"))
             .WithName("compliant-capability")
             .WithJsonMetadata(
                 """
@@ -31,8 +31,8 @@ public class TestAadAwsSyncCapabilityQuery
             )
             .Build();
 
-        var nonCompliantCapability = A.Capability
-            .WithId(CapabilityId.CreateFrom("non-compliant-capability"))
+        var nonCompliantCapability = A
+            .Capability.WithId(CapabilityId.CreateFrom("non-compliant-capability"))
             .WithName("non-compliant-capability")
             .WithJsonMetadata("{}")
             .Build();
@@ -40,13 +40,13 @@ public class TestAadAwsSyncCapabilityQuery
         var compliantMember = A.Member.WithUserId(UserId.Parse("compliant-user")).Build();
         var nonCompliantMember = A.Member.WithUserId(UserId.Parse("non-compliant-user")).Build();
 
-        var compliantMembership = A.Membership
-            .WithCapabilityId(compliantCapability.Id)
+        var compliantMembership = A
+            .Membership.WithCapabilityId(compliantCapability.Id)
             .WithUserId(compliantMember.Id)
             .Build();
 
-        var nonCompliantMembership = A.Membership
-            .WithCapabilityId(nonCompliantCapability.Id)
+        var nonCompliantMembership = A
+            .Membership.WithCapabilityId(nonCompliantCapability.Id)
             .WithUserId(nonCompliantMember.Id)
             .Build();
 
@@ -54,7 +54,10 @@ public class TestAadAwsSyncCapabilityQuery
             new[] { compliantCapability, nonCompliantCapability },
             cancellationTokenSource.Token
         );
-        await dbContext.Members.AddRangeAsync(new[] { compliantMember, nonCompliantMember }, cancellationTokenSource.Token);
+        await dbContext.Members.AddRangeAsync(
+            new[] { compliantMember, nonCompliantMember },
+            cancellationTokenSource.Token
+        );
         await dbContext.Memberships.AddRangeAsync(
             new[] { compliantMembership, nonCompliantMembership },
             cancellationTokenSource.Token
