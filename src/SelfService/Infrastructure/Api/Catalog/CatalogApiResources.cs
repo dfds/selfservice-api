@@ -50,6 +50,7 @@ public class ApiDocApiResource
 public class ReachabilityApiResource
 {
     public string Host { get; init; } = "";
+    public string Path { get; init; } = "";
     public string Url { get; init; } = "";
     public string Status { get; init; } = "";
     public int StatusCode { get; init; }

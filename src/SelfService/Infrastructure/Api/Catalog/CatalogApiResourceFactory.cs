@@ -204,6 +204,7 @@ public class CatalogApiResourceFactory
                 .Reachability.Select(r => new ReachabilityApiResource
                 {
                     Host = r.Host,
+                    Path = r.Path,
                     Url = r.Url,
                     Status = r.Status,
                     StatusCode = r.StatusCode,
