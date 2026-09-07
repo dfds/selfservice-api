@@ -278,6 +278,7 @@ public sealed class ApiDocInfoDto
 public sealed class ReachabilityResultDto
 {
     public string Host { get; set; } = "";
+    public string Path { get; set; } = "";
     public string Url { get; set; } = "";
     public string Status { get; set; } = ""; // "reachable" | "unreachable" | "unknown"
     public int StatusCode { get; set; }
