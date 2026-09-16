@@ -58,6 +58,24 @@ public class TestTemplateRenderingService
         Assert.Equal("My Capability - A test capability (5 members)", result);
     }
 
+    [Theory]
+    [InlineData("https://build.dfds.cloud")]
+    [InlineData("https://build.dfds.cloud/")]
+    [InlineData("build.dfds.cloud")]
+    public void RenderTemplate_CapabilityNameLink_UsesPortalBaseUrlWithSingleScheme(string portalBaseUrl)
+    {
+        var configMock = new Mock<IConfiguration>();
+        configMock.Setup(c => c["SS_PORTAL_BASE_URL"]).Returns(portalBaseUrl);
+        var sut = new TemplateRenderingService(configMock.Object);
+
+        var capability = A.Capability.WithId("my-capability-abc12").WithName("My Capability").Build();
+        var context = CreateContext(capability: capability);
+
+        var result = sut.RenderTemplate("{{Capability.NameLink}}", context);
+
+        Assert.Equal("<a href=\"https://build.dfds.cloud/capabilities/my-capability-abc12\">My Capability</a>", result);
+    }
+
     [Fact]
     public void RenderTemplate_MemberVariables_StillWork()
     {
