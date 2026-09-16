@@ -80,9 +80,10 @@ public class TemplateRenderingService : ITemplateRenderingService
 
     public TemplateRenderingService(IConfiguration configuration)
     {
-        _portalBaseUrl =
+        var portalBaseUrl =
             configuration["SS_PORTAL_BASE_URL"]
             ?? throw new InvalidOperationException("SS_PORTAL_BASE_URL configuration is required but not set.");
+        _portalBaseUrl = NormalizePortalBaseUrl(portalBaseUrl);
         _variables = InitializeVariables();
         _byName = _variables.OfType<StaticVariable>().ToDictionary(v => v.Name);
         _patterns = _variables.OfType<PatternVariable>().ToArray();
@@ -118,7 +119,7 @@ public class TemplateRenderingService : ITemplateRenderingService
                         return "";
                     var capId = ctx.Capability.Id.ToString();
                     var name = ctx.Capability.Name;
-                    return $"<a href=\"https://{_portalBaseUrl}/capabilities/{capId}\">{name}</a>";
+                    return $"<a href=\"{_portalBaseUrl}/capabilities/{capId}\">{name}</a>";
                 }
             ),
             new StaticVariable(
@@ -471,6 +472,13 @@ public class TemplateRenderingService : ITemplateRenderingService
                 return sb.ToString();
             }
         );
+    }
+
+    // Local configuration omits the scheme; production includes it.
+    private static string NormalizePortalBaseUrl(string value)
+    {
+        var trimmed = value.Trim().TrimEnd('/');
+        return trimmed.Contains("://", StringComparison.Ordinal) ? trimmed : "https://" + trimmed;
     }
 
     private string? Resolve(string name, TemplateRenderContext context)
