@@ -42,7 +42,7 @@ public static class ConsumerConfiguration
                 .ForTopic($"{SelfServicePrefix}.kubernetes")
                 .Register<KubernetesAccessRequested>(
                     messageType: KubernetesAccessRequested.EventType,
-                    keySelector: x => x.ContextId!
+                    keySelector: x => x.KubernetesAccessId!
                 );
 
             options
