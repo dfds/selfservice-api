@@ -13,9 +13,32 @@ public class AwsAccountRepository : IAwsAccountRepository
         _dbContext = dbContext;
     }
 
-    public Task<AwsAccount?> FindBy(CapabilityId capabilityId)
+    public async Task<AwsAccount?> FindBy(CapabilityId capabilityId)
     {
-        return _dbContext.AwsAccounts.SingleOrDefaultAsync(x => x.CapabilityId == capabilityId);
+        var accounts = await _dbContext
+            .AwsAccounts.Where(x => x.CapabilityId == capabilityId)
+            .OrderByDescending(x => x.Environment == "prod")
+            .ThenBy(x => x.RequestedAt)
+            .ToListAsync();
+
+        return accounts.FirstOrDefault();
+    }
+
+    public Task<AwsAccount?> FindBy(CapabilityId capabilityId, string environment)
+    {
+        return _dbContext.AwsAccounts.SingleOrDefaultAsync(x =>
+            x.CapabilityId == capabilityId && x.Environment == environment
+        );
+    }
+
+    public Task<AwsAccount?> FindBy(AwsAccountId id)
+    {
+        return _dbContext.AwsAccounts.SingleOrDefaultAsync(x => x.Id == id);
+    }
+
+    public Task<List<AwsAccount>> GetAllBy(CapabilityId capabilityId)
+    {
+        return _dbContext.AwsAccounts.Where(x => x.CapabilityId == capabilityId).ToListAsync();
     }
 
     public async Task<List<AwsAccount>> GetAll()
@@ -52,5 +75,17 @@ public class AwsAccountRepository : IAwsAccountRepository
     public async Task<bool> Exists(CapabilityId capabilityId)
     {
         return await _dbContext.AwsAccounts.AnyAsync(x => x.CapabilityId == capabilityId);
+    }
+
+    public async Task<bool> Exists(CapabilityId capabilityId, string environment)
+    {
+        return await _dbContext.AwsAccounts.AnyAsync(x =>
+            x.CapabilityId == capabilityId && x.Environment == environment
+        );
+    }
+
+    public async Task<int> CountBy(CapabilityId capabilityId)
+    {
+        return await _dbContext.AwsAccounts.CountAsync(x => x.CapabilityId == capabilityId);
     }
 }
