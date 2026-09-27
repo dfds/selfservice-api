@@ -9,6 +9,7 @@ using SelfService.Infrastructure.Api.Prometheus;
 using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Catalog;
+using SelfService.Infrastructure.CopilotInsights;
 using SelfService.Infrastructure.Kafka;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
@@ -200,5 +201,16 @@ public static class Domain
         builder.Services.AddTransient<ICatalogFetcher, CatalogFetcher>();
         builder.Services.AddSingleton<CatalogSnapshotCache>();
         builder.Services.AddTransient<ICatalogApplicationService, CatalogApplicationService>();
+
+        builder.Services.AddSingleton(
+            new CopilotInsightsConfig(
+                builder.Configuration["SS_COPILOT_INSIGHTS_ENDPOINT"],
+                builder.Configuration["SS_COPILOT_INSIGHTS_SCOPE"]
+            )
+        );
+        builder.Services.AddScoped<ICopilotInsightsTokenProvider, CopilotInsightsTokenProvider>();
+        builder.Services.AddHttpClient<ICopilotInsightsClient, CopilotInsightsClient>();
+        builder.Services.AddSingleton<CopilotInsightsCache>();
+        builder.Services.AddTransient<ICopilotInsightsApplicationService, CopilotInsightsApplicationService>();
     }
 }
