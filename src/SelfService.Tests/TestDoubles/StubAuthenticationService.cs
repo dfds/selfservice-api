@@ -224,6 +224,11 @@ public class StubAuthorizationService : IAuthorizationService
         return _authorized;
     }
 
+    public Task<bool> CanReadAllCopilotUsage(PortalUser portalUser)
+    {
+        return Task.FromResult(_authorized);
+    }
+
     public bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser)
     {
         return _authorized;

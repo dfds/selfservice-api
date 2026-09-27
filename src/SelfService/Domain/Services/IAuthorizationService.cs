@@ -52,6 +52,8 @@ public interface IAuthorizationService
     bool CanUpdateDemoRecording(PortalUser portalUser);
     bool CanDeleteDemoRecording(PortalUser portalUser);
 
+    Task<bool> CanReadAllCopilotUsage(PortalUser portalUser);
+
     bool CanCreateEvent(PortalUser portalUser);
     bool CanUpdateEvent(PortalUser portalUser);
     bool CanDeleteEvent(PortalUser portalUser);
