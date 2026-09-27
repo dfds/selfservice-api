@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using SelfService.Infrastructure.Api;
 using SelfService.Infrastructure.Api.Catalog;
+using SelfService.Infrastructure.Api.Copilot;
 
 namespace SelfService.Configuration;
 
@@ -35,5 +36,6 @@ public static class Api
 
         builder.Services.AddTransient<ApiResourceFactory>();
         builder.Services.AddTransient<CatalogApiResourceFactory>();
+        builder.Services.AddTransient<CopilotApiResourceFactory>();
     }
 }
