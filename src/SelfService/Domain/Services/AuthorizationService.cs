@@ -131,7 +131,6 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser, "delete-demo-recording");
     }
 
-    // The link must reflect the route's RBAC check, which ignores CE mode.
     public Task<bool> CanReadAllCopilotUsage(PortalUser portalUser)
     {
         return HasPermission(portalUser.Id, RbacAccessType.Global, RbacNamespace.Copilot, "read-all");

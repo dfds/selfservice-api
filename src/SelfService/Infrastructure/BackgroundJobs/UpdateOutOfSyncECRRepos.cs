@@ -9,9 +9,6 @@ public class UpdateOutOfSyncEcrRepos : BackgroundService
     private readonly ILogger<UpdateOutOfSyncEcrRepos> _logger;
     private OutOfSyncECRInfo _outOfSyncEcrInfo;
 
-    // A failed update leaves UpdateNeededAt in the past, so without a floor the job re-runs back to back
-    // and calls STS AssumeRole and ECR DescribeRepositories continuously.
-    private static readonly TimeSpan MinimumDelay = TimeSpan.FromMinutes(5);
 
     public UpdateOutOfSyncEcrRepos(
         IServiceProvider serviceProvider,
@@ -33,8 +30,7 @@ public class UpdateOutOfSyncEcrRepos : BackgroundService
                 {
                     await DoWork(stoppingToken);
                     var nextRunTimestamp = _outOfSyncEcrInfo.UpdateNeededAt;
-                    var untilNextRun = nextRunTimestamp - DateTime.Now;
-                    var delay = untilNextRun > MinimumDelay ? untilNextRun : MinimumDelay;
+                    var delay = nextRunTimestamp > DateTime.Now ? nextRunTimestamp - DateTime.Now : TimeSpan.Zero;
                     await Task.Delay(delay, stoppingToken);
                 }
             },
