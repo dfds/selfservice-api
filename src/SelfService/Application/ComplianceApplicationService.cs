@@ -18,6 +18,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
     private static readonly string[] PlaceholderCategories = Array.Empty<string>();
     private const string RogueCostCentreName = "rogue";
     private const string OrphanedLabel = "orphaned";
+    private const string ItemMetricName = "dfds_requirement_item";
 
     private static readonly RequirementDefinition[] RequirementDefinitions =
     {
@@ -70,7 +71,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
         var overallStatus = DetermineOverallStatus(categories);
         var totalScore = categories.Count(c => c.Status == ComplianceStatus.Compliant);
         var itemMetrics = await _requirementsDbContext.Metrics
-            .Where(metric => metric.CapabilityRootId == capabilityId.ToString() && metric.Type == "dfds_requirements_item")
+            .Where(metric => metric.CapabilityRootId == capabilityId.ToString() && metric.Name == ItemMetricName)
             .ToListAsync();
         AddNonCompliantItems(categories, itemMetrics);
 
@@ -187,8 +188,8 @@ public class ComplianceApplicationService : IComplianceApplicationService
         var requirementMetrics = await _requirementsDbContext
             .Metrics.Where(metric => capabilityIds.Contains(metric.CapabilityRootId))
             .ToListAsync();
-        var aggregateMetrics = requirementMetrics.Where(metric => metric.Type != "dfds_requirements_item").ToList();
-        var itemMetrics = requirementMetrics.Where(metric => metric.Type == "dfds_requirements_item").ToList();
+        var aggregateMetrics = requirementMetrics.Where(metric => metric.Name != ItemMetricName).ToList();
+        var itemMetrics = requirementMetrics.Where(metric => metric.Name == ItemMetricName).ToList();
 
         var metricMap = aggregateMetrics
             .GroupBy(m => m.CapabilityRootId)
@@ -275,11 +276,11 @@ public class ComplianceApplicationService : IComplianceApplicationService
             category.NonCompliantItems = definition == null
                 ? new List<string>()
                 : metrics
-                    .Where(metric => metric.Type == "dfds_requirements_item"
+                    .Where(metric => metric.Name == ItemMetricName
                         && metric.RequirementId == definition.MetricRequirementId
                         && metric.Measurement == "non_compliant"
-                        && metric.Labels?["item"] != null)
-                    .Select(metric => metric.Labels!["item"]!.GetValue<string>())
+                        && !string.IsNullOrEmpty(metric.Item))
+                    .Select(metric => metric.Item!)
                     .OrderBy(item => item)
                     .ToList();
         }
@@ -422,7 +423,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
     private async Task<ComplianceCategoryResult> CheckExternalSecretsCompliance(string capabilityId)
     {
         var metrics = await _requirementsDbContext
-            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "external_secrets" && (m.Type == null || m.Type != "dfds_requirements_item"))
+            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "external_secrets" && m.Name != ItemMetricName)
             .ToListAsync();
         return CheckExternalSecretsCompliance(metrics);
     }
@@ -480,7 +481,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
     private async Task<ComplianceCategoryResult> CheckIrsaMutualTrustCompliance(string capabilityId)
     {
         var metrics = await _requirementsDbContext
-            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "irsa" && (m.Type == null || m.Type != "dfds_requirements_item"))
+            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "irsa" && m.Name != ItemMetricName)
             .ToListAsync();
         return CheckIrsaMutualTrustCompliance(metrics);
     }
@@ -538,7 +539,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
     private async Task<ComplianceCategoryResult> CheckK8sProbesCompliance(string capabilityId)
     {
         var metrics = await _requirementsDbContext
-            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "k8s-probes" && (m.Type == null || m.Type != "dfds_requirements_item"))
+            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "k8s-probes" && m.Name != ItemMetricName)
             .ToListAsync();
         return CheckK8sProbesCompliance(metrics);
     }
@@ -596,7 +597,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
     private async Task<ComplianceCategoryResult> CheckEcrPullCompliance(string capabilityId)
     {
         var metrics = await _requirementsDbContext
-            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "ecr-pull" && (m.Type == null || m.Type != "dfds_requirements_item"))
+            .Metrics.Where(m => m.CapabilityRootId == capabilityId && m.RequirementId == "ecr-pull" && m.Name != ItemMetricName)
             .ToListAsync();
         return CheckEcrPullCompliance(metrics);
     }

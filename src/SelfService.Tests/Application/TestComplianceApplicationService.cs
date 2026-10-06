@@ -643,45 +643,45 @@ public class TestComplianceApplicationService
         db.Metrics.AddRange(
             new RequirementsMetric
             {
-                Name = "item",
+                Name = "dfds_requirement_item",
                 CapabilityRootId = firstId.ToString(),
                 RequirementId = "external_secrets",
                 Measurement = "non_compliant",
-                Type = "dfds_requirements_item",
+                Type = "gauge",
                 Value = 1,
-                Labels = JsonNode.Parse("""{"item":"secret-b"}""")!.AsObject(),
+                Item = "secret-b",
             },
             new RequirementsMetric
             {
-                Name = "item",
+                Name = "dfds_requirement_item",
                 CapabilityRootId = firstId.ToString(),
                 RequirementId = "external_secrets",
                 Measurement = "non_compliant",
-                Type = "dfds_requirements_item",
+                Type = "gauge",
                 Value = 1,
-                Labels = JsonNode.Parse("""{"item":"secret-a"}""")!.AsObject(),
+                Item = "secret-a",
             },
             new RequirementsMetric
             {
-                Name = "item",
+                Name = "dfds_requirement_item",
                 CapabilityRootId = secondId.ToString(),
                 RequirementId = "irsa",
                 Measurement = "non_compliant",
-                Type = "dfds_requirements_item",
-                Labels = JsonNode.Parse("""{"item":"other-account"}""")!.AsObject(),
+                Type = "gauge",
+                Item = "other-account",
             },
             new RequirementsMetric
             {
-                Name = "item",
+                Name = "dfds_requirement_item",
                 CapabilityRootId = firstId.ToString(),
                 RequirementId = "irsa",
                 Measurement = "non_compliant",
-                Type = "dfds_requirements_item",
-                Labels = JsonNode.Parse("""{"item":"service-account"}""")!.AsObject(),
+                Type = "gauge",
+                Item = "service-account",
             },
             new RequirementsMetric
             {
-                Name = "value",
+                Name = "dfds_requirement_value",
                 CapabilityRootId = firstId.ToString(),
                 RequirementId = "irsa",
                 Measurement = "non_compliant_total",
@@ -689,20 +689,20 @@ public class TestComplianceApplicationService
             },
             new RequirementsMetric
             {
-                Name = "value",
+                Name = "dfds_requirement_value",
                 CapabilityRootId = firstId.ToString(),
                 RequirementId = "external_secrets",
                 Measurement = "non_compliant_total",
-                Type = "dfds_requirements_value",
+                Type = "gauge",
                 Value = 0,
             },
             new RequirementsMetric
             {
-                Name = "value",
+                Name = "dfds_requirement_value",
                 CapabilityRootId = firstId.ToString(),
                 RequirementId = "external_secrets",
                 Measurement = "compliant_total",
-                Type = "dfds_requirements_value",
+                Type = "gauge",
                 Value = 1,
             }
         );
@@ -756,6 +756,7 @@ public class TestComplianceApplicationService
             CapabilityComplianceApiResource.From(capability), jsonOptions))!;
         Assert.Null(capabilityJson["nonCompliantItems"]);
         Assert.Equal("secret-a", capabilityJson["categories"]![1]!["nonCompliantItems"]![0]!.GetValue<string>());
+        Assert.Equal("""["service-account"]""", capabilityJson["categories"]![2]!["nonCompliantItems"]!.ToJsonString());
         var requirementDetailsJson = JsonNode.Parse(JsonSerializer.Serialize(
             RequirementComplianceDetailsApiResource.From(requirementDetails), jsonOptions))!;
         Assert.Equal(

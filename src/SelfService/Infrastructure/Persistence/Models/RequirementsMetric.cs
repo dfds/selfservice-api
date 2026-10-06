@@ -57,6 +57,9 @@ namespace SelfService.Infrastructure.Persistence.Models
         [Column("date")]
         public long Date { get; set; }
 
+        [Column("item")]
+        public string? Item { get; set; }
+
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; }
 
