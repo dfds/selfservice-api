@@ -26,7 +26,7 @@ public class CapabilityComplianceApiResource
     public string CapabilityId { get; set; } = null!;
     public string OverallStatus { get; set; } = null!;
     public int TotalScore { get; set; }
-    public List<ComplianceCategoryApiResource> Categories { get; set; } = new();
+    public List<CapabilityComplianceCategoryApiResource> Categories { get; set; } = new();
 
     public static CapabilityComplianceApiResource From(CapabilityComplianceResult result)
     {
@@ -35,7 +35,34 @@ public class CapabilityComplianceApiResource
             CapabilityId = result.CapabilityId,
             OverallStatus = result.OverallStatus.ToString(),
             TotalScore = result.TotalScore,
-            Categories = result.Categories.Select(ComplianceCategoryApiResource.From).ToList(),
+            Categories = result.Categories.Select(CapabilityComplianceCategoryApiResource.From).ToList(),
+        };
+    }
+}
+
+public class CapabilityComplianceCategoryApiResource
+{
+    public string CategoryName { get; set; } = null!;
+    public string Status { get; set; } = null!;
+    public double? Score { get; set; }
+    public string? HelpUrl { get; set; }
+    public string? DisplayName { get; set; }
+    public string? Description { get; set; }
+    public List<ComplianceCategoryItemApiResource> Items { get; set; } = new();
+    public List<string> NonCompliantItems { get; set; } = new();
+
+    public static CapabilityComplianceCategoryApiResource From(ComplianceCategoryResult result)
+    {
+        return new CapabilityComplianceCategoryApiResource
+        {
+            CategoryName = result.CategoryName,
+            Status = result.Status.ToString(),
+            Score = result.Score,
+            HelpUrl = result.HelpUrl,
+            DisplayName = result.DisplayName,
+            Description = result.Description,
+            Items = result.Items.Select(ComplianceCategoryItemApiResource.From).ToList(),
+            NonCompliantItems = result.NonCompliantItems,
         };
     }
 }
@@ -49,6 +76,7 @@ public class ComplianceCategoryApiResource
     public string? DisplayName { get; set; }
     public string? Description { get; set; }
     public List<ComplianceCategoryItemApiResource> Items { get; set; } = new();
+    public List<string> NonCompliantItems { get; set; } = new();
 
     public static ComplianceCategoryApiResource From(ComplianceCategoryResult result)
     {
@@ -61,6 +89,7 @@ public class ComplianceCategoryApiResource
             DisplayName = result.DisplayName,
             Description = result.Description,
             Items = result.Items.Select(ComplianceCategoryItemApiResource.From).ToList(),
+            NonCompliantItems = result.NonCompliantItems,
         };
     }
 }
@@ -270,6 +299,7 @@ public class RequirementCapabilityComplianceApiResource
     public string Status { get; set; } = null!;
     public double? Score { get; set; }
     public List<ComplianceCategoryItemApiResource> Items { get; set; } = new();
+    public List<string> NonCompliantItems { get; set; } = new();
 
     public static RequirementCapabilityComplianceApiResource From(RequirementCapabilityComplianceResult result)
     {
@@ -281,6 +311,7 @@ public class RequirementCapabilityComplianceApiResource
             Status = result.Status.ToString(),
             Score = result.Score,
             Items = result.Items.Select(ComplianceCategoryItemApiResource.From).ToList(),
+            NonCompliantItems = result.NonCompliantItems,
         };
     }
 }
