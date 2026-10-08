@@ -708,8 +708,8 @@ public class TestComplianceApplicationService
         );
         await db.SaveChangesAsync();
 
-        var service = A.ComplianceApplicationService
-            .WithRequirementsDbContext(db)
+        var service = A
+            .ComplianceApplicationService.WithRequirementsDbContext(db)
             .WithCapabilityRepository(capabilityRepo.Object)
             .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(firstId))
             .Build();
@@ -719,8 +719,9 @@ public class TestComplianceApplicationService
 
         var costCentre = await service.GetCostCentreCompliance("ti-platform");
         var costCentreDetails = await service.GetCostCentreComplianceDetails("ti-platform");
-        var costCentreCategory = costCentreDetails.Capabilities.Single().Categories.Single(category =>
-            category.CategoryName == "External Secrets");
+        var costCentreCategory = costCentreDetails
+            .Capabilities.Single()
+            .Categories.Single(category => category.CategoryName == "External Secrets");
         Assert.Equal(new[] { "secret-a", "secret-b" }, costCentreCategory.NonCompliantItems);
         Assert.Equal(ComplianceStatus.Compliant, costCentreCategory.Status);
 
@@ -728,12 +729,16 @@ public class TestComplianceApplicationService
         var capabilityCategory = capability.Categories.Single(category => category.CategoryName == "External Secrets");
         Assert.Equal(new[] { "secret-a", "secret-b" }, capabilityCategory.NonCompliantItems);
         Assert.Equal(ComplianceStatus.Compliant, capabilityCategory.Status);
-        Assert.Equal(new[] { "service-account" }, capability.Categories.Single(category =>
-            category.CategoryName == "IRSA Mutual Trust").NonCompliantItems);
+        Assert.Equal(
+            new[] { "service-account" },
+            capability.Categories.Single(category => category.CategoryName == "IRSA Mutual Trust").NonCompliantItems
+        );
         Assert.Equal(
             ComplianceStatus.NonCompliant,
-            costCentreDetails.Capabilities.Single().Categories.Single(category =>
-                category.CategoryName == "IRSA Mutual Trust").Status
+            costCentreDetails
+                .Capabilities.Single()
+                .Categories.Single(category => category.CategoryName == "IRSA Mutual Trust")
+                .Status
         );
 
         var requirementDetails = await service.GetRequirementComplianceDetails("external-secrets");
@@ -741,24 +746,33 @@ public class TestComplianceApplicationService
         Assert.Equal(new[] { "secret-a", "secret-b" }, requirementCapability.NonCompliantItems);
 
         var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-        Assert.Null(JsonNode.Parse(JsonSerializer.Serialize(RequirementsComplianceApiResource.From(requirements),
-            jsonOptions))!["nonCompliantItems"]);
-        Assert.Null(JsonNode.Parse(JsonSerializer.Serialize(CostCentreComplianceApiResource.From(costCentre),
-            jsonOptions))!["nonCompliantItems"]);
-        var costCentreJson = JsonNode.Parse(JsonSerializer.Serialize(
-            CostCentreComplianceDetailsApiResource.From(costCentreDetails), jsonOptions))!;
+        Assert.Null(
+            JsonNode.Parse(
+                JsonSerializer.Serialize(RequirementsComplianceApiResource.From(requirements), jsonOptions)
+            )!["nonCompliantItems"]
+        );
+        Assert.Null(
+            JsonNode.Parse(JsonSerializer.Serialize(CostCentreComplianceApiResource.From(costCentre), jsonOptions))![
+                "nonCompliantItems"
+            ]
+        );
+        var costCentreJson = JsonNode.Parse(
+            JsonSerializer.Serialize(CostCentreComplianceDetailsApiResource.From(costCentreDetails), jsonOptions)
+        )!;
         Assert.Null(costCentreJson["nonCompliantItems"]);
         Assert.Equal(
             "secret-a",
             costCentreJson["capabilities"]![0]!["categories"]![1]!["nonCompliantItems"]![0]!.GetValue<string>()
         );
-        var capabilityJson = JsonNode.Parse(JsonSerializer.Serialize(
-            CapabilityComplianceApiResource.From(capability), jsonOptions))!;
+        var capabilityJson = JsonNode.Parse(
+            JsonSerializer.Serialize(CapabilityComplianceApiResource.From(capability), jsonOptions)
+        )!;
         Assert.Null(capabilityJson["nonCompliantItems"]);
         Assert.Equal("secret-a", capabilityJson["categories"]![1]!["nonCompliantItems"]![0]!.GetValue<string>());
         Assert.Equal("""["service-account"]""", capabilityJson["categories"]![2]!["nonCompliantItems"]!.ToJsonString());
-        var requirementDetailsJson = JsonNode.Parse(JsonSerializer.Serialize(
-            RequirementComplianceDetailsApiResource.From(requirementDetails), jsonOptions))!;
+        var requirementDetailsJson = JsonNode.Parse(
+            JsonSerializer.Serialize(RequirementComplianceDetailsApiResource.From(requirementDetails), jsonOptions)
+        )!;
         Assert.Equal(
             "secret-a",
             requirementDetailsJson["capabilities"]![0]!["nonCompliantItems"]![0]!.GetValue<string>()
@@ -816,7 +830,9 @@ public class TestComplianceApplicationService
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<RequirementsMetric>().Property(metric => metric.Labels)
+            modelBuilder
+                .Entity<RequirementsMetric>()
+                .Property(metric => metric.Labels)
                 .HasConversion(
                     labels => labels == null ? null : labels.ToJsonString(null),
                     json => json == null ? null : JsonNode.Parse(json, null, default)!.AsObject()
