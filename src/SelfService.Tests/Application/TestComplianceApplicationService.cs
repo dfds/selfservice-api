@@ -681,6 +681,23 @@ public class TestComplianceApplicationService
             },
             new RequirementsMetric
             {
+                Name = "dfds_requirement_item",
+                CapabilityRootId = firstId.ToString(),
+                RequirementId = "mandatory_tags",
+                Measurement = "non_compliant",
+                Type = "gauge",
+                Item = "dfds.service.criticality",
+            },
+            new RequirementsMetric
+            {
+                Name = "dfds_requirement_value",
+                CapabilityRootId = firstId.ToString(),
+                RequirementId = null,
+                Measurement = "score",
+                Value = 50,
+            },
+            new RequirementsMetric
+            {
                 Name = "dfds_requirement_value",
                 CapabilityRootId = firstId.ToString(),
                 RequirementId = "irsa",
@@ -734,6 +751,10 @@ public class TestComplianceApplicationService
             capability.Categories.Single(category => category.CategoryName == "IRSA Mutual Trust").NonCompliantItems
         );
         Assert.Equal(
+            new[] { "dfds.service.criticality" },
+            capability.Categories.Single(category => category.CategoryName == "Tags").NonCompliantItems
+        );
+        Assert.Equal(
             ComplianceStatus.NonCompliant,
             costCentreDetails
                 .Capabilities.Single()
@@ -744,6 +765,9 @@ public class TestComplianceApplicationService
         var requirementDetails = await service.GetRequirementComplianceDetails("external-secrets");
         var requirementCapability = Assert.Single(requirementDetails.Capabilities);
         Assert.Equal(new[] { "secret-a", "secret-b" }, requirementCapability.NonCompliantItems);
+
+        var tagDetails = await service.GetRequirementComplianceDetails("tags");
+        Assert.Equal(new[] { "dfds.service.criticality" }, Assert.Single(tagDetails.Capabilities).NonCompliantItems);
 
         var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         Assert.Null(

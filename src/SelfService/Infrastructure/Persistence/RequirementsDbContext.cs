@@ -76,7 +76,7 @@ public class RequirementsDbContext : DbContext
             cfg.Property(x => x.Id).ValueGeneratedOnAdd();
             cfg.Property(x => x.Name).IsRequired();
             cfg.Property(x => x.CapabilityRootId).IsRequired();
-            cfg.Property(x => x.RequirementId).IsRequired();
+            cfg.Property(x => x.RequirementId);
             cfg.Property(x => x.Measurement).IsRequired();
             cfg.Property(x => x.HelpUrl);
             cfg.Property(x => x.Owner);

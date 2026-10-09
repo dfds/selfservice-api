@@ -22,9 +22,8 @@ namespace SelfService.Infrastructure.Persistence.Models
         [Column("capability_root_id")]
         public string CapabilityRootId { get; set; } = null!;
 
-        [Required]
         [Column("requirement_id")]
-        public string RequirementId { get; set; } = null!;
+        public string? RequirementId { get; set; }
 
         [Required]
         [Column("measurement")]

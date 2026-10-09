@@ -22,7 +22,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     private static readonly RequirementDefinition[] RequirementDefinitions =
     {
-        new("tags", "tags", "Tags"),
+        new("tags", "mandatory_tags", "Tags"),
         new("external-secrets", "external_secrets", "External Secrets"),
         new("irsa-mutual-trust", "irsa", "IRSA Mutual Trust"),
         new("workload-liveness-and-readiness-probes", "k8s-probes", "Workload Liveness and Readiness Probes"),
@@ -190,7 +190,9 @@ public class ComplianceApplicationService : IComplianceApplicationService
         var requirementMetrics = await _requirementsDbContext
             .Metrics.Where(metric => capabilityIds.Contains(metric.CapabilityRootId))
             .ToListAsync();
-        var aggregateMetrics = requirementMetrics.Where(metric => metric.Name != ItemMetricName).ToList();
+        var aggregateMetrics = requirementMetrics
+            .Where(metric => metric.Name != ItemMetricName && metric.RequirementId != null)
+            .ToList();
         var itemMetrics = requirementMetrics.Where(metric => metric.Name == ItemMetricName).ToList();
 
         var metricMap = aggregateMetrics
