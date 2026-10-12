@@ -692,14 +692,6 @@ public class TestComplianceApplicationService
             {
                 Name = "dfds_requirement_value",
                 CapabilityRootId = firstId.ToString(),
-                RequirementId = null,
-                Measurement = "score",
-                Value = 50,
-            },
-            new RequirementsMetric
-            {
-                Name = "dfds_requirement_value",
-                CapabilityRootId = firstId.ToString(),
                 RequirementId = "irsa",
                 Measurement = "non_compliant_total",
                 Value = 1,
