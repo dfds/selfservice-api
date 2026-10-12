@@ -289,6 +289,23 @@ public class TestDafdaSerializationDeserialization
     }
 
     [Fact]
+    public async Task dafda_serialize_deserialize_email_campaign_send_requested_with_inline_images()
+    {
+        await dafda_serialize_deserialize(new EmailCampaignSendRequestedWithInlineImages());
+        await dafda_serialize_deserialize(
+            new EmailCampaignSendRequestedWithInlineImages
+            {
+                EmailSendId = "campaign-id",
+                RecipientLogId = "log-id",
+                RecipientEmail = "user@example.com",
+                Subject = "Test Subject",
+                HtmlBody = "<img src=\"cid:image-asset\">",
+                InlineImages = [new InlineEmailImage("image-asset", "object-key", "image/png", "diagram.png")],
+            }
+        );
+    }
+
+    [Fact]
     public async Task dafda_serialize_deserialize_email_campaign_delivery_completed()
     {
         await dafda_serialize_deserialize(new EmailCampaignDeliveryCompleted());

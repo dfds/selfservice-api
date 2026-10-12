@@ -6,6 +6,7 @@ using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Metrics;
 using SelfService.Infrastructure.Persistence.Models;
+using SelfService.Domain.Events;
 
 namespace SelfService.Application;
 
@@ -23,6 +24,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
     private readonly IRbacApplicationService _rbacApplicationService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly AllCapabilitiesCostsCache _allCapabilitiesCostsCache;
+    private readonly IContentImageService _contentImageService;
 
     public EmailCampaignApplicationService(
         IEmailCampaignRepository emailCampaignRepository,
@@ -36,7 +38,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         ITemplateRenderingService templateRenderingService,
         IRbacApplicationService rbacApplicationService,
         IServiceScopeFactory serviceScopeFactory,
-        AllCapabilitiesCostsCache allCapabilitiesCostsCache
+        AllCapabilitiesCostsCache allCapabilitiesCostsCache,
+        IContentImageService contentImageService
     )
     {
         _emailCampaignRepository = emailCampaignRepository;
@@ -51,6 +54,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         _rbacApplicationService = rbacApplicationService;
         _serviceScopeFactory = serviceScopeFactory;
         _allCapabilitiesCostsCache = allCapabilitiesCostsCache;
+        _contentImageService = contentImageService;
     }
 
     /// <summary>
@@ -432,8 +436,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         foreach (var log in failedLogs)
         {
             log.ResetForRetry();
-
-            campaign.RaiseSendRequestedEvent(log.Id.ToString(), log.Email, log.RenderedSubject, log.RenderedHtml);
+            await RaiseSendRequestedEventAsync(campaign, log.Id.ToString(), log.Email, log.RenderedSubject, log.RenderedHtml);
         }
 
         return new RetryResult { RetriedCount = failedLogs.Count, Status = "Retried" };
@@ -530,7 +533,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
                 recipientLogs.Add(recipientLog);
 
-                campaign.RaiseSendRequestedEvent(
+                await RaiseSendRequestedEventAsync(
+                    campaign,
                     recipientLog.Id.ToString(),
                     member.Email,
                     renderedSubject,
@@ -587,11 +591,35 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
             recipientLogs.Add(recipientLog);
 
-            campaign.RaiseSendRequestedEvent(recipientLog.Id.ToString(), member.Email, renderedSubject, renderedHtml);
+            await RaiseSendRequestedEventAsync(
+                campaign,
+                recipientLog.Id.ToString(),
+                member.Email,
+                renderedSubject,
+                renderedHtml
+            );
         }
 
         await _recipientLogRepository.AddRange(recipientLogs);
         return recipientLogs.Count;
+    }
+
+    private async Task RaiseSendRequestedEventAsync(
+        EmailCampaign campaign,
+        string recipientLogId,
+        string recipientEmail,
+        string subject,
+        string renderedHtml
+    )
+    {
+        var inlineImages = await _contentImageService.GetReferencedAsync(
+            ContentImageOwnerType.EmailCampaign,
+            (Guid)campaign.Id,
+            renderedHtml,
+            CancellationToken.None
+        );
+        var (cidHtml, descriptors) = EmailInlineImageResolver.Resolve(renderedHtml, inlineImages);
+        campaign.RaiseSendRequestedEvent(recipientLogId, recipientEmail, subject, cidHtml, descriptors);
     }
 
     /// <summary>
