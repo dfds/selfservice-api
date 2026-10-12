@@ -25,8 +25,8 @@ public class ComplianceApplicationService : IComplianceApplicationService
         new("tags", "mandatory_tags", "Tags"),
         new("external-secrets", "external_secrets", "External Secrets"),
         new("irsa-mutual-trust", "irsa", "IRSA Mutual Trust"),
-        new("workload-liveness-and-readiness-probes", "k8s-probes", "Workload Liveness and Readiness Probes"),
-        new("ecr-pull-policy", "ecr-pull", "ECR pull policy"),
+        new("workload-liveness-and-readiness-probes", "k8s_probes", "Workload Liveness and Readiness Probes"),
+        new("ecr-pull-policy", "ecr_pull", "ECR pull policy"),
     };
 
     private static readonly string[] Categories = RequirementDefinitions
@@ -221,8 +221,8 @@ public class ComplianceApplicationService : IComplianceApplicationService
                         CheckExternalSecretsCompliance(capMetrics.GetValueOrDefault("external_secrets", new()))
                     );
                     categories.Add(CheckIrsaMutualTrustCompliance(capMetrics.GetValueOrDefault("irsa", new())));
-                    categories.Add(CheckK8sProbesCompliance(capMetrics.GetValueOrDefault("k8s-probes", new())));
-                    categories.Add(CheckEcrPullCompliance(capMetrics.GetValueOrDefault("ecr-pull", new())));
+                    categories.Add(CheckK8sProbesCompliance(capMetrics.GetValueOrDefault("k8s_probes", new())));
+                    categories.Add(CheckEcrPullCompliance(capMetrics.GetValueOrDefault("ecr_pull", new())));
                 }
 
                 AddNonCompliantItems(categories, itemMetricMap.GetValueOrDefault(cap.Id.ToString(), new()));
@@ -549,7 +549,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
     {
         var metrics = await _requirementsDbContext
             .Metrics.Where(m =>
-                m.CapabilityRootId == capabilityId && m.RequirementId == "k8s-probes" && m.Name != ItemMetricName
+                m.CapabilityRootId == capabilityId && m.RequirementId == "k8s_probes" && m.Name != ItemMetricName
             )
             .ToListAsync();
         return CheckK8sProbesCompliance(metrics);
@@ -609,7 +609,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
     {
         var metrics = await _requirementsDbContext
             .Metrics.Where(m =>
-                m.CapabilityRootId == capabilityId && m.RequirementId == "ecr-pull" && m.Name != ItemMetricName
+                m.CapabilityRootId == capabilityId && m.RequirementId == "ecr_pull" && m.Name != ItemMetricName
             )
             .ToListAsync();
         return CheckEcrPullCompliance(metrics);

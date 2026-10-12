@@ -231,7 +231,7 @@ public class TemplateRenderingService : ITemplateRenderingService
             ),
             new PatternVariable(
                 "Requirement.<id>",
-                "Individual requirement score (0-100). Replace <id> with: mandatory_tags, external_secrets, irsa, k8s-probes, ecr-pull",
+                "Individual requirement score (0-100). Replace <id> with: mandatory_tags, external_secrets, irsa, k8s_probes, ecr_pull",
                 "Requirement",
                 "85",
                 new Regex(@"^Requirement\.(?<id>[^.]+)$", RegexOptions.Compiled),
