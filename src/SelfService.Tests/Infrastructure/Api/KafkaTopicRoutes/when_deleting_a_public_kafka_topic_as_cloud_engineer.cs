@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
@@ -24,19 +24,11 @@ public class when_deleting_a_public_kafka_topic_as_cloud_engineer : IAsyncLifeti
                 [
                     RbacPermissionGrant.New(
                         AssignedEntityType.User,
-                        "foo@bar.com",
-                        RbacNamespace.Topics,
-                        "delete",
-                        RbacAccessType.Capability,
-                        "foo"
-                    ),
-                    RbacPermissionGrant.New(
-                        AssignedEntityType.User,
-                        "foo@bar.com",
+                        FakeAuthenticationSchemeDefaults.DefaultUser,
                         RbacNamespace.TopicsPublic,
                         "delete",
-                        RbacAccessType.Capability,
-                        "foo"
+                        RbacAccessType.Global,
+                        ""
                     ),
                 ]
             )

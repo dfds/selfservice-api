@@ -870,6 +870,7 @@ public class Permission
             new(RbacNamespace.Topics, "read-public", "Read public topics", RbacAccessType.Capability),
             new(RbacNamespace.Topics, "update", "Update topics", RbacAccessType.Capability),
             new(RbacNamespace.Topics, "delete", "Delete topics", RbacAccessType.Capability),
+            new(RbacNamespace.TopicsPublic, "delete", "Delete public topics", RbacAccessType.Capability),
             new(RbacNamespace.CapabilityManagement, "receive-alerts", "Receive Alarms", RbacAccessType.Capability),
             new(
                 RbacNamespace.CapabilityManagement,
