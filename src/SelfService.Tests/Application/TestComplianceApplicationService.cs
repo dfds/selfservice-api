@@ -762,9 +762,15 @@ public class TestComplianceApplicationService
         Assert.Equal(2, tagDetails.Capabilities.Count);
         Assert.Equal(
             new[] { "dfds.service.criticality" },
-            tagDetails.Capabilities.Single(capability => capability.CapabilityId == firstId.ToString()).NonCompliantItems
+            tagDetails
+                .Capabilities.Single(capability => capability.CapabilityId == firstId.ToString())
+                .NonCompliantItems
         );
-        Assert.Empty(tagDetails.Capabilities.Single(capability => capability.CapabilityId == secondId.ToString()).NonCompliantItems);
+        Assert.Empty(
+            tagDetails
+                .Capabilities.Single(capability => capability.CapabilityId == secondId.ToString())
+                .NonCompliantItems
+        );
 
         var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         Assert.Null(
