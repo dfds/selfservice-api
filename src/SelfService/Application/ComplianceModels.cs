@@ -24,6 +24,7 @@ public class ComplianceCategoryResult
     public string? DisplayName { get; set; }
     public string? Description { get; set; }
     public List<ComplianceCategoryItem> Items { get; set; } = new();
+    public List<string> NonCompliantItems { get; set; } = new();
 }
 
 public class ComplianceCategoryItem
@@ -118,4 +119,5 @@ public class RequirementCapabilityComplianceResult
     public ComplianceStatus Status { get; set; }
     public double? Score { get; set; }
     public List<ComplianceCategoryItem> Items { get; set; } = new();
+    public List<string> NonCompliantItems { get; set; } = new();
 }

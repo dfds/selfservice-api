@@ -1,7 +1,14 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using SelfService.Application;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
+using SelfService.Infrastructure.Api.Compliance;
+using SelfService.Infrastructure.Persistence;
+using SelfService.Infrastructure.Persistence.Models;
 
 namespace SelfService.Tests.Application;
 
@@ -617,6 +624,189 @@ public class TestComplianceApplicationService
     }
 
     [Fact]
+    public async Task ComplianceResponses_IncludeOnlyMatchingNonCompliantItems()
+    {
+        await using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<RequirementsDbContext>().UseSqlite(connection).Options;
+        await using var db = new SqliteRequirementsDbContext(options);
+        await db.Database.EnsureCreatedAsync();
+
+        var firstId = CapabilityId.CreateFrom("first-cap");
+        var secondId = CapabilityId.CreateFrom("second-cap");
+        var first = A.Capability.WithId(firstId).WithJsonMetadata(AllTagsPresent).Build();
+        var second = A.Capability.WithId(secondId).WithJsonMetadata("""{"dfds.cost.centre":"other"}""").Build();
+        var capabilityRepo = new Mock<ICapabilityRepository>();
+        capabilityRepo.Setup(repo => repo.GetAllActive()).ReturnsAsync(new[] { first, second });
+        capabilityRepo.Setup(repo => repo.FindBy(firstId)).ReturnsAsync(first);
+
+        db.Metrics.AddRange(
+            new RequirementsMetric
+            {
+                Name = "dfds_requirement_item",
+                CapabilityRootId = firstId.ToString(),
+                RequirementId = "external_secrets",
+                Measurement = "non_compliant",
+                Type = "gauge",
+                Value = 1,
+                Item = "secret-b",
+            },
+            new RequirementsMetric
+            {
+                Name = "dfds_requirement_item",
+                CapabilityRootId = firstId.ToString(),
+                RequirementId = "external_secrets",
+                Measurement = "non_compliant",
+                Type = "gauge",
+                Value = 1,
+                Item = "secret-a",
+            },
+            new RequirementsMetric
+            {
+                Name = "dfds_requirement_item",
+                CapabilityRootId = secondId.ToString(),
+                RequirementId = "irsa",
+                Measurement = "non_compliant",
+                Type = "gauge",
+                Item = "other-account",
+            },
+            new RequirementsMetric
+            {
+                Name = "dfds_requirement_item",
+                CapabilityRootId = firstId.ToString(),
+                RequirementId = "irsa",
+                Measurement = "non_compliant",
+                Type = "gauge",
+                Item = "service-account",
+            },
+            new RequirementsMetric
+            {
+                Name = "dfds_requirement_item",
+                CapabilityRootId = firstId.ToString(),
+                RequirementId = "mandatory_tags",
+                Measurement = "non_compliant",
+                Type = "gauge",
+                Item = "dfds.service.criticality",
+            },
+            new RequirementsMetric
+            {
+                Name = "dfds_requirement_value",
+                CapabilityRootId = firstId.ToString(),
+                RequirementId = "irsa",
+                Measurement = "non_compliant_total",
+                Value = 1,
+            },
+            new RequirementsMetric
+            {
+                Name = "dfds_requirement_value",
+                CapabilityRootId = firstId.ToString(),
+                RequirementId = "external_secrets",
+                Measurement = "non_compliant_total",
+                Type = "gauge",
+                Value = 0,
+            },
+            new RequirementsMetric
+            {
+                Name = "dfds_requirement_value",
+                CapabilityRootId = firstId.ToString(),
+                RequirementId = "external_secrets",
+                Measurement = "compliant_total",
+                Type = "gauge",
+                Value = 1,
+            }
+        );
+        await db.SaveChangesAsync();
+
+        var service = A
+            .ComplianceApplicationService.WithRequirementsDbContext(db)
+            .WithCapabilityRepository(capabilityRepo.Object)
+            .WithAwsAccountRepository(AwsAccountRepoWithK8sLinkFor(firstId))
+            .Build();
+
+        var requirements = await service.GetRequirementsCompliance();
+        Assert.Equal(5, requirements.Items.Count);
+
+        var costCentre = await service.GetCostCentreCompliance("ti-platform");
+        var costCentreDetails = await service.GetCostCentreComplianceDetails("ti-platform");
+        var costCentreCategory = costCentreDetails
+            .Capabilities.Single()
+            .Categories.Single(category => category.CategoryName == "External Secrets");
+        Assert.Equal(new[] { "secret-a", "secret-b" }, costCentreCategory.NonCompliantItems);
+        Assert.Equal(ComplianceStatus.Compliant, costCentreCategory.Status);
+
+        var capability = await service.GetCapabilityCompliance(firstId);
+        var capabilityCategory = capability.Categories.Single(category => category.CategoryName == "External Secrets");
+        Assert.Equal(new[] { "secret-a", "secret-b" }, capabilityCategory.NonCompliantItems);
+        Assert.Equal(ComplianceStatus.Compliant, capabilityCategory.Status);
+        Assert.Equal(
+            new[] { "service-account" },
+            capability.Categories.Single(category => category.CategoryName == "IRSA Mutual Trust").NonCompliantItems
+        );
+        Assert.Equal(
+            new[] { "dfds.service.criticality" },
+            capability.Categories.Single(category => category.CategoryName == "Tags").NonCompliantItems
+        );
+        Assert.Equal(
+            ComplianceStatus.NonCompliant,
+            costCentreDetails
+                .Capabilities.Single()
+                .Categories.Single(category => category.CategoryName == "IRSA Mutual Trust")
+                .Status
+        );
+
+        var requirementDetails = await service.GetRequirementComplianceDetails("external-secrets");
+        var requirementCapability = Assert.Single(requirementDetails.Capabilities);
+        Assert.Equal(new[] { "secret-a", "secret-b" }, requirementCapability.NonCompliantItems);
+
+        var tagDetails = await service.GetRequirementComplianceDetails("tags");
+        Assert.Equal(2, tagDetails.Capabilities.Count);
+        Assert.Equal(
+            new[] { "dfds.service.criticality" },
+            tagDetails
+                .Capabilities.Single(capability => capability.CapabilityId == firstId.ToString())
+                .NonCompliantItems
+        );
+        Assert.Empty(
+            tagDetails
+                .Capabilities.Single(capability => capability.CapabilityId == secondId.ToString())
+                .NonCompliantItems
+        );
+
+        var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        Assert.Null(
+            JsonNode.Parse(
+                JsonSerializer.Serialize(RequirementsComplianceApiResource.From(requirements), jsonOptions)
+            )!["nonCompliantItems"]
+        );
+        Assert.Null(
+            JsonNode.Parse(JsonSerializer.Serialize(CostCentreComplianceApiResource.From(costCentre), jsonOptions))![
+                "nonCompliantItems"
+            ]
+        );
+        var costCentreJson = JsonNode.Parse(
+            JsonSerializer.Serialize(CostCentreComplianceDetailsApiResource.From(costCentreDetails), jsonOptions)
+        )!;
+        Assert.Null(costCentreJson["nonCompliantItems"]);
+        Assert.Equal(
+            "secret-a",
+            costCentreJson["capabilities"]![0]!["categories"]![1]!["nonCompliantItems"]![0]!.GetValue<string>()
+        );
+        var capabilityJson = JsonNode.Parse(
+            JsonSerializer.Serialize(CapabilityComplianceApiResource.From(capability), jsonOptions)
+        )!;
+        Assert.Null(capabilityJson["nonCompliantItems"]);
+        Assert.Equal("secret-a", capabilityJson["categories"]![1]!["nonCompliantItems"]![0]!.GetValue<string>());
+        Assert.Equal("""["service-account"]""", capabilityJson["categories"]![2]!["nonCompliantItems"]!.ToJsonString());
+        var requirementDetailsJson = JsonNode.Parse(
+            JsonSerializer.Serialize(RequirementComplianceDetailsApiResource.From(requirementDetails), jsonOptions)
+        )!;
+        Assert.Equal(
+            "secret-a",
+            requirementDetailsJson["capabilities"]![0]!["nonCompliantItems"]![0]!.GetValue<string>()
+        );
+    }
+
+    [Fact]
     public async Task GetRequirementComplianceDetails_Tags_ReturnsCapabilityLevelData()
     {
         var compliantCap = A
@@ -657,5 +847,24 @@ public class TestComplianceApplicationService
         await Assert.ThrowsAsync<KeyNotFoundException>(
             () => service.GetRequirementComplianceDetails("not-a-real-requirement")
         );
+    }
+
+    private sealed class SqliteRequirementsDbContext : RequirementsDbContext
+    {
+        public SqliteRequirementsDbContext(DbContextOptions<RequirementsDbContext> options)
+            : base(options) { }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder
+                .Entity<RequirementsMetric>()
+                .Property(metric => metric.Labels)
+                .HasConversion(
+                    labels => labels == null ? null : labels.ToJsonString(null),
+                    json => json == null ? null : JsonNode.Parse(json, null, default)!.AsObject()
+                )
+                .HasColumnType("TEXT");
+        }
     }
 }
