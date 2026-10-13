@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
@@ -13,16 +14,19 @@ public class NewsController : ControllerBase
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly INewsItemService _newsItemService;
     private readonly IAuthorizationService _authorizationService;
+    private readonly IContentImageService _contentImageService;
 
     public NewsController(
         ApiResourceFactory apiResourceFactory,
         INewsItemService newsItemService,
-        IAuthorizationService authorizationService
+        IAuthorizationService authorizationService,
+        IContentImageService contentImageService
     )
     {
         _apiResourceFactory = apiResourceFactory;
         _newsItemService = newsItemService;
         _authorizationService = authorizationService;
+        _contentImageService = contentImageService;
     }
 
     [HttpGet("")]
@@ -43,8 +47,13 @@ public class NewsController : ControllerBase
         }
 
         var newsItems = await _newsItemService.GetAllNewsItems();
+        var resource = _apiResourceFactory.Convert(newsItems);
+        foreach (var item in resource.NewsItems)
+        {
+            await ResolveImagesAsync(item);
+        }
 
-        return Ok(_apiResourceFactory.Convert(newsItems));
+        return Ok(resource);
     }
 
     [HttpGet("relevant")]
@@ -53,8 +62,13 @@ public class NewsController : ControllerBase
     public async Task<IActionResult> GetRelevantNews()
     {
         var newsItems = await _newsItemService.GetRelevantNewsItems();
+        var resource = _apiResourceFactory.ConvertRelevantNewsItems(newsItems);
+        foreach (var item in resource.NewsItems)
+        {
+            await ResolveImagesAsync(item);
+        }
 
-        return Ok(_apiResourceFactory.ConvertRelevantNewsItems(newsItems));
+        return Ok(resource);
     }
 
     [HttpGet("{id}")]
@@ -78,7 +92,7 @@ public class NewsController : ControllerBase
         try
         {
             var newsItem = await _newsItemService.GetNewsItemById(id);
-            return Ok(_apiResourceFactory.Convert(newsItem));
+            return Ok(await ResolveImagesAsync(_apiResourceFactory.Convert(newsItem)));
         }
         catch (KeyNotFoundException)
         {
@@ -136,7 +150,7 @@ public class NewsController : ControllerBase
 
         var created = await _newsItemService.CreateNewsItem(newsItem);
 
-        return Ok(_apiResourceFactory.Convert(created));
+        return Ok(await ResolveImagesAsync(_apiResourceFactory.Convert(created)));
     }
 
     [HttpPost("{id}")]
@@ -177,9 +191,28 @@ public class NewsController : ControllerBase
 
         try
         {
+            if (request.Body is not null)
+            {
+                request.Body = await _contentImageService.RestoreReferencesAsync(
+                    ContentImageOwnerType.NewsItem,
+                    (Guid)id,
+                    request.Body,
+                    HttpContext.RequestAborted
+                );
+            }
+            if (request.FrontpageSummary is not null)
+            {
+                request.FrontpageSummary = await _contentImageService.RestoreReferencesAsync(
+                    ContentImageOwnerType.NewsItem,
+                    (Guid)id,
+                    request.FrontpageSummary,
+                    HttpContext.RequestAborted
+                );
+            }
+
             await _newsItemService.UpdateNewsItem(id, request);
             var updated = await _newsItemService.GetNewsItemById(id);
-            return Ok(_apiResourceFactory.Convert(updated));
+            return Ok(await ResolveImagesAsync(_apiResourceFactory.Convert(updated)));
         }
         catch (KeyNotFoundException)
         {
@@ -221,6 +254,11 @@ public class NewsController : ControllerBase
 
         try
         {
+            await _contentImageService.DeleteForOwnerAsync(
+                ContentImageOwnerType.NewsItem,
+                (Guid)id,
+                HttpContext.RequestAborted
+            );
             await _newsItemService.DeleteNewsItem(id);
             return NoContent();
         }
@@ -266,7 +304,7 @@ public class NewsController : ControllerBase
         {
             await _newsItemService.HighlightNewsItem(id);
             var updated = await _newsItemService.GetNewsItemById(id);
-            return Ok(_apiResourceFactory.Convert(updated));
+            return Ok(await ResolveImagesAsync(_apiResourceFactory.Convert(updated)));
         }
         catch (KeyNotFoundException)
         {
@@ -274,5 +312,39 @@ public class NewsController : ControllerBase
                 new ProblemDetails { Title = "Not Found", Detail = $"News item with id '{id}' was not found." }
             );
         }
+    }
+
+    private async Task<NewsItemApiResource> ResolveImagesAsync(NewsItemApiResource resource)
+    {
+        var bodyHasImages = ContentImageReference.FindIds(resource.Body).Count > 0;
+        var summaryHasImages = !string.IsNullOrEmpty(resource.FrontpageSummary)
+            && ContentImageReference.FindIds(resource.FrontpageSummary).Count > 0;
+        if (!bodyHasImages && !summaryHasImages)
+        {
+            return resource;
+        }
+
+        Response.Headers.CacheControl = "private, no-store";
+        if (bodyHasImages)
+        {
+            resource.Body = await _contentImageService.ResolveReferencesAsync(
+                ContentImageOwnerType.NewsItem,
+                (Guid)resource.Id,
+                resource.Body,
+                HttpContext.RequestAborted
+            );
+        }
+
+        if (summaryHasImages)
+        {
+            resource.FrontpageSummary = await _contentImageService.ResolveReferencesAsync(
+                ContentImageOwnerType.NewsItem,
+                (Guid)resource.Id,
+                resource.FrontpageSummary!,
+                HttpContext.RequestAborted
+            );
+        }
+
+        return resource;
     }
 }

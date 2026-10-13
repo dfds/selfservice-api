@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
@@ -15,16 +16,19 @@ public class EventController : ControllerBase
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IEventService _eventService;
     private readonly IAuthorizationService _authorizationService;
+    private readonly IContentImageService _contentImageService;
 
     public EventController(
         ApiResourceFactory apiResourceFactory,
         IEventService eventService,
-        IAuthorizationService authorizationService
+        IAuthorizationService authorizationService,
+        IContentImageService contentImageService
     )
     {
         _apiResourceFactory = apiResourceFactory;
         _eventService = eventService;
         _authorizationService = authorizationService;
+        _contentImageService = contentImageService;
     }
 
     [HttpGet("")]
@@ -45,8 +49,13 @@ public class EventController : ControllerBase
         }
 
         var events = await _eventService.GetAllEvents();
+        var resource = _apiResourceFactory.Convert(events);
+        foreach (var eventResource in resource.Events)
+        {
+            await ResolveImagesAsync(eventResource);
+        }
 
-        return Ok(_apiResourceFactory.Convert(events));
+        return Ok(resource);
     }
 
     [HttpPost("")]
@@ -113,7 +122,7 @@ public class EventController : ControllerBase
             }
         }
 
-        return Ok(_apiResourceFactory.Convert(createdEvent));
+        return Ok(await ResolveImagesAsync(_apiResourceFactory.Convert(createdEvent)));
     }
 
     [HttpGet("{id}")]
@@ -137,7 +146,7 @@ public class EventController : ControllerBase
         try
         {
             var eventModel = await _eventService.GetEventById(id);
-            return Ok(_apiResourceFactory.Convert(eventModel));
+            return Ok(await ResolveImagesAsync(_apiResourceFactory.Convert(eventModel)));
         }
         catch (KeyNotFoundException)
         {
@@ -179,6 +188,16 @@ public class EventController : ControllerBase
                     Title = "Unauthorized",
                     Detail = "You are not authorized to update events. Only cloud engineers can perform this action.",
                 }
+            );
+        }
+
+        if (request.Description is not null)
+        {
+            request.Description = await _contentImageService.RestoreReferencesAsync(
+                ContentImageOwnerType.Event,
+                (Guid)id,
+                request.Description,
+                HttpContext.RequestAborted
             );
         }
 
@@ -234,7 +253,7 @@ public class EventController : ControllerBase
 
         var updatedEvent = await _eventService.GetEventById(id);
 
-        return Ok(_apiResourceFactory.Convert(updatedEvent));
+        return Ok(await ResolveImagesAsync(_apiResourceFactory.Convert(updatedEvent)));
     }
 
     [HttpDelete("{id}")]
@@ -266,6 +285,11 @@ public class EventController : ControllerBase
             );
         }
 
+        await _contentImageService.DeleteForOwnerAsync(
+            ContentImageOwnerType.Event,
+            (Guid)id,
+            HttpContext.RequestAborted
+        );
         await _eventService.DeleteEvent(id);
 
         return NoContent();
@@ -279,6 +303,34 @@ public class EventController : ControllerBase
         var upcomingEvents = await _eventService.GetUpcomingEvents(limit: 5);
         var latestHeldEvent = await _eventService.GetLatestHeldEvent();
 
-        return Ok(_apiResourceFactory.ConvertUpcomingEvents(upcomingEvents, latestHeldEvent));
+        var resource = _apiResourceFactory.ConvertUpcomingEvents(upcomingEvents, latestHeldEvent);
+        foreach (var eventResource in resource.UpcomingEvents)
+        {
+            await ResolveImagesAsync(eventResource);
+        }
+
+        if (resource.LatestHeldEvent is not null)
+        {
+            await ResolveImagesAsync(resource.LatestHeldEvent);
+        }
+
+        return Ok(resource);
+    }
+
+    private async Task<EventApiResource> ResolveImagesAsync(EventApiResource resource)
+    {
+        if (ContentImageReference.FindIds(resource.Description).Count == 0)
+        {
+            return resource;
+        }
+
+        Response.Headers.CacheControl = "private, no-store";
+        resource.Description = await _contentImageService.ResolveReferencesAsync(
+            ContentImageOwnerType.Event,
+            (Guid)resource.Id,
+            resource.Description,
+            HttpContext.RequestAborted
+        );
+        return resource;
     }
 }

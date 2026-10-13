@@ -57,6 +57,12 @@ spec:
           env:
             - name: ECR_PULL_PERMISSION_AWS_ORGANIZATION_ID
               value: "{{ $.Values.app.config.ecrPullPermissionAwsOrganizationId }}"
+            - name: SS_IMAGES_S3_BUCKET
+              value: {{ required "imageStorage.bucketName must be configured" $.Values.imageStorage.bucketName | quote }}
+            - name: SS_IMAGES_MAX_UPLOAD_BYTES
+              value: {{ $.Values.imageStorage.maximumUploadBytes | quote }}
+            - name: SS_IMAGES_PRESIGNED_URL_TTL_SECONDS
+              value: {{ $.Values.imageStorage.presignedUrlTtlSeconds | quote }}
             {{- toYaml . | nindent 12}}
           {{- end }}
           envFrom:

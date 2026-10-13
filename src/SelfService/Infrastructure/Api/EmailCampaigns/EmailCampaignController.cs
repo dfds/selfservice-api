@@ -12,10 +12,15 @@ namespace SelfService.Infrastructure.Api.EmailCampaigns;
 public class EmailCampaignController : ControllerBase
 {
     private readonly IEmailCampaignApplicationService _emailCampaignApplicationService;
+    private readonly IContentImageService _contentImageService;
 
-    public EmailCampaignController(IEmailCampaignApplicationService emailCampaignApplicationService)
+    public EmailCampaignController(
+        IEmailCampaignApplicationService emailCampaignApplicationService,
+        IContentImageService contentImageService
+    )
     {
         _emailCampaignApplicationService = emailCampaignApplicationService;
+        _contentImageService = contentImageService;
     }
 
     private const string DefaultAudienceJson = "{\"mode\":\"all\"}";
@@ -93,7 +98,13 @@ public class EmailCampaignController : ControllerBase
         try
         {
             var campaigns = await _emailCampaignApplicationService.GetAll(status);
-            return Ok(campaigns.Select(ToApiResource));
+            var resources = new List<EmailCampaignApiResource>(campaigns.Count);
+            foreach (var campaign in campaigns)
+            {
+                resources.Add(await ToApiResourceWithImages(campaign));
+            }
+
+            return Ok(resources);
         }
         catch (Exception e)
         {
@@ -121,7 +132,7 @@ public class EmailCampaignController : ControllerBase
                     new ProblemDetails { Title = "Not Found", Detail = $"Email campaign with id {id} does not exist." }
                 );
             }
-            return Ok(ToApiResource(campaign));
+            return Ok(await ToApiResourceWithImages(campaign));
         }
         catch (Exception e)
         {
@@ -170,7 +181,11 @@ public class EmailCampaignController : ControllerBase
                 request.CronExpression,
                 parsedTargetType
             );
-            return CreatedAtAction(nameof(GetById), new { id = campaign.Id.ToString() }, ToApiResource(campaign));
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = campaign.Id.ToString() },
+                await ToApiResourceWithImages(campaign)
+            );
         }
         catch (InvalidOperationException e)
         {
@@ -212,6 +227,22 @@ public class EmailCampaignController : ControllerBase
 
             if (ParseTargetType(request.TargetType, out var parsedTargetType) is { } targetTypeError)
                 return targetTypeError;
+
+            request.ContentJson = await _contentImageService.RestoreReferencesAsync(
+                ContentImageOwnerType.EmailCampaign,
+                (Guid)parsedId,
+                request.ContentJson!,
+                HttpContext.RequestAborted
+            );
+            if (request.ContentHtml is not null)
+            {
+                request.ContentHtml = await _contentImageService.RestoreReferencesAsync(
+                    ContentImageOwnerType.EmailCampaign,
+                    (Guid)parsedId,
+                    request.ContentHtml,
+                    HttpContext.RequestAborted
+                );
+            }
 
             await _emailCampaignApplicationService.UpdateDraft(
                 parsedId,
@@ -256,6 +287,17 @@ public class EmailCampaignController : ControllerBase
 
         try
         {
+            var campaign = await _emailCampaignApplicationService.GetById(parsedId);
+            if (campaign is null)
+                throw EntityNotFoundException<EmailCampaign>.UsingId(parsedId.ToString());
+            if (campaign.Status != EmailCampaignStatus.Draft)
+                throw new InvalidOperationException("Only drafts can be deleted.");
+
+            await _contentImageService.DeleteForOwnerAsync(
+                ContentImageOwnerType.EmailCampaign,
+                (Guid)parsedId,
+                HttpContext.RequestAborted
+            );
             await _emailCampaignApplicationService.DeleteDraft(parsedId);
             return NoContent();
         }
@@ -290,7 +332,7 @@ public class EmailCampaignController : ControllerBase
         try
         {
             var duplicate = await _emailCampaignApplicationService.DuplicateCampaign(parsedId, userId.ToString());
-            return Ok(ToApiResource(duplicate));
+            return Ok(await ToApiResourceWithImages(duplicate));
         }
         catch (EntityNotFoundException e)
         {
@@ -403,6 +445,11 @@ public class EmailCampaignController : ControllerBase
                     parsedId,
                     request?.UserEmails
                 );
+                foreach (var preview in userPreviews)
+                {
+                    preview.Html = await ResolveCampaignContentAsync(campaign.Id, preview.Html);
+                }
+
                 return Ok(
                     new UserPreviewResponse
                     {
@@ -421,6 +468,11 @@ public class EmailCampaignController : ControllerBase
             }
 
             var previews = await _emailCampaignApplicationService.PreviewCampaign(parsedId, request?.CapabilityIds);
+            foreach (var preview in previews)
+            {
+                preview.Html = await ResolveCampaignContentAsync(campaign.Id, preview.Html);
+            }
+
             return Ok(
                 new PreviewResponse
                 {
@@ -521,7 +573,7 @@ public class EmailCampaignController : ControllerBase
                 userId.ToString()
             );
             var campaign = await _emailCampaignApplicationService.GetById(parsedId);
-            return Ok(ToApiResource(campaign!));
+            return Ok(await ToApiResourceWithImages(campaign!));
         }
         catch (EntityNotFoundException e)
         {
@@ -632,7 +684,7 @@ public class EmailCampaignController : ControllerBase
         {
             await _emailCampaignApplicationService.RevertToDraft(parsedId, userId.ToString());
             var campaign = await _emailCampaignApplicationService.GetById(parsedId);
-            return Ok(ToApiResource(campaign!));
+            return Ok(await ToApiResourceWithImages(campaign!));
         }
         catch (EntityNotFoundException e)
         {
@@ -695,6 +747,34 @@ public class EmailCampaignController : ControllerBase
             );
         parsed = tt;
         return null;
+    }
+
+    private async Task<EmailCampaignApiResource> ToApiResourceWithImages(EmailCampaign campaign)
+    {
+        var resource = ToApiResource(campaign);
+        resource.ContentJson = await ResolveCampaignContentAsync(campaign.Id, resource.ContentJson);
+        if (resource.ContentHtml is not null)
+        {
+            resource.ContentHtml = await ResolveCampaignContentAsync(campaign.Id, resource.ContentHtml);
+        }
+
+        return resource;
+    }
+
+    private async Task<string> ResolveCampaignContentAsync(EmailCampaignId campaignId, string content)
+    {
+        if (ContentImageReference.FindIds(content).Count == 0)
+        {
+            return content;
+        }
+
+        Response.Headers.CacheControl = "private, no-store";
+        return await _contentImageService.ResolveReferencesAsync(
+            ContentImageOwnerType.EmailCampaign,
+            (Guid)campaignId,
+            content,
+            HttpContext.RequestAborted
+        );
     }
 
     private static EmailCampaignApiResource ToApiResource(EmailCampaign b) =>

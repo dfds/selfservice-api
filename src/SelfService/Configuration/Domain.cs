@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SelfService.Application;
+using Amazon.S3;
 using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
@@ -10,6 +11,7 @@ using SelfService.Infrastructure.Api.System;
 using SelfService.Infrastructure.BackgroundJobs;
 using SelfService.Infrastructure.Catalog;
 using SelfService.Infrastructure.Kafka;
+using SelfService.Infrastructure.Images;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
 using SelfService.Infrastructure.Ticketing;
@@ -36,6 +38,9 @@ public static class Domain
         builder.Services.AddTransient<ITeamApplicationService, TeamApplicationService>();
         builder.Services.AddTransient<IKafkaSchemaService, KafkaSchemaService>();
         builder.Services.AddTransient<IEmailCampaignApplicationService, EmailCampaignApplicationService>();
+        builder.Services.AddTransient<IContentImageService, ContentImageService>();
+        builder.Services.AddSingleton<IAmazonS3>(_ => new AmazonS3Client());
+        builder.Services.AddSingleton<IImageObjectStorage, S3ImageObjectStorage>();
 
         if (aws_type == "mock")
         {

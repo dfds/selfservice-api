@@ -8,8 +8,8 @@ public class NewsItemApiResource
 {
     public NewsItemId Id { get; private set; }
     public string Title { get; private set; }
-    public string Body { get; private set; }
-    public string? FrontpageSummary { get; private set; }
+    public string Body { get; set; }
+    public string? FrontpageSummary { get; set; }
     public DateTime DueDate { get; private set; }
     public bool IsHighlighted { get; private set; }
     public bool IsRelevant { get; private set; }

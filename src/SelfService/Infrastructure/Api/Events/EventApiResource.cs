@@ -10,7 +10,7 @@ public class EventApiResource
     public EventId Id { get; private set; }
     public DateTime EventDate { get; private set; }
     public string Title { get; private set; }
-    public string Description { get; private set; }
+    public string Description { get; set; }
     public EventType Type { get; private set; }
     public string CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }

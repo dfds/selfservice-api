@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using SelfService.Application;
+using SelfService.Domain.Events;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Domain.Services;
@@ -318,6 +319,95 @@ public class TestEmailCampaignApplicationService
         Assert.DoesNotContain("Deleted Cap", previews[0].Html);
     }
 
+    [Fact]
+    public async Task send_user_campaign_emits_inline_image_event_for_referenced_campaign_image()
+    {
+        var campaign = EmailCampaign.CreateDraft(
+            name: "Campaign",
+            subject: "Subject",
+            contentJson: "{}",
+            contentHtml: "<img src=\"content-image:00000000-0000-0000-0000-000000000001\">",
+            audienceJson: "{\"mode\":\"all\"}",
+            recipientFilter: null,
+            createdBy: "tester",
+            targetType: EmailCampaignTargetType.User
+        );
+        var member = new Member(
+            UserId.Parse("reader@dfds.com"),
+            "reader@dfds.com",
+            "Reader User",
+            UserSettings.Default
+        );
+        var campaignRepository = new Mock<IEmailCampaignRepository>();
+        campaignRepository.Setup(repository => repository.FindById(campaign.Id)).ReturnsAsync(campaign);
+
+        var userFilter = new Mock<IUserFilterService>();
+        userFilter
+            .Setup(service => service.ResolveUsers(It.IsAny<string>()))
+            .ReturnsAsync(new UserAudienceResolution { Members = new List<Member> { member } });
+
+        var membershipRepository = new Mock<IMembershipRepository>();
+        membershipRepository
+            .Setup(repository => repository.GetAllMembershipsForUserIds(It.IsAny<List<UserId>>()))
+            .ReturnsAsync(new List<Membership>());
+
+        var imageId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var contentImageService = new Mock<IContentImageService>();
+        contentImageService
+            .Setup(service => service.GetReferencedAsync(
+                ContentImageOwnerType.EmailCampaign,
+                (Guid)campaign.Id,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()
+            ))
+            .ReturnsAsync(new[]
+            {
+                new ContentImageInfo(
+                    imageId,
+                    ContentImageOwnerType.EmailCampaign,
+                    (Guid)campaign.Id,
+                    "diagram.png",
+                    "image/png",
+                    256,
+                    "private-s3-key",
+                    $"content-image:{imageId:D}",
+                    "unused-presigned-url",
+                    DateTime.UtcNow.AddMinutes(15),
+                    DateTime.UtcNow
+                ),
+            });
+
+        var scopeFactory = ScopeFactoryWith(
+            (typeof(IMembershipRepository), membershipRepository.Object),
+            (typeof(ICapabilityRepository), Mock.Of<ICapabilityRepository>()),
+            (typeof(IAwsAccountRepository), Mock.Of<IAwsAccountRepository>()),
+            (typeof(IAzureResourceRepository), Mock.Of<IAzureResourceRepository>()),
+            (typeof(ICapabilityMembershipApplicationQuery), Mock.Of<ICapabilityMembershipApplicationQuery>()),
+            (typeof(IRequirementsMetricService), Mock.Of<IRequirementsMetricService>())
+        );
+        var templateRenderer = new Mock<ITemplateRenderingService>();
+        templateRenderer
+            .Setup(renderer => renderer.RenderTemplate(It.IsAny<string>(), It.IsAny<TemplateRenderContext>()))
+            .Returns<string, TemplateRenderContext>((template, _) => template);
+
+        var service = BuildService(
+            campaignRepo: campaignRepository.Object,
+            userFilter: userFilter.Object,
+            templateRendering: templateRenderer.Object,
+            scopeFactory: scopeFactory,
+            contentImageService: contentImageService.Object
+        );
+
+        await service.SendCampaign(campaign.Id, "tester");
+
+        var send = Assert.Single(campaign.GetEvents().OfType<EmailCampaignSendRequestedWithInlineImages>());
+        Assert.Contains("src=\"cid:image-00000000000000000000000000000001\"", send.HtmlBody);
+        var descriptor = Assert.Single(send.InlineImages);
+        Assert.Equal("image-00000000000000000000000000000001", descriptor.ContentId);
+        Assert.Equal("private-s3-key", descriptor.ObjectKey);
+        Assert.Equal("image/png", descriptor.ContentType);
+    }
+
     private static EmailCampaignApplicationService BuildService(
         IEmailCampaignRepository? campaignRepo = null,
         IEmailCampaignRecipientLogRepository? recipientLogRepo = null,
@@ -327,9 +417,20 @@ public class TestEmailCampaignApplicationService
         IRbacApplicationService? rbac = null,
         ITemplateRenderingService? templateRendering = null,
         IServiceScopeFactory? scopeFactory = null,
-        AllCapabilitiesCostsCache? costsCache = null
+        AllCapabilitiesCostsCache? costsCache = null,
+        IContentImageService? contentImageService = null
     )
     {
+        var imageService = new Mock<IContentImageService>();
+        imageService
+            .Setup(service => service.GetReferencedAsync(
+                ContentImageOwnerType.EmailCampaign,
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()
+            ))
+            .ReturnsAsync(Array.Empty<ContentImageInfo>());
+
         return new EmailCampaignApplicationService(
             campaignRepo ?? Mock.Of<IEmailCampaignRepository>(),
             recipientLogRepo ?? Mock.Of<IEmailCampaignRecipientLogRepository>(),
@@ -342,7 +443,8 @@ public class TestEmailCampaignApplicationService
             templateRendering ?? Mock.Of<ITemplateRenderingService>(),
             rbac ?? Mock.Of<IRbacApplicationService>(),
             scopeFactory ?? Mock.Of<IServiceScopeFactory>(),
-            costsCache ?? new AllCapabilitiesCostsCache()
+            costsCache ?? new AllCapabilitiesCostsCache(),
+            contentImageService ?? imageService.Object
         );
     }
 

@@ -83,6 +83,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<Event> Events => Set<Event>();
     public DbSet<EventAttachment> EventAttachments => Set<EventAttachment>();
     public DbSet<NewsItem> NewsItems => Set<NewsItem>();
+    public DbSet<ContentImage> ContentImages => Set<ContentImage>();
     public DbSet<EmailCampaign> EmailCampaigns => Set<EmailCampaign>();
     public DbSet<EmailCampaignRecipientLog> EmailCampaignRecipientLogs => Set<EmailCampaignRecipientLog>();
     public DbSet<EmailCampaignExecution> EmailCampaignExecutions => Set<EmailCampaignExecution>();
@@ -660,6 +661,28 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.CreatedAt);
             cfg.Property(x => x.ModifiedAt);
+        });
+
+        modelBuilder.Entity<ContentImage>(cfg =>
+        {
+            cfg.ToTable("ContentImage", table =>
+                table.HasCheckConstraint(
+                    "ContentImage_OwnerType_Check",
+                    "\"OwnerType\" IN ('NewsItem', 'Event', 'ReleaseNote', 'EmailCampaign')"
+                )
+            );
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.OwnerType).HasConversion<string>();
+            cfg.Property(x => x.OwnerId).IsRequired();
+            cfg.Property(x => x.ObjectKey).IsRequired();
+            cfg.Property(x => x.FileName).IsRequired();
+            cfg.Property(x => x.ContentType).IsRequired();
+            cfg.Property(x => x.Length).IsRequired();
+            cfg.Property(x => x.CreatedAt);
+            cfg.Property(x => x.IsDeletePending).HasDefaultValue(false);
+            cfg.HasIndex(x => new { x.OwnerType, x.OwnerId }).HasDatabaseName("IX_ContentImage_Owner");
+            cfg.HasIndex(x => x.ObjectKey).IsUnique().HasDatabaseName("UX_ContentImage_ObjectKey");
         });
 
         modelBuilder.Entity<EmailCampaign>(cfg =>

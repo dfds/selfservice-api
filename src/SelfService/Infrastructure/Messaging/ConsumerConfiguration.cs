@@ -114,6 +114,10 @@ public static class ConsumerConfiguration
                 .Register<EmailCampaignSendRequested>(
                     messageType: EmailCampaignSendRequested.EventType,
                     keySelector: x => x.EmailSendId!
+                )
+                .Register<EmailCampaignSendRequestedWithInlineImages>(
+                    messageType: EmailCampaignSendRequestedWithInlineImages.EventType,
+                    keySelector: x => x.EmailSendId!
                 );
             // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs
         });

@@ -18,6 +18,7 @@ public class ApiApplicationBuilder
     private ICapabilityRepository _capabilityRepository;
     private IFavouriteRepository _favouriteRepository;
     private IReleaseNoteRepository _releaseNoteRepository;
+    private IContentImageService _contentImageService;
     private IMembershipQuery _membershipQuery;
     private ICapabilityDeletionStatusQuery _capabilityDeletionStatusQuery;
     private Action<IServiceCollection> _configureRbac;
@@ -33,6 +34,7 @@ public class ApiApplicationBuilder
         _capabilityRepository = new StubCapabilityRepository();
         _favouriteRepository = Dummy.Of<IFavouriteRepository>();
         _releaseNoteRepository = new StubReleaseNoteRepository();
+        _contentImageService = Dummy.Of<IContentImageService>();
         _membershipQuery = new StubMembershipQuery();
         _capabilityDeletionStatusQuery = new StubCapabilityDeletionStatusQuery();
         _configureRbac = cfg => { };
@@ -74,6 +76,12 @@ public class ApiApplicationBuilder
     public ApiApplicationBuilder WithReleaseNoteRepository(IReleaseNoteRepository releaseNoteRepository)
     {
         _releaseNoteRepository = releaseNoteRepository;
+        return this;
+    }
+
+    public ApiApplicationBuilder WithContentImageService(IContentImageService contentImageService)
+    {
+        _contentImageService = contentImageService;
         return this;
     }
 
@@ -124,6 +132,7 @@ public class ApiApplicationBuilder
         application.ReplaceService<ICapabilityRepository>(_capabilityRepository);
         application.ReplaceService<IFavouriteRepository>(_favouriteRepository);
         application.ReplaceService<IReleaseNoteRepository>(_releaseNoteRepository);
+        application.ReplaceService<IContentImageService>(_contentImageService);
         application.ReplaceService<IMembershipQuery>(_membershipQuery);
         application.ReplaceService<ICapabilityDeletionStatusQuery>(_capabilityDeletionStatusQuery);
         application.ReplaceService<IMessagingService>(new StubMessagingService());

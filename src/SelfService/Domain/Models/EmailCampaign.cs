@@ -305,9 +305,26 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
         string recipientLogId,
         string recipientEmail,
         string renderedSubject,
-        string renderedHtml
+        string renderedHtml,
+        List<InlineEmailImage>? inlineImages = null
     )
     {
+        if (inlineImages is { Count: > 0 })
+        {
+            Raise(
+                new EmailCampaignSendRequestedWithInlineImages
+                {
+                    EmailSendId = Id.ToString(),
+                    RecipientLogId = recipientLogId,
+                    RecipientEmail = recipientEmail,
+                    Subject = renderedSubject,
+                    HtmlBody = renderedHtml,
+                    InlineImages = inlineImages,
+                }
+            );
+            return;
+        }
+
         Raise(
             new EmailCampaignSendRequested
             {

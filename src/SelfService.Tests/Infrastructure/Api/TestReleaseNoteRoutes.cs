@@ -1,4 +1,6 @@
 using System.Text.Json;
+using Moq;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 using SelfService.Tests.TestDoubles;
@@ -14,6 +16,7 @@ public class TestReleaseNoteRoutes
 
         await using var application = new ApiApplicationBuilder()
             .WithReleaseNoteRepository(new StubReleaseNoteRepository(stubReleaseNote))
+            .WithContentImageService(Mock.Of<IContentImageService>())
             .Build();
 
         using var client = application.CreateClient();
@@ -34,7 +37,9 @@ public class TestReleaseNoteRoutes
     [Fact]
     public async Task get_release_note_list_returns_expected_permissions_on_create_link()
     {
-        await using var application = new ApiApplicationBuilder().Build();
+        await using var application = new ApiApplicationBuilder()
+            .WithContentImageService(Mock.Of<IContentImageService>())
+            .Build();
 
         using var client = application.CreateClient();
         var response = await client.GetAsync($"/release-notes");

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SelfService.Application;
 using SelfService.Domain.Models;
 using SelfService.Domain.Services;
 using SelfService.Infrastructure.Api.Capabilities;
@@ -13,16 +14,19 @@ public class ReleaseNotesController : ControllerBase
     private readonly ApiResourceFactory _apiResourceFactory;
     private readonly IReleaseNoteService _releaseNoteService;
     private readonly IAuthorizationService _authorizationService;
+    private readonly IContentImageService _contentImageService;
 
     public ReleaseNotesController(
         ApiResourceFactory apiResourceFactory,
         IReleaseNoteService releaseNoteService,
-        IAuthorizationService authorizationService
+        IAuthorizationService authorizationService,
+        IContentImageService contentImageService
     )
     {
         _apiResourceFactory = apiResourceFactory;
         _releaseNoteService = releaseNoteService;
         _authorizationService = authorizationService;
+        _contentImageService = contentImageService;
     }
 
     [HttpGet("")]
@@ -48,7 +52,13 @@ public class ReleaseNotesController : ControllerBase
                 releaseNotes = releaseNotes.Where(r => r.IsActive);
             }
             releaseNotes = releaseNotes.OrderByDescending(r => r.ReleaseDate);
-            return Ok(_apiResourceFactory.Convert(releaseNotes));
+            var resource = _apiResourceFactory.Convert(releaseNotes);
+            foreach (var item in resource.Items)
+            {
+                await ResolveImagesAsync(item);
+            }
+
+            return Ok(resource);
         }
         catch (Exception e)
         {
@@ -99,7 +109,7 @@ public class ReleaseNotesController : ControllerBase
                 1,
                 request.IsActive
             );
-            return Ok(_apiResourceFactory.Convert(newNote));
+            return Ok(await ResolveImagesAsync(_apiResourceFactory.Convert(newNote)));
         }
         catch (Exception e)
         {
@@ -136,6 +146,13 @@ public class ReleaseNotesController : ControllerBase
                 );
             }
             var title = request.Title?.Trim()!;
+
+            request.Content = await _contentImageService.RestoreReferencesAsync(
+                ContentImageOwnerType.ReleaseNote,
+                (Guid)ReleaseNoteId.Parse(id),
+                request.Content!,
+                HttpContext.RequestAborted
+            );
 
             await _releaseNoteService.UpdateReleaseNote(
                 ReleaseNoteId.Parse(id),
@@ -185,7 +202,12 @@ public class ReleaseNotesController : ControllerBase
                     }
                 );
             }
-            return Ok(_apiResourceFactory.Convert(releaseNote));
+            if (!releaseNote.IsActive && !_authorizationService.IsAuthorizedToListDraftReleaseNotes(User.ToPortalUser()))
+            {
+                return Unauthorized();
+            }
+
+            return Ok(await ResolveImagesAsync(_apiResourceFactory.Convert(releaseNote)));
         }
         catch (Exception e)
         {
@@ -258,6 +280,11 @@ public class ReleaseNotesController : ControllerBase
 
         try
         {
+            await _contentImageService.DeleteForOwnerAsync(
+                ContentImageOwnerType.ReleaseNote,
+                (Guid)parsedId,
+                HttpContext.RequestAborted
+            );
             await _releaseNoteService.RemoveReleaseNote(parsedId);
             return NoContent();
         }
@@ -267,5 +294,22 @@ public class ReleaseNotesController : ControllerBase
                 new ProblemDetails { Title = "Uncaught Exception", Detail = $"RemoveReleaseNote: {e.Message}." }
             );
         }
+    }
+
+    private async Task<ReleaseNoteApiResource> ResolveImagesAsync(ReleaseNoteApiResource resource)
+    {
+        if (ContentImageReference.FindIds(resource.Content).Count == 0)
+        {
+            return resource;
+        }
+
+        Response.Headers.CacheControl = "private, no-store";
+        resource.Content = await _contentImageService.ResolveReferencesAsync(
+            ContentImageOwnerType.ReleaseNote,
+            Guid.Parse(resource.Id),
+            resource.Content,
+            HttpContext.RequestAborted
+        );
+        return resource;
     }
 }
