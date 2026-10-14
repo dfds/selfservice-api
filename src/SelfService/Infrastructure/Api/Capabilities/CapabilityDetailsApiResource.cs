@@ -29,6 +29,7 @@ public class CapabilityDetailsApiResource
         public ResourceLink LeaveCapability { get; set; }
         public ResourceLink AwsAccount { get; set; }
         public ResourceLink AwsAccountInformation { get; set; }
+        public ResourceLink KubernetesAccess { get; set; }
         public ResourceLink AzureResources { get; set; }
         public ResourceLink RequestCapabilityDeletion { get; set; }
         public ResourceLink CancelCapabilityDeletionRequest { get; set; }
@@ -51,6 +52,7 @@ public class CapabilityDetailsApiResource
             ResourceLink leaveCapability,
             ResourceLink awsAccount,
             ResourceLink awsAccountInformation,
+            ResourceLink kubernetesAccess,
             ResourceLink azureResources,
             ResourceLink requestCapabilityDeletion,
             ResourceLink cancelCapabilityDeletionRequest,
@@ -72,6 +74,7 @@ public class CapabilityDetailsApiResource
             LeaveCapability = leaveCapability;
             AwsAccount = awsAccount;
             AwsAccountInformation = awsAccountInformation;
+            KubernetesAccess = kubernetesAccess;
             AzureResources = azureResources;
             RequestCapabilityDeletion = requestCapabilityDeletion;
             CancelCapabilityDeletionRequest = cancelCapabilityDeletionRequest;

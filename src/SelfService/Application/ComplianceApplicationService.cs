@@ -13,6 +13,7 @@ public class ComplianceApplicationService : IComplianceApplicationService
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly IMembershipRepository _membershipRepository;
+    private readonly IKubernetesAccessRepository _kubernetesAccessRepository;
     private readonly RequirementsDbContext _requirementsDbContext;
 
     private static readonly string[] PlaceholderCategories = Array.Empty<string>();
@@ -41,12 +42,14 @@ public class ComplianceApplicationService : IComplianceApplicationService
         ICapabilityRepository capabilityRepository,
         IAwsAccountRepository awsAccountRepository,
         IMembershipRepository membershipRepository,
+        IKubernetesAccessRepository kubernetesAccessRepository,
         RequirementsDbContext requirementsDbContext
     )
     {
         _capabilityRepository = capabilityRepository;
         _awsAccountRepository = awsAccountRepository;
         _membershipRepository = membershipRepository;
+        _kubernetesAccessRepository = kubernetesAccessRepository;
         _requirementsDbContext = requirementsDbContext;
     }
 
@@ -86,8 +89,8 @@ public class ComplianceApplicationService : IComplianceApplicationService
 
     private async Task<bool> HasKubernetesContext(CapabilityId capabilityId)
     {
-        var awsAccount = await _awsAccountRepository.FindBy(capabilityId);
-        return awsAccount?.KubernetesLink.LinkedAt is not null;
+        var accesses = await _kubernetesAccessRepository.GetAllBy(capabilityId);
+        return accesses.Any(a => a.Status == KubernetesAccessStatus.Active);
     }
 
     public async Task<CostCentreComplianceResult> GetCostCentreCompliance(string costCentre)
@@ -196,9 +199,9 @@ public class ComplianceApplicationService : IComplianceApplicationService
                 g => g.GroupBy(m => m.RequirementId).ToDictionary(rg => rg.Key, rg => rg.ToList())
             );
 
-        var awsAccounts = await _awsAccountRepository.GetByCapabilityIds(matchingCapabilities.Select(c => c.Id));
-        var k8sCapabilityIds = awsAccounts
-            .Where(a => a.KubernetesLink.LinkedAt is not null)
+        var k8sAccesses = await _kubernetesAccessRepository.GetAllBy(matchingCapabilities.Select(c => c.Id));
+        var k8sCapabilityIds = k8sAccesses
+            .Where(a => a.Status == KubernetesAccessStatus.Active)
             .Select(a => a.CapabilityId.ToString())
             .ToHashSet();
 
