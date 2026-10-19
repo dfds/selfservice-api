@@ -48,8 +48,8 @@ public class TestUserRole
         new[] { "foo", "bar", "baz", "qux" }.Select(value => new[] { value });
 
     public static IEnumerable<object[]> ValidCloudEngineerInput =>
-        new[] { "Cloud.Engineer", "Cloud Engineer", "Cloud_Engineer", "Cloud-Engineer" }.Select(value =>
-            new[] { value }
+        new[] { "Cloud.Engineer", "Cloud Engineer", "Cloud_Engineer", "Cloud-Engineer", "CloudEngineer" }.Select(
+            value => new[] { value }
         );
 
     public static IEnumerable<object[]> InvalidInput =>

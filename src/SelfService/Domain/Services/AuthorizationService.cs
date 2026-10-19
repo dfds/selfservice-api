@@ -620,6 +620,11 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser, "create-news-item");
     }
 
+    public bool CanCreatePrivateAsset(PortalUser portalUser)
+    {
+        return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.PrivateAssets, "create");
+    }
+
     public bool CanUpdateNewsItem(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "update-news-item");

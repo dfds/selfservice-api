@@ -34,7 +34,7 @@ public class UserRole : ValueObject
             return false;
         }
 
-        if (Regex.IsMatch(text, @"^\s*Cloud[-_\.\s]Engineer\s*$"))
+        if (Regex.IsMatch(text, @"^\s*Cloud(?:[-_\.\s]+)?Engineer\s*$"))
         {
             role = CloudEngineer;
         }
