@@ -1,10 +1,29 @@
-﻿using SelfService.Domain.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using SelfService.Domain.Models;
+using SelfService.Infrastructure.Persistence;
+using SelfService.Tests.Builders;
 using SelfService.Tests.Comparers;
 
 namespace SelfService.Tests.Infrastructure.Persistence;
 
 public class TestPostgresMappings
 {
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task privateasset()
+    {
+        await using var factory = new ExternalDatabaseFactory();
+        var db = await factory.CreateDbContext();
+        var stub = A.PrivateAsset.Build();
+
+        await db.PrivateAssets.AddAsync(stub);
+        await db.SaveChangesAsync();
+
+        var storedVersion = await db.PrivateAssets.FindAsync(stub.Id);
+
+        Assert.Equal(expected: stub, actual: storedVersion, comparer: new PrivateAssetComparer());
+    }
+
     [Fact]
     [Trait("Category", "Integration")]
     public async Task capability()

@@ -33,14 +33,19 @@ public class EmailCampaignController : ControllerBase
                 new ProblemDetails { Title = "Invalid Id", Detail = $"{id} is not a valid email campaign id." }
             );
 
-    private IActionResult? ValidateCampaignRequest(CreateEmailCampaignRequest request) =>
-        string.IsNullOrEmpty(request.Name)
-        || string.IsNullOrEmpty(request.Subject)
-        || string.IsNullOrEmpty(request.ContentJson)
-            ? BadRequest(
+    private IActionResult? ValidateCampaignRequest(CreateEmailCampaignRequest request)
+    {
+        if (
+            string.IsNullOrEmpty(request.Name)
+            || string.IsNullOrEmpty(request.Subject)
+            || string.IsNullOrEmpty(request.ContentJson)
+        )
+            return BadRequest(
                 new ProblemDetails { Title = "Invalid Request", Detail = "Name, subject, and content are required." }
-            )
-            : null;
+            );
+
+        return null;
+    }
 
     [HttpGet("variables")]
     public async Task<IActionResult> GetTemplateVariables([FromQuery] string? targetType)

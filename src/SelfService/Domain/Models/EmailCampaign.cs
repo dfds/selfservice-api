@@ -5,6 +5,29 @@ namespace SelfService.Domain.Models;
 
 public class EmailCampaign : AggregateRoot<EmailCampaignId>
 {
+    // Private constructor for EF Core
+    private EmailCampaign()
+    {
+        TargetType = EmailCampaignTargetType.Capability;
+        Name = string.Empty;
+        Subject = string.Empty;
+        ContentJson = string.Empty;
+        ContentHtml = null;
+        AudienceJson = string.Empty;
+        RecipientFilter = null;
+        ScheduleType = EmailCampaignScheduleType.Immediate;
+        ScheduledAt = null;
+        CronExpression = null;
+        Status = EmailCampaignStatus.Draft;
+        CreatedAt = DateTime.UtcNow;
+        CreatedBy = string.Empty;
+        ModifiedAt = DateTime.UtcNow;
+        ModifiedBy = string.Empty;
+        SentAt = null;
+        CancelledAt = null;
+        IsDeleted = false;
+    }
+
     public EmailCampaign(
         EmailCampaignId id,
         string name,
@@ -305,7 +328,8 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
         string recipientLogId,
         string recipientEmail,
         string renderedSubject,
-        string renderedHtml
+        string renderedHtml,
+        IEnumerable<EmailDeliveryAttachment> attachments
     )
     {
         Raise(
@@ -316,6 +340,15 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
                 RecipientEmail = recipientEmail,
                 Subject = renderedSubject,
                 HtmlBody = renderedHtml,
+                Attachments = attachments
+                    .Select(attachment => new EmailDeliveryAttachment
+                    {
+                        ContentId = attachment.ContentId,
+                        StorageKey = attachment.StorageKey,
+                        AssetId = attachment.AssetId,
+                        IsInline = attachment.IsInline,
+                    })
+                    .ToList(),
             }
         );
     }
