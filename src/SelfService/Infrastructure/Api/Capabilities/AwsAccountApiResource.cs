@@ -5,9 +5,9 @@ namespace SelfService.Infrastructure.Api.Capabilities;
 public class AwsAccountApiResource
 {
     public string Id { get; set; }
+    public string? Environment { get; set; }
     public string? AccountId { get; set; }
     public string? RoleEmail { get; set; }
-    public string? Namespace { get; set; }
     public string? Status { get; set; }
 
     [JsonPropertyName("_links")]
@@ -25,17 +25,17 @@ public class AwsAccountApiResource
 
     public AwsAccountApiResource(
         string id,
+        string? environment,
         string? accountId,
         string? roleEmail,
-        string? @namespace,
         string? status,
         AwsAccountLinks links
     )
     {
         Id = id;
+        Environment = environment;
         AccountId = accountId;
         RoleEmail = roleEmail;
-        Namespace = @namespace;
         Status = status;
         Links = links;
     }

@@ -13,7 +13,21 @@ public class StubAwsAccountRepository : IAwsAccountRepository
 
     public Task<AwsAccount?> FindBy(CapabilityId capabilityId)
     {
-        return Task.FromResult(_awsAccount);
+        return Task.FromResult<AwsAccount?>(_awsAccount);
+    }
+
+    public Task<AwsAccount?> FindBy(CapabilityId capabilityId, string environment)
+    {
+        if (_awsAccount?.Environment == environment)
+            return Task.FromResult<AwsAccount?>(_awsAccount);
+        return Task.FromResult<AwsAccount?>(null);
+    }
+
+    public Task<List<AwsAccount>> GetAllBy(CapabilityId capabilityId)
+    {
+        if (_awsAccount?.CapabilityId == capabilityId)
+            return Task.FromResult(new List<AwsAccount> { _awsAccount });
+        return Task.FromResult(new List<AwsAccount>());
     }
 
     public Task<List<AwsAccount>> GetAll()
@@ -39,5 +53,24 @@ public class StubAwsAccountRepository : IAwsAccountRepository
     public Task<bool> Exists(CapabilityId capabilityId)
     {
         return Task.FromResult(_awsAccount != null);
+    }
+
+    public Task<bool> Exists(CapabilityId capabilityId, string environment)
+    {
+        if (_awsAccount == null)
+            return Task.FromResult(false);
+        return Task.FromResult(_awsAccount.Environment == environment);
+    }
+
+    public Task<AwsAccount?> FindBy(AwsAccountId id)
+    {
+        if (_awsAccount?.Id == id)
+            return Task.FromResult<AwsAccount?>(_awsAccount);
+        return Task.FromResult<AwsAccount?>(null);
+    }
+
+    public Task<int> CountBy(CapabilityId capabilityId)
+    {
+        return Task.FromResult(_awsAccount?.CapabilityId == capabilityId ? 1 : 0);
     }
 }

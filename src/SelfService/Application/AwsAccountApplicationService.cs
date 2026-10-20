@@ -37,14 +37,24 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
     }
 
     [TransactionalBoundary, Outboxed]
-    public async Task<AwsAccountId> RequestAwsAccount(CapabilityId capabilityId, UserId requestedBy)
+    public async Task<AwsAccountId> RequestAwsAccount(CapabilityId capabilityId, string environment, UserId requestedBy)
     {
-        if (await _awsAccountRepository.Exists(capabilityId))
+        if (await _awsAccountRepository.Exists(capabilityId, environment))
         {
-            throw new AlreadyHasAwsAccountException($"Capability {capabilityId} already has an AWS account");
+            throw new AlreadyHasAwsAccountException(
+                $"Capability {capabilityId} already has an AWS account for environment {environment}"
+            );
         }
 
-        var account = AwsAccount.RequestNew(capabilityId, _systemTime.Now, requestedBy);
+        var accountCount = await _awsAccountRepository.CountBy(capabilityId);
+        if (accountCount >= AwsAccountConfiguration.MaxAccountsPerCapability)
+        {
+            throw new AwsAccountLimitExceededException(
+                $"Capability {capabilityId} has reached the maximum limit of {AwsAccountConfiguration.MaxAccountsPerCapability} AWS accounts"
+            );
+        }
+
+        var account = AwsAccount.RequestNew(capabilityId, environment, _systemTime.Now, requestedBy);
 
         await _awsAccountRepository.Add(account);
 
@@ -57,14 +67,6 @@ public class AwsAccountApplicationService : IAwsAccountApplicationService
         var account = await _awsAccountRepository.Get(id);
 
         account.RegisterRealAwsAccount(realAwsAccountId, roleEmail, _systemTime.Now);
-    }
-
-    [TransactionalBoundary, Outboxed]
-    public async Task LinkKubernetesNamespace(AwsAccountId id, string? @namespace)
-    {
-        var account = await _awsAccountRepository.Get(id);
-
-        account.LinkKubernetesNamespace(@namespace, _systemTime.Now);
     }
 
     private class ContextAddedToCapabilityData
