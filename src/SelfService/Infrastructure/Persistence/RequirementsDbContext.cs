@@ -86,6 +86,7 @@ public class RequirementsDbContext : DbContext
             cfg.Property(x => x.Help);
             cfg.Property(x => x.Type);
             cfg.Property(x => x.Date);
+            cfg.Property(x => x.Item);
             cfg.Property(x => x.UpdatedAt);
             cfg.Property(x => x.Labels).HasColumnType("jsonb");
         });
