@@ -680,13 +680,6 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.OwnerType).HasConversion<string>().HasMaxLength(64).IsRequired();
             cfg.Property(x => x.ContentId).HasMaxLength(255).IsRequired();
             cfg.Property(x => x.IsInline).IsRequired();
-            cfg.HasIndex(x => new
-                {
-                    x.OwnerType,
-                    x.OwnerId,
-                    x.ContentId,
-                })
-                .IsUnique();
         });
 
         modelBuilder.Entity<EmailCampaign>(cfg =>

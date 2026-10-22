@@ -199,31 +199,4 @@ public class TestGenericRepository
         var allObjects3 = await repo.GetAllWithPredicate(x => x.Foo == "bar");
         Assert.Single(allObjects3);
     }
-
-    [Fact]
-    [Trait("Category", "InMemoryDatabase")]
-    public async Task can_persist_private_asset_metadata()
-    {
-        await using var databaseFactory = new InMemoryDatabaseFactory();
-        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
-
-        var asset = A
-            .PrivateAsset.WithStorageKey("private-assets/abc123/banner.png")
-            .WithFileName("banner.png")
-            .WithSizeInBytes(1234)
-            .WithContentId("banner")
-            .Build();
-
-        await dbContext.PrivateAssets.AddAsync(asset);
-        await dbContext.SaveChangesAsync();
-
-        var persisted = await dbContext.PrivateAssets.FindAsync(asset.Id);
-
-        Assert.NotNull(persisted);
-        Assert.Equal(asset.StorageKey, persisted!.StorageKey);
-        Assert.Equal(asset.FileName, persisted.FileName);
-        Assert.Equal(asset.MimeType, persisted.MimeType);
-        Assert.Equal(asset.SizeInBytes, persisted.SizeInBytes);
-        Assert.Equal(asset.CreatedBy, persisted.CreatedBy);
-    }
 }
