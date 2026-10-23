@@ -11,4 +11,5 @@ public class EmailCampaignSendRequested : IDomainEvent
     public string? RecipientEmail { get; set; }
     public string? Subject { get; set; }
     public string? HtmlBody { get; set; }
+    public List<EmailDeliveryAttachment> Attachments { get; set; } = new();
 }

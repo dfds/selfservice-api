@@ -3,6 +3,7 @@ using SelfService.Application;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Capabilities;
+using SelfService.Infrastructure.Api.PrivateAssets;
 
 namespace SelfService.Infrastructure.Api.EmailCampaigns;
 
@@ -12,10 +13,15 @@ namespace SelfService.Infrastructure.Api.EmailCampaigns;
 public class EmailCampaignController : ControllerBase
 {
     private readonly IEmailCampaignApplicationService _emailCampaignApplicationService;
+    private readonly IPrivateAssetApplicationService _privateAssetApplicationService;
 
-    public EmailCampaignController(IEmailCampaignApplicationService emailCampaignApplicationService)
+    public EmailCampaignController(
+        IEmailCampaignApplicationService emailCampaignApplicationService,
+        IPrivateAssetApplicationService privateAssetApplicationService
+    )
     {
         _emailCampaignApplicationService = emailCampaignApplicationService;
+        _privateAssetApplicationService = privateAssetApplicationService;
     }
 
     private const string DefaultAudienceJson = "{\"mode\":\"all\"}";
@@ -33,14 +39,19 @@ public class EmailCampaignController : ControllerBase
                 new ProblemDetails { Title = "Invalid Id", Detail = $"{id} is not a valid email campaign id." }
             );
 
-    private IActionResult? ValidateCampaignRequest(CreateEmailCampaignRequest request) =>
-        string.IsNullOrEmpty(request.Name)
-        || string.IsNullOrEmpty(request.Subject)
-        || string.IsNullOrEmpty(request.ContentJson)
-            ? BadRequest(
+    private IActionResult? ValidateCampaignRequest(CreateEmailCampaignRequest request)
+    {
+        if (
+            string.IsNullOrEmpty(request.Name)
+            || string.IsNullOrEmpty(request.Subject)
+            || string.IsNullOrEmpty(request.ContentJson)
+        )
+            return BadRequest(
                 new ProblemDetails { Title = "Invalid Request", Detail = "Name, subject, and content are required." }
-            )
-            : null;
+            );
+
+        return null;
+    }
 
     [HttpGet("variables")]
     public async Task<IActionResult> GetTemplateVariables([FromQuery] string? targetType)
@@ -104,7 +115,7 @@ public class EmailCampaignController : ControllerBase
     }
 
     [HttpGet("{id:required}")]
-    public async Task<IActionResult> GetById(string id)
+    public async Task<IActionResult> GetById(string id, CancellationToken cancellationToken)
     {
         if (!IsAuthorized())
             return Unauthorized();
@@ -121,7 +132,9 @@ public class EmailCampaignController : ControllerBase
                     new ProblemDetails { Title = "Not Found", Detail = $"Email campaign with id {id} does not exist." }
                 );
             }
-            return Ok(ToApiResource(campaign));
+            var resource = ToApiResource(campaign);
+            resource.Images = await GetCampaignImages(campaign.Id, cancellationToken);
+            return Ok(resource);
         }
         catch (Exception e)
         {
@@ -383,7 +396,11 @@ public class EmailCampaignController : ControllerBase
     }
 
     [HttpPost("{id:required}/preview")]
-    public async Task<IActionResult> Preview(string id, [FromBody] PreviewRequest? request)
+    public async Task<IActionResult> Preview(
+        string id,
+        [FromBody] PreviewRequest? request,
+        CancellationToken cancellationToken
+    )
     {
         if (!IsAuthorized())
             return Unauthorized();
@@ -396,6 +413,9 @@ public class EmailCampaignController : ControllerBase
             var campaign = await _emailCampaignApplicationService.GetById(parsedId);
             if (campaign == null)
                 return NotFound(new ProblemDetails { Title = "Not Found", Detail = $"Campaign '{id}' not found." });
+
+            // Inline images are identical across every rendered preview, so resolve their URLs once.
+            var inlineImageUrls = await GetInlineImageUrls(campaign.Id, cancellationToken);
 
             if (campaign.TargetType == EmailCampaignTargetType.User)
             {
@@ -413,7 +433,7 @@ public class EmailCampaignController : ControllerBase
                                 Email = p.Email,
                                 DisplayName = p.DisplayName,
                                 Subject = p.Subject,
-                                Html = p.Html,
+                                Html = ReplaceInlineImageReferences(p.Html, inlineImageUrls),
                             })
                             .ToList(),
                     }
@@ -430,7 +450,7 @@ public class EmailCampaignController : ControllerBase
                             CapabilityId = p.CapabilityId,
                             CapabilityName = p.CapabilityName,
                             Subject = p.Subject,
-                            Html = p.Html,
+                            Html = ReplaceInlineImageReferences(p.Html, inlineImageUrls),
                         })
                         .ToList(),
                 }
@@ -695,6 +715,65 @@ public class EmailCampaignController : ControllerBase
             );
         parsed = tt;
         return null;
+    }
+
+    // Maps each inline image's content-id to a viewable preview URL so cid: references can be rendered in a browser.
+    private async Task<Dictionary<string, string>> GetInlineImageUrls(
+        Guid campaignId,
+        CancellationToken cancellationToken
+    )
+    {
+        var assets = await _privateAssetApplicationService.GetByOwner(campaignId, PrivateAssetOwnerType.EmailCampaign);
+        var urls = new Dictionary<string, string>();
+        foreach (var asset in assets)
+        {
+            if (!asset.IsInline)
+                continue;
+
+            var url = await _privateAssetApplicationService.GetPreviewUrl(asset, cancellationToken);
+            if (!string.IsNullOrEmpty(url))
+                urls[asset.ContentId] = url;
+        }
+        return urls;
+    }
+
+    private static string ReplaceInlineImageReferences(string html, IReadOnlyDictionary<string, string> contentIdToUrl)
+    {
+        if (string.IsNullOrEmpty(html) || contentIdToUrl.Count == 0)
+            return html;
+
+        foreach (var (contentId, url) in contentIdToUrl)
+            html = html.Replace($"cid:{contentId}", url);
+        return html;
+    }
+
+    private async Task<List<PrivateAssetUploadResponse>> GetCampaignImages(
+        Guid campaignId,
+        CancellationToken cancellationToken
+    )
+    {
+        var assets = await _privateAssetApplicationService.GetByOwner(campaignId, PrivateAssetOwnerType.EmailCampaign);
+        var images = new List<PrivateAssetUploadResponse>();
+        foreach (var asset in assets)
+        {
+            images.Add(
+                new PrivateAssetUploadResponse
+                {
+                    AssetId = asset.Id.ToString(),
+                    OwnerId = asset.OwnerId,
+                    OwnerType = asset.OwnerType,
+                    ContentId = asset.ContentId,
+                    IsInline = asset.IsInline,
+                    StorageKey = asset.StorageKey,
+                    FileName = asset.FileName,
+                    MimeType = asset.MimeType,
+                    SizeInBytes = asset.SizeInBytes,
+                    CreatedAt = asset.CreatedAt,
+                    Url = await _privateAssetApplicationService.GetPreviewUrl(asset, cancellationToken),
+                }
+            );
+        }
+        return images;
     }
 
     private static EmailCampaignApiResource ToApiResource(EmailCampaign b) =>

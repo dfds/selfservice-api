@@ -230,6 +230,9 @@
                     "update",
                     "delete"
                 ],
+                "private-assets": [
+                    "create"
+                ],
                 "service-catalogue": [
                     "read"
                 ],

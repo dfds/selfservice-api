@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Converters;
+using SelfService.Tests.Builders;
 
 namespace SelfService.Tests.Infrastructure.Persistence;
 
