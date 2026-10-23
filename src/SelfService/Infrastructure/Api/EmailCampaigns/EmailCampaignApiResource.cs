@@ -1,5 +1,7 @@
 namespace SelfService.Infrastructure.Api.EmailCampaigns;
 
+using SelfService.Infrastructure.Api.PrivateAssets;
+
 public class EmailCampaignApiResource
 {
     public string Id { get; set; } = "";
@@ -20,4 +22,5 @@ public class EmailCampaignApiResource
     public string ModifiedBy { get; set; } = "";
     public DateTime? SentAt { get; set; }
     public DateTime? CancelledAt { get; set; }
+    public List<PrivateAssetUploadResponse> Images { get; set; } = new();
 }

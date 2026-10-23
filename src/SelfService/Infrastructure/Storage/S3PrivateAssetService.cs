@@ -1,6 +1,5 @@
 using Amazon.S3;
 using Amazon.S3.Model;
-using Microsoft.Extensions.Configuration;
 using SelfService.Domain.Services;
 
 namespace SelfService.Infrastructure.Storage;
@@ -10,12 +9,10 @@ public class S3PrivateAssetService : IPrivateAssetService
     private readonly IAmazonS3 _s3Client;
     private readonly string _bucketName;
 
-    public S3PrivateAssetService(IAmazonS3 s3Client, IConfiguration configuration)
+    public S3PrivateAssetService(IAmazonS3 s3Client, PrivateAssetStorageOptions options)
     {
         _s3Client = s3Client;
-        _bucketName =
-            configuration["SS_PRIVATE_ASSET_BUCKET"]
-            ?? throw new InvalidOperationException("SS_PRIVATE_ASSET_BUCKET configuration is required but not set.");
+        _bucketName = options.BucketName;
     }
 
     public async Task<string> UploadAsync(
@@ -66,7 +63,19 @@ public class S3PrivateAssetService : IPrivateAssetService
             Expires = DateTime.UtcNow.Add(duration),
         };
 
-        return await Task.FromResult(_s3Client.GetPreSignedURL(request));
+        var url = _s3Client.GetPreSignedURL(request);
+
+        // The SDK always presigns with https; downgrade to match an http endpoint (e.g. the local S3 mock).
+        // Only the host is signed (SignedHeaders=host), so changing the scheme does not invalidate the signature.
+        if (
+            _s3Client.Config.ServiceURL?.StartsWith("http://", StringComparison.OrdinalIgnoreCase) == true
+            && url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            url = string.Concat("http://", url.AsSpan("https://".Length));
+        }
+
+        return await Task.FromResult(url);
     }
 
     private static string SanitizeFileName(string input)
