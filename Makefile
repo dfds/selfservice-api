@@ -80,6 +80,29 @@ dev:
 run:
 	@cd src && dotnet run --configuration $(CONFIGURATION) --project $(APP_PROJECT)
 
+# Like `run`, but merges the launch profile's environmentVariables and applicationUrl
+# with the shell environment; variables already set in the shell take precedence.
+# `dotnet run` alone either lets the profile override the shell or ignores it
+# (--no-launch-profile). LAUNCH_PROFILE selects the profile (default: the first one).
+LAUNCH_SETTINGS=SelfService/Properties/launchSettings.json
+run-with-env: SHELL := /bin/bash
+run-with-env:
+	@set -euo pipefail; cd src; \
+	command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }; \
+	profile="$${LAUNCH_PROFILE:-$$(jq -r '.profiles | keys_unsorted[0]' $(LAUNCH_SETTINGS))}"; \
+	jq -e --arg p "$$profile" '.profiles[$$p]' $(LAUNCH_SETTINGS) >/dev/null \
+		|| { echo "launch profile '$$profile' not found in $(LAUNCH_SETTINGS)" >&2; exit 1; }; \
+	while IFS= read -r -d '' key && IFS= read -r -d '' value; do \
+		if [[ -z "$${!key+x}" ]]; then export "$$key=$$value"; fi; \
+	done < <(jq -j --arg p "$$profile" \
+		'.profiles[$$p].environmentVariables // {} | to_entries[] | .key, "\u0000", (.value | tostring), "\u0000"' \
+		$(LAUNCH_SETTINGS)); \
+	if [[ -z "$${ASPNETCORE_URLS+x}" ]]; then \
+		url="$$(jq -r --arg p "$$profile" '.profiles[$$p].applicationUrl // empty' $(LAUNCH_SETTINGS))"; \
+		if [[ -n "$$url" ]]; then export ASPNETCORE_URLS="$$url"; fi; \
+	fi; \
+	exec dotnet run --configuration $(CONFIGURATION) --project $(APP_PROJECT) --no-launch-profile
+
 newmigration:
 	@read -p "Enter name of migration (e.g. add-table-for-xxx):" REPLY; \
 	   echo "-- $(shell date +'%4Y-%m-%d %H:%M:%S') : $$REPLY" > db/migrations/$(shell date +'%4Y%m%d%H%M%S')_$$REPLY.sql
