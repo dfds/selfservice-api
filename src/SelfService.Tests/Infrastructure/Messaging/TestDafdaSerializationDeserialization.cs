@@ -72,6 +72,15 @@ public class TestDafdaSerializationDeserialization
     }
 
     [Fact]
+    public async Task dafda_serialize_deserialize_private_asset_removed()
+    {
+        await dafda_serialize_deserialize(new PrivateAssetRemoved());
+        await dafda_serialize_deserialize(
+            new PrivateAssetRemoved { AssetId = "asset-123", StorageKey = "private-assets/abc/banner.png" }
+        );
+    }
+
+    [Fact]
     public async Task dafda_serialize_deserialize_membership_application_cancelled()
     {
         await dafda_serialize_deserialize(new MembershipApplicationHasBeenCancelled());

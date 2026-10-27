@@ -14,4 +14,6 @@ public interface IPrivateAssetService
         TimeSpan? ttl = null,
         CancellationToken cancellationToken = default
     );
+
+    Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default);
 }

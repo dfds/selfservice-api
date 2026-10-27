@@ -527,6 +527,10 @@ public class TestEmailCampaignApplicationService
 
         assets.Verify(repository => repository.Remove(remove), Times.Once);
         assets.Verify(repository => repository.Remove(keep), Times.Never);
+
+        var removedEvent = Assert.Single(campaign.GetEvents().OfType<PrivateAssetRemoved>());
+        Assert.Equal(remove.Id.ToString(), removedEvent.AssetId);
+        Assert.Equal(remove.StorageKey, removedEvent.StorageKey);
     }
 
     [Fact]

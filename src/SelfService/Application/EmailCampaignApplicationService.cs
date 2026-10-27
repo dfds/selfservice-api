@@ -115,7 +115,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         return await _emailCampaignRepository.GetAll();
     }
 
-    [TransactionalBoundary]
+    [TransactionalBoundary, Outboxed]
     public async Task UpdateDraft(
         EmailCampaignId id,
         string name,
@@ -152,11 +152,12 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             campaign.UpdateScheduleFields(scheduleType, scheduledAt, cronExpression);
         }
 
-        await PruneAssets(id, assetIds);
+        await PruneAssets(campaign, assetIds);
     }
 
-    // A null list leaves stored assets untouched; otherwise any stored asset not in the list is removed.
-    private async Task PruneAssets(EmailCampaignId id, IReadOnlyCollection<string>? assetIds)
+    // A null list leaves stored assets untouched; otherwise any stored asset not in the list is removed,
+    // raising an event so its stored object can be cleaned up asynchronously.
+    private async Task PruneAssets(EmailCampaign campaign, IReadOnlyCollection<string>? assetIds)
     {
         if (assetIds is null)
             return;
@@ -165,10 +166,15 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             assetIds.Where(assetId => !string.IsNullOrWhiteSpace(assetId)),
             StringComparer.OrdinalIgnoreCase
         );
-        foreach (var asset in await _privateAssetRepository.GetByOwner(PrivateAssetOwnerType.EmailCampaign, id))
+        foreach (
+            var asset in await _privateAssetRepository.GetByOwner(PrivateAssetOwnerType.EmailCampaign, campaign.Id)
+        )
         {
-            if (!keep.Contains(asset.Id.ToString()))
-                await _privateAssetRepository.Remove(asset);
+            if (keep.Contains(asset.Id.ToString()))
+                continue;
+
+            await _privateAssetRepository.Remove(asset);
+            campaign.RaisePrivateAssetRemoved(asset.Id.ToString(), asset.StorageKey);
         }
     }
 

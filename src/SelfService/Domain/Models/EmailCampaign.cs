@@ -170,6 +170,11 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
         ModifiedBy = modifiedBy;
     }
 
+    public void RaisePrivateAssetRemoved(string assetId, string storageKey)
+    {
+        Raise(new PrivateAssetRemoved { AssetId = assetId, StorageKey = storageKey });
+    }
+
     public void UpdateScheduleFields(
         EmailCampaignScheduleType scheduleType,
         DateTime? scheduledAt,

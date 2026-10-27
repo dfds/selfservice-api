@@ -78,6 +78,18 @@ public class S3PrivateAssetService : IPrivateAssetService
         return await Task.FromResult(url);
     }
 
+    public async Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(storageKey))
+            throw new ArgumentException("Storage key is required.", nameof(storageKey));
+
+        // S3 DeleteObject is idempotent: deleting a missing key still succeeds, so retries are safe.
+        await _s3Client.DeleteObjectAsync(
+            new DeleteObjectRequest { BucketName = _bucketName, Key = storageKey },
+            cancellationToken
+        );
+    }
+
     private static string SanitizeFileName(string input)
     {
         var fileName = Path.GetFileName(input);
