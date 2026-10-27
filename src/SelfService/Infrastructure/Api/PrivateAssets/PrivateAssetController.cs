@@ -52,6 +52,7 @@ public class PrivateAssetController : ControllerBase
 
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
+    [UserActionSkipRequestData]
     [ProducesResponseType(typeof(PrivateAssetUploadResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
