@@ -33,7 +33,8 @@ public interface IEmailCampaignApplicationService
         EmailCampaignScheduleType? scheduleType = null,
         DateTime? scheduledAt = null,
         string? cronExpression = null,
-        EmailCampaignTargetType? targetType = null
+        EmailCampaignTargetType? targetType = null,
+        IReadOnlyCollection<string>? assetIds = null
     );
     Task DeleteDraft(EmailCampaignId id);
     Task<EmailCampaign> DuplicateCampaign(EmailCampaignId sourceId, string createdBy);

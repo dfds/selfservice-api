@@ -238,7 +238,8 @@ public class EmailCampaignController : ControllerBase
                 parsedScheduleType,
                 request.ScheduledAt,
                 request.CronExpression,
-                parsedTargetType
+                parsedTargetType,
+                request.AssetIds
             );
             return NoContent();
         }

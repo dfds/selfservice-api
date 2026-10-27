@@ -7,6 +7,12 @@ public class PrivateAssetRepository(SelfServiceDbContext dbContext) : IPrivateAs
 {
     public async Task Add(PrivateAsset asset) => await dbContext.PrivateAssets.AddAsync(asset);
 
+    public Task Remove(PrivateAsset asset)
+    {
+        dbContext.PrivateAssets.Remove(asset);
+        return Task.CompletedTask;
+    }
+
     public async Task<PrivateAsset?> FindById(PrivateAssetId id) => await dbContext.PrivateAssets.FindAsync(id);
 
     public Task<List<PrivateAsset>> GetByOwner(PrivateAssetOwnerType ownerType, Guid ownerId) =>

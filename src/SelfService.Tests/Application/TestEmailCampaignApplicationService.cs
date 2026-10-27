@@ -499,6 +499,59 @@ public class TestEmailCampaignApplicationService
         Assert.Equal(source.ContentHtml, duplicate.ContentHtml);
     }
 
+    [Fact]
+    public async Task update_draft_prunes_stored_assets_not_in_the_provided_list()
+    {
+        var campaign = DraftCampaign();
+        var keep = Image(campaign);
+        var remove = Image(campaign);
+        var campaigns = new Mock<IEmailCampaignRepository>();
+        campaigns.Setup(repository => repository.FindById(campaign.Id)).ReturnsAsync(campaign);
+        var assets = new Mock<IPrivateAssetRepository>();
+        assets
+            .Setup(repository => repository.GetByOwner(PrivateAssetOwnerType.EmailCampaign, (Guid)campaign.Id))
+            .ReturnsAsync([keep, remove]);
+
+        await BuildService(campaignRepo: campaigns.Object, assetRepo: assets.Object)
+            .UpdateDraft(
+                campaign.Id,
+                "Campaign",
+                "Subject",
+                "{}",
+                "<p></p>",
+                "{\"mode\":\"all\"}",
+                null,
+                "tester",
+                assetIds: new[] { keep.Id.ToString() }
+            );
+
+        assets.Verify(repository => repository.Remove(remove), Times.Once);
+        assets.Verify(repository => repository.Remove(keep), Times.Never);
+    }
+
+    [Fact]
+    public async Task update_draft_leaves_assets_untouched_when_no_asset_list_is_provided()
+    {
+        var campaign = DraftCampaign();
+        var campaigns = new Mock<IEmailCampaignRepository>();
+        campaigns.Setup(repository => repository.FindById(campaign.Id)).ReturnsAsync(campaign);
+        var assets = new Mock<IPrivateAssetRepository>(MockBehavior.Strict);
+
+        await BuildService(campaignRepo: campaigns.Object, assetRepo: assets.Object)
+            .UpdateDraft(
+                campaign.Id,
+                "Campaign",
+                "Subject",
+                "{}",
+                "<p></p>",
+                "{\"mode\":\"all\"}",
+                null,
+                "tester"
+            );
+
+        assets.VerifyNoOtherCalls();
+    }
+
     private static PrivateAsset Image(EmailCampaign owner) =>
         new(
             PrivateAssetId.New(),

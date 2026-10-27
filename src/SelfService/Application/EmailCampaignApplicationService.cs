@@ -128,7 +128,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         EmailCampaignScheduleType? scheduleType = null,
         DateTime? scheduledAt = null,
         string? cronExpression = null,
-        EmailCampaignTargetType? targetType = null
+        EmailCampaignTargetType? targetType = null,
+        IReadOnlyCollection<string>? assetIds = null
     )
     {
         var campaign = await GetRequired(id);
@@ -149,6 +150,25 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         if (scheduleType is not null)
         {
             campaign.UpdateScheduleFields(scheduleType, scheduledAt, cronExpression);
+        }
+
+        await PruneAssets(id, assetIds);
+    }
+
+    // A null list leaves stored assets untouched; otherwise any stored asset not in the list is removed.
+    private async Task PruneAssets(EmailCampaignId id, IReadOnlyCollection<string>? assetIds)
+    {
+        if (assetIds is null)
+            return;
+
+        var keep = new HashSet<string>(
+            assetIds.Where(assetId => !string.IsNullOrWhiteSpace(assetId)),
+            StringComparer.OrdinalIgnoreCase
+        );
+        foreach (var asset in await _privateAssetRepository.GetByOwner(PrivateAssetOwnerType.EmailCampaign, id))
+        {
+            if (!keep.Contains(asset.Id.ToString()))
+                await _privateAssetRepository.Remove(asset);
         }
     }
 
