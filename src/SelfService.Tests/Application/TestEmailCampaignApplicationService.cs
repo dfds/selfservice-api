@@ -538,16 +538,7 @@ public class TestEmailCampaignApplicationService
         var assets = new Mock<IPrivateAssetRepository>(MockBehavior.Strict);
 
         await BuildService(campaignRepo: campaigns.Object, assetRepo: assets.Object)
-            .UpdateDraft(
-                campaign.Id,
-                "Campaign",
-                "Subject",
-                "{}",
-                "<p></p>",
-                "{\"mode\":\"all\"}",
-                null,
-                "tester"
-            );
+            .UpdateDraft(campaign.Id, "Campaign", "Subject", "{}", "<p></p>", "{\"mode\":\"all\"}", null, "tester");
 
         assets.VerifyNoOtherCalls();
     }
