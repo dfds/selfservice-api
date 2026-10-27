@@ -60,7 +60,6 @@ public class PrivateAssetController : ControllerBase
         IFormFile file,
         [FromForm] Guid ownerId,
         [FromForm, BindRequired] PrivateAssetOwnerType ownerType,
-        [FromForm] string contentId,
         [FromForm, BindRequired] bool isInline,
         CancellationToken cancellationToken
     )
@@ -111,7 +110,6 @@ public class PrivateAssetController : ControllerBase
             var asset = await _privateAssetService.Upload(
                 ownerId,
                 ownerType,
-                contentId,
                 isInline,
                 file.FileName,
                 mimeType,
@@ -156,7 +154,6 @@ public class PrivateAssetController : ControllerBase
             AssetId = asset.Id.ToString(),
             OwnerId = asset.OwnerId,
             OwnerType = asset.OwnerType,
-            ContentId = asset.ContentId,
             IsInline = asset.IsInline,
             StorageKey = asset.StorageKey,
             FileName = asset.FileName,
@@ -191,17 +188,6 @@ public class PrivateAssetController : ControllerBase
         catch (InvalidOperationException exception)
         {
             return BadRequest(new ProblemDetails { Title = "Invalid Operation", Detail = exception.Message });
-        }
-        catch (DbUpdateException exception)
-            when (exception.InnerException is Npgsql.PostgresException { SqlState: "23505" })
-        {
-            return Conflict(
-                new ProblemDetails
-                {
-                    Title = "Duplicate ContentId",
-                    Detail = "ContentId must be unique within its owner.",
-                }
-            );
         }
     }
 

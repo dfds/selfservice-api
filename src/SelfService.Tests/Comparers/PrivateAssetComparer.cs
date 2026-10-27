@@ -20,7 +20,6 @@ public class PrivateAssetComparer : IEqualityComparer<PrivateAsset?>
             && x.CreatedAt.Equals(y.CreatedAt)
             && x.OwnerId == y.OwnerId
             && x.OwnerType == y.OwnerType
-            && x.ContentId == y.ContentId
             && x.IsInline == y.IsInline;
     }
 
@@ -28,6 +27,6 @@ public class PrivateAssetComparer : IEqualityComparer<PrivateAsset?>
         HashCode.Combine(
             HashCode.Combine(obj.Id, obj.StorageKey, obj.FileName, obj.MimeType),
             HashCode.Combine(obj.SizeInBytes, obj.CreatedBy, obj.CreatedAt, obj.OwnerId),
-            HashCode.Combine(obj.OwnerType, obj.ContentId, obj.IsInline)
+            HashCode.Combine(obj.OwnerType, obj.IsInline)
         );
 }

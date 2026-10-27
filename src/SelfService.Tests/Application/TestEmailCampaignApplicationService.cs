@@ -417,7 +417,6 @@ public class TestEmailCampaignApplicationService
             var attachment = Assert.Single(send.Attachments);
             Assert.Equal(image.StorageKey, attachment.StorageKey);
             Assert.Equal(image.Id.ToString(), attachment.AssetId);
-            Assert.Equal("banner", attachment.ContentId);
             Assert.True(attachment.IsInline);
         }
         assets.Verify(
@@ -511,7 +510,6 @@ public class TestEmailCampaignApplicationService
             DateTime.UtcNow,
             owner.Id,
             PrivateAssetOwnerType.EmailCampaign,
-            "banner",
             true
         );
 

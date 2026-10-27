@@ -13,7 +13,6 @@ public class PrivateAssetBuilder
     private DateTime _createdAt = new(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     private Guid _ownerId = Guid.NewGuid();
     private PrivateAssetOwnerType _ownerType = PrivateAssetOwnerType.EmailCampaign;
-    private string _contentId = "asset";
     private bool _isInline = true;
 
     public PrivateAssetBuilder WithId(PrivateAssetId id)
@@ -70,12 +69,6 @@ public class PrivateAssetBuilder
         return this;
     }
 
-    public PrivateAssetBuilder WithContentId(string value)
-    {
-        _contentId = value;
-        return this;
-    }
-
     public PrivateAssetBuilder WithIsInline(bool value)
     {
         _isInline = value;
@@ -93,7 +86,6 @@ public class PrivateAssetBuilder
             _createdAt,
             _ownerId,
             _ownerType,
-            _contentId,
             _isInline
         );
 

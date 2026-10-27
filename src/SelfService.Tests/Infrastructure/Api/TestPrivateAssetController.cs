@@ -23,14 +23,12 @@ public class TestPrivateAssetController
         var asset = A
             .PrivateAsset.WithStorageKey("private-assets/abc123/banner.png")
             .WithFileName("banner.png")
-            .WithContentId("banner")
             .Build();
         privateAssetService
             .Setup(x =>
                 x.Upload(
                     It.IsAny<Guid>(),
                     PrivateAssetOwnerType.EmailCampaign,
-                    "banner",
                     true,
                     "banner.png",
                     "image/png",
@@ -54,7 +52,6 @@ public class TestPrivateAssetController
             file,
             Guid.NewGuid(),
             PrivateAssetOwnerType.EmailCampaign,
-            "banner",
             true,
             CancellationToken.None
         );
@@ -86,7 +83,6 @@ public class TestPrivateAssetController
             file,
             Guid.NewGuid(),
             PrivateAssetOwnerType.EmailCampaign,
-            "banner",
             true,
             CancellationToken.None
         );
@@ -114,7 +110,6 @@ public class TestPrivateAssetController
             file,
             Guid.NewGuid(),
             PrivateAssetOwnerType.EmailCampaign,
-            "banner",
             true,
             CancellationToken.None
         );

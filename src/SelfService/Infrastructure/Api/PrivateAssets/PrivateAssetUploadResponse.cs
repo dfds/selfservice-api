@@ -7,7 +7,6 @@ public class PrivateAssetUploadResponse
     public string AssetId { get; set; } = "";
     public Guid OwnerId { get; set; }
     public PrivateAssetOwnerType OwnerType { get; set; }
-    public string ContentId { get; set; } = "";
     public bool IsInline { get; set; }
     public long SizeInBytes { get; set; }
     public DateTime CreatedAt { get; set; }

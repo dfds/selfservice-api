@@ -510,7 +510,6 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
             {
                 AssetId = asset.Id.ToString(),
                 StorageKey = asset.StorageKey,
-                ContentId = asset.ContentId,
                 IsInline = asset.IsInline,
             })
             .ToList();

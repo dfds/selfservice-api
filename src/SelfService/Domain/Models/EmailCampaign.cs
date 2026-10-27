@@ -343,7 +343,6 @@ public class EmailCampaign : AggregateRoot<EmailCampaignId>
                 Attachments = attachments
                     .Select(attachment => new EmailDeliveryAttachment
                     {
-                        ContentId = attachment.ContentId,
                         StorageKey = attachment.StorageKey,
                         AssetId = attachment.AssetId,
                         IsInline = attachment.IsInline,

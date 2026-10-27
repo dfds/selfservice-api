@@ -7,7 +7,6 @@ public interface IPrivateAssetApplicationService
     Task<PrivateAsset> Upload(
         Guid ownerId,
         PrivateAssetOwnerType ownerType,
-        string contentId,
         bool isInline,
         string fileName,
         string mimeType,

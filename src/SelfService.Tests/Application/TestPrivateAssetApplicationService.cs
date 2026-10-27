@@ -65,7 +65,6 @@ public class TestPrivateAssetApplicationService
         var asset = await service.Upload(
             owner.Id,
             PrivateAssetOwnerType.EmailCampaign,
-            "banner",
             true,
             "banner.png",
             "image/png",
@@ -104,7 +103,6 @@ public class TestPrivateAssetApplicationService
                     DateTime.UtcNow,
                     Guid.NewGuid(),
                     (PrivateAssetOwnerType)(-1),
-                    "banner",
                     true
                 )
         );
@@ -126,7 +124,6 @@ public class TestPrivateAssetApplicationService
             .Upload(
                 Guid.NewGuid(),
                 PrivateAssetOwnerType.EmailCampaign,
-                "banner",
                 true,
                 "banner.png",
                 "image/png",
@@ -153,9 +150,8 @@ public class TestPrivateAssetApplicationService
                     .Upload(
                         Guid.NewGuid(),
                         PrivateAssetOwnerType.EmailCampaign,
-                        "bad content id",
                         true,
-                        "banner.png",
+                        "",
                         "image/png",
                         4,
                         new MemoryStream([1, 2, 3, 4]),
@@ -197,7 +193,6 @@ public class TestPrivateAssetApplicationService
                     .Upload(
                         owner.Id,
                         PrivateAssetOwnerType.EmailCampaign,
-                        "banner",
                         true,
                         "banner.png",
                         "image/png",
@@ -226,7 +221,6 @@ public class TestPrivateAssetApplicationService
             .PrivateAsset.WithStorageKey("private-assets/test/banner.png")
             .WithFileName("banner.png")
             .WithOwnerId(ownerId)
-            .WithContentId("banner")
             .Build();
 
         await using var transaction = await new RealDbTransactionFacade(db).BeginTransaction();
@@ -236,7 +230,6 @@ public class TestPrivateAssetApplicationService
 
         var restored = Assert.Single(await repository.GetByOwner(PrivateAssetOwnerType.EmailCampaign, ownerId));
         Assert.Equal(asset.Id, restored.Id);
-        Assert.Equal("banner", restored.ContentId);
         Assert.True(restored.IsInline);
         Assert.Equal(4, restored.SizeInBytes);
         Assert.Empty(await repository.GetByOwner((PrivateAssetOwnerType)(-1), ownerId));
@@ -274,7 +267,6 @@ public class TestPrivateAssetApplicationService
         var asset = await service.Upload(
             owner.Id,
             PrivateAssetOwnerType.EmailCampaign,
-            "banner",
             true,
             "banner.png",
             "image/png",
@@ -294,26 +286,6 @@ public class TestPrivateAssetApplicationService
     }
 
     [Fact]
-    public async Task content_id_uniqueness_is_scoped_to_owner_and_enforced_by_database()
-    {
-        await using var factory = new InMemoryDatabaseFactory();
-        await using var db = await factory.CreateSelfServiceDbContext();
-        var owner = Guid.NewGuid();
-        PrivateAsset Asset(Guid ownerId) =>
-            A
-                .PrivateAsset.WithStorageKey("private-assets/test/banner.png")
-                .WithFileName("banner.png")
-                .WithOwnerId(ownerId)
-                .WithContentId("banner")
-                .Build();
-        db.PrivateAssets.AddRange(Asset(owner), Asset(Guid.NewGuid()));
-        await db.SaveChangesAsync();
-        db.PrivateAssets.Add(Asset(owner));
-
-        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
-    }
-
-    [Fact]
     public async Task user_without_upload_permission_is_denied_before_storage()
     {
         await using var factory = new InMemoryDatabaseFactory();
@@ -330,7 +302,6 @@ public class TestPrivateAssetApplicationService
                     .Upload(
                         Guid.NewGuid(),
                         PrivateAssetOwnerType.EmailCampaign,
-                        "banner",
                         true,
                         "banner.png",
                         "image/png",
@@ -368,7 +339,6 @@ public class TestPrivateAssetApplicationService
                     .Upload(
                         owner.Id,
                         PrivateAssetOwnerType.EmailCampaign,
-                        "banner",
                         true,
                         "banner.png",
                         "image/png",

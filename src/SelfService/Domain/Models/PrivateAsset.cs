@@ -12,7 +12,6 @@ public class PrivateAsset : Entity<PrivateAssetId>
         DateTime createdAt,
         Guid ownerId,
         PrivateAssetOwnerType ownerType,
-        string contentId,
         bool isInline
     )
         : base(id)
@@ -20,7 +19,7 @@ public class PrivateAsset : Entity<PrivateAssetId>
         StorageKey = ValidateRequired(storageKey, nameof(storageKey));
         if (StorageKey.Length > 1024)
             throw new ArgumentException("Asset metadata exceeds the supported field length.");
-        ValidateMetadata(fileName, mimeType, sizeInBytes, createdBy, ownerId, ownerType, contentId);
+        ValidateMetadata(fileName, mimeType, sizeInBytes, createdBy, ownerId, ownerType);
         FileName = fileName;
         MimeType = mimeType;
         SizeInBytes = sizeInBytes;
@@ -28,7 +27,6 @@ public class PrivateAsset : Entity<PrivateAssetId>
         CreatedAt = createdAt;
         OwnerId = ownerId;
         OwnerType = ownerType;
-        ContentId = contentId;
         IsInline = isInline;
     }
 
@@ -38,28 +36,18 @@ public class PrivateAsset : Entity<PrivateAssetId>
         long sizeInBytes,
         string createdBy,
         Guid ownerId,
-        PrivateAssetOwnerType ownerType,
-        string contentId
+        PrivateAssetOwnerType ownerType
     )
     {
         ValidateRequired(fileName, nameof(fileName));
         ValidateRequired(mimeType, nameof(mimeType));
         ValidateRequired(createdBy, nameof(createdBy));
-        ValidateRequired(contentId, nameof(contentId));
         if (sizeInBytes < 0)
             throw new ArgumentOutOfRangeException(nameof(sizeInBytes), "Size must be zero or greater.");
         if (ownerId == Guid.Empty)
             throw new ArgumentException("Owner ID is required.", nameof(ownerId));
         if (!Enum.IsDefined(ownerType))
             throw new ArgumentException("Unsupported owner type.", nameof(ownerType));
-        if (
-            contentId.Length > 255
-            || contentId.Any(character => char.IsWhiteSpace(character) || character is '<' or '>' or '"' or '\'')
-        )
-            throw new ArgumentException(
-                "ContentId must be a MIME identifier of at most 255 characters.",
-                nameof(contentId)
-            );
         if (fileName.Length > 255 || mimeType.Length > 255 || createdBy.Length > 255)
             throw new ArgumentException("Asset metadata exceeds the supported field length.");
     }
@@ -72,7 +60,6 @@ public class PrivateAsset : Entity<PrivateAssetId>
     public DateTime CreatedAt { get; private set; }
     public Guid OwnerId { get; private set; }
     public PrivateAssetOwnerType OwnerType { get; private set; }
-    public string ContentId { get; private set; }
     public bool IsInline { get; private set; }
 
     private static string ValidateRequired(string value, string parameterName)

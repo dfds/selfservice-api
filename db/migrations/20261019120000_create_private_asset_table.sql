@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS "PrivateAsset" (
     "CreatedAt" timestamp with time zone NOT NULL,
     "OwnerId" uuid NOT NULL,
     "OwnerType" varchar(64) NOT NULL,
-    "ContentId" varchar(255) NOT NULL,
     "IsInline" boolean NOT NULL
 );
 
@@ -20,5 +19,5 @@ CREATE INDEX IF NOT EXISTS "IX_PrivateAsset_CreatedAt"
 CREATE INDEX IF NOT EXISTS "IX_PrivateAsset_CreatedBy"
     ON "PrivateAsset" ("CreatedBy");
 
-CREATE UNIQUE INDEX IF NOT EXISTS "IX_PrivateAsset_OwnerType_OwnerId_ContentId"
-    ON "PrivateAsset" ("OwnerType", "OwnerId", "ContentId");
+CREATE INDEX IF NOT EXISTS "IX_PrivateAsset_OwnerType_OwnerId_CreatedAt"
+    ON "PrivateAsset" ("OwnerType", "OwnerId", "CreatedAt");

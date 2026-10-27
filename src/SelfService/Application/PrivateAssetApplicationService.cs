@@ -16,7 +16,6 @@ public class PrivateAssetApplicationService(
     public async Task<PrivateAsset> Upload(
         Guid ownerId,
         PrivateAssetOwnerType ownerType,
-        string contentId,
         bool isInline,
         string fileName,
         string mimeType,
@@ -32,9 +31,7 @@ public class PrivateAssetApplicationService(
         var assetId = PrivateAssetId.New();
         var createdAt = DateTime.UtcNow;
         var createdBy = user.Id.ToString();
-        PrivateAsset.ValidateMetadata(fileName, mimeType, sizeInBytes, createdBy, ownerId, ownerType, contentId);
-        if ((await repository.GetByOwner(ownerType, ownerId)).Any(existing => existing.ContentId == contentId))
-            throw new InvalidOperationException("ContentId must be unique within its owner.");
+        PrivateAsset.ValidateMetadata(fileName, mimeType, sizeInBytes, createdBy, ownerId, ownerType);
 
         var key = await storage.UploadAsync(fileName, mimeType, content, cancellationToken);
         var asset = new PrivateAsset(
@@ -47,7 +44,6 @@ public class PrivateAssetApplicationService(
             createdAt,
             ownerId,
             ownerType,
-            contentId,
             isInline
         );
         try

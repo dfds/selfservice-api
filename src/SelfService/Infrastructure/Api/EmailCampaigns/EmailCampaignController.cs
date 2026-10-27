@@ -717,7 +717,7 @@ public class EmailCampaignController : ControllerBase
         return null;
     }
 
-    // Maps each inline image's content-id to a viewable preview URL so cid: references can be rendered in a browser.
+    // Maps each inline image's asset id to a viewable preview URL so cid: references can be rendered in a browser.
     private async Task<Dictionary<string, string>> GetInlineImageUrls(
         Guid campaignId,
         CancellationToken cancellationToken
@@ -732,18 +732,18 @@ public class EmailCampaignController : ControllerBase
 
             var url = await _privateAssetApplicationService.GetPreviewUrl(asset, cancellationToken);
             if (!string.IsNullOrEmpty(url))
-                urls[asset.ContentId] = url;
+                urls[asset.Id.ToString()] = url;
         }
         return urls;
     }
 
-    private static string ReplaceInlineImageReferences(string html, IReadOnlyDictionary<string, string> contentIdToUrl)
+    private static string ReplaceInlineImageReferences(string html, IReadOnlyDictionary<string, string> assetIdToUrl)
     {
-        if (string.IsNullOrEmpty(html) || contentIdToUrl.Count == 0)
+        if (string.IsNullOrEmpty(html) || assetIdToUrl.Count == 0)
             return html;
 
-        foreach (var (contentId, url) in contentIdToUrl)
-            html = html.Replace($"cid:{contentId}", url);
+        foreach (var (assetId, url) in assetIdToUrl)
+            html = html.Replace($"cid:{assetId}", url);
         return html;
     }
 
@@ -762,7 +762,6 @@ public class EmailCampaignController : ControllerBase
                     AssetId = asset.Id.ToString(),
                     OwnerId = asset.OwnerId,
                     OwnerType = asset.OwnerType,
-                    ContentId = asset.ContentId,
                     IsInline = asset.IsInline,
                     StorageKey = asset.StorageKey,
                     FileName = asset.FileName,

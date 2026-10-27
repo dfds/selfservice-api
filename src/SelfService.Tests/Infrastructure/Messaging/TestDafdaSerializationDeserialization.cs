@@ -288,7 +288,6 @@ public class TestDafdaSerializationDeserialization
                 [
                     new EmailDeliveryAttachment
                     {
-                        ContentId = "team-banner",
                         StorageKey = "private-assets/campaigns/campaign-id/team-banner.png",
                         AssetId = "asset-123",
                         IsInline = true,

@@ -678,16 +678,14 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedAt).HasConversion<ForceUtcKind>();
             cfg.Property(x => x.OwnerId).IsRequired();
             cfg.Property(x => x.OwnerType).HasConversion<string>().HasMaxLength(64).IsRequired();
-            cfg.Property(x => x.ContentId).HasMaxLength(255).IsRequired();
             cfg.Property(x => x.IsInline).IsRequired();
             cfg.HasIndex(x => new
                 {
                     x.OwnerType,
                     x.OwnerId,
-                    x.ContentId,
+                    x.CreatedAt,
                 })
-                .IsUnique()
-                .HasDatabaseName("IX_PrivateAsset_OwnerType_OwnerId_ContentId");
+                .HasDatabaseName("IX_PrivateAsset_OwnerType_OwnerId_CreatedAt");
         });
 
         modelBuilder.Entity<EmailCampaign>(cfg =>

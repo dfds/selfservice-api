@@ -13,6 +13,6 @@ public class PrivateAssetRepository(SelfServiceDbContext dbContext) : IPrivateAs
         dbContext
             .PrivateAssets.Where(asset => asset.OwnerType == ownerType && asset.OwnerId == ownerId)
             .OrderBy(asset => asset.CreatedAt)
-            .ThenBy(asset => asset.ContentId)
+            .ThenBy(asset => asset.Id)
             .ToListAsync();
 }
