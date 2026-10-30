@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Amazon;
 using Amazon.S3;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -132,17 +133,50 @@ public static class Domain
 
         builder.Services.AddTransient<ICapabilityMembershipApplicationQuery, CapabilityMembershipApplicationQuery>();
 
-        // Single URL that carries both the endpoint and the bucket name in its path, e.g. http://s3.localhost:19090/my-bucket.
+        // SS_PRIVATE_ASSET_S3_URL carries both the S3 endpoint and the bucket name. Two shapes are supported:
+        //  - Virtual-hosted-style, the way AWS presents a bucket, with the bucket as the left-most host label:
+        //      https://my-bucket.s3.eu-west-1.amazonaws.com
+        //  - Path-style, with the bucket as the first path segment (used by the local adobe/s3mock):
+        //      http://s3.localhost:19090/my-bucket
         var privateAssetS3Url =
             builder.Configuration["SS_PRIVATE_ASSET_S3_URL"]
             ?? throw new InvalidOperationException("SS_PRIVATE_ASSET_S3_URL configuration is required but not set.");
         var privateAssetS3Uri = new Uri(privateAssetS3Url);
-        var privateAssetBucket = privateAssetS3Uri.AbsolutePath.Trim('/');
+
+        // A virtual-hosted-style host looks like "<bucket>.s3.<region>.amazonaws.com": the first label is the
+        // bucket and the remainder (starting at "s3.") is the regional endpoint. Anything else is treated as
+        // path-style, where the authority is the endpoint and the bucket is the first path segment.
+        var virtualHostedMatch = Regex.Match(
+            privateAssetS3Uri.Host,
+            @"^(?<bucket>[^.]+)\.(?<endpoint>s3[.-][^/]+)$",
+            RegexOptions.IgnoreCase
+        );
+
+        string privateAssetBucket;
+        string privateAssetS3ServiceUrl;
+        bool privateAssetForcePathStyle;
+        if (virtualHostedMatch.Success)
+        {
+            privateAssetBucket = virtualHostedMatch.Groups["bucket"].Value;
+            var endpointAuthority = privateAssetS3Uri.IsDefaultPort
+                ? virtualHostedMatch.Groups["endpoint"].Value
+                : $"{virtualHostedMatch.Groups["endpoint"].Value}:{privateAssetS3Uri.Port}";
+            privateAssetS3ServiceUrl = $"{privateAssetS3Uri.Scheme}://{endpointAuthority}";
+            privateAssetForcePathStyle = false;
+        }
+        else
+        {
+            privateAssetBucket = privateAssetS3Uri.AbsolutePath.Trim('/');
+            privateAssetS3ServiceUrl = $"{privateAssetS3Uri.Scheme}://{privateAssetS3Uri.Authority}";
+            privateAssetForcePathStyle = true;
+        }
+
         if (string.IsNullOrWhiteSpace(privateAssetBucket))
             throw new InvalidOperationException(
-                "SS_PRIVATE_ASSET_S3_URL must include the bucket name in its path, e.g. http://s3.localhost:19090/my-bucket."
+                "SS_PRIVATE_ASSET_S3_URL must include the bucket name, either as the host label in a "
+                    + "virtual-hosted-style URL (https://my-bucket.s3.eu-west-1.amazonaws.com) or as the first "
+                    + "path segment in a path-style URL (http://s3.localhost:19090/my-bucket)."
             );
-        var privateAssetS3ServiceUrl = $"{privateAssetS3Uri.Scheme}://{privateAssetS3Uri.Authority}";
 
         builder.Services.AddSingleton(new PrivateAssetStorageOptions { BucketName = privateAssetBucket });
 
@@ -152,13 +186,14 @@ public static class Domain
                 builder.Configuration["AWS_REGION"] ?? builder.Configuration["SS_AWS_REGION"] ?? "eu-west-1"
             );
 
-            // Path-style addressing is required because the bucket is served from the endpoint path (e.g. adobe/s3mock).
+            // Path-style addressing is used when the bucket is served from the endpoint path (e.g. adobe/s3mock);
+            // virtual-hosted-style is used for real AWS endpoints where the bucket lives in the host.
             // Credentials are resolved via the default AWS credential chain (IRSA in production, AWS_* env vars locally)
             // because GetPreSignedURL does not use constructor-supplied credentials.
             var config = new AmazonS3Config
             {
                 ServiceURL = privateAssetS3ServiceUrl,
-                ForcePathStyle = true,
+                ForcePathStyle = privateAssetForcePathStyle,
                 // Honor the endpoint scheme so presigned URLs match it (the S3 mock serves plain HTTP).
                 UseHttp = privateAssetS3Uri.Scheme == Uri.UriSchemeHttp,
                 AuthenticationRegion = region.SystemName,
