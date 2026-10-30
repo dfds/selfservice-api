@@ -28,4 +28,7 @@ public class CreateEmailCampaignRequest
     /// "Capability" (default) or "User". Immutable after creation.
     /// </summary>
     public string? TargetType { get; set; }
+
+    // Assets currently used by the campaign; stored assets not in this list are pruned on save. Null leaves them untouched.
+    public List<string>? AssetIds { get; set; }
 }

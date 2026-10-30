@@ -1,3 +1,5 @@
+using Amazon;
+using Amazon.S3;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SelfService.Application;
 using SelfService.Domain;
@@ -12,6 +14,7 @@ using SelfService.Infrastructure.Catalog;
 using SelfService.Infrastructure.Kafka;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Queries;
+using SelfService.Infrastructure.Storage;
 using SelfService.Infrastructure.Ticketing;
 
 namespace SelfService.Configuration;
@@ -66,6 +69,9 @@ public static class Domain
         builder.Services.AddTransient<ICapabilityFilterService, CapabilityFilterService>();
         builder.Services.AddTransient<IUserFilterService, UserFilterService>();
         builder.Services.AddTransient<ITemplateRenderingService, TemplateRenderingService>();
+        builder.Services.AddTransient<IPrivateAssetService, S3PrivateAssetService>();
+        builder.Services.AddTransient<IPrivateAssetApplicationService, PrivateAssetApplicationService>();
+        builder.Services.AddTransient<IPrivateAssetRepository, PrivateAssetRepository>();
         // Note: IRequirementsMetricService is registered conditionally in RequirementsDbContext.AddRequirementsDatabase
 
         // domain repositories
@@ -125,6 +131,41 @@ public static class Domain
         //});
 
         builder.Services.AddTransient<ICapabilityMembershipApplicationQuery, CapabilityMembershipApplicationQuery>();
+
+        // Single URL that carries both the endpoint and the bucket name in its path, e.g. http://s3.localhost:19090/my-bucket.
+        var privateAssetS3Url =
+            builder.Configuration["SS_PRIVATE_ASSET_S3_URL"]
+            ?? throw new InvalidOperationException("SS_PRIVATE_ASSET_S3_URL configuration is required but not set.");
+        var privateAssetS3Uri = new Uri(privateAssetS3Url);
+        var privateAssetBucket = privateAssetS3Uri.AbsolutePath.Trim('/');
+        if (string.IsNullOrWhiteSpace(privateAssetBucket))
+            throw new InvalidOperationException(
+                "SS_PRIVATE_ASSET_S3_URL must include the bucket name in its path, e.g. http://s3.localhost:19090/my-bucket."
+            );
+        var privateAssetS3ServiceUrl = $"{privateAssetS3Uri.Scheme}://{privateAssetS3Uri.Authority}";
+
+        builder.Services.AddSingleton(new PrivateAssetStorageOptions { BucketName = privateAssetBucket });
+
+        builder.Services.AddSingleton<IAmazonS3>(_ =>
+        {
+            var region = RegionEndpoint.GetBySystemName(
+                builder.Configuration["AWS_REGION"] ?? builder.Configuration["SS_AWS_REGION"] ?? "eu-west-1"
+            );
+
+            // Path-style addressing is required because the bucket is served from the endpoint path (e.g. adobe/s3mock).
+            // Credentials are resolved via the default AWS credential chain (IRSA in production, AWS_* env vars locally)
+            // because GetPreSignedURL does not use constructor-supplied credentials.
+            var config = new AmazonS3Config
+            {
+                ServiceURL = privateAssetS3ServiceUrl,
+                ForcePathStyle = true,
+                // Honor the endpoint scheme so presigned URLs match it (the S3 mock serves plain HTTP).
+                UseHttp = privateAssetS3Uri.Scheme == Uri.UriSchemeHttp,
+                AuthenticationRegion = region.SystemName,
+            };
+
+            return new AmazonS3Client(config);
+        });
 
         // aad-aws-sync
         builder.Services.AddTransient<IAadAwsSyncCapabilityQuery, AadAwsSyncCapabilityQuery>();
