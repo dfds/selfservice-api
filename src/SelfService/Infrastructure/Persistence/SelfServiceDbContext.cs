@@ -52,6 +52,8 @@ public class SelfServiceDbContext : DbContext
 
     public DbSet<AwsAccount> AwsAccounts => Set<AwsAccount>();
 
+    public DbSet<KubernetesAccess> KubernetesAccesses => Set<KubernetesAccess>();
+
     public DbSet<AzureResource> AzureResources => Set<AzureResource>();
 
     public DbSet<KafkaCluster> KafkaClusters => Set<KafkaCluster>();
@@ -107,6 +109,10 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<RealAwsAccountId>().HaveConversion<RealAwsAccountIdConverter>();
 
         configurationBuilder.Properties<AzureResourceId>().HaveConversion<AzureResourceIdConverter>();
+
+        configurationBuilder
+            .Properties<KubernetesAccessId>()
+            .HaveConversion<ValueObjectGuidConverter<KubernetesAccessId>>();
 
         configurationBuilder.Properties<AwsRoleArn>().HaveConversion<AwsRoleArnConverter>();
 
@@ -350,6 +356,8 @@ public class SelfServiceDbContext : DbContext
             cfg.HasKey(x => x.Id);
             cfg.Property(x => x.Id).ValueGeneratedNever();
             cfg.Property(x => x.CapabilityId);
+            cfg.Property(x => x.Environment);
+            cfg.HasIndex(x => new { x.CapabilityId, x.Environment }).IsUnique();
             cfg.OwnsOne(
                 x => x.Registration,
                 o =>
@@ -357,14 +365,6 @@ public class SelfServiceDbContext : DbContext
                     o.Property(x => x.AccountId).HasColumnName(nameof(AwsAccountRegistration.AccountId));
                     o.Property(x => x.RoleEmail).HasColumnName(nameof(AwsAccountRegistration.RoleEmail));
                     o.Property(x => x.RegisteredAt).HasColumnName(nameof(AwsAccountRegistration.RegisteredAt));
-                }
-            );
-            cfg.OwnsOne(
-                x => x.KubernetesLink,
-                o =>
-                {
-                    o.Property(x => x.Namespace).HasColumnName(nameof(KubernetesLink.Namespace));
-                    o.Property(x => x.LinkedAt).HasColumnName(nameof(KubernetesLink.LinkedAt));
                 }
             );
             cfg.Property(x => x.RequestedAt);
@@ -379,6 +379,20 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CapabilityId);
             cfg.Property(x => x.RequestedAt);
             cfg.Property(x => x.RequestedBy);
+        });
+
+        modelBuilder.Entity<KubernetesAccess>(cfg =>
+        {
+            cfg.ToTable("KubernetesAccess");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.CapabilityId);
+            cfg.Property(x => x.Environment);
+            cfg.Property(x => x.AwsAccountId);
+            cfg.Property(x => x.RequestedAt);
+            cfg.Property(x => x.RequestedBy);
+            cfg.Property(x => x.Namespace);
+            cfg.Property(x => x.GrantedAt);
         });
 
         modelBuilder.Entity<KafkaCluster>(cfg =>

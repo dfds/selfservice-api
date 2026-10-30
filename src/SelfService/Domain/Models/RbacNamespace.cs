@@ -13,6 +13,7 @@ public class RbacNamespace : ValueObject
     public static readonly RbacNamespace CapabilityMembershipManagement = new("capability-membership-management");
     public static readonly RbacNamespace TagsAndMetadata = new("tags-and-metadata");
     public static readonly RbacNamespace Aws = new("aws");
+    public static readonly RbacNamespace Kubernetes = new("kubernetes");
     public static readonly RbacNamespace Finout = new("finout");
     public static readonly RbacNamespace Azure = new("azure");
     public static readonly RbacNamespace Rbac = new("rbac");
