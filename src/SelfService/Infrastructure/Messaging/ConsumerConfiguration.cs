@@ -115,6 +115,13 @@ public static class ConsumerConfiguration
                     messageType: EmailCampaignSendRequested.EventType,
                     keySelector: x => x.EmailSendId!
                 );
+
+            options
+                .ForTopic($"{SelfServicePrefix}.privateasset")
+                .Register<PrivateAssetRemoved>(
+                    messageType: PrivateAssetRemoved.EventType,
+                    keySelector: x => x.AssetId!
+                );
             // NOTE: if adding new message types; add a test to SelfService.Tests/Infrastructure/Messaging/TestDafdaSerializationDeserialization.cs
         });
 
@@ -203,6 +210,14 @@ public static class ConsumerConfiguration
                 .RegisterMessageHandler<EmailCampaignDeliveryCompleted, EmailCampaignDeliveryHandler>(
                     EmailCampaignDeliveryCompleted.EventType
                 );
+
+            #endregion
+
+            #region private asset cleanup
+
+            options
+                .ForTopic($"{SelfServicePrefix}.privateasset")
+                .RegisterMessageHandler<PrivateAssetRemoved, PrivateAssetRemovedHandler>(PrivateAssetRemoved.EventType);
 
             #endregion
 

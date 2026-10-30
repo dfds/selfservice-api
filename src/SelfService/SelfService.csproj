@@ -9,6 +9,7 @@
     <ItemGroup>
       <PackageReference Include="AWSSDK.EC2" Version="4.0.65.4" />
       <PackageReference Include="AWSSDK.ECR" Version="4.0.9.4" />
+      <PackageReference Include="AWSSDK.S3" Version="4.0.4.1" />
       <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.8" />
       <PackageReference Include="Dafda" Version="0.12.6" />
       <PackageReference Include="OpenTelemetry" Version="1.15.3" />

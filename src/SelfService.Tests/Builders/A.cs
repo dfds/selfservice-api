@@ -23,6 +23,7 @@ public static class A
     public static MessageContractBuilder MessageContract => new();
     public static DemoRecordingBuilder DemoRecording => new();
     public static ReleaseNoteBuilder ReleaseNote => new();
+    public static PrivateAssetBuilder PrivateAsset => new();
 
     public static CapabilityRepositoryBuilder CapabilityRepository => new();
     public static MembershipApplicationRepositoryBuilder MembershipApplicationRepository => new();

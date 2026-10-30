@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SelfService.Domain;
+using SelfService.Domain.Events;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
@@ -23,6 +24,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
     private readonly IRbacApplicationService _rbacApplicationService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly AllCapabilitiesCostsCache _allCapabilitiesCostsCache;
+    private readonly IPrivateAssetRepository _privateAssetRepository;
 
     public EmailCampaignApplicationService(
         IEmailCampaignRepository emailCampaignRepository,
@@ -36,7 +38,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         ITemplateRenderingService templateRenderingService,
         IRbacApplicationService rbacApplicationService,
         IServiceScopeFactory serviceScopeFactory,
-        AllCapabilitiesCostsCache allCapabilitiesCostsCache
+        AllCapabilitiesCostsCache allCapabilitiesCostsCache,
+        IPrivateAssetRepository privateAssetRepository
     )
     {
         _emailCampaignRepository = emailCampaignRepository;
@@ -51,6 +54,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         _rbacApplicationService = rbacApplicationService;
         _serviceScopeFactory = serviceScopeFactory;
         _allCapabilitiesCostsCache = allCapabilitiesCostsCache;
+        _privateAssetRepository = privateAssetRepository;
     }
 
     /// <summary>
@@ -111,7 +115,7 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         return await _emailCampaignRepository.GetAll();
     }
 
-    [TransactionalBoundary]
+    [TransactionalBoundary, Outboxed]
     public async Task UpdateDraft(
         EmailCampaignId id,
         string name,
@@ -124,7 +128,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         EmailCampaignScheduleType? scheduleType = null,
         DateTime? scheduledAt = null,
         string? cronExpression = null,
-        EmailCampaignTargetType? targetType = null
+        EmailCampaignTargetType? targetType = null,
+        IReadOnlyCollection<string>? assetIds = null
     )
     {
         var campaign = await GetRequired(id);
@@ -145,6 +150,31 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         if (scheduleType is not null)
         {
             campaign.UpdateScheduleFields(scheduleType, scheduledAt, cronExpression);
+        }
+
+        await PruneAssets(campaign, assetIds);
+    }
+
+    // A null list leaves stored assets untouched; otherwise any stored asset not in the list is removed,
+    // raising an event so its stored object can be cleaned up asynchronously.
+    private async Task PruneAssets(EmailCampaign campaign, IReadOnlyCollection<string>? assetIds)
+    {
+        if (assetIds is null)
+            return;
+
+        var keep = new HashSet<string>(
+            assetIds.Where(assetId => !string.IsNullOrWhiteSpace(assetId)),
+            StringComparer.OrdinalIgnoreCase
+        );
+        foreach (
+            var asset in await _privateAssetRepository.GetByOwner(PrivateAssetOwnerType.EmailCampaign, campaign.Id)
+        )
+        {
+            if (keep.Contains(asset.Id.ToString()))
+                continue;
+
+            await _privateAssetRepository.Remove(asset);
+            campaign.RaisePrivateAssetRemoved(asset.Id.ToString(), asset.StorageKey);
         }
     }
 
@@ -429,11 +459,18 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         if (failedLogs.Count == 0)
             return new RetryResult { RetriedCount = 0, Status = "NoFailedRecipients" };
 
+        var attachments = await ResolveAttachments(campaign);
         foreach (var log in failedLogs)
         {
             log.ResetForRetry();
 
-            campaign.RaiseSendRequestedEvent(log.Id.ToString(), log.Email, log.RenderedSubject, log.RenderedHtml);
+            campaign.RaiseSendRequestedEvent(
+                log.Id.ToString(),
+                log.Email,
+                log.RenderedSubject,
+                log.RenderedHtml,
+                attachments
+            );
         }
 
         return new RetryResult { RetriedCount = failedLogs.Count, Status = "Retried" };
@@ -477,12 +514,13 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
     private async Task<int> ExecuteSend(EmailCampaign campaign)
     {
+        var attachments = await ResolveAttachments(campaign);
         campaign.MarkAsSending();
 
         var execution = EmailCampaignExecution.Create(campaign.Id, 0);
         await _executionRepository.Add(execution);
 
-        var recipientCount = await SendToRecipients(campaign, execution.Id);
+        var recipientCount = await SendToRecipients(campaign, attachments, execution.Id);
         execution.TotalRecipients = recipientCount;
         if (recipientCount == 0)
             execution.MarkCompleted(0, 0); // valid empty audience: nothing to deliver
@@ -490,12 +528,33 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         return recipientCount;
     }
 
-    private Task<int> SendToRecipients(EmailCampaign campaign, EmailCampaignExecutionId? executionId = null) =>
-        campaign.TargetType == EmailCampaignTargetType.User
-            ? SendToUserRecipients(campaign, executionId)
-            : SendToCapabilityRecipients(campaign, executionId);
+    private async Task<List<EmailDeliveryAttachment>> ResolveAttachments(EmailCampaign campaign)
+    {
+        var assets = await _privateAssetRepository.GetByOwner(PrivateAssetOwnerType.EmailCampaign, campaign.Id);
+        return assets
+            .Select(asset => new EmailDeliveryAttachment
+            {
+                AssetId = asset.Id.ToString(),
+                StorageKey = asset.StorageKey,
+                IsInline = asset.IsInline,
+            })
+            .ToList();
+    }
 
-    private async Task<int> SendToCapabilityRecipients(EmailCampaign campaign, EmailCampaignExecutionId? executionId)
+    private Task<int> SendToRecipients(
+        EmailCampaign campaign,
+        List<EmailDeliveryAttachment> attachments,
+        EmailCampaignExecutionId? executionId = null
+    ) =>
+        campaign.TargetType == EmailCampaignTargetType.User
+            ? SendToUserRecipients(campaign, attachments, executionId)
+            : SendToCapabilityRecipients(campaign, attachments, executionId);
+
+    private async Task<int> SendToCapabilityRecipients(
+        EmailCampaign campaign,
+        List<EmailDeliveryAttachment> attachments,
+        EmailCampaignExecutionId? executionId
+    )
     {
         var resolved = await ResolveCapabilityRecipients(campaign.AudienceJson, campaign.RecipientFilter);
         var recipientLogs = new List<EmailCampaignRecipientLog>();
@@ -534,7 +593,8 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
                     recipientLog.Id.ToString(),
                     member.Email,
                     renderedSubject,
-                    renderedHtml
+                    renderedHtml,
+                    attachments
                 );
             }
 
@@ -546,7 +606,11 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
         return recipientLogs.Count;
     }
 
-    private async Task<int> SendToUserRecipients(EmailCampaign campaign, EmailCampaignExecutionId? executionId)
+    private async Task<int> SendToUserRecipients(
+        EmailCampaign campaign,
+        List<EmailDeliveryAttachment> attachments,
+        EmailCampaignExecutionId? executionId
+    )
     {
         var resolution = await _userFilterService.ResolveUsers(campaign.AudienceJson);
         var matchingRoleIds = await ResolveRoleIds(campaign.RecipientFilter);
@@ -587,7 +651,13 @@ public class EmailCampaignApplicationService : IEmailCampaignApplicationService
 
             recipientLogs.Add(recipientLog);
 
-            campaign.RaiseSendRequestedEvent(recipientLog.Id.ToString(), member.Email, renderedSubject, renderedHtml);
+            campaign.RaiseSendRequestedEvent(
+                recipientLog.Id.ToString(),
+                member.Email,
+                renderedSubject,
+                renderedHtml,
+                attachments
+            );
         }
 
         await _recipientLogRepository.AddRange(recipientLogs);

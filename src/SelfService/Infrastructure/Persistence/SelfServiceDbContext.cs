@@ -83,6 +83,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<Event> Events => Set<Event>();
     public DbSet<EventAttachment> EventAttachments => Set<EventAttachment>();
     public DbSet<NewsItem> NewsItems => Set<NewsItem>();
+    public DbSet<PrivateAsset> PrivateAssets => Set<PrivateAsset>();
     public DbSet<EmailCampaign> EmailCampaigns => Set<EmailCampaign>();
     public DbSet<EmailCampaignRecipientLog> EmailCampaignRecipientLogs => Set<EmailCampaignRecipientLog>();
     public DbSet<EmailCampaignExecution> EmailCampaignExecutions => Set<EmailCampaignExecution>();
@@ -164,6 +165,8 @@ public class SelfServiceDbContext : DbContext
         configurationBuilder.Properties<EventAttachmentId>().HaveConversion<EventAttachmentIdConverter>();
 
         configurationBuilder.Properties<NewsItemId>().HaveConversion<NewsItemIdConverter>();
+
+        configurationBuilder.Properties<PrivateAssetId>().HaveConversion<ValueObjectGuidConverter<PrivateAssetId>>();
 
         configurationBuilder.Properties<EmailCampaignId>().HaveConversion<ValueObjectGuidConverter<EmailCampaignId>>();
 
@@ -660,6 +663,29 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.CreatedAt);
             cfg.Property(x => x.ModifiedAt);
+        });
+
+        modelBuilder.Entity<PrivateAsset>(cfg =>
+        {
+            cfg.ToTable("PrivateAsset");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.StorageKey);
+            cfg.Property(x => x.FileName);
+            cfg.Property(x => x.MimeType);
+            cfg.Property(x => x.SizeInBytes);
+            cfg.Property(x => x.CreatedBy);
+            cfg.Property(x => x.CreatedAt).HasConversion<ForceUtcKind>();
+            cfg.Property(x => x.OwnerId).IsRequired();
+            cfg.Property(x => x.OwnerType).HasConversion<string>().HasMaxLength(64).IsRequired();
+            cfg.Property(x => x.IsInline).IsRequired();
+            cfg.HasIndex(x => new
+                {
+                    x.OwnerType,
+                    x.OwnerId,
+                    x.CreatedAt,
+                })
+                .HasDatabaseName("IX_PrivateAsset_OwnerType_OwnerId_CreatedAt");
         });
 
         modelBuilder.Entity<EmailCampaign>(cfg =>

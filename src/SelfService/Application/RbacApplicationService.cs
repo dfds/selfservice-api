@@ -963,6 +963,7 @@ public class Permission
             new(RbacNamespace.Rbac, "update", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.Rbac, "delete", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.ServiceCatalogue, "read", "Read service catalogue resources", RbacAccessType.Global),
+            new(RbacNamespace.PrivateAssets, "create", "Upload private assets", RbacAccessType.Global),
             new(
                 RbacNamespace.SystemLegacy,
                 "read",
