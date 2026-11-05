@@ -188,6 +188,9 @@
                 ],
                 "finout": [
                     "read-dashboards"
+                ],
+                "copilot": [
+                    "read-own"
                 ]
             }
         },
@@ -285,6 +288,10 @@
                     "delete-membership-application-as-admin",
                     "retry-creating-message-contract",
                     "manage-json-schemas"
+                ],
+                "copilot": [
+                    "read-own",
+                    "read-all"
                 ]
             }
         },

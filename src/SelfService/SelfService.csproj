@@ -29,6 +29,7 @@
       <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.1" />
       <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+      <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.4.0" />
       <PackageReference Include="Castle.Core" Version="5.1.1" />
       <PackageReference Include="Castle.Core.AsyncInterceptor" Version="2.1.0" />
       <PackageReference Include="Cronos" Version="0.8.4" />

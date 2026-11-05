@@ -131,6 +131,11 @@ public class AuthorizationService : IAuthorizationService
         return IsCloudEngineerEnabled(portalUser, "delete-demo-recording");
     }
 
+    public Task<bool> CanReadAllCopilotUsage(PortalUser portalUser)
+    {
+        return HasPermission(portalUser.Id, RbacAccessType.Global, RbacNamespace.Copilot, "read-all");
+    }
+
     private bool IsCloudEngineerEnabled(PortalUser portalUser, string permissionName)
     {
         if (
