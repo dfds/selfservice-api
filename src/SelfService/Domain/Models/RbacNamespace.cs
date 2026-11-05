@@ -88,6 +88,7 @@ public class RbacNamespace : ValueObject
                 break;
             case "private-assets":
                 rbacNamespace = PrivateAssets;
+                break;
             case "copilot":
                 rbacNamespace = Copilot;
                 break;
