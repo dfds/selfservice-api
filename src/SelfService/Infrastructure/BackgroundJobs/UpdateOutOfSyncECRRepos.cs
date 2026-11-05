@@ -9,7 +9,6 @@ public class UpdateOutOfSyncEcrRepos : BackgroundService
     private readonly ILogger<UpdateOutOfSyncEcrRepos> _logger;
     private OutOfSyncECRInfo _outOfSyncEcrInfo;
 
-
     public UpdateOutOfSyncEcrRepos(
         IServiceProvider serviceProvider,
         ILogger<UpdateOutOfSyncEcrRepos> logger,

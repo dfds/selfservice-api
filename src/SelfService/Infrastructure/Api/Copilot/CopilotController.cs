@@ -11,7 +11,7 @@ namespace SelfService.Infrastructure.Api.Copilot;
 [RbacConfig(nameof(RbacObjectType.Global), "id")]
 [Produces("application/json")]
 [ApiController]
-[SwaggerTag("GitHub Copilot seats, usage and AI credits from copilot-insights." )]
+[SwaggerTag("GitHub Copilot seats, usage and AI credits from copilot-insights.")]
 public class CopilotController : ControllerBase
 {
     private const int MaxRangeDays = 400;
@@ -38,10 +38,7 @@ public class CopilotController : ControllerBase
 
     [HttpGet("me")]
     [RequiresPermission("copilot", "read-own")]
-    [SwaggerOperation(
-        Summary = "Get the caller's Copilot usage",
-        OperationId = "CopilotGetMe"
-    )]
+    [SwaggerOperation(Summary = "Get the caller's Copilot usage", OperationId = "CopilotGetMe")]
     [SwaggerResponse(StatusCodes.Status200OK, "The caller's usage.", typeof(CopilotMeApiResource))]
     [SwaggerResponse(
         StatusCodes.Status400BadRequest,
@@ -67,15 +64,9 @@ public class CopilotController : ControllerBase
 
     [HttpGet("me/credits")]
     [RequiresPermission("copilot", "read-own")]
-    [SwaggerOperation(
-        Summary = "Get the caller's AI credits usage per month",
-        OperationId = "CopilotGetMeCredits"
-    )]
+    [SwaggerOperation(Summary = "Get the caller's AI credits usage per month", OperationId = "CopilotGetMeCredits")]
     [SwaggerResponse(StatusCodes.Status200OK, "The caller's credits.", typeof(CopilotMeCreditsApiResource))]
-    [SwaggerResponse(
-        StatusCodes.Status400BadRequest,
-        "application/json"
-    )]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "application/json")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Plain text: Missing permission read-own.")]
     public async Task<IActionResult> GetMeCredits(
         [FromQuery] int? year,
@@ -94,15 +85,9 @@ public class CopilotController : ControllerBase
 
     [HttpGet("users")]
     [RequiresPermission("copilot", "read-all")]
-    [SwaggerOperation(
-        Summary = "Search GitHub users",
-        OperationId = "CopilotSearchUsers"
-    )]
+    [SwaggerOperation(Summary = "Search GitHub users", OperationId = "CopilotSearchUsers")]
     [SwaggerResponse(StatusCodes.Status200OK, "The matching users", typeof(CopilotUserSearchApiResource))]
-    [SwaggerResponse(
-        StatusCodes.Status400BadRequest,
-        "application/json"
-    )]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "application/json")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Missing permission read-all")]
     public async Task<IActionResult> SearchUsers(
         [FromQuery] string? q,
@@ -126,15 +111,9 @@ public class CopilotController : ControllerBase
 
     [HttpGet("users/{login}")]
     [RequiresPermission("copilot", "read-all")]
-    [SwaggerOperation(
-        Summary = "Get a GitHub user's Copilot usage",
-        OperationId = "CopilotGetUser"
-    )]
+    [SwaggerOperation(Summary = "Get a GitHub user's Copilot usage", OperationId = "CopilotGetUser")]
     [SwaggerResponse(StatusCodes.Status200OK, "The user's usage.", typeof(CopilotMeApiResource))]
-    [SwaggerResponse(
-        StatusCodes.Status400BadRequest,
-        "application/json"
-    )]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "application/json")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Missing permission read-all")]
     public async Task<IActionResult> GetUser(
         string login,
@@ -158,15 +137,9 @@ public class CopilotController : ControllerBase
 
     [HttpGet("users/{login}/credits")]
     [RequiresPermission("copilot", "read-all")]
-    [SwaggerOperation(
-        Summary = "Get a GitHub user's AI credits for a month",
-        OperationId = "CopilotGetUserCredits"
-    )]
+    [SwaggerOperation(Summary = "Get a GitHub user's AI credits for a month", OperationId = "CopilotGetUserCredits")]
     [SwaggerResponse(StatusCodes.Status200OK, "The user's credits.", typeof(CopilotMeCreditsApiResource))]
-    [SwaggerResponse(
-        StatusCodes.Status400BadRequest,
-        "application/json"
-    )]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "application/json")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Missing permission read-all")]
     public async Task<IActionResult> GetUserCredits(
         string login,
