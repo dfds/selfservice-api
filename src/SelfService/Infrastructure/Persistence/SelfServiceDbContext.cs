@@ -85,6 +85,8 @@ public class SelfServiceDbContext : DbContext
     public DbSet<EventAttachment> EventAttachments => Set<EventAttachment>();
     public DbSet<NewsItem> NewsItems => Set<NewsItem>();
     public DbSet<PrivateAsset> PrivateAssets => Set<PrivateAsset>();
+    public DbSet<ComplianceSnapshot> ComplianceSnapshots => Set<ComplianceSnapshot>();
+    public DbSet<ComplianceDailySummary> ComplianceDailySummaries => Set<ComplianceDailySummary>();
     public DbSet<EmailCampaign> EmailCampaigns => Set<EmailCampaign>();
     public DbSet<EmailCampaignRecipientLog> EmailCampaignRecipientLogs => Set<EmailCampaignRecipientLog>();
     public DbSet<EmailCampaignExecution> EmailCampaignExecutions => Set<EmailCampaignExecution>();
@@ -694,6 +696,41 @@ public class SelfServiceDbContext : DbContext
                     x.CreatedAt,
                 })
                 .HasDatabaseName("IX_PrivateAsset_OwnerType_OwnerId_CreatedAt");
+        });
+
+        modelBuilder.Entity<ComplianceSnapshot>(cfg =>
+        {
+            cfg.ToTable("ComplianceSnapshot");
+            cfg.HasKey(x => x.Id);
+            cfg.Property(x => x.Id).ValueGeneratedNever();
+            cfg.Property(x => x.SnapshotDate).IsRequired();
+            cfg.Property(x => x.CapturedAt).HasConversion<ForceUtcKind>();
+            cfg.Property(x => x.CapabilityId).HasMaxLength(255).IsRequired();
+            cfg.Property(x => x.CapabilityName).IsRequired();
+            cfg.Property(x => x.JsonMetadata);
+            cfg.Property(x => x.CostCentre);
+            cfg.Property(x => x.MemberCount);
+            cfg.Property(x => x.OverallStatus).HasConversion<string>().HasMaxLength(32).IsRequired();
+            cfg.Property(x => x.Categories).HasColumnType("jsonb").IsRequired();
+            cfg.HasIndex(x => new { x.SnapshotDate, x.CapabilityId })
+                .IsUnique()
+                .HasDatabaseName("ComplianceSnapshot_SnapshotDate_CapabilityId_UQ");
+            cfg.HasIndex(x => new { x.CapabilityId, x.SnapshotDate })
+                .HasDatabaseName("IX_ComplianceSnapshot_CapabilityId_SnapshotDate");
+        });
+
+        modelBuilder.Entity<ComplianceDailySummary>(cfg =>
+        {
+            cfg.ToTable("ComplianceDailySummary");
+            cfg.HasKey(x => x.SnapshotDate);
+            cfg.Property(x => x.SnapshotDate).ValueGeneratedNever();
+            cfg.Property(x => x.CapturedAt).HasConversion<ForceUtcKind>();
+            cfg.Property(x => x.TotalCapabilities);
+            cfg.Property(x => x.FullyCompliantCapabilities);
+            cfg.Property(x => x.NonCompliantCapabilities);
+            cfg.Property(x => x.UnknownCapabilities);
+            cfg.Property(x => x.Requirements).HasColumnType("jsonb").IsRequired();
+            cfg.Property(x => x.CostCentres).HasColumnType("jsonb").IsRequired();
         });
 
         modelBuilder.Entity<EmailCampaign>(cfg =>

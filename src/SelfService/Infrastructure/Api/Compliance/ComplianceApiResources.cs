@@ -87,6 +87,7 @@ public class ComplianceCategoryItemApiResource
 public class CostCentreComplianceApiResource
 {
     public string CostCentre { get; set; } = null!;
+    public ComplianceCostCentreKind Kind { get; set; }
     public int TotalCapabilities { get; set; }
     public int CompliantCount { get; set; }
     public int NonCompliantCount { get; set; }
@@ -97,10 +98,24 @@ public class CostCentreComplianceApiResource
         return new CostCentreComplianceApiResource
         {
             CostCentre = result.CostCentre,
+            Kind = result.Kind,
             TotalCapabilities = result.TotalCapabilities,
             CompliantCount = result.CompliantCount,
             NonCompliantCount = result.NonCompliantCount,
             Categories = result.Categories.Select(CostCentreCategoryBreakdownApiResource.From).ToList(),
+        };
+    }
+}
+
+public class AllCostCentresComplianceApiResource
+{
+    public List<CostCentreComplianceApiResource> Items { get; set; } = new();
+
+    public static AllCostCentresComplianceApiResource From(AllCostCentresComplianceResult result)
+    {
+        return new AllCostCentresComplianceApiResource
+        {
+            Items = result.Items.Select(CostCentreComplianceApiResource.From).ToList(),
         };
     }
 }
@@ -287,4 +302,213 @@ public class RequirementCapabilityComplianceApiResource
             NonCompliantItems = result.NonCompliantItems,
         };
     }
+}
+
+public class ComplianceHistoryApiResource
+{
+    public DateOnly? OldestDate { get; set; }
+    public List<ComplianceDailySummaryApiResource> Items { get; set; } = new();
+
+    public static ComplianceHistoryApiResource From(ComplianceHistoryResult result)
+    {
+        return new ComplianceHistoryApiResource
+        {
+            OldestDate = result.OldestDate,
+            Items = result.Items.Select(ComplianceDailySummaryApiResource.From).ToList(),
+        };
+    }
+}
+
+public class ComplianceDailySummaryApiResource
+{
+    public DateOnly Date { get; set; }
+    public DateTime CapturedAt { get; set; }
+    public int TotalCapabilities { get; set; }
+    public int FullyCompliantCapabilities { get; set; }
+    public int NonCompliantCapabilities { get; set; }
+    public int UnknownCapabilities { get; set; }
+    public List<ComplianceRequirementTotalsApiResource> Requirements { get; set; } = new();
+    public List<ComplianceCostCentreTotalsApiResource> CostCentres { get; set; } = new();
+
+    public static ComplianceDailySummaryApiResource From(ComplianceDailySummaryResult result)
+    {
+        return new ComplianceDailySummaryApiResource
+        {
+            Date = result.Date,
+            CapturedAt = result.CapturedAt,
+            TotalCapabilities = result.TotalCapabilities,
+            FullyCompliantCapabilities = result.FullyCompliantCapabilities,
+            NonCompliantCapabilities = result.NonCompliantCapabilities,
+            UnknownCapabilities = result.UnknownCapabilities,
+            Requirements = result.Requirements.Select(ComplianceRequirementTotalsApiResource.From).ToList(),
+            CostCentres = result.CostCentres.Select(ComplianceCostCentreTotalsApiResource.From).ToList(),
+        };
+    }
+}
+
+public class ComplianceRequirementTotalsApiResource
+{
+    public string RequirementId { get; set; } = null!;
+    public string CategoryName { get; set; } = null!;
+    public string? DisplayName { get; set; }
+    public int TotalCapabilities { get; set; }
+    public int CompliantCount { get; set; }
+    public int NonCompliantCount { get; set; }
+    public int UnknownCount { get; set; }
+
+    public static ComplianceRequirementTotalsApiResource From(ComplianceRequirementTotals totals)
+    {
+        return new ComplianceRequirementTotalsApiResource
+        {
+            RequirementId = totals.RequirementId,
+            CategoryName = totals.CategoryName,
+            DisplayName = totals.DisplayName,
+            TotalCapabilities = totals.TotalCapabilities,
+            CompliantCount = totals.CompliantCount,
+            NonCompliantCount = totals.NonCompliantCount,
+            UnknownCount = totals.UnknownCount,
+        };
+    }
+}
+
+public class ComplianceCostCentreTotalsApiResource
+{
+    public string? CostCentre { get; set; }
+    public ComplianceCostCentreKind Kind { get; set; }
+    public int TotalCapabilities { get; set; }
+    public int CompliantCount { get; set; }
+    public int NonCompliantCount { get; set; }
+    public int UnknownCount { get; set; }
+
+    public static ComplianceCostCentreTotalsApiResource From(ComplianceCostCentreTotals totals)
+    {
+        return new ComplianceCostCentreTotalsApiResource
+        {
+            CostCentre = totals.CostCentre,
+            Kind = totals.Kind,
+            TotalCapabilities = totals.TotalCapabilities,
+            CompliantCount = totals.CompliantCount,
+            NonCompliantCount = totals.NonCompliantCount,
+            UnknownCount = totals.UnknownCount,
+        };
+    }
+}
+
+public class CostCentreComplianceHistoryApiResource
+{
+    public DateOnly? OldestDate { get; set; }
+    public List<CostCentreComplianceHistoryEntryApiResource> Items { get; set; } = new();
+
+    public static CostCentreComplianceHistoryApiResource From(CostCentreComplianceHistoryResult result)
+    {
+        return new CostCentreComplianceHistoryApiResource
+        {
+            OldestDate = result.OldestDate,
+            Items = result.Items.Select(CostCentreComplianceHistoryEntryApiResource.From).ToList(),
+        };
+    }
+}
+
+public class CostCentreComplianceHistoryEntryApiResource
+{
+    public DateOnly Date { get; set; }
+    public int TotalCapabilities { get; set; }
+    public int CompliantCount { get; set; }
+    public int NonCompliantCount { get; set; }
+    public int UnknownCount { get; set; }
+    public List<ComplianceRequirementTotalsApiResource> Requirements { get; set; } = new();
+
+    public static CostCentreComplianceHistoryEntryApiResource From(CostCentreComplianceHistoryEntry entry)
+    {
+        return new CostCentreComplianceHistoryEntryApiResource
+        {
+            Date = entry.Date,
+            TotalCapabilities = entry.TotalCapabilities,
+            CompliantCount = entry.CompliantCount,
+            NonCompliantCount = entry.NonCompliantCount,
+            UnknownCount = entry.UnknownCount,
+            Requirements = entry.Requirements.Select(ComplianceRequirementTotalsApiResource.From).ToList(),
+        };
+    }
+}
+
+public class RequirementComplianceHistoryApiResource
+{
+    public DateOnly? OldestDate { get; set; }
+    public string RequirementId { get; set; } = null!;
+    public List<RequirementComplianceHistoryEntryApiResource> Items { get; set; } = new();
+
+    public static RequirementComplianceHistoryApiResource From(RequirementComplianceHistoryResult result)
+    {
+        return new RequirementComplianceHistoryApiResource
+        {
+            OldestDate = result.OldestDate,
+            RequirementId = result.RequirementId,
+            Items = result.Items.Select(RequirementComplianceHistoryEntryApiResource.From).ToList(),
+        };
+    }
+}
+
+public class RequirementComplianceHistoryEntryApiResource
+{
+    public DateOnly Date { get; set; }
+    public ComplianceRequirementTotalsApiResource Totals { get; set; } = null!;
+    public List<ComplianceCostCentreTotalsApiResource> CostCentres { get; set; } = new();
+
+    public static RequirementComplianceHistoryEntryApiResource From(RequirementComplianceHistoryEntry entry)
+    {
+        return new RequirementComplianceHistoryEntryApiResource
+        {
+            Date = entry.Date,
+            Totals = ComplianceRequirementTotalsApiResource.From(entry.Totals),
+            CostCentres = entry.CostCentres.Select(ComplianceCostCentreTotalsApiResource.From).ToList(),
+        };
+    }
+}
+
+public class CapabilityComplianceHistoryApiResource
+{
+    public List<CapabilityComplianceHistoryEntryApiResource> Items { get; set; } = new();
+
+    public static CapabilityComplianceHistoryApiResource From(IEnumerable<CapabilityComplianceHistoryEntry> entries)
+    {
+        return new CapabilityComplianceHistoryApiResource
+        {
+            Items = entries.Select(CapabilityComplianceHistoryEntryApiResource.From).ToList(),
+        };
+    }
+}
+
+public class CapabilityComplianceHistoryEntryApiResource
+{
+    public DateOnly Date { get; set; }
+    public string OverallStatus { get; set; } = null!;
+    public int CompliantCategories { get; set; }
+    public int TotalCategories { get; set; }
+    public List<ComplianceCategoryStatusApiResource> Categories { get; set; } = new();
+
+    public static CapabilityComplianceHistoryEntryApiResource From(CapabilityComplianceHistoryEntry entry)
+    {
+        var categories = entry.Row.Categories;
+        return new CapabilityComplianceHistoryEntryApiResource
+        {
+            Date = entry.Date,
+            OverallStatus = entry.Row.OverallStatus.ToString(),
+            CompliantCategories = categories.Count(c => c.Status == ComplianceStatus.Compliant),
+            TotalCategories = categories.Count,
+            Categories = categories
+                .Select(c => new ComplianceCategoryStatusApiResource
+                {
+                    CategoryName = c.CategoryName,
+                    Status = c.Status.ToString(),
+                })
+                .ToList(),
+        };
+    }
+}
+
+public class ComplianceCategoryStatusApiResource
+{
+    public string CategoryName { get; set; } = null!;
+    public string Status { get; set; } = null!;
 }
