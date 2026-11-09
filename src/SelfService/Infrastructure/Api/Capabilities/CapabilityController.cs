@@ -160,6 +160,17 @@ public class CapabilityController : ControllerBase
                 new ProblemDetails { Title = "Internal server error", Detail = "JsonMetadataResult is null" }
             );
 
+        var missingTags = TagComplianceEvaluator.MissingTags(jsonMetadataResult.JsonMetadata);
+        if (missingTags.Count > 0)
+            return BadRequest(
+                new ProblemDetails
+                {
+                    Title = "Missing required tags",
+                    Detail = $"The following tags are required: {string.Join(", ", missingTags)}",
+                    Status = StatusCodes.Status400BadRequest,
+                }
+            );
+
         try
         {
             await _capabilityApplicationService.CreateNewCapability(

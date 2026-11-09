@@ -50,4 +50,9 @@ public static class TagComplianceEvaluator
 
         return new TagEvaluation(tags, score, presentCount == tags.Count);
     }
+
+    public static IReadOnlyList<string> MissingTags(string? jsonMetadata)
+    {
+        return Evaluate(jsonMetadata).Tags.Where(t => !t.IsPresent).Select(t => t.Name).ToList();
+    }
 }
