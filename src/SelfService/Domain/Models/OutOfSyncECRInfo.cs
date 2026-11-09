@@ -38,6 +38,7 @@ public class OutOfSyncECRInfo : ValueObject
         RepositoriesNotInAws = o.RepositoriesNotInAws;
         RepositoriesNotInDb = o.RepositoriesNotInDb;
         HasBeenSet = o.HasBeenSet;
+        UpdateNeededAt = o.UpdateNeededAt;
     }
 
     protected override IEnumerable<object> GetEqualityComponents()
