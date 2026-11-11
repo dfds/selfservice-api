@@ -18,7 +18,7 @@ public class MembershipApplicationController : ControllerBase
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IMembershipApplicationQuery _membershipApplicationQuery;
     private readonly ApiResourceFactory _apiResourceFactory;
-    private readonly RbacApplicationService _rbacApplicationService;
+    private readonly IRbacApplicationService _rbacApplicationService;
 
     public MembershipApplicationController(
         ILogger<MembershipApplicationController> logger,
@@ -26,7 +26,7 @@ public class MembershipApplicationController : ControllerBase
         IMembershipApplicationService membershipApplicationService,
         IMembershipApplicationQuery membershipApplicationQuery,
         ApiResourceFactory apiResourceFactory,
-        RbacApplicationService rbacApplicationService
+        IRbacApplicationService rbacApplicationService
     )
     {
         _authorizationService = authorizationService;
