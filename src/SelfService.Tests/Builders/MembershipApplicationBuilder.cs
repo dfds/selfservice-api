@@ -29,6 +29,12 @@ public class MembershipApplicationBuilder
         return this;
     }
 
+    public MembershipApplicationBuilder WithStatus(MembershipApplicationStatusOptions status)
+    {
+        _status = status;
+        return this;
+    }
+
     public MembershipApplicationBuilder WithId(MembershipApplicationId id)
     {
         _id = id;

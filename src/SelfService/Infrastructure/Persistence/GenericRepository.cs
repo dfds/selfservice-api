@@ -62,4 +62,9 @@ public class GenericRepository<T, TId> : IGenericRepository<T, TId>
         var ts = await DbSetReference.ToListAsync();
         return ts.Where(predicate).ToList();
     }
+
+    public Task<List<T>> GetAllWhere(Expression<Func<T, bool>> predicate)
+    {
+        return DbSetReference.Where(predicate).ToListAsync();
+    }
 }

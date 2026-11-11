@@ -79,6 +79,7 @@ public class SelfServiceDbContext : DbContext
     public DbSet<RbacGroup> RbacGroups => Set<RbacGroup>();
     public DbSet<RbacGroupMember> RbacGroupMembers => Set<RbacGroupMember>();
     public DbSet<RbacRole> RbacRoles => Set<RbacRole>();
+    public DbSet<RbacGrantableRole> RbacGrantableRoles => Set<RbacGrantableRole>();
     public DbSet<DemoRecording> DemoRecording => Set<DemoRecording>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<EventAttachment> EventAttachments => Set<EventAttachment>();
@@ -598,6 +599,13 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.Name);
             cfg.Property(x => x.Description);
             cfg.Property(x => x.Type);
+        });
+
+        modelBuilder.Entity<RbacGrantableRole>(cfg =>
+        {
+            cfg.ToTable("RbacGrantableRole");
+            cfg.HasKey(x => new { x.RoleId, x.GrantableRoleId });
+            cfg.Property(x => x.CreatedAt);
         });
 
         modelBuilder.Entity<RbacGroup>(cfg =>

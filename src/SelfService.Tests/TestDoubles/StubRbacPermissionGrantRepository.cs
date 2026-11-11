@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using SelfService.Domain.Models;
 
 namespace SelfService.Tests.TestDoubles;
@@ -44,5 +45,10 @@ public class StubRbacPermissionGrantRepository : IRbacPermissionGrantRepository
     public Task<List<RbacPermissionGrant>> GetAllWithPredicate(Func<RbacPermissionGrant, bool> predicate)
     {
         return Task.FromResult(new List<RbacPermissionGrant>(_permissions.Where(predicate)));
+    }
+
+    public Task<List<RbacPermissionGrant>> GetAllWhere(Expression<Func<RbacPermissionGrant, bool>> predicate)
+    {
+        return Task.FromResult(new List<RbacPermissionGrant>(_permissions.Where(predicate.Compile())));
     }
 }

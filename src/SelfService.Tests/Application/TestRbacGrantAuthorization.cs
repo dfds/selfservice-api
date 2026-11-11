@@ -13,6 +13,7 @@ namespace SelfService.Tests.Application;
 public class TestRbacGrantAuthorization
 {
     private const string Owner = "owner@bar.com";
+    private const string Contributor = "contributor@bar.com";
     private const string CloudEngineer = "ce@dfds.com";
     private const string Nobody = "nobody@dfds.com";
     private const string Bystander = "someone@dfds.com";
@@ -26,6 +27,7 @@ public class TestRbacGrantAuthorization
 
         /// <summary>Mirrors the seeded Owner role: capability manage-permissions plus rbac/create.</summary>
         public required RbacRoleId OwnerRoleId { get; init; }
+        public required RbacRoleId ContributorRoleId { get; init; }
         public required RbacRoleId CloudEngineerRoleId { get; init; }
         public required RbacRoleId ReaderRoleId { get; init; }
         public required RbacRoleId GuestRoleId { get; init; }
@@ -46,10 +48,20 @@ public class TestRbacGrantAuthorization
 
         var ownerRole = RbacRole.New("system", "Owner", "", RbacAccessType.Global);
         var cloudEngineerRole = RbacRole.New("system", "CloudEngineer", "", RbacAccessType.Global);
+        var contributorRole = RbacRole.New("system", "Contributor", "", RbacAccessType.Global);
         var readerRole = RbacRole.New("system", "Reader", "", RbacAccessType.Global);
         var guestRole = RbacRole.New("system", "Guest", "", RbacAccessType.Global);
 
-        db.RbacRoles.AddRange(ownerRole, cloudEngineerRole, readerRole, guestRole);
+        db.RbacRoles.AddRange(ownerRole, cloudEngineerRole, contributorRole, readerRole, guestRole);
+
+        // Same rules as the 20261111120000_add-rbac-grantable-role migration.
+        db.RbacGrantableRoles.AddRange(
+            new RbacGrantableRole(ownerRole.Id, ownerRole.Id, DateTime.Now),
+            new RbacGrantableRole(ownerRole.Id, contributorRole.Id, DateTime.Now),
+            new RbacGrantableRole(ownerRole.Id, readerRole.Id, DateTime.Now),
+            new RbacGrantableRole(contributorRole.Id, contributorRole.Id, DateTime.Now),
+            new RbacGrantableRole(contributorRole.Id, readerRole.Id, DateTime.Now)
+        );
 
         db.RbacPermissionGrants.AddRange(
             RbacPermissionGrant.New(
@@ -81,6 +93,7 @@ public class TestRbacGrantAuthorization
 
         db.RbacRoleGrants.AddRange(
             RbacRoleGrant.New(ownerRole.Id, AssignedEntityType.User, Owner, RbacAccessType.Capability, Bar),
+            RbacRoleGrant.New(contributorRole.Id, AssignedEntityType.User, Contributor, RbacAccessType.Capability, Bar),
             RbacRoleGrant.New(cloudEngineerRole.Id, AssignedEntityType.User, CloudEngineer, RbacAccessType.Global, "")
         );
 
@@ -91,6 +104,7 @@ public class TestRbacGrantAuthorization
             Fixture = fixture,
             Service = fixture.ApiApplication.Services.GetService<IRbacApplicationService>()!,
             OwnerRoleId = ownerRole.Id,
+            ContributorRoleId = contributorRole.Id,
             CloudEngineerRoleId = cloudEngineerRole.Id,
             ReaderRoleId = readerRole.Id,
             GuestRoleId = guestRole.Id,
@@ -255,10 +269,11 @@ public class TestRbacGrantAuthorization
     {
         var scenario = await NewScenario();
 
+        // Granted by a global admin so the request reaches the switch's own validation.
         await Assert.ThrowsAsync<BadHttpRequestException>(
             async () =>
                 await scenario.Service.GrantRoleGrant(
-                    Owner,
+                    CloudEngineer,
                     Grant(scenario.GuestRoleId, Bystander, RbacAccessType.Capability, Bar),
                     userInitiated: true
                 )
@@ -279,5 +294,131 @@ public class TestRbacGrantAuthorization
                     userInitiated: true
                 )
         );
+    }
+
+    [Theory]
+    [InlineData("Contributor")]
+    [InlineData("Reader")]
+    public async Task contributor_can_grant_roles_in_its_matrix_row(string roleName)
+    {
+        var scenario = await NewScenario();
+        var roleId = roleName == "Contributor" ? scenario.ContributorRoleId : scenario.ReaderRoleId;
+
+        await scenario.Service.GrantRoleGrant(
+            Contributor,
+            Grant(roleId, Bystander, RbacAccessType.Capability, Bar),
+            userInitiated: true
+        );
+
+        var grants = await PersistedGrants(scenario);
+        Assert.Contains(grants, g => g.AssignedEntityId == Bystander && g.RoleId == roleId);
+    }
+
+    [Fact]
+    public async Task contributor_cannot_grant_owner()
+    {
+        var scenario = await NewScenario();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            async () =>
+                await scenario.Service.GrantRoleGrant(
+                    Contributor,
+                    Grant(scenario.OwnerRoleId, Bystander, RbacAccessType.Capability, Bar),
+                    userInitiated: true
+                )
+        );
+    }
+
+    [Fact]
+    public async Task contributor_cannot_replace_an_owner_grant()
+    {
+        var scenario = await NewScenario();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            async () =>
+                await scenario.Service.GrantRoleGrant(
+                    Contributor,
+                    Grant(scenario.ReaderRoleId, Owner, RbacAccessType.Capability, Bar),
+                    userInitiated: true
+                )
+        );
+    }
+
+    [Fact]
+    public async Task owner_cannot_grant_a_role_outside_the_matrix()
+    {
+        var scenario = await NewScenario();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            async () =>
+                await scenario.Service.GrantRoleGrant(
+                    Owner,
+                    Grant(scenario.CloudEngineerRoleId, Bystander, RbacAccessType.Capability, Bar),
+                    userInitiated: true
+                )
+        );
+    }
+
+    [Fact]
+    public async Task grantable_roles_follow_the_callers_role_on_the_capability()
+    {
+        var scenario = await NewScenario();
+
+        var forContributor = await scenario.Service.GetGrantableRoles(Contributor, Bar);
+        var elsewhere = await scenario.Service.GetGrantableRoles(Contributor, OtherCapability);
+        var forAdmin = await scenario.Service.GetGrantableRoles(CloudEngineer, OtherCapability);
+
+        Assert.Equal(new[] { "Contributor", "Reader" }, forContributor.Select(r => r.Name).Order());
+        Assert.Empty(elsewhere);
+        Assert.Equal(new[] { "Contributor", "Owner", "Reader" }, forAdmin.Select(r => r.Name).Order());
+    }
+
+    [Fact]
+    public async Task grant_matrix_can_only_be_set_by_global_admins()
+    {
+        var scenario = await NewScenario();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            async () =>
+                await scenario.Service.SetGrantMatrix(
+                    Owner,
+                    new List<(RbacRoleId, RbacRoleId)> { (scenario.ReaderRoleId, scenario.ReaderRoleId) }
+                )
+        );
+    }
+
+    [Fact]
+    public async Task grant_matrix_rejects_non_capability_roles()
+    {
+        var scenario = await NewScenario();
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () =>
+                await scenario.Service.SetGrantMatrix(
+                    CloudEngineer,
+                    new List<(RbacRoleId, RbacRoleId)> { (scenario.OwnerRoleId, scenario.CloudEngineerRoleId) }
+                )
+        );
+    }
+
+    [Fact]
+    public async Task setting_the_grant_matrix_replaces_every_rule()
+    {
+        var scenario = await NewScenario();
+
+        await scenario.Service.SetGrantMatrix(
+            CloudEngineer,
+            new List<(RbacRoleId, RbacRoleId)>
+            {
+                (scenario.OwnerRoleId, scenario.ReaderRoleId),
+                (scenario.ReaderRoleId, scenario.ReaderRoleId),
+            }
+        );
+        await scenario.Fixture.DbContext.SaveChangesAsync();
+
+        var rules = await scenario.Fixture.DbContext.RbacGrantableRoles.ToListAsync();
+        Assert.Equal(2, rules.Count);
+        Assert.Contains(rules, r => r.RoleId == scenario.OwnerRoleId && r.GrantableRoleId == scenario.ReaderRoleId);
+        Assert.Contains(rules, r => r.RoleId == scenario.ReaderRoleId && r.GrantableRoleId == scenario.ReaderRoleId);
     }
 }

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using SelfService.Configuration;
 using SelfService.Domain.Models;
 
@@ -46,6 +47,11 @@ public class StubRbacRoleGrantRepository : IRbacRoleGrantRepository
     }
 
     public Task<List<RbacRoleGrant>> GetAllWithPredicate(Func<RbacRoleGrant, bool> predicate)
+    {
+        return Task.FromResult(new List<RbacRoleGrant>());
+    }
+
+    public Task<List<RbacRoleGrant>> GetAllWhere(Expression<Func<RbacRoleGrant, bool>> predicate)
     {
         return Task.FromResult(new List<RbacRoleGrant>());
     }

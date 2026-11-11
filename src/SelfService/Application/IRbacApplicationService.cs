@@ -31,12 +31,29 @@ public interface IRbacApplicationService
 
     /// <param name="userInitiated">
     /// True when <paramref name="roleGrant"/> came from a caller-supplied request body rather than a
-    /// platform workflow. Enables authorization: global grants are refused, the caller must hold
-    /// capability-management/manage-permissions on roleGrant.Resource (or global rbac/create), and
-    /// self-grants are refused. Defaults to false, which preserves the trusted behaviour used by
-    /// capability bootstrap, membership approval, bulk import and the global /rbac endpoints.
+    /// platform workflow. Enables authorization through <see cref="CanGrantRoleGrant"/>. Defaults to
+    /// false, which preserves the trusted behaviour used by capability bootstrap, membership approval,
+    /// bulk import and the global /rbac endpoints.
     /// </param>
     Task GrantRoleGrant(string user, RbacRoleGrant roleGrant, bool userInitiated = false);
+
+    /// <summary>
+    /// Global rbac/create holders may grant anything. Otherwise the grant must be capability-scoped, not
+    /// to the caller, and both its role and the role of the grant it replaces must be grantable by the
+    /// caller on that capability according to the grant matrix.
+    /// </summary>
+    Task<bool> CanGrantRoleGrant(string user, RbacRoleGrant roleGrant);
+
+    /// <summary>Capability roles the caller may grant on <paramref name="capabilityId"/>.</summary>
+    Task<List<RbacRole>> GetGrantableRoles(string user, string capabilityId);
+
+    /// <summary>Owner, Contributor, Reader and roles of type Capability; never Guest.</summary>
+    Task<List<RbacRole>> GetCapabilityRoles();
+    Task<List<RbacGrantableRole>> GetGrantMatrix();
+
+    /// <summary>Replaces the grant matrix. Requires global rbac/create; both ends must be capability roles.</summary>
+    Task SetGrantMatrix(string user, List<(RbacRoleId RoleId, RbacRoleId GrantableRoleId)> rules);
+    Task<bool> CanManageGrantMatrix(string user);
     Task<BulkGrantResult<RbacRoleGrant>> GrantRoleGrants(string user, List<RbacRoleGrant> grants);
     Task<RbacRoleGrant?> RevokeRoleGrant(string user, string id);
     Task RevokeCapabilityRoleGrant(UserId userId, CapabilityId capabilityId);
