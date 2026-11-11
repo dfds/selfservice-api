@@ -63,7 +63,7 @@ public class S3PrivateAssetService : IPrivateAssetService
             Expires = DateTime.UtcNow.Add(duration),
         };
 
-        var url = _s3Client.GetPreSignedURL(request);
+        var url = await _s3Client.GetPreSignedURLAsync(request);
 
         // The SDK always presigns with https; downgrade to match an http endpoint (e.g. the local S3 mock).
         // Only the host is signed (SignedHeaders=host), so changing the scheme does not invalidate the signature.
@@ -75,7 +75,7 @@ public class S3PrivateAssetService : IPrivateAssetService
             url = string.Concat("http://", url.AsSpan("https://".Length));
         }
 
-        return await Task.FromResult(url);
+        return url;
     }
 
     public async Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default)
