@@ -20,6 +20,7 @@ public static class SwaggerConfiguration
             );
             var schemaHelper = new SwashbuckleSchemaHelper();
             options.CustomSchemaIds(type => schemaHelper.GetSchemaId(type));
+            options.EnableAnnotations();
 
             options.DocInclusionPredicate((_, description) => !description.ShouldIgnore());
         });

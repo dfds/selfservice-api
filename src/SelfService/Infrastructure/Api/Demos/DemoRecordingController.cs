@@ -49,7 +49,7 @@ public class DemoRecordingController : ControllerBase
 
         var demos = await _demoRecordingService.GetAllDemoRecordings();
 
-        return Ok(_apiResourceFactory.Convert(demos));
+        return Ok(await _apiResourceFactory.Convert(demos));
     }
 
     [HttpPost("")]
@@ -89,7 +89,7 @@ public class DemoRecordingController : ControllerBase
 
         var createdDemo = await _demoRecordingService.AddDemoRecording(demo);
 
-        return Ok(_apiResourceFactory.Convert(createdDemo));
+        return Ok(await _apiResourceFactory.Convert(createdDemo));
     }
 
     [HttpGet("{id}")]
@@ -112,7 +112,7 @@ public class DemoRecordingController : ControllerBase
 
         var demo = await _demoRecordingService.GetDemoRecordingById(id);
 
-        return Ok(_apiResourceFactory.Convert(demo));
+        return Ok(await _apiResourceFactory.Convert(demo));
     }
 
     [HttpPost("{id}")]
@@ -143,7 +143,7 @@ public class DemoRecordingController : ControllerBase
 
         var updatedDemo = await _demoRecordingService.GetDemoRecordingById(id);
 
-        return Ok(_apiResourceFactory.Convert(updatedDemo));
+        return Ok(await _apiResourceFactory.Convert(updatedDemo));
     }
 
     [HttpDelete("{id}")]
@@ -181,7 +181,7 @@ public class DemoRecordingController : ControllerBase
             );
         }
 
-        var isCloudEngineer = _authorizationService.CanSynchronizeAwsECRAndDatabaseECR(User.ToPortalUser());
+        var isCloudEngineer = await _authorizationService.CanSynchronizeAwsECRAndDatabaseECR(User.ToPortalUser());
         if (!isCloudEngineer)
             return Unauthorized();
 

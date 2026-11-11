@@ -80,13 +80,13 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
         return set;
     }
 
-    public Task Add(AzureResourceManifest manifest)
+    public async Task Add(AzureResourceManifest manifest)
     {
         Directory.CreateDirectory($"{_config.TemporaryRepoPath}/{manifest.AzureResource?.Id}");
         var manifestString = manifest.GenerateManifestString(ExtractManifestRef());
         if (!File.Exists($"{_config.TemporaryRepoPath}/{manifest.AzureResource?.Id}/terragrunt.hcl"))
         {
-            File.WriteAllText(
+            await File.WriteAllTextAsync(
                 $"{_config.TemporaryRepoPath}/{manifest.AzureResource?.Id}/terragrunt.hcl",
                 manifestString
             );
@@ -100,8 +100,6 @@ public class AzureResourceManifestRepository : IAzureResourceManifestRepository
             var result = CommandExecutor.Run("git", "push", _config.TemporaryRepoPath, 60000);
             result.ThrowIfError();
         }
-
-        return Task.CompletedTask;
     }
 
     public String ExtractManifestRef()

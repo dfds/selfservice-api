@@ -107,10 +107,9 @@ public class TeamApplicationService : ITeamApplicationService
     }
 
     [TransactionalBoundary]
-    public Task RemoveTeam(TeamId id)
+    public async Task RemoveTeam(TeamId id)
     {
-        _teamRepository.Remove(id);
-        return Task.CompletedTask;
+        await _teamRepository.Remove(id);
     }
 
     [TransactionalBoundary]

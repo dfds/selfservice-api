@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SelfService.Domain.Models;
 using SelfService.Domain.Queries;
 
@@ -12,11 +13,11 @@ public class AwsAccountIdQuery : IAwsAccountIdQuery
         _context = context;
     }
 
-    public RealAwsAccountId? FindBy(CapabilityId capabilityId)
+    public async Task<RealAwsAccountId?> FindBy(CapabilityId capabilityId)
     {
         try
         {
-            var query = _context.AwsAccounts.Where(x => x.CapabilityId == capabilityId).ToArray();
+            var query = await _context.AwsAccounts.Where(x => x.CapabilityId == capabilityId).ToArrayAsync();
             return query.Length > 0 ? query.First().Registration.AccountId : null;
         }
         catch
@@ -25,7 +26,9 @@ public class AwsAccountIdQuery : IAwsAccountIdQuery
         }
     }
 
-    public IReadOnlyDictionary<CapabilityId, RealAwsAccountId> FindBy(IReadOnlyCollection<CapabilityId> capabilityIds)
+    public async Task<IReadOnlyDictionary<CapabilityId, RealAwsAccountId>> FindBy(
+        IReadOnlyCollection<CapabilityId> capabilityIds
+    )
     {
         try
         {
@@ -33,7 +36,7 @@ public class AwsAccountIdQuery : IAwsAccountIdQuery
             if (ids.Count == 0)
                 return new Dictionary<CapabilityId, RealAwsAccountId>();
 
-            var accounts = _context.AwsAccounts.Where(x => ids.Contains(x.CapabilityId)).ToList();
+            var accounts = await _context.AwsAccounts.Where(x => ids.Contains(x.CapabilityId)).ToListAsync();
 
             return accounts
                 .Where(x => x.Registration.AccountId is not null)

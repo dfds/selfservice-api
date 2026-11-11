@@ -80,13 +80,16 @@ public class AwsAccountManifestRepository : IAwsAccountManifestRepository
         return set;
     }
 
-    public Task Add(AwsAccountManifest manifest)
+    public async Task Add(AwsAccountManifest manifest)
     {
         Directory.CreateDirectory($"{_config.TemporaryRepoPath}/{manifest.AwsAccount?.Id}");
         var manifestString = manifest.GenerateManifestString(ExtractTemplateText());
         if (!File.Exists($"{_config.TemporaryRepoPath}/{manifest.AwsAccount?.Id}/terragrunt.hcl"))
         {
-            File.WriteAllText($"{_config.TemporaryRepoPath}/{manifest.AwsAccount?.Id}/terragrunt.hcl", manifestString);
+            await File.WriteAllTextAsync(
+                $"{_config.TemporaryRepoPath}/{manifest.AwsAccount?.Id}/terragrunt.hcl",
+                manifestString
+            );
             Commands.Stage(_repository, manifest.AwsAccount?.Id.ToString());
             _repository.Commit(
                 $"Added new AWS Account for {manifest.Capability?.Id}", // no environment yet
@@ -97,8 +100,6 @@ public class AwsAccountManifestRepository : IAwsAccountManifestRepository
             var result = CommandExecutor.Run("git", "push", _config.TemporaryRepoPath, 60000);
             result.ThrowIfError();
         }
-
-        return Task.CompletedTask;
     }
 
     public String ExtractTemplateText()

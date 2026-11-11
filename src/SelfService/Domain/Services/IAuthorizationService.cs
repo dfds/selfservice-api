@@ -30,13 +30,13 @@ public interface IAuthorizationService
     Task<bool> CanApply(UserId userId, CapabilityId capabilityId);
     Task<bool> CanViewAllApplications(UserId userId, CapabilityId capabilityId);
     Task<bool> CanDeleteCapability(UserId userId, CapabilityId capabilityId);
-    bool CanViewDeletedCapabilities(PortalUser portalUser);
-    bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser);
-    bool CanManagePermissionMatrix(PortalUser portalUser);
+    Task<bool> CanViewDeletedCapabilities(PortalUser portalUser);
+    Task<bool> CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser);
+    Task<bool> CanManagePermissionMatrix(PortalUser portalUser);
     Task<bool> CanGetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId);
     Task<bool> CanSetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId);
-    bool CanBypassMembershipApprovals(PortalUser portalUser);
-    bool CanBatchCreateCapabilities(PortalUser portalUser);
+    Task<bool> CanBypassMembershipApprovals(PortalUser portalUser);
+    Task<bool> CanBatchCreateCapabilities(PortalUser portalUser);
     Task<bool> CanDeleteMembershipApplication(
         PortalUser portalUser,
         UserId userId,
@@ -46,27 +46,29 @@ public interface IAuthorizationService
     Task<bool> CanSeeAwsAccountId(PortalUser portalUser, CapabilityId capabilityId);
     Task<bool> CanRetryCreatingMessageContract(PortalUser portalUser, MessageContractId messageContractId);
     Task<bool> CanSelfAssess(UserId userId, CapabilityId capabilityId);
-    bool CanManageSelfAssessmentOptions(PortalUser portalUser);
+    Task<bool> CanManageSelfAssessmentOptions(PortalUser portalUser);
 
-    bool CanCreateDemoRecording(PortalUser portalUser);
-    bool CanUpdateDemoRecording(PortalUser portalUser);
-    bool CanDeleteDemoRecording(PortalUser portalUser);
+    Task<bool> CanCreateDemoRecording(PortalUser portalUser);
+    Task<bool> CanUpdateDemoRecording(PortalUser portalUser);
+    Task<bool> CanDeleteDemoRecording(PortalUser portalUser);
 
-    bool CanCreateEvent(PortalUser portalUser);
-    bool CanUpdateEvent(PortalUser portalUser);
-    bool CanDeleteEvent(PortalUser portalUser);
+    Task<bool> CanReadAllCopilotUsage(PortalUser portalUser);
 
-    bool CanCreateNewsItem(PortalUser portalUser);
-    bool CanUpdateNewsItem(PortalUser portalUser);
-    bool CanDeleteNewsItem(PortalUser portalUser);
-    bool CanCreatePrivateAsset(PortalUser portalUser);
+    Task<bool> CanCreateEvent(PortalUser portalUser);
+    Task<bool> CanUpdateEvent(PortalUser portalUser);
+    Task<bool> CanDeleteEvent(PortalUser portalUser);
 
-    bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser);
-    bool IsAuthorizedToUpdateReleaseNote(PortalUser portalUser);
-    bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser);
-    bool IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser);
-    bool IsAuthorizedToRemoveReleaseNote(PortalUser portalUser);
+    Task<bool> CanCreateNewsItem(PortalUser portalUser);
+    Task<bool> CanUpdateNewsItem(PortalUser portalUser);
+    Task<bool> CanDeleteNewsItem(PortalUser portalUser);
+    Task<bool> CanCreatePrivateAsset(PortalUser portalUser);
+
+    Task<bool> IsAuthorizedToCreateReleaseNotes(PortalUser portalUser);
+    Task<bool> IsAuthorizedToUpdateReleaseNote(PortalUser portalUser);
+    Task<bool> IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser);
+    Task<bool> IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser);
+    Task<bool> IsAuthorizedToRemoveReleaseNote(PortalUser portalUser);
     Task<bool> CanViewMembershipApplications(UserId userId, CapabilityId capabilityId);
-    bool CanGetUserEmails(PortalUser portalUser);
-    bool CanUnsetCapabilityTags(PortalUser portalUser);
+    Task<bool> CanGetUserEmails(PortalUser portalUser);
+    Task<bool> CanUnsetCapabilityTags(PortalUser portalUser);
 }

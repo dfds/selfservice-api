@@ -2,6 +2,14 @@
 indent_style = space
 indent_size = 4
 
+# Microsoft.VisualStudio.Threading.Analyzers. Blocking on a Task (VSTHRD002) starves the
+# thread pool under concurrent load; TreatWarningsAsErrors turns the enabled rules into errors.
+# VSTHRD200 is an "Async" naming-suffix rule the codebase does not follow.
+dotnet_diagnostic.VSTHRD200.severity = none
+# VSTHRD011's deadlock needs a JoinableTaskFactory or single-threaded SynchronizationContext,
+# neither of which exists in ASP.NET Core.
+dotnet_diagnostic.VSTHRD011.severity = none
+
 [*.json]
 indent_style = space
 indent_size = 2
