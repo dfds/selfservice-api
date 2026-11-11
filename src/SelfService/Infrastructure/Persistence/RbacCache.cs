@@ -24,6 +24,23 @@ class RbacCache
         return result;
     }
 
+    public bool TryGet<T>(string prefix, string key, out T value)
+    {
+        if (_cache.TryGetValue($"{prefix}-{key}", out var cached))
+        {
+            value = (T)cached!;
+            return true;
+        }
+
+        value = default!;
+        return false;
+    }
+
+    public void Set<T>(string prefix, string key, T value)
+    {
+        _cache.Set($"{prefix}-{key}", value);
+    }
+
     public void Reset()
     {
         _cache = new MemoryCache(new MemoryCacheOptions());
