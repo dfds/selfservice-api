@@ -18,7 +18,7 @@ public class MembershipApplicationController : ControllerBase
     private readonly IMembershipApplicationService _membershipApplicationService;
     private readonly IMembershipApplicationQuery _membershipApplicationQuery;
     private readonly ApiResourceFactory _apiResourceFactory;
-    private readonly RbacApplicationService _rbacApplicationService;
+    private readonly IRbacApplicationService _rbacApplicationService;
 
     public MembershipApplicationController(
         ILogger<MembershipApplicationController> logger,
@@ -26,7 +26,7 @@ public class MembershipApplicationController : ControllerBase
         IMembershipApplicationService membershipApplicationService,
         IMembershipApplicationQuery membershipApplicationQuery,
         ApiResourceFactory apiResourceFactory,
-        RbacApplicationService rbacApplicationService
+        IRbacApplicationService rbacApplicationService
     )
     {
         _authorizationService = authorizationService;
@@ -271,10 +271,41 @@ public class MembershipApplicationController : ControllerBase
             }
         }
 
+        // The grant always goes to the applicant; the body only chooses the role.
+        var suppliedGrant =
+            request == null
+                ? null
+                : Domain.Models.RbacRoleGrant.New(
+                    RbacRoleId.Parse(request.RoleId),
+                    AssignedEntityType.User,
+                    application.Applicant,
+                    RbacAccessType.Capability,
+                    application.CapabilityId.ToString()
+                );
+
+        // Approval and grant commit in separate transactions, so both are authorized before either runs.
+        if (suppliedGrant != null)
+        {
+            if (!await _authorizationService.CanApproveMembershipApplications(userId, application))
+            {
+                return Unauthorized(
+                    new ProblemDetails
+                    {
+                        Title = "Not authorized to approve",
+                        Detail =
+                            $"User \"{userId}\" is not authorized to approve membership application \"{membershipApplicationId}\".",
+                    }
+                );
+            }
+
+            if (!await _rbacApplicationService.CanGrantRoleGrant(userId.ToString(), suppliedGrant))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
+        }
+
         try
         {
-            // Approve first: it runs its own CanApproveMembershipApplications check and does not depend
-            // on the role grant, so an unauthorized caller cannot commit a grant on the way through.
             await _membershipApplicationService.ApproveMembershipApplication(membershipApplicationId, userId);
 
             // If request is null, create a legal RbacRoleGrant for Reader role
@@ -309,14 +340,7 @@ public class MembershipApplicationController : ControllerBase
             }
             else
             {
-                var suppliedGrant = Domain.Models.RbacRoleGrant.New(
-                    RbacRoleId.Parse(request.RoleId),
-                    request.AssignedEntityType,
-                    request.AssignedEntityId,
-                    RbacAccessType.Capability,
-                    application.CapabilityId.ToString()
-                );
-                await _rbacApplicationService.GrantRoleGrant(userId.ToString(), suppliedGrant, userInitiated: true);
+                await _rbacApplicationService.GrantRoleGrant(userId.ToString(), suppliedGrant!, userInitiated: true);
             }
         }
         catch (EntityNotFoundException<MembershipApplication>)
@@ -363,9 +387,26 @@ public class MembershipApplicationController : ControllerBase
                 }
             );
         }
-        var result = await _membershipApplicationService.GetMembershipsApplicationsThatUserCanApprove(userId);
+        var result = (
+            await _membershipApplicationService.GetMembershipsApplicationsThatUserCanApprove(userId)
+        ).ToList();
+        var resource = await _apiResourceFactory.Convert(result, userId);
 
-        return Ok(await _apiResourceFactory.Convert(result, userId));
+        var grantableByCapability = new Dictionary<string, List<RbacRoleDTO>>();
+        foreach (var capabilityId in result.Select(x => x.CapabilityId.ToString()).Distinct())
+        {
+            grantableByCapability[capabilityId] = (
+                await _rbacApplicationService.GetGrantableRoles(userId.ToString(), capabilityId)
+            )
+                .Select(RbacRoleDTO.FromRbacRole)
+                .ToList();
+        }
+        foreach (var item in resource.Items)
+        {
+            item.GrantableRoles = grantableByCapability[item.CapabilityId];
+        }
+
+        return Ok(resource);
     }
 
     [HttpGet("my-outstanding-applications")]

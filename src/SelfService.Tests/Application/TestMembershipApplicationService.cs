@@ -67,6 +67,30 @@ public class TestMembershipApplicationService
     }
 
     [Fact]
+    [Trait("Category", "InMemoryDatabase")]
+    public async Task outstanding_applications_for_user_excludes_finalized_and_cancelled()
+    {
+        await using var databaseFactory = new InMemoryDatabaseFactory();
+        var dbContext = await databaseFactory.CreateSelfServiceDbContext();
+        UserId applicant = "applicant@example.com";
+
+        MembershipApplication pending = A.MembershipApplication.WithApplicant(applicant);
+        await dbContext.MembershipApplications.AddRangeAsync(
+            pending,
+            A.MembershipApplication.WithApplicant(applicant).WithStatus(MembershipApplicationStatusOptions.Finalized),
+            A.MembershipApplication.WithApplicant(applicant).WithStatus(MembershipApplicationStatusOptions.Cancelled),
+            A.MembershipApplication.WithApplicant("someone-else@example.com")
+        );
+        await dbContext.SaveChangesAsync();
+
+        var sut = A.MembershipApplicationService.WithDbContextAndDefaultRepositories(dbContext).Build();
+
+        var result = await sut.GetOutstandingMembershipsApplicationsForUser(applicant);
+
+        Assert.Equal(pending.Id, Assert.Single(result).Id);
+    }
+
+    [Fact]
     public async Task submit_membership_application_auto_finalizes_when_capability_has_no_members()
     {
         CapabilityId capabilityId = "cap-a";
