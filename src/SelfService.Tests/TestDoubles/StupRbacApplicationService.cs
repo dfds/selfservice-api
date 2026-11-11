@@ -191,4 +191,34 @@ public class StubRbacApplicationService : IRbacApplicationService
     {
         return Task.CompletedTask;
     }
+
+    public Task<bool> CanGrantRoleGrant(string user, RbacRoleGrant roleGrant)
+    {
+        return Task.FromResult(_isPermitted);
+    }
+
+    public async Task<List<RbacRole>> GetGrantableRoles(string user, string capabilityId)
+    {
+        return _isPermitted ? await GetCapabilityRoles() : new List<RbacRole>();
+    }
+
+    public async Task<List<RbacRole>> GetCapabilityRoles()
+    {
+        return (await GetAssignableRoles()).Where(RbacApplicationService.IsCapabilityRole).ToList();
+    }
+
+    public Task<List<RbacGrantableRole>> GetGrantMatrix()
+    {
+        return Task.FromResult(new List<RbacGrantableRole>());
+    }
+
+    public Task SetGrantMatrix(string user, List<(RbacRoleId RoleId, RbacRoleId GrantableRoleId)> rules)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> CanManageGrantMatrix(string user)
+    {
+        return Task.FromResult(_isPermitted);
+    }
 }

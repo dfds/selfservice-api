@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using SelfService.Application;
 using SelfService.Configuration;
@@ -90,30 +91,30 @@ public class RbacController : ControllerBase
     [HttpGet("get-assignable-roles")]
     [ProducesResponseType(typeof(List<RbacRoleDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
-    public async Task<IActionResult> GetAssignableRoles([FromQuery] string? scope)
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAssignableRoles([FromQuery] string? scope, [FromQuery] string? capabilityId)
     {
-        var capabilityRoleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "Owner",
-            "Contributor",
-            "Reader",
-        };
-
         var roles = await _rbacApplicationService.GetAssignableRoles();
         switch (scope?.Trim().ToLowerInvariant())
         {
             case null:
             case "":
             case "capability":
-                roles = roles
-                    .Where(r => r.Type == RbacAccessType.Capability || capabilityRoleNames.Contains(r.Name))
-                    .ToList();
+                roles = roles.Where(RbacApplicationService.IsCapabilityRole).ToList();
                 break;
             case "system":
             case "global":
-                roles = roles
-                    .Where(r => r.Type != RbacAccessType.Capability && !capabilityRoleNames.Contains(r.Name))
-                    .ToList();
+                if (!string.IsNullOrEmpty(capabilityId))
+                {
+                    return BadRequest(
+                        new ProblemDetails
+                        {
+                            Title = "Invalid scope",
+                            Detail = "capabilityId can only be combined with the capability scope.",
+                        }
+                    );
+                }
+                roles = roles.Where(r => !RbacApplicationService.IsCapabilityRole(r)).ToList();
                 break;
             default:
                 return BadRequest(
@@ -125,11 +126,93 @@ public class RbacController : ControllerBase
                 );
         }
 
-        List<RbacRoleDTO> toRbacDTO(List<RbacRole> roles)
+        if (!string.IsNullOrEmpty(capabilityId))
         {
-            return roles.Select(role => RbacRoleDTO.FromRbacRole(role)).ToList();
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized();
+
+            roles = await _rbacApplicationService.GetGrantableRoles(userId.ToString(), capabilityId);
         }
-        return Ok(toRbacDTO(roles));
+
+        return Ok(roles.Select(RbacRoleDTO.FromRbacRole).ToList());
+    }
+
+    [HttpGet("grant-matrix")]
+    [ProducesResponseType(typeof(GrantMatrixResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetGrantMatrix()
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var allow = Allow.Get;
+        if (await _rbacApplicationService.CanManageGrantMatrix(userId.ToString()))
+            allow += Method.Put;
+
+        var roles = await _rbacApplicationService.GetCapabilityRoles();
+        var rules = await _rbacApplicationService.GetGrantMatrix();
+
+        return Ok(
+            new GrantMatrixResponse(
+                roles.Select(RbacRoleDTO.FromRbacRole).ToList(),
+                rules
+                    .Select(r => new GrantMatrixRuleDto(r.RoleId.ToString(), r.GrantableRoleId.ToString()))
+                    .ToList(),
+                new GrantMatrixLinks(
+                    new ResourceLink(
+                        href: Url.Action(nameof(GetGrantMatrix), null, null, Request.Scheme) ?? "",
+                        rel: "self",
+                        allow: allow
+                    )
+                )
+            )
+        );
+    }
+
+    [HttpPut("grant-matrix")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [RequiresPermission("rbac", "create")]
+    public async Task<IActionResult> SetGrantMatrix([FromBody] SetGrantMatrixRequest request)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var rules = new List<(RbacRoleId, RbacRoleId)>();
+        foreach (var rule in request.Rules)
+        {
+            if (
+                !RbacRoleId.TryParse(rule.RoleId, out var roleId)
+                || !RbacRoleId.TryParse(rule.GrantableRoleId, out var grantableRoleId)
+            )
+            {
+                return BadRequest(
+                    new ProblemDetails
+                    {
+                        Title = "Invalid role id",
+                        Detail = $"\"{rule.RoleId}\" → \"{rule.GrantableRoleId}\" contains an invalid role id.",
+                    }
+                );
+            }
+            rules.Add((roleId, grantableRoleId));
+        }
+
+        try
+        {
+            await _rbacApplicationService.SetGrantMatrix(userId.ToString(), rules);
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(new ProblemDetails { Title = "Invalid grant matrix", Detail = e.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden);
+        }
+
+        return NoContent();
     }
 
     [HttpPost("permission/grant")]
@@ -872,6 +955,18 @@ public record PermissionMatrixGrantDto(string RoleId, string Namespace, string P
 public record SetRolePermissionEntry(string Namespace, string Name);
 
 public record SetRolePermissionsRequest(List<SetRolePermissionEntry> Permissions);
+
+public record GrantMatrixRuleDto(string RoleId, string GrantableRoleId);
+
+public record GrantMatrixLinks(ResourceLink Self);
+
+public record GrantMatrixResponse(
+    List<RbacRoleDTO> Roles,
+    List<GrantMatrixRuleDto> Rules,
+    [property: JsonPropertyName("_links")] GrantMatrixLinks Links
+);
+
+public record SetGrantMatrixRequest(List<GrantMatrixRuleDto> Rules);
 
 public record PermissionMatrixResponse(
     List<RbacRoleDTO> Roles,

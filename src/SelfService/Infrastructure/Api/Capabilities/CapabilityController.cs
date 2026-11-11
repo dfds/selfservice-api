@@ -1714,14 +1714,13 @@ public class CapabilityController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [RequiresPermission("rbac", "create")]
     public async Task<IActionResult> GrantRole(string id, [FromBody] RbacRoleGrant roleGrant)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        // The request was authorized as capability-scoped rbac/create on {id}, so the body must not be
-        // allowed to name a different scope or a different capability.
+        // GrantRoleGrant authorizes against the grant matrix for {id}, so the body must not be allowed
+        // to name a different scope or a different capability.
         if (
             !RbacAccessType.TryParse(roleGrant.Type ?? "", out var accessType)
             || accessType != RbacAccessType.Capability

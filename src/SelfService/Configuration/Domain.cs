@@ -103,6 +103,7 @@ public static class Domain
         builder.Services.AddTransient<IRbacPermissionGrantRepository, RbacPermissionGrantRepository>();
         builder.Services.AddTransient<IRbacRoleGrantRepository, RbacRoleGrantRepository>();
         builder.Services.AddTransient<IRbacRoleRepository, RbacRoleRepository>();
+        builder.Services.AddTransient<IRbacGrantableRoleRepository, RbacGrantableRoleRepository>();
         builder.Services.AddTransient<IPermissionQuery, PermissionsQuery>();
         builder.Services.AddTransient<IMemberQuery, MemberQuery>();
         builder.Services.AddTransient<IDemoRecordingRepository, DemoRecordingRepository>();

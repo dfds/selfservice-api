@@ -44,6 +44,7 @@ class CacheConst
     public const string RoleGrantsForGroup = "RoleGrantsForGroup";
     public const string GroupsForUser = "GroupsForUser";
     public const string AssignableRoles = "AssignableRoles";
+    public const string GrantableRoles = "GrantableRoles";
     public const string GuestPermissions = "GuestPermissions";
     public const string SystemGroups = "SystemGroups";
 }
