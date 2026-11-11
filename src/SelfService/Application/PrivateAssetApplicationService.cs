@@ -25,7 +25,7 @@ public class PrivateAssetApplicationService(
         CancellationToken cancellationToken = default
     )
     {
-        if (!authorization.CanCreatePrivateAsset(user))
+        if (!await authorization.CanCreatePrivateAsset(user))
             throw new UnauthorizedAccessException("The private-assets:create permission is required.");
 
         var assetId = PrivateAssetId.New();

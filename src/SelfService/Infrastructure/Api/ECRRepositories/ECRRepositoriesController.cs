@@ -110,7 +110,9 @@ public class ECRRepositoriesController : ControllerBase
             // user wish to potentially delete/add records to the database: lets check credentials
             if (updateOnMismatch)
             {
-                var isCloudEngineer = _authorizationService.CanSynchronizeAwsECRAndDatabaseECR(User.ToPortalUser());
+                var isCloudEngineer = await _authorizationService.CanSynchronizeAwsECRAndDatabaseECR(
+                    User.ToPortalUser()
+                );
                 if (!isCloudEngineer)
                     return Unauthorized();
             }

@@ -44,7 +44,7 @@ public class NewsController : ControllerBase
 
         var newsItems = await _newsItemService.GetAllNewsItems();
 
-        return Ok(_apiResourceFactory.Convert(newsItems));
+        return Ok(await _apiResourceFactory.Convert(newsItems));
     }
 
     [HttpGet("relevant")]
@@ -54,7 +54,7 @@ public class NewsController : ControllerBase
     {
         var newsItems = await _newsItemService.GetRelevantNewsItems();
 
-        return Ok(_apiResourceFactory.ConvertRelevantNewsItems(newsItems));
+        return Ok(await _apiResourceFactory.ConvertRelevantNewsItems(newsItems));
     }
 
     [HttpGet("{id}")]
@@ -78,7 +78,7 @@ public class NewsController : ControllerBase
         try
         {
             var newsItem = await _newsItemService.GetNewsItemById(id);
-            return Ok(_apiResourceFactory.Convert(newsItem));
+            return Ok(await _apiResourceFactory.Convert(newsItem));
         }
         catch (KeyNotFoundException)
         {
@@ -111,7 +111,7 @@ public class NewsController : ControllerBase
             );
         }
 
-        if (!_authorizationService.CanCreateNewsItem(User.ToPortalUser()))
+        if (!await _authorizationService.CanCreateNewsItem(User.ToPortalUser()))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -136,7 +136,7 @@ public class NewsController : ControllerBase
 
         var created = await _newsItemService.CreateNewsItem(newsItem);
 
-        return Ok(_apiResourceFactory.Convert(created));
+        return Ok(await _apiResourceFactory.Convert(created));
     }
 
     [HttpPost("{id}")]
@@ -163,7 +163,7 @@ public class NewsController : ControllerBase
             );
         }
 
-        if (!_authorizationService.CanUpdateNewsItem(User.ToPortalUser()))
+        if (!await _authorizationService.CanUpdateNewsItem(User.ToPortalUser()))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -179,7 +179,7 @@ public class NewsController : ControllerBase
         {
             await _newsItemService.UpdateNewsItem(id, request);
             var updated = await _newsItemService.GetNewsItemById(id);
-            return Ok(_apiResourceFactory.Convert(updated));
+            return Ok(await _apiResourceFactory.Convert(updated));
         }
         catch (KeyNotFoundException)
         {
@@ -207,7 +207,7 @@ public class NewsController : ControllerBase
             );
         }
 
-        if (!_authorizationService.CanDeleteNewsItem(User.ToPortalUser()))
+        if (!await _authorizationService.CanDeleteNewsItem(User.ToPortalUser()))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -250,7 +250,7 @@ public class NewsController : ControllerBase
             );
         }
 
-        if (!_authorizationService.CanUpdateNewsItem(User.ToPortalUser()))
+        if (!await _authorizationService.CanUpdateNewsItem(User.ToPortalUser()))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -266,7 +266,7 @@ public class NewsController : ControllerBase
         {
             await _newsItemService.HighlightNewsItem(id);
             var updated = await _newsItemService.GetNewsItemById(id);
-            return Ok(_apiResourceFactory.Convert(updated));
+            return Ok(await _apiResourceFactory.Convert(updated));
         }
         catch (KeyNotFoundException)
         {

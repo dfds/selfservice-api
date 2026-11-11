@@ -12,6 +12,10 @@
       <PackageReference Include="AWSSDK.S3" Version="4.0.4.1" />
       <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.8" />
       <PackageReference Include="Dafda" Version="0.12.6" />
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1">
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        <PrivateAssets>all</PrivateAssets>
+      </PackageReference>
       <PackageReference Include="OpenTelemetry" Version="1.15.3" />
       <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
       <PackageReference Include="OpenTelemetry.Exporter.Prometheus.HttpListener" Version="1.15.3-beta.1" />

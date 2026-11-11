@@ -44,7 +44,7 @@ public class TestPrivateAssetController
             .ReturnsAsync("https://example.test/private-assets/abc123/banner.png");
 
         var authorizationService = new Mock<IAuthorizationService>();
-        authorizationService.Setup(x => x.CanCreatePrivateAsset(It.IsAny<PortalUser>())).Returns(true);
+        authorizationService.Setup(x => x.CanCreatePrivateAsset(It.IsAny<PortalUser>())).ReturnsAsync(true);
 
         var controller = BuildController(privateAssetService.Object, authorizationService.Object);
 
@@ -75,7 +75,7 @@ public class TestPrivateAssetController
 
         var privateAssetService = new Mock<IPrivateAssetApplicationService>();
         var authorizationService = new Mock<IAuthorizationService>();
-        authorizationService.Setup(x => x.CanCreatePrivateAsset(It.IsAny<PortalUser>())).Returns(true);
+        authorizationService.Setup(x => x.CanCreatePrivateAsset(It.IsAny<PortalUser>())).ReturnsAsync(true);
 
         var controller = BuildController(privateAssetService.Object, authorizationService.Object);
 
@@ -102,7 +102,7 @@ public class TestPrivateAssetController
 
         var privateAssetService = new Mock<IPrivateAssetApplicationService>();
         var authorizationService = new Mock<IAuthorizationService>();
-        authorizationService.Setup(x => x.CanCreatePrivateAsset(It.IsAny<PortalUser>())).Returns(false);
+        authorizationService.Setup(x => x.CanCreatePrivateAsset(It.IsAny<PortalUser>())).ReturnsAsync(false);
 
         var controller = BuildController(privateAssetService.Object, authorizationService.Object);
 
@@ -140,7 +140,9 @@ public class TestPrivateAssetController
         return new PrivateAssetController(
             privateAssetService,
             authorizationService
-                ?? Mock.Of<IAuthorizationService>(x => x.CanCreatePrivateAsset(It.IsAny<PortalUser>()) == true)
+                ?? Mock.Of<IAuthorizationService>(x =>
+                    x.CanCreatePrivateAsset(It.IsAny<PortalUser>()) == Task.FromResult(true)
+                )
         )
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = principal } },

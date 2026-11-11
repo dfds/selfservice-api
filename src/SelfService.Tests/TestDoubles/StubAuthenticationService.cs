@@ -37,9 +37,9 @@ public class StubAuthorizationService : IAuthorizationService
         return await Task.FromResult(_authorized);
     }
 
-    public bool CanViewDeletedCapabilities(PortalUser portalUser)
+    public Task<bool> CanViewDeletedCapabilities(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
     private bool IsCloudEngineerEnabled(PortalUser portalUser)
@@ -150,14 +150,14 @@ public class StubAuthorizationService : IAuthorizationService
         return await Task.FromResult(_authorized);
     }
 
-    public bool CanManagePermissionMatrix(PortalUser portalUser)
+    public Task<bool> CanManagePermissionMatrix(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
+    public Task<bool> CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
     public async Task<bool> CanGetCapabilityJsonMetadata(PortalUser portalUser, CapabilityId capabilityId)
@@ -170,9 +170,9 @@ public class StubAuthorizationService : IAuthorizationService
         return await Task.FromResult(_authorized);
     }
 
-    public bool CanBypassMembershipApprovals(PortalUser portalUser)
+    public Task<bool> CanBypassMembershipApprovals(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
     public async Task<bool> CanDeleteMembershipApplication(
@@ -204,24 +204,24 @@ public class StubAuthorizationService : IAuthorizationService
         return await Task.FromResult(_authorized);
     }
 
-    public bool CanManageSelfAssessmentOptions(PortalUser portalUser)
+    public Task<bool> CanManageSelfAssessmentOptions(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanCreateDemoRecording(PortalUser portalUser)
+    public Task<bool> CanCreateDemoRecording(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanUpdateDemoRecording(PortalUser portalUser)
+    public Task<bool> CanUpdateDemoRecording(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanDeleteDemoRecording(PortalUser portalUser)
+    public Task<bool> CanDeleteDemoRecording(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
     public Task<bool> CanReadAllCopilotUsage(PortalUser portalUser)
@@ -229,64 +229,64 @@ public class StubAuthorizationService : IAuthorizationService
         return Task.FromResult(_authorized);
     }
 
-    public bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser)
+    public Task<bool> IsAuthorizedToCreateReleaseNotes(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool IsAuthorizedToUpdateReleaseNote(PortalUser portalUser)
+    public Task<bool> IsAuthorizedToUpdateReleaseNote(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser)
+    public Task<bool> IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser)
+    public Task<bool> IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool IsAuthorizedToRemoveReleaseNote(PortalUser portalUser)
+    public Task<bool> IsAuthorizedToRemoveReleaseNote(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanCreateEvent(PortalUser portalUser)
+    public Task<bool> CanCreateEvent(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanUpdateEvent(PortalUser portalUser)
+    public Task<bool> CanUpdateEvent(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanDeleteEvent(PortalUser portalUser)
+    public Task<bool> CanDeleteEvent(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanCreateNewsItem(PortalUser portalUser)
+    public Task<bool> CanCreateNewsItem(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanUpdateNewsItem(PortalUser portalUser)
+    public Task<bool> CanUpdateNewsItem(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanDeleteNewsItem(PortalUser portalUser)
+    public Task<bool> CanDeleteNewsItem(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanCreatePrivateAsset(PortalUser portalUser)
+    public Task<bool> CanCreatePrivateAsset(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
     public async Task<bool> CanViewMembershipApplications(UserId userId, CapabilityId capabilityId)
@@ -294,18 +294,18 @@ public class StubAuthorizationService : IAuthorizationService
         return await Task.FromResult(_authorized);
     }
 
-    public bool CanGetUserEmails(PortalUser portalUser)
+    public Task<bool> CanGetUserEmails(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanUnsetCapabilityTags(PortalUser portalUser)
+    public Task<bool> CanUnsetCapabilityTags(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 
-    public bool CanBatchCreateCapabilities(PortalUser portalUser)
+    public Task<bool> CanBatchCreateCapabilities(PortalUser portalUser)
     {
-        return _authorized;
+        return Task.FromResult(_authorized);
     }
 }

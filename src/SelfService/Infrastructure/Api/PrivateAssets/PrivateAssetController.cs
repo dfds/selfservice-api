@@ -64,7 +64,7 @@ public class PrivateAssetController : ControllerBase
         CancellationToken cancellationToken
     )
     {
-        if (!_authorizationService.CanCreatePrivateAsset(User.ToPortalUser()))
+        if (!await _authorizationService.CanCreatePrivateAsset(User.ToPortalUser()))
             return Unauthorized(
                 new ProblemDetails
                 {

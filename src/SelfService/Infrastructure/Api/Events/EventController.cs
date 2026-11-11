@@ -46,7 +46,7 @@ public class EventController : ControllerBase
 
         var events = await _eventService.GetAllEvents();
 
-        return Ok(_apiResourceFactory.Convert(events));
+        return Ok(await _apiResourceFactory.Convert(events));
     }
 
     [HttpPost("")]
@@ -72,7 +72,7 @@ public class EventController : ControllerBase
             );
         }
 
-        if (!_authorizationService.CanCreateEvent(User.ToPortalUser()))
+        if (!await _authorizationService.CanCreateEvent(User.ToPortalUser()))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -113,7 +113,7 @@ public class EventController : ControllerBase
             }
         }
 
-        return Ok(_apiResourceFactory.Convert(createdEvent));
+        return Ok(await _apiResourceFactory.Convert(createdEvent));
     }
 
     [HttpGet("{id}")]
@@ -137,7 +137,7 @@ public class EventController : ControllerBase
         try
         {
             var eventModel = await _eventService.GetEventById(id);
-            return Ok(_apiResourceFactory.Convert(eventModel));
+            return Ok(await _apiResourceFactory.Convert(eventModel));
         }
         catch (KeyNotFoundException)
         {
@@ -171,7 +171,7 @@ public class EventController : ControllerBase
             );
         }
 
-        if (!_authorizationService.CanUpdateEvent(User.ToPortalUser()))
+        if (!await _authorizationService.CanUpdateEvent(User.ToPortalUser()))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -234,7 +234,7 @@ public class EventController : ControllerBase
 
         var updatedEvent = await _eventService.GetEventById(id);
 
-        return Ok(_apiResourceFactory.Convert(updatedEvent));
+        return Ok(await _apiResourceFactory.Convert(updatedEvent));
     }
 
     [HttpDelete("{id}")]
@@ -255,7 +255,7 @@ public class EventController : ControllerBase
             );
         }
 
-        if (!_authorizationService.CanDeleteEvent(User.ToPortalUser()))
+        if (!await _authorizationService.CanDeleteEvent(User.ToPortalUser()))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -279,6 +279,6 @@ public class EventController : ControllerBase
         var upcomingEvents = await _eventService.GetUpcomingEvents(limit: 5);
         var latestHeldEvent = await _eventService.GetLatestHeldEvent();
 
-        return Ok(_apiResourceFactory.ConvertUpcomingEvents(upcomingEvents, latestHeldEvent));
+        return Ok(await _apiResourceFactory.ConvertUpcomingEvents(upcomingEvents, latestHeldEvent));
     }
 }
