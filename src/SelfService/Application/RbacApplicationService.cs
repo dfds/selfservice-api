@@ -287,9 +287,7 @@ public class RbacApplicationService : IRbacApplicationService
             CacheConst.RoleGrantsForCapability,
             capabilityId,
             () =>
-                _roleGrantRepository.GetAllWhere(p =>
-                    p.Type == RbacAccessType.Capability && p.Resource == capabilityId
-                )
+                _roleGrantRepository.GetAllWhere(p => p.Type == RbacAccessType.Capability && p.Resource == capabilityId)
         );
     }
 
