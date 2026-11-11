@@ -7,8 +7,6 @@ public sealed class CatalogConfig
     public IReadOnlyList<CatalogClusterEndpoint> Clusters { get; }
     public string Scope { get; }
 
-    public bool TokenAcquisitionEnabled => !string.IsNullOrWhiteSpace(Scope);
-
     public CatalogConfig(IReadOnlyList<CatalogClusterEndpoint> clusters, string? scope)
     {
         Clusters = clusters;

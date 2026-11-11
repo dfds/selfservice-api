@@ -18,6 +18,7 @@ public class RbacNamespace : ValueObject
     public static readonly RbacNamespace Rbac = new("rbac");
     public static readonly RbacNamespace ServiceCatalogue = new("service-catalogue");
     public static readonly RbacNamespace PrivateAssets = new("private-assets");
+    public static readonly RbacNamespace Copilot = new("copilot");
     public static readonly RbacNamespace SystemAdmin = new("system-admin");
     public static readonly RbacNamespace SystemLegacy = new("system-legacy");
 
@@ -87,6 +88,9 @@ public class RbacNamespace : ValueObject
                 break;
             case "private-assets":
                 rbacNamespace = PrivateAssets;
+                break;
+            case "copilot":
+                rbacNamespace = Copilot;
                 break;
             case "system-admin":
                 rbacNamespace = SystemAdmin;

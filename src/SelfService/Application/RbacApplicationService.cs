@@ -964,6 +964,8 @@ public class Permission
             new(RbacNamespace.Rbac, "delete", "Manage RBAC", RbacAccessType.Global),
             new(RbacNamespace.ServiceCatalogue, "read", "Read service catalogue resources", RbacAccessType.Global),
             new(RbacNamespace.PrivateAssets, "create", "Upload private assets", RbacAccessType.Global),
+            new(RbacNamespace.Copilot, "read-own", "Read own GitHub Copilot usage", RbacAccessType.Global),
+            new(RbacNamespace.Copilot, "read-all", "Read GitHub Copilot usage for everyone", RbacAccessType.Global),
             new(
                 RbacNamespace.SystemLegacy,
                 "read",
