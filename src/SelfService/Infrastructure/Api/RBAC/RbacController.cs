@@ -155,9 +155,7 @@ public class RbacController : ControllerBase
         return Ok(
             new GrantMatrixResponse(
                 roles.Select(RbacRoleDTO.FromRbacRole).ToList(),
-                rules
-                    .Select(r => new GrantMatrixRuleDto(r.RoleId.ToString(), r.GrantableRoleId.ToString()))
-                    .ToList(),
+                rules.Select(r => new GrantMatrixRuleDto(r.RoleId.ToString(), r.GrantableRoleId.ToString())).ToList(),
                 new GrantMatrixLinks(
                     new ResourceLink(
                         href: Url.Action(nameof(GetGrantMatrix), null, null, Request.Scheme) ?? "",

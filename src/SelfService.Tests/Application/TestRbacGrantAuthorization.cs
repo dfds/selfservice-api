@@ -93,13 +93,7 @@ public class TestRbacGrantAuthorization
 
         db.RbacRoleGrants.AddRange(
             RbacRoleGrant.New(ownerRole.Id, AssignedEntityType.User, Owner, RbacAccessType.Capability, Bar),
-            RbacRoleGrant.New(
-                contributorRole.Id,
-                AssignedEntityType.User,
-                Contributor,
-                RbacAccessType.Capability,
-                Bar
-            ),
+            RbacRoleGrant.New(contributorRole.Id, AssignedEntityType.User, Contributor, RbacAccessType.Capability, Bar),
             RbacRoleGrant.New(cloudEngineerRole.Id, AssignedEntityType.User, CloudEngineer, RbacAccessType.Global, "")
         );
 
