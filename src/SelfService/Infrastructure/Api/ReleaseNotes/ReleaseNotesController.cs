@@ -38,7 +38,7 @@ public class ReleaseNotesController : ControllerBase
             if (Request.Query.ContainsKey("includeDrafts"))
             {
                 var portalUser = HttpContext.User.ToPortalUser();
-                if (!_authorizationService.IsAuthorizedToListDraftReleaseNotes(portalUser))
+                if (!await _authorizationService.IsAuthorizedToListDraftReleaseNotes(portalUser))
                 {
                     return Unauthorized();
                 }
@@ -48,7 +48,7 @@ public class ReleaseNotesController : ControllerBase
                 releaseNotes = releaseNotes.Where(r => r.IsActive);
             }
             releaseNotes = releaseNotes.OrderByDescending(r => r.ReleaseDate);
-            return Ok(_apiResourceFactory.Convert(releaseNotes));
+            return Ok(await _apiResourceFactory.Convert(releaseNotes));
         }
         catch (Exception e)
         {
@@ -78,7 +78,7 @@ public class ReleaseNotesController : ControllerBase
             }
 
             var portalUser = HttpContext.User.ToPortalUser();
-            if (!_authorizationService.IsAuthorizedToCreateReleaseNotes(portalUser))
+            if (!await _authorizationService.IsAuthorizedToCreateReleaseNotes(portalUser))
             {
                 return Unauthorized();
             }
@@ -99,7 +99,7 @@ public class ReleaseNotesController : ControllerBase
                 1,
                 request.IsActive
             );
-            return Ok(_apiResourceFactory.Convert(newNote));
+            return Ok(await _apiResourceFactory.Convert(newNote));
         }
         catch (Exception e)
         {
@@ -124,7 +124,7 @@ public class ReleaseNotesController : ControllerBase
             }
 
             var portalUser = HttpContext.User.ToPortalUser();
-            if (!_authorizationService.IsAuthorizedToUpdateReleaseNote(portalUser))
+            if (!await _authorizationService.IsAuthorizedToUpdateReleaseNote(portalUser))
             {
                 return Unauthorized();
             }
@@ -185,7 +185,7 @@ public class ReleaseNotesController : ControllerBase
                     }
                 );
             }
-            return Ok(_apiResourceFactory.Convert(releaseNote));
+            return Ok(await _apiResourceFactory.Convert(releaseNote));
         }
         catch (Exception e)
         {
@@ -214,7 +214,7 @@ public class ReleaseNotesController : ControllerBase
         }
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.IsAuthorizedToToggleReleaseNoteIsActive(portalUser))
+        if (!await _authorizationService.IsAuthorizedToToggleReleaseNoteIsActive(portalUser))
         {
             return Unauthorized();
         }
@@ -251,7 +251,7 @@ public class ReleaseNotesController : ControllerBase
         }
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.IsAuthorizedToRemoveReleaseNote(portalUser))
+        if (!await _authorizationService.IsAuthorizedToRemoveReleaseNote(portalUser))
         {
             return Unauthorized();
         }

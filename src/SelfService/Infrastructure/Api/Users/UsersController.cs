@@ -33,7 +33,7 @@ public class UsersController : ControllerBase
         try
         {
             // Check if user is a cloud engineer
-            var isCloudEngineer = _authorizationService.CanGetUserEmails(User.ToPortalUser());
+            var isCloudEngineer = await _authorizationService.CanGetUserEmails(User.ToPortalUser());
             if (!isCloudEngineer)
             {
                 return Unauthorized(

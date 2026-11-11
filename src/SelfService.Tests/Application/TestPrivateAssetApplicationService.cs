@@ -35,7 +35,7 @@ public class TestPrivateAssetApplicationService
             storage.Object,
             authorization
                 ?? Mock.Of<IAuthorizationService>(authorization =>
-                    authorization.CanCreatePrivateAsset(It.IsAny<PortalUser>())
+                    authorization.CanCreatePrivateAsset(It.IsAny<PortalUser>()) == Task.FromResult(true)
                 ),
             transactions ?? new RealDbTransactionFacade(db),
             NullLogger<PrivateAssetApplicationService>.Instance
@@ -293,7 +293,7 @@ public class TestPrivateAssetApplicationService
         var storage = new Mock<IPrivateAssetService>(MockBehavior.Strict);
         var user = new PortalUser(UserId.Parse("reader@dfds.com"), []);
         var authorization = Mock.Of<IAuthorizationService>(service =>
-            service.CanCreatePrivateAsset(It.IsAny<PortalUser>()) == false
+            service.CanCreatePrivateAsset(It.IsAny<PortalUser>()) == Task.FromResult(false)
         );
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(

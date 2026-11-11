@@ -294,11 +294,9 @@ public class MembershipApplicationController : ControllerBase
                     );
                 }
 
-                var readerRoleId = _rbacApplicationService
-                    .GetAssignableRoles()
-                    .Result.Where(r => r.Name == "Reader")
+                var readerRoleId = (await _rbacApplicationService.GetAssignableRoles())
+                    .Where(r => r.Name == "Reader")
                     .Select(r => r.Id)
-                    .ToList()
                     .First();
                 Domain.Models.RbacRoleGrant readerRoleGrant = Domain.Models.RbacRoleGrant.New(
                     readerRoleId!,

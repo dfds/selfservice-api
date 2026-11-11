@@ -111,7 +111,7 @@ public class CapabilityController : ControllerBase
         var userMemberships = await _membershipRepository.GetAllMembershipsForUserId(userId);
         var userFavourites = await _favouriteRepository.GetAllFavouritesForUserId(userId);
 
-        return Ok(_apiResourceFactory.Convert(capabilities, userMemberships, userFavourites));
+        return Ok(await _apiResourceFactory.Convert(capabilities, userMemberships, userFavourites));
     }
 
     [HttpPost("")]
@@ -193,11 +193,9 @@ public class CapabilityController : ControllerBase
 
         var capability = await _capabilityRepository.Get(capabilityId);
 
-        var ownerRoleId = _rbacApplicationService
-            .GetAssignableRoles()
-            .Result.Where(r => r.Name == "Owner")
+        var ownerRoleId = (await _rbacApplicationService.GetAssignableRoles())
+            .Where(r => r.Name == "Owner")
             .Select(r => r.Id)
-            .ToList()
             .FirstOrDefault();
 
         Domain.Models.RbacRoleGrant ownerRoleGrant = Domain.Models.RbacRoleGrant.New(
@@ -1497,7 +1495,7 @@ public class CapabilityController : ControllerBase
                 }
             );
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.CanBypassMembershipApprovals(portalUser))
+        if (!await _authorizationService.CanBypassMembershipApprovals(portalUser))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -1509,11 +1507,9 @@ public class CapabilityController : ControllerBase
         }
         try
         {
-            var ownerRoleId = _rbacApplicationService
-                .GetAssignableRoles()
-                .Result.Where(r => r.Name == "Owner")
+            var ownerRoleId = (await _rbacApplicationService.GetAssignableRoles())
+                .Where(r => r.Name == "Owner")
                 .Select(r => r.Id)
-                .ToList()
                 .First();
             Domain.Models.RbacRoleGrant ownerRoleGrant = Domain.Models.RbacRoleGrant.New(
                 ownerRoleId!,
@@ -1577,7 +1573,7 @@ public class CapabilityController : ControllerBase
 
         var portalUser = HttpContext.User.ToPortalUser();
 
-        if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
+        if (!await _authorizationService.CanManageSelfAssessmentOptions(portalUser))
             return Unauthorized();
 
         var selfAssessmentOptions = await _selfAssessmentOptionRepository.GetAllSelfAssessmentOptions();
@@ -1596,7 +1592,7 @@ public class CapabilityController : ControllerBase
 
         var portalUser = HttpContext.User.ToPortalUser();
 
-        if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
+        if (!await _authorizationService.CanManageSelfAssessmentOptions(portalUser))
             return Unauthorized();
 
         var newSelfAssessmentOption = SelfAssessmentOption.New(
@@ -1627,7 +1623,7 @@ public class CapabilityController : ControllerBase
 
         var portalUser = HttpContext.User.ToPortalUser();
 
-        if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
+        if (!await _authorizationService.CanManageSelfAssessmentOptions(portalUser))
             return Unauthorized();
 
         if (!SelfAssessmentOptionId.TryParse(id, out var selfAssessmentOptionId))
@@ -1663,7 +1659,7 @@ public class CapabilityController : ControllerBase
 
         var portalUser = HttpContext.User.ToPortalUser();
 
-        if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
+        if (!await _authorizationService.CanManageSelfAssessmentOptions(portalUser))
             return Unauthorized();
 
         if (!SelfAssessmentOptionId.TryParse(id, out var selfAssessmentOptionId))
@@ -1694,7 +1690,7 @@ public class CapabilityController : ControllerBase
 
         var portalUser = HttpContext.User.ToPortalUser();
 
-        if (!_authorizationService.CanManageSelfAssessmentOptions(portalUser))
+        if (!await _authorizationService.CanManageSelfAssessmentOptions(portalUser))
             return Unauthorized();
 
         if (!SelfAssessmentOptionId.TryParse(id, out var selfAssessmentOptionId))
@@ -1848,7 +1844,7 @@ public class CapabilityController : ControllerBase
             return Unauthorized();
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.CanBatchCreateCapabilities(portalUser))
+        if (!await _authorizationService.CanBatchCreateCapabilities(portalUser))
             return Unauthorized(
                 new ProblemDetails
                 {
@@ -2120,7 +2116,7 @@ public class CapabilityController : ControllerBase
             );
 
         var portalUser = HttpContext.User.ToPortalUser();
-        if (!_authorizationService.CanUnsetCapabilityTags(portalUser))
+        if (!await _authorizationService.CanUnsetCapabilityTags(portalUser))
             return Forbid();
 
         if (request?.Tags == null || request.Tags.Count == 0)

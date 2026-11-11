@@ -106,27 +106,27 @@ public class AuthorizationService : IAuthorizationService
         );
     }
 
-    public bool CanViewDeletedCapabilities(PortalUser portalUser)
+    public Task<bool> CanViewDeletedCapabilities(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "view-deleted-capabilities");
     }
 
-    public bool CanUnsetCapabilityTags(PortalUser portalUser)
+    public Task<bool> CanUnsetCapabilityTags(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "unset-capability-tags");
     }
 
-    public bool CanCreateDemoRecording(PortalUser portalUser)
+    public Task<bool> CanCreateDemoRecording(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "create-demo-recording");
     }
 
-    public bool CanUpdateDemoRecording(PortalUser portalUser)
+    public Task<bool> CanUpdateDemoRecording(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "update-demo-recording");
     }
 
-    public bool CanDeleteDemoRecording(PortalUser portalUser)
+    public Task<bool> CanDeleteDemoRecording(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "delete-demo-recording");
     }
@@ -136,20 +136,20 @@ public class AuthorizationService : IAuthorizationService
         return HasPermission(portalUser.Id, RbacAccessType.Global, RbacNamespace.Copilot, "read-all");
     }
 
-    private bool IsCloudEngineerEnabled(PortalUser portalUser, string permissionName)
+    private Task<bool> IsCloudEngineerEnabled(PortalUser portalUser, string permissionName)
     {
         if (
             _httpContextAccessor.HttpContext != null
             && _httpContextAccessor.HttpContext.Items.ContainsKey("userPermissions")
         )
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.SystemAdmin, permissionName);
     }
 
-    private bool HasPermission(
+    private async Task<bool> HasPermission(
         PortalUser portalUser,
         RbacAccessType scope,
         RbacNamespace permissionNamespace,
@@ -159,9 +159,7 @@ public class AuthorizationService : IAuthorizationService
     {
         try
         {
-            return HasPermission(portalUser.Id, scope, permissionNamespace, permissionName, resourceId)
-                .GetAwaiter()
-                .GetResult();
+            return await HasPermission(portalUser.Id, scope, permissionNamespace, permissionName, resourceId);
         }
         catch (Exception ex)
         {
@@ -370,11 +368,9 @@ public class AuthorizationService : IAuthorizationService
             return false;
         }
 
-        var ownerRoleId = _rbacApplicationService
-            .GetAssignableRoles()
-            .Result.Where(r => r.Name == "Owner")
+        var ownerRoleId = (await _rbacApplicationService.GetAssignableRoles())
+            .Where(r => r.Name == "Owner")
             .Select(r => r.Id)
-            .ToList()
             .FirstOrDefault();
 
         var numberOfOwners = capabilityRoleGrants.Count(rg => rg.RoleId == ownerRoleId);
@@ -417,12 +413,12 @@ public class AuthorizationService : IAuthorizationService
         );
     }
 
-    public bool CanManagePermissionMatrix(PortalUser portalUser)
+    public Task<bool> CanManagePermissionMatrix(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "manage-permission-matrix");
     }
 
-    public bool CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
+    public Task<bool> CanSynchronizeAwsECRAndDatabaseECR(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "synchronize-aws-ecr-and-database-ecr");
     }
@@ -461,12 +457,12 @@ public class AuthorizationService : IAuthorizationService
         return hasCreatePermission || hasUpdatePermission;
     }
 
-    public bool CanBypassMembershipApprovals(PortalUser portalUser)
+    public Task<bool> CanBypassMembershipApprovals(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "bypass-membership-approvals");
     }
 
-    public bool CanBatchCreateCapabilities(PortalUser portalUser)
+    public Task<bool> CanBatchCreateCapabilities(PortalUser portalUser)
     {
         return HasPermission(
             portalUser,
@@ -494,7 +490,7 @@ public class AuthorizationService : IAuthorizationService
 
         return isApplicant
             || hasPermission
-            || IsCloudEngineerEnabled(portalUser, "delete-membership-application-as-admin");
+            || await IsCloudEngineerEnabled(portalUser, "delete-membership-application-as-admin");
     }
 
     public async Task<bool> CanRemoveMember(UserId requesterId, CapabilityId capabilityId)
@@ -550,7 +546,7 @@ public class AuthorizationService : IAuthorizationService
             "update",
             kafkaTopic.CapabilityId
         );
-        bool isCloudEngineer = IsCloudEngineerEnabled(portalUser, "retry-creating-message-contract");
+        bool isCloudEngineer = await IsCloudEngineerEnabled(portalUser, "retry-creating-message-contract");
 
         return isCloudEngineer || canCreateMessageContract;
     }
@@ -575,72 +571,72 @@ public class AuthorizationService : IAuthorizationService
         return canCreate && canUpdate;
     }
 
-    public bool CanManageSelfAssessmentOptions(PortalUser portalUser)
+    public Task<bool> CanManageSelfAssessmentOptions(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "manage-self-assessment-options");
     }
 
-    public bool IsAuthorizedToCreateReleaseNotes(PortalUser portalUser)
+    public Task<bool> IsAuthorizedToCreateReleaseNotes(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "create-release-notes");
     }
 
-    public bool IsAuthorizedToUpdateReleaseNote(PortalUser portalUser)
+    public Task<bool> IsAuthorizedToUpdateReleaseNote(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "update-release-note");
     }
 
-    public bool IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser)
+    public Task<bool> IsAuthorizedToToggleReleaseNoteIsActive(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "toggle-release-note-is-active");
     }
 
-    public bool IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser)
+    public Task<bool> IsAuthorizedToListDraftReleaseNotes(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "list-draft-release-notes");
     }
 
-    public bool IsAuthorizedToRemoveReleaseNote(PortalUser portalUser)
+    public Task<bool> IsAuthorizedToRemoveReleaseNote(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "remove-release-note");
     }
 
-    public bool CanCreateEvent(PortalUser portalUser)
+    public Task<bool> CanCreateEvent(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "create-event");
     }
 
-    public bool CanUpdateEvent(PortalUser portalUser)
+    public Task<bool> CanUpdateEvent(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "update-event");
     }
 
-    public bool CanDeleteEvent(PortalUser portalUser)
+    public Task<bool> CanDeleteEvent(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "delete-event");
     }
 
-    public bool CanCreateNewsItem(PortalUser portalUser)
+    public Task<bool> CanCreateNewsItem(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "create-news-item");
     }
 
-    public bool CanCreatePrivateAsset(PortalUser portalUser)
+    public Task<bool> CanCreatePrivateAsset(PortalUser portalUser)
     {
         return HasPermission(portalUser, RbacAccessType.Global, RbacNamespace.PrivateAssets, "create");
     }
 
-    public bool CanUpdateNewsItem(PortalUser portalUser)
+    public Task<bool> CanUpdateNewsItem(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "update-news-item");
     }
 
-    public bool CanDeleteNewsItem(PortalUser portalUser)
+    public Task<bool> CanDeleteNewsItem(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "delete-news-item");
     }
 
-    public bool CanGetUserEmails(PortalUser portalUser)
+    public Task<bool> CanGetUserEmails(PortalUser portalUser)
     {
         return IsCloudEngineerEnabled(portalUser, "get-user-emails");
     }

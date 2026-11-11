@@ -294,13 +294,13 @@ public class ApiResourceFactory
         );
     }
 
-    public CapabilityListApiResource Convert(
+    public async Task<CapabilityListApiResource> Convert(
         IEnumerable<Capability> capabilities,
         IEnumerable<Membership> currentUserMemberships,
         IEnumerable<Favourite> currentUserFavourites
     )
     {
-        var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
+        var showDeleted = await _authorizationService.CanViewDeletedCapabilities(PortalUser);
         capabilities = showDeleted
             ? capabilities
             : capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted);
@@ -311,7 +311,7 @@ public class ApiResourceFactory
         var capabilitiesSelected = capabilities.Select(ConvertToListItem).ToList();
 
         // Resolve all AWS account ids in a single bulk query instead of one query per capability (N+1).
-        var awsAccountIds = _awsAccountIdQuery.FindBy(
+        var awsAccountIds = await _awsAccountIdQuery.FindBy(
             capabilitiesSelected.Select(x => CapabilityId.Parse(x.Id)).ToList()
         );
 
@@ -340,9 +340,9 @@ public class ApiResourceFactory
     }
 
     // This conversion is used by Teams, so we don't need to check for membership
-    public CapabilityListApiResource Convert(IEnumerable<Capability> capabilities)
+    public async Task<CapabilityListApiResource> Convert(IEnumerable<Capability> capabilities)
     {
-        var showDeleted = _authorizationService.CanViewDeletedCapabilities(PortalUser);
+        var showDeleted = await _authorizationService.CanViewDeletedCapabilities(PortalUser);
         capabilities = showDeleted
             ? capabilities
             : capabilities.Where(x => x.Status != CapabilityStatusOptions.Deleted);
@@ -550,11 +550,11 @@ public class ApiResourceFactory
         );
     }
 
-    private ResourceLink CreateJoinLinkFor(Capability capability)
+    private async Task<ResourceLink> CreateJoinLinkFor(Capability capability)
     {
         var allowedInteractions = Allow.None;
 
-        if (_authorizationService.CanBypassMembershipApprovals(PortalUser))
+        if (await _authorizationService.CanBypassMembershipApprovals(PortalUser))
         {
             allowedInteractions += Post;
         }
@@ -799,7 +799,7 @@ public class ApiResourceFactory
                 metadata: await CreateMetadataLinkFor(capability),
                 setRequiredMetadata: await CreateSetRequiredMetadataLinkFor(capability),
                 getLinkedTeams: GetLinkedTeams(capability),
-                joinCapability: CreateJoinLinkFor(capability),
+                joinCapability: await CreateJoinLinkFor(capability),
                 configurationLevel: CreateConfigurationLevelLinkFor(capability),
                 selfAssessments: await CreateSelfAssessmentsLinkFor(capability),
                 requirementScore: CreateRequirementScoreLinkFor(capability),
@@ -1653,16 +1653,25 @@ public class ApiResourceFactory
         );
     }
 
-    public ReleaseNoteApiResource Convert(ReleaseNote releaseNote)
+    public async Task<ReleaseNoteApiResource> Convert(ReleaseNote releaseNote)
     {
         var portalUser = HttpContext.User.ToPortalUser();
+        return ConvertReleaseNote(
+            releaseNote,
+            canToggle: await _authorizationService.IsAuthorizedToToggleReleaseNoteIsActive(portalUser),
+            canRemove: await _authorizationService.IsAuthorizedToRemoveReleaseNote(portalUser)
+        );
+    }
+
+    private ReleaseNoteApiResource ConvertReleaseNote(ReleaseNote releaseNote, bool canToggle, bool canRemove)
+    {
         var allowedToggleInteractions = Allow.None;
-        if (_authorizationService.IsAuthorizedToToggleReleaseNoteIsActive(portalUser))
+        if (canToggle)
         {
             allowedToggleInteractions += Post;
         }
         var allowedRemoveInteractions = Allow.None;
-        if (_authorizationService.IsAuthorizedToRemoveReleaseNote(portalUser))
+        if (canRemove)
         {
             allowedRemoveInteractions += Delete;
         }
@@ -1712,16 +1721,18 @@ public class ApiResourceFactory
         );
     }
 
-    public ReleaseNoteListApiResource Convert(IEnumerable<ReleaseNote> releaseNotes)
+    public async Task<ReleaseNoteListApiResource> Convert(IEnumerable<ReleaseNote> releaseNotes)
     {
         var portalUser = HttpContext.User.ToPortalUser();
         var allowedInteractions = Allow.None;
-        if (_authorizationService.IsAuthorizedToCreateReleaseNotes(portalUser))
+        if (await _authorizationService.IsAuthorizedToCreateReleaseNotes(portalUser))
         {
             allowedInteractions += Post;
         }
 
-        var items = releaseNotes.Select(Convert).ToArray();
+        var canToggle = await _authorizationService.IsAuthorizedToToggleReleaseNoteIsActive(portalUser);
+        var canRemove = await _authorizationService.IsAuthorizedToRemoveReleaseNote(portalUser);
+        var items = releaseNotes.Select(n => ConvertReleaseNote(n, canToggle, canRemove)).ToArray();
 
         return new ReleaseNoteListApiResource(
             items: items,
@@ -1951,16 +1962,29 @@ public class ApiResourceFactory
         );
     }
 
-    public EventApiResource Convert(Event eventModel)
+    public async Task<EventApiResource> Convert(Event eventModel)
+    {
+        var (canDelete, canUpdate) = await GetEventPermissions();
+        return ConvertEvent(eventModel, canDelete, canUpdate);
+    }
+
+    private async Task<(bool CanDelete, bool CanUpdate)> GetEventPermissions()
     {
         var portalUser = HttpContext.User.ToPortalUser();
+        return (
+            await _authorizationService.CanDeleteEvent(portalUser),
+            await _authorizationService.CanUpdateEvent(portalUser)
+        );
+    }
 
+    private EventApiResource ConvertEvent(Event eventModel, bool canDelete, bool canUpdate)
+    {
         var allowOnSelf = Allow.Get;
-        if (_authorizationService.CanDeleteEvent(portalUser))
+        if (canDelete)
         {
             allowOnSelf += Delete;
         }
-        if (_authorizationService.CanUpdateEvent(portalUser))
+        if (canUpdate)
         {
             allowOnSelf += Post;
         }
@@ -1992,18 +2016,19 @@ public class ApiResourceFactory
         return result;
     }
 
-    public EventsApiResource Convert(IEnumerable<Event> events)
+    public async Task<EventsApiResource> Convert(IEnumerable<Event> events)
     {
         var portalUser = HttpContext.User.ToPortalUser();
 
         var allowOnSelf = Allow.Get;
-        if (_authorizationService.CanCreateEvent(portalUser))
+        if (await _authorizationService.CanCreateEvent(portalUser))
         {
             allowOnSelf += Post;
         }
 
+        var (canDelete, canUpdate) = await GetEventPermissions();
         var result = new EventsApiResource(
-            events: events.Select(Convert).ToArray(),
+            events: events.Select(e => ConvertEvent(e, canDelete, canUpdate)).ToArray(),
             links: new EventsApiResource.EventsLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -2020,11 +2045,15 @@ public class ApiResourceFactory
         return result;
     }
 
-    public UpcomingEventsApiResource ConvertUpcomingEvents(IEnumerable<Event> upcomingEvents, Event? latestHeldEvent)
+    public async Task<UpcomingEventsApiResource> ConvertUpcomingEvents(
+        IEnumerable<Event> upcomingEvents,
+        Event? latestHeldEvent
+    )
     {
+        var (canDelete, canUpdate) = await GetEventPermissions();
         var result = new UpcomingEventsApiResource(
-            upcomingEvents: upcomingEvents.Select(Convert).ToArray(),
-            latestHeldEvent: latestHeldEvent != null ? Convert(latestHeldEvent) : null,
+            upcomingEvents: upcomingEvents.Select(e => ConvertEvent(e, canDelete, canUpdate)).ToArray(),
+            latestHeldEvent: latestHeldEvent != null ? ConvertEvent(latestHeldEvent, canDelete, canUpdate) : null,
             links: new UpcomingEventsApiResource.UpcomingEventsLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -2041,12 +2070,17 @@ public class ApiResourceFactory
         return result;
     }
 
-    public DemoRecordingApiResource Convert(DemoRecording demo)
+    public async Task<DemoRecordingApiResource> Convert(DemoRecording demo)
     {
         var portalUser = HttpContext.User.ToPortalUser();
+        return ConvertDemoRecording(demo, await _authorizationService.CanDeleteDemoRecording(portalUser));
+    }
+
+    private DemoRecordingApiResource ConvertDemoRecording(DemoRecording demo, bool canDelete)
+    {
         var allowOnSelf = Allow.Get;
 
-        if (_authorizationService.CanDeleteDemoRecording(portalUser))
+        if (canDelete)
         {
             allowOnSelf += Delete;
         }
@@ -2075,18 +2109,19 @@ public class ApiResourceFactory
         );
     }
 
-    public DemoRecordingsApiResource Convert(IEnumerable<DemoRecording> demos)
+    public async Task<DemoRecordingsApiResource> Convert(IEnumerable<DemoRecording> demos)
     {
         var portalUser = HttpContext.User.ToPortalUser();
         var allowOnSelf = Allow.Get;
 
-        if (_authorizationService.CanCreateDemoRecording(portalUser))
+        if (await _authorizationService.CanCreateDemoRecording(portalUser))
         {
             allowOnSelf += Post;
         }
 
+        var canDelete = await _authorizationService.CanDeleteDemoRecording(portalUser);
         return new DemoRecordingsApiResource(
-            demos: demos.Select(Convert).ToArray(),
+            demos: demos.Select(d => ConvertDemoRecording(d, canDelete)).ToArray(),
             links: new DemoRecordingsApiResource.DemoRecordingsLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -2121,17 +2156,31 @@ public class ApiResourceFactory
         };
     }
 
-    public NewsItemApiResource Convert(NewsItem newsItem)
+    public async Task<NewsItemApiResource> Convert(NewsItem newsItem)
+    {
+        var (canUpdate, canDelete) = await GetNewsItemPermissions();
+        return ConvertNewsItem(newsItem, canUpdate, canDelete);
+    }
+
+    private async Task<(bool CanUpdate, bool CanDelete)> GetNewsItemPermissions()
     {
         var portalUser = HttpContext.User.ToPortalUser();
+        return (
+            await _authorizationService.CanUpdateNewsItem(portalUser),
+            await _authorizationService.CanDeleteNewsItem(portalUser)
+        );
+    }
+
+    private NewsItemApiResource ConvertNewsItem(NewsItem newsItem, bool canUpdate, bool canDelete)
+    {
         var allowOnSelf = Allow.Get;
 
-        if (_authorizationService.CanUpdateNewsItem(portalUser))
+        if (canUpdate)
         {
             allowOnSelf += Post;
         }
 
-        if (_authorizationService.CanDeleteNewsItem(portalUser))
+        if (canDelete)
         {
             allowOnSelf += Delete;
         }
@@ -2162,18 +2211,19 @@ public class ApiResourceFactory
         );
     }
 
-    public NewsItemsApiResource Convert(IEnumerable<NewsItem> newsItems)
+    public async Task<NewsItemsApiResource> Convert(IEnumerable<NewsItem> newsItems)
     {
         var portalUser = HttpContext.User.ToPortalUser();
         var allowOnSelf = Allow.Get;
 
-        if (_authorizationService.CanCreateNewsItem(portalUser))
+        if (await _authorizationService.CanCreateNewsItem(portalUser))
         {
             allowOnSelf += Post;
         }
 
+        var (canUpdate, canDelete) = await GetNewsItemPermissions();
         return new NewsItemsApiResource(
-            newsItems: newsItems.Select(Convert).ToArray(),
+            newsItems: newsItems.Select(n => ConvertNewsItem(n, canUpdate, canDelete)).ToArray(),
             links: new NewsItemsApiResource.NewsItemsLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
@@ -2188,10 +2238,11 @@ public class ApiResourceFactory
         );
     }
 
-    public NewsItemsApiResource ConvertRelevantNewsItems(IEnumerable<NewsItem> newsItems)
+    public async Task<NewsItemsApiResource> ConvertRelevantNewsItems(IEnumerable<NewsItem> newsItems)
     {
+        var (canUpdate, canDelete) = await GetNewsItemPermissions();
         return new NewsItemsApiResource(
-            newsItems: newsItems.Select(Convert).ToArray(),
+            newsItems: newsItems.Select(n => ConvertNewsItem(n, canUpdate, canDelete)).ToArray(),
             links: new NewsItemsApiResource.NewsItemsLinks(
                 self: new ResourceLink(
                     href: _linkGenerator.GetUriByAction(
