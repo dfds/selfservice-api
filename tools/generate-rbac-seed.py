@@ -83,7 +83,7 @@ def write_roles_csv(roles, role_id_map):
                     now_iso(),
                     name,
                     role.get("description") or f"Role: {name}",
-                    role.get("type") or "Global",
+                    (role.get("type") or "global").lower(),
                 ]
             )
 
@@ -118,7 +118,7 @@ def write_permission_grants_csv(roles, role_id_map):
                             role_id,
                             namespace,
                             permission,
-                            "Global",
+                            "global",
                             "",
                         ]
                     )
@@ -158,7 +158,7 @@ def write_group_members_csv(groups, group_id_map):
                 writer.writerow([new_uuid(), group_id, member, now_iso()])
 
 
-def append_group_role_grant(grants, role_id_map, group_id, role_name, grant_type="Global", resource=""):
+def append_group_role_grant(grants, role_id_map, group_id, role_name, grant_type="global", resource=""):
     role_id = role_id_map.get(role_name)
     if not role_id:
         raise ValueError(f"Role '{role_name}' referenced by grants was not found in config.roles")
@@ -184,7 +184,7 @@ def build_role_grants(groups, role_id_map, group_id_map):
             if not role_name:
                 continue
 
-            grant_type = binding.get("scope") or "Global"
+            grant_type = (binding.get("scope") or "global").lower()
             resource = binding.get("resource") or ""
             append_group_role_grant(grants, role_id_map, group_id, role_name, grant_type, resource)
 
