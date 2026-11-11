@@ -4,6 +4,11 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <!-- Microsoft.VisualStudio.Threading.Analyzers: VSTHRD200 is an "Async" naming-suffix rule the
+             codebase does not follow; VSTHRD011's deadlock needs a JoinableTaskFactory or single-threaded
+             SynchronizationContext, neither of which exists in ASP.NET Core. Set here rather than in the
+             root .editorconfig because the Dockerfile builds from src/ only. -->
+        <NoWarn>$(NoWarn);VSTHRD200;VSTHRD011</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
