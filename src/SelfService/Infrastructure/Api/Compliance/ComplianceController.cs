@@ -11,10 +11,8 @@ namespace SelfService.Infrastructure.Api.Compliance;
 [Produces("application/json")]
 [ApiController]
 [SwaggerTag(
-    "Capability compliance with the platform requirements (tags, External Secrets, IRSA mutual trust, "
-        + "workload probes, ECR pull policy), per capability, cost centre and requirement. Today (UTC) is "
-        + "computed live; earlier days are read from daily snapshots, kept for 1100 days. Every route needs an "
-        + "authenticated caller; no RBAC permission is checked."
+    "Capability compliance with the platform requirements per capability, cost centre and requirement. Today (UTC) is "
+        + "computed live; earlier days are read from daily snapshots."
 )]
 public class ComplianceController : ControllerBase
 {
@@ -96,9 +94,6 @@ public class ComplianceController : ControllerBase
     [HttpGet("capabilities/{id}/history")]
     [SwaggerOperation(
         Summary = "Get a capability's daily compliance history",
-        Description = "One item per day with a snapshot, oldest first, from days - 1 days ago to today (UTC). "
-            + "Days without a snapshot are absent. Today is computed live, like /compliance/capabilities/{id}. "
-            + "An unknown capability returns no items.",
         OperationId = "ComplianceGetCapabilityHistory"
     )]
     [SwaggerResponse(StatusCodes.Status200OK, null, typeof(CapabilityComplianceHistoryApiResource))]
@@ -322,7 +317,6 @@ public class ComplianceController : ControllerBase
     [HttpGet("requirements/{id}")]
     [SwaggerOperation(
         Summary = "Get compliance for a requirement, per capability",
-        Description = "id is one of tags, external-secrets, irsa-mutual-trust, workload-liveness-and-readiness-probes or ecr-pull-policy, matched case-insensitively.",
         OperationId = "ComplianceGetRequirement"
     )]
     [SwaggerResponse(StatusCodes.Status200OK, null, typeof(RequirementComplianceDetailsApiResource))]
@@ -358,10 +352,6 @@ public class ComplianceController : ControllerBase
     [HttpGet("history")]
     [SwaggerOperation(
         Summary = "Get daily compliance totals",
-        Description = "One item per day with a snapshot, oldest first. from defaults to the oldest snapshot "
-            + "and to defaults to today (UTC). Until the first snapshot is captured, oldestDate is null and "
-            + "items is empty. Today's item is computed live, like /compliance/summary, so the response is not "
-            + "cacheable.",
         OperationId = "ComplianceGetHistory"
     )]
     [SwaggerResponse(StatusCodes.Status200OK, null, typeof(ComplianceHistoryApiResource))]

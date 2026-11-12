@@ -501,6 +501,7 @@ public class CapabilityComplianceHistoryEntryApiResource
                 {
                     CategoryName = c.CategoryName,
                     Status = c.Status.ToString(),
+                    Score = c.Score,
                 })
                 .ToList(),
         };
@@ -511,4 +512,7 @@ public class ComplianceCategoryStatusApiResource
 {
     public string CategoryName { get; set; } = null!;
     public string Status { get; set; } = null!;
+
+    /// <summary>0-100, as on /compliance/capabilities/{id}; null when the category could not be evaluated.</summary>
+    public double? Score { get; set; }
 }

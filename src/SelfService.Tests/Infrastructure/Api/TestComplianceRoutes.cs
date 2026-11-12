@@ -176,6 +176,43 @@ public class TestComplianceRoutes
         service.Verify(x => x.GetCapabilityHistory(CapabilityId.Parse("foo"), Today.AddDays(-89), Today), Times.Once);
     }
 
+    [Fact]
+    public async Task capability_history_returns_each_category_score()
+    {
+        var row = new CapabilityComplianceRow(
+            "foo",
+            "Foo",
+            null,
+            "ti-example",
+            2,
+            ComplianceStatus.NonCompliant,
+            new List<ComplianceCategoryResult>
+            {
+                new()
+                {
+                    CategoryName = "Tags",
+                    Status = ComplianceStatus.NonCompliant,
+                    Score = 83.3,
+                },
+                new() { CategoryName = "IRSA", Status = ComplianceStatus.Unknown },
+            }
+        );
+        var service = new Mock<IComplianceApplicationService>();
+        service
+            .Setup(x => x.GetCapabilityHistory(It.IsAny<CapabilityId>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>()))
+            .ReturnsAsync(new List<CapabilityComplianceHistoryEntry> { new(Today, row) });
+        await using var application = CreateApplication(service);
+        using var client = application.CreateClient();
+
+        var response = await client.GetAsync("/compliance/capabilities/foo/history");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var categories = body.RootElement.GetProperty("items")[0].GetProperty("categories");
+        Assert.Equal(83.3, categories[0].GetProperty("score").GetDouble());
+        Assert.Equal(JsonValueKind.Null, categories[1].GetProperty("score").ValueKind);
+    }
+
     [Theory]
     [InlineData("/compliance/capabilities/foo/history?days=0")]
     [InlineData("/compliance/capabilities/foo/history?days=1101")]
