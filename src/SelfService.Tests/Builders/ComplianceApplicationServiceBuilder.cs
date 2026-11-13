@@ -1,5 +1,6 @@
 using Moq;
 using SelfService.Application;
+using SelfService.Domain;
 using SelfService.Domain.Models;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Tests.TestDoubles;
@@ -12,12 +13,16 @@ public class ComplianceApplicationServiceBuilder
     private IAwsAccountRepository _awsAccountRepository;
     private IMembershipRepository _membershipRepository;
     private RequirementsDbContext? _requirementsDbContext;
+    private IComplianceSnapshotRepository _complianceSnapshotRepository;
+    private SystemTime _systemTime;
 
     public ComplianceApplicationServiceBuilder()
     {
         _capabilityRepository = Dummy.Of<ICapabilityRepository>();
         _awsAccountRepository = DefaultAwsAccountRepository();
         _membershipRepository = DefaultMembershipRepository();
+        _complianceSnapshotRepository = Dummy.Of<IComplianceSnapshotRepository>();
+        _systemTime = SystemTime.Default;
     }
 
     public ComplianceApplicationServiceBuilder WithCapabilityRepository(ICapabilityRepository capabilityRepository)
@@ -44,6 +49,20 @@ public class ComplianceApplicationServiceBuilder
         return this;
     }
 
+    public ComplianceApplicationServiceBuilder WithComplianceSnapshotRepository(
+        IComplianceSnapshotRepository complianceSnapshotRepository
+    )
+    {
+        _complianceSnapshotRepository = complianceSnapshotRepository;
+        return this;
+    }
+
+    public ComplianceApplicationServiceBuilder WithSystemTime(SystemTime systemTime)
+    {
+        _systemTime = systemTime;
+        return this;
+    }
+
     public IComplianceApplicationService Build()
     {
         if (_requirementsDbContext != null)
@@ -52,14 +71,17 @@ public class ComplianceApplicationServiceBuilder
                 _capabilityRepository,
                 _awsAccountRepository,
                 _membershipRepository,
-                _requirementsDbContext
+                _requirementsDbContext,
+                _complianceSnapshotRepository,
+                _systemTime
             );
         }
 
         return new StubComplianceApplicationService(
             _capabilityRepository,
             _awsAccountRepository,
-            _membershipRepository
+            _membershipRepository,
+            _systemTime
         );
     }
 
