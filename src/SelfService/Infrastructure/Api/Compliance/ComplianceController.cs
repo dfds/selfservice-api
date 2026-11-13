@@ -350,10 +350,7 @@ public class ComplianceController : ControllerBase
     }
 
     [HttpGet("history")]
-    [SwaggerOperation(
-        Summary = "Get daily compliance totals",
-        OperationId = "ComplianceGetHistory"
-    )]
+    [SwaggerOperation(Summary = "Get daily compliance totals", OperationId = "ComplianceGetHistory")]
     [SwaggerResponse(StatusCodes.Status200OK, null, typeof(ComplianceHistoryApiResource))]
     [SwaggerResponse(
         StatusCodes.Status400BadRequest,
