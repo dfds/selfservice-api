@@ -1,0 +1,1 @@
+ALTER TABLE "PrivateAsset" ALTER COLUMN "OwnerId" DROP NOT NULL;

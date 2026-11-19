@@ -14,7 +14,7 @@ public class PrivateAssetApplicationService(
 ) : IPrivateAssetApplicationService
 {
     public async Task<PrivateAsset> Upload(
-        Guid ownerId,
+        Guid? ownerId,
         PrivateAssetOwnerType ownerType,
         bool isInline,
         string fileName,

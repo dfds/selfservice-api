@@ -134,9 +134,15 @@ public class NewsController : ControllerBase
             frontpageSummary: request.FrontpageSummary
         );
 
-        var created = await _newsItemService.CreateNewsItem(newsItem);
-
-        return Ok(await _apiResourceFactory.Convert(created));
+        try
+        {
+            var created = await _newsItemService.CreateNewsItem(newsItem, request.AssetIds, userId.ToString());
+            return Ok(await _apiResourceFactory.Convert(created));
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = exception.Message });
+        }
     }
 
     [HttpPost("{id}")]
@@ -152,7 +158,7 @@ public class NewsController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        if (!User.TryGetUserId(out _))
+        if (!User.TryGetUserId(out var userId))
         {
             return Unauthorized(
                 new ProblemDetails
@@ -177,7 +183,7 @@ public class NewsController : ControllerBase
 
         try
         {
-            await _newsItemService.UpdateNewsItem(id, request);
+            await _newsItemService.UpdateNewsItem(id, request, userId.ToString());
             var updated = await _newsItemService.GetNewsItemById(id);
             return Ok(await _apiResourceFactory.Convert(updated));
         }
@@ -186,6 +192,10 @@ public class NewsController : ControllerBase
             return NotFound(
                 new ProblemDetails { Title = "Not Found", Detail = $"News item with id '{id}' was not found." }
             );
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = exception.Message });
         }
     }
 

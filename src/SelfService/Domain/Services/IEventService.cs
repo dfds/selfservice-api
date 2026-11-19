@@ -8,8 +8,8 @@ public interface IEventService
 {
     Task<IEnumerable<Event>> GetAllEvents();
     Task<Event> GetEventById(EventId eventId);
-    Task<Event> CreateEvent(Event eventModel);
-    Task UpdateEvent(EventId eventId, EventUpdateRequest updateRequest);
+    Task<Event> CreateEvent(Event eventModel, EventCreateRequest request, string userId);
+    Task UpdateEvent(EventId eventId, EventUpdateRequest updateRequest, string userId);
     Task DeleteEvent(EventId eventId);
     Task<List<Event>> GetUpcomingEvents(int limit = 10);
     Task<Event?> GetLatestHeldEvent();

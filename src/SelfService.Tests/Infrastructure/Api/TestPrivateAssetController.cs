@@ -27,7 +27,7 @@ public class TestPrivateAssetController
         privateAssetService
             .Setup(x =>
                 x.Upload(
-                    It.IsAny<Guid>(),
+                    It.IsAny<Guid?>(),
                     PrivateAssetOwnerType.EmailCampaign,
                     true,
                     "banner.png",
@@ -64,6 +64,51 @@ public class TestPrivateAssetController
         Assert.Equal("image/png", response.MimeType);
         Assert.Equal(asset.Id.ToString(), response.AssetId);
         Assert.Equal("https://example.test/private-assets/abc123/banner.png", response.Url);
+    }
+
+    [Fact]
+    public async Task upload_accepts_a_missing_owner_id()
+    {
+        var stream = new MemoryStream([1, 2, 3, 4]);
+        var file = new FormFile(stream, 0, stream.Length, "file", "banner.png") { Headers = new HeaderDictionary() };
+        file.ContentType = "image/png";
+        var asset = new PrivateAsset(
+            PrivateAssetId.New(),
+            "key",
+            "banner.png",
+            "image/png",
+            4,
+            "tester@dfds.com",
+            DateTime.UtcNow,
+            null,
+            PrivateAssetOwnerType.News,
+            true
+        );
+        var service = new Mock<IPrivateAssetApplicationService>();
+        service
+            .Setup(current =>
+                current.Upload(
+                    null,
+                    PrivateAssetOwnerType.News,
+                    true,
+                    "banner.png",
+                    "image/png",
+                    4,
+                    It.IsAny<Stream>(),
+                    It.IsAny<PortalUser>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(asset);
+        var authorization = new Mock<IAuthorizationService>();
+        authorization.Setup(current => current.CanCreatePrivateAsset(It.IsAny<PortalUser>())).ReturnsAsync(true);
+
+        var result = await BuildController(service.Object, authorization.Object)
+            .Upload(file, null, PrivateAssetOwnerType.News, true, CancellationToken.None);
+
+        var response = Assert.IsType<PrivateAssetUploadResponse>(Assert.IsType<OkObjectResult>(result).Value);
+        Assert.Null(response.OwnerId);
+        Assert.Equal(PrivateAssetOwnerType.News, response.OwnerType);
     }
 
     [Fact]

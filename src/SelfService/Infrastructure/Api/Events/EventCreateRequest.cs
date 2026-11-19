@@ -22,6 +22,7 @@ public class EventCreateRequest
     public EventType Type { get; set; }
 
     public List<EventAttachmentCreateDto>? Attachments { get; set; }
+    public List<Guid>? AssetIds { get; set; }
 }
 
 public class EventAttachmentCreateDto

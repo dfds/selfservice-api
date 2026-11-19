@@ -27,7 +27,11 @@ public class TestNewsItemService
         var repository = new Mock<INewsItemRepository>();
         repository.Setup(x => x.FindById(newsItem.Id)).ReturnsAsync(newsItem);
 
-        var sut = new NewsItemService(Mock.Of<ILogger<NewsItemService>>(), repository.Object);
+        var sut = new NewsItemService(
+            Mock.Of<ILogger<NewsItemService>>(),
+            repository.Object,
+            Mock.Of<IPrivateAssetRepository>()
+        );
 
         await sut.HighlightNewsItem(newsItem.Id);
 
@@ -42,7 +46,11 @@ public class TestNewsItemService
         var repository = new Mock<INewsItemRepository>();
         repository.Setup(x => x.FindById(newsItem.Id)).ReturnsAsync(newsItem);
 
-        var sut = new NewsItemService(Mock.Of<ILogger<NewsItemService>>(), repository.Object);
+        var sut = new NewsItemService(
+            Mock.Of<ILogger<NewsItemService>>(),
+            repository.Object,
+            Mock.Of<IPrivateAssetRepository>()
+        );
 
         await sut.HighlightNewsItem(newsItem.Id);
 
@@ -58,7 +66,11 @@ public class TestNewsItemService
         var repository = new Mock<INewsItemRepository>();
         repository.Setup(x => x.FindById(missingId)).ReturnsAsync((NewsItem?)null);
 
-        var sut = new NewsItemService(Mock.Of<ILogger<NewsItemService>>(), repository.Object);
+        var sut = new NewsItemService(
+            Mock.Of<ILogger<NewsItemService>>(),
+            repository.Object,
+            Mock.Of<IPrivateAssetRepository>()
+        );
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => sut.HighlightNewsItem(missingId));
     }
