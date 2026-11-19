@@ -684,7 +684,7 @@ public class SelfServiceDbContext : DbContext
             cfg.Property(x => x.SizeInBytes);
             cfg.Property(x => x.CreatedBy);
             cfg.Property(x => x.CreatedAt).HasConversion<ForceUtcKind>();
-            cfg.Property(x => x.OwnerId).IsRequired();
+            cfg.Property(x => x.OwnerId);
             cfg.Property(x => x.OwnerType).HasConversion<string>().HasMaxLength(64).IsRequired();
             cfg.Property(x => x.IsInline).IsRequired();
             cfg.HasIndex(x => new

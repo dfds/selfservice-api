@@ -108,8 +108,12 @@ public class TestPrivateAssetApplicationService
         );
     }
 
-    [Fact]
-    public async Task upload_does_not_require_an_owner_record()
+    [Theory]
+    [InlineData(PrivateAssetOwnerType.EmailCampaign)]
+    [InlineData(PrivateAssetOwnerType.Event)]
+    [InlineData(PrivateAssetOwnerType.ReleaseNote)]
+    [InlineData(PrivateAssetOwnerType.News)]
+    public async Task upload_does_not_require_an_owner_record(PrivateAssetOwnerType ownerType)
     {
         await using var factory = new InMemoryDatabaseFactory();
         await using var db = await factory.CreateSelfServiceDbContext();
@@ -120,10 +124,11 @@ public class TestPrivateAssetApplicationService
             )
             .ReturnsAsync("private-assets/upload/banner.png");
 
+        var ownerId = Guid.NewGuid();
         var asset = await Service(db, storage)
             .Upload(
-                Guid.NewGuid(),
-                PrivateAssetOwnerType.EmailCampaign,
+                ownerId,
+                ownerType,
                 true,
                 "banner.png",
                 "image/png",
@@ -132,9 +137,30 @@ public class TestPrivateAssetApplicationService
                 Editor
             );
 
-        Assert.Equal(PrivateAssetOwnerType.EmailCampaign, asset.OwnerType);
-        Assert.Single(await new PrivateAssetRepository(db).GetByOwner(asset.OwnerType, asset.OwnerId));
+        Assert.Equal(ownerType, asset.OwnerType);
+        Assert.Single(await new PrivateAssetRepository(db).GetByOwner(asset.OwnerType, ownerId));
         Assert.Empty(db.EmailCampaigns);
+    }
+
+    [Fact]
+    public async Task upload_without_owner_persists_unowned_asset()
+    {
+        await using var factory = new InMemoryDatabaseFactory();
+        await using var db = await factory.CreateSelfServiceDbContext();
+        var storage = new Mock<IPrivateAssetService>();
+        storage.Setup(service => service.UploadAsync("banner.png", "image/png", It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("private-assets/upload/banner.png");
+
+        var asset = await Service(db, storage).Upload(
+            null, PrivateAssetOwnerType.News, true, "banner.png", "image/png", 4,
+            new MemoryStream([1, 2, 3, 4]), Editor
+        );
+        db.ChangeTracker.Clear();
+
+        var persisted = await db.PrivateAssets.FindAsync(asset.Id);
+        Assert.NotNull(persisted);
+        Assert.Null(persisted.OwnerId);
+        Assert.Equal(PrivateAssetOwnerType.News, persisted.OwnerType);
     }
 
     [Fact]

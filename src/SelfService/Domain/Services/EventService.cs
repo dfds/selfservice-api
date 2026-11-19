@@ -9,16 +9,19 @@ public class EventService : IEventService
     private readonly ILogger<EventService> _logger;
     private readonly IEventRepository _eventRepository;
     private readonly IEventAttachmentRepository _eventAttachmentRepository;
+    private readonly IPrivateAssetRepository _privateAssetRepository;
 
     public EventService(
         ILogger<EventService> logger,
         IEventRepository eventRepository,
-        IEventAttachmentRepository eventAttachmentRepository
+        IEventAttachmentRepository eventAttachmentRepository,
+        IPrivateAssetRepository privateAssetRepository
     )
     {
         _logger = logger;
         _eventRepository = eventRepository;
         _eventAttachmentRepository = eventAttachmentRepository;
+        _privateAssetRepository = privateAssetRepository;
     }
 
     public async Task<IEnumerable<Event>> GetAllEvents()
@@ -55,20 +58,75 @@ public class EventService : IEventService
     }
 
     [TransactionalBoundary]
-    public async Task<Event> CreateEvent(Event eventModel)
+    public async Task<Event> CreateEvent(Event eventModel, EventCreateRequest request, string userId)
     {
+        await _privateAssetRepository.Claim(request.AssetIds ?? [], PrivateAssetOwnerType.Event, eventModel.Id, userId);
         await _eventRepository.Add(eventModel);
+        foreach (var attachmentDto in request.Attachments ?? [])
+        {
+            var attachment = new EventAttachment(
+                id: new EventAttachmentId(),
+                eventId: eventModel.Id,
+                url: attachmentDto.Url!,
+                attachmentType: attachmentDto.Type,
+                description: attachmentDto.Description,
+                createdAt: DateTime.UtcNow
+            );
+            await _eventAttachmentRepository.Add(attachment);
+            eventModel.AddAttachment(attachment);
+        }
         return eventModel;
     }
 
     [TransactionalBoundary]
-    public async Task UpdateEvent(EventId eventId, EventUpdateRequest updateRequest)
+    public async Task UpdateEvent(EventId eventId, EventUpdateRequest updateRequest, string userId)
     {
         var eventModel =
             await _eventRepository.FindById(eventId)
             ?? throw new KeyNotFoundException($"Event with id '{eventId}' not found.");
 
+        await _privateAssetRepository.Claim(updateRequest.AssetIds ?? [], PrivateAssetOwnerType.Event, eventId, userId);
         eventModel.Update(updateRequest.EventDate, updateRequest.Title, updateRequest.Description, updateRequest.Type);
+
+        if (updateRequest.Attachments is null)
+            return;
+
+        var currentAttachments = await _eventAttachmentRepository.GetAttachmentsByEventId(eventId);
+        var requestedIds = updateRequest
+            .Attachments.Where(attachment => attachment.Id is not null)
+            .Select(attachment => attachment.Id!)
+            .ToHashSet();
+        foreach (var attachment in currentAttachments)
+        {
+            if (!requestedIds.Contains(attachment.Id))
+                await _eventAttachmentRepository.Remove(attachment.Id);
+        }
+
+        foreach (
+            var attachmentDto in updateRequest.Attachments.Where(attachment =>
+                attachment.Id is not null && attachment.Url is not null
+            )
+        )
+        {
+            var attachment =
+                await _eventAttachmentRepository.FindById(attachmentDto.Id!)
+                ?? throw new KeyNotFoundException($"Attachment with id '{attachmentDto.Id}' not found.");
+            attachment.Update(attachmentDto.Url!, attachmentDto.Type, attachmentDto.Description);
+        }
+
+        foreach (var attachmentDto in updateRequest.Attachments.Where(attachment => attachment.Id is null))
+        {
+            await _eventAttachmentRepository.Add(
+                new EventAttachment(
+                    id: new EventAttachmentId(),
+                    eventId: eventId,
+                    url: attachmentDto.Url!,
+                    attachmentType: attachmentDto.Type,
+                    description: attachmentDto.Description,
+                    createdAt: DateTime.UtcNow
+                )
+            );
+        }
     }
 
     [TransactionalBoundary]

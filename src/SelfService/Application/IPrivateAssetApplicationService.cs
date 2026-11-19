@@ -5,7 +5,7 @@ namespace SelfService.Application;
 public interface IPrivateAssetApplicationService
 {
     Task<PrivateAsset> Upload(
-        Guid ownerId,
+        Guid? ownerId,
         PrivateAssetOwnerType ownerType,
         bool isInline,
         string fileName,

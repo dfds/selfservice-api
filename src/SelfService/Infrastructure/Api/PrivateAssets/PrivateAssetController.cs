@@ -58,7 +58,7 @@ public class PrivateAssetController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized, "application/problem+json")]
     public async Task<IActionResult> Upload(
         IFormFile file,
-        [FromForm] Guid ownerId,
+        [FromForm] Guid? ownerId,
         [FromForm, BindRequired] PrivateAssetOwnerType ownerType,
         [FromForm, BindRequired] bool isInline,
         CancellationToken cancellationToken
