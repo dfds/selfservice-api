@@ -126,16 +126,7 @@ public class TestPrivateAssetApplicationService
 
         var ownerId = Guid.NewGuid();
         var asset = await Service(db, storage)
-            .Upload(
-                ownerId,
-                ownerType,
-                true,
-                "banner.png",
-                "image/png",
-                4,
-                new MemoryStream([1, 2, 3, 4]),
-                Editor
-            );
+            .Upload(ownerId, ownerType, true, "banner.png", "image/png", 4, new MemoryStream([1, 2, 3, 4]), Editor);
 
         Assert.Equal(ownerType, asset.OwnerType);
         Assert.Single(await new PrivateAssetRepository(db).GetByOwner(asset.OwnerType, ownerId));
@@ -148,13 +139,23 @@ public class TestPrivateAssetApplicationService
         await using var factory = new InMemoryDatabaseFactory();
         await using var db = await factory.CreateSelfServiceDbContext();
         var storage = new Mock<IPrivateAssetService>();
-        storage.Setup(service => service.UploadAsync("banner.png", "image/png", It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+        storage
+            .Setup(service =>
+                service.UploadAsync("banner.png", "image/png", It.IsAny<Stream>(), It.IsAny<CancellationToken>())
+            )
             .ReturnsAsync("private-assets/upload/banner.png");
 
-        var asset = await Service(db, storage).Upload(
-            null, PrivateAssetOwnerType.News, true, "banner.png", "image/png", 4,
-            new MemoryStream([1, 2, 3, 4]), Editor
-        );
+        var asset = await Service(db, storage)
+            .Upload(
+                null,
+                PrivateAssetOwnerType.News,
+                true,
+                "banner.png",
+                "image/png",
+                4,
+                new MemoryStream([1, 2, 3, 4]),
+                Editor
+            );
         db.ChangeTracker.Clear();
 
         var persisted = await db.PrivateAssets.FindAsync(asset.Id);

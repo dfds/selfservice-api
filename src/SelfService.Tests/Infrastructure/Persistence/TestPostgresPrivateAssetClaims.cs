@@ -13,8 +13,16 @@ public class TestPostgresPrivateAssetClaims
         await using var setupFactory = new ExternalDatabaseFactory();
         var setup = await setupFactory.CreateDbContext();
         var asset = new PrivateAsset(
-            PrivateAssetId.New(), "key", "image.png", "image/png", 4, "editor", DateTime.UtcNow,
-            null, PrivateAssetOwnerType.News, true
+            PrivateAssetId.New(),
+            "key",
+            "image.png",
+            "image/png",
+            4,
+            "editor",
+            DateTime.UtcNow,
+            null,
+            PrivateAssetOwnerType.News,
+            true
         );
         setup.PrivateAssets.Add(asset);
         await setup.SaveChangesAsync();
@@ -30,7 +38,12 @@ public class TestPostgresPrivateAssetClaims
                 await using var transaction = await new RealDbTransactionFacade(db).BeginTransaction();
                 try
                 {
-                    await new PrivateAssetRepository(db).Claim([(Guid)asset.Id], PrivateAssetOwnerType.News, owner, "editor");
+                    await new PrivateAssetRepository(db).Claim(
+                        [(Guid)asset.Id],
+                        PrivateAssetOwnerType.News,
+                        owner,
+                        "editor"
+                    );
                     await transaction.Commit();
                     return true;
                 }
