@@ -9,6 +9,7 @@ using SelfService.Domain.Models;
 using SelfService.Infrastructure.Api.Compliance;
 using SelfService.Infrastructure.Persistence;
 using SelfService.Infrastructure.Persistence.Models;
+using SelfService.Tests.TestDoubles;
 
 namespace SelfService.Tests.Application;
 
@@ -847,24 +848,5 @@ public class TestComplianceApplicationService
         await Assert.ThrowsAsync<KeyNotFoundException>(
             () => service.GetRequirementComplianceDetails("not-a-real-requirement")
         );
-    }
-
-    private sealed class SqliteRequirementsDbContext : RequirementsDbContext
-    {
-        public SqliteRequirementsDbContext(DbContextOptions<RequirementsDbContext> options)
-            : base(options) { }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-            modelBuilder
-                .Entity<RequirementsMetric>()
-                .Property(metric => metric.Labels)
-                .HasConversion(
-                    labels => labels == null ? null : labels.ToJsonString(null),
-                    json => json == null ? null : JsonNode.Parse(json, null, default)!.AsObject()
-                )
-                .HasColumnType("TEXT");
-        }
     }
 }

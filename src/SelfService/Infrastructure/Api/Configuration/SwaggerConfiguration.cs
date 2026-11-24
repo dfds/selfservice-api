@@ -22,6 +22,9 @@ public static class SwaggerConfiguration
             options.CustomSchemaIds(type => schemaHelper.GetSchemaId(type));
             options.EnableAnnotations();
 
+            // Swashbuckle 6.4 describes DateOnly as an object; System.Text.Json writes and binds it as YYYY-MM-DD.
+            options.MapType<DateOnly>(() => new OpenApiSchema { Type = "string", Format = "date" });
+
             options.DocInclusionPredicate((_, description) => !description.ShouldIgnore());
         });
     }

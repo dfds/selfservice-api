@@ -1,197 +1,121 @@
-using System.Text.Json.Nodes;
+using SelfService.Domain;
 using SelfService.Domain.Exceptions;
 using SelfService.Domain.Models;
-using SelfService.Domain.Services;
+using static SelfService.Application.ComplianceAggregation;
 
 namespace SelfService.Application;
 
+/// <summary>
+/// Used when no requirements DB is configured. Tags are evaluated; every metric-backed category is Unknown.
+/// There is no snapshot history: any <c>date</c> throws <see cref="ComplianceSnapshotNotFoundException"/>.
+/// </summary>
 public class StubComplianceApplicationService : IComplianceApplicationService
 {
     private readonly ICapabilityRepository _capabilityRepository;
     private readonly IAwsAccountRepository _awsAccountRepository;
     private readonly IMembershipRepository _membershipRepository;
+    private readonly SystemTime _systemTime;
 
-    private static readonly string[] PlaceholderCategories = Array.Empty<string>();
-    private const string RogueCostCentreName = "rogue";
-    private const string OrphanedLabel = "orphaned";
-
-    private static readonly RequirementDefinition[] RequirementDefinitions =
+    private static readonly string[] MetricCategoryNames =
     {
-        new("tags", "Tags"),
-        new("external-secrets", "External Secrets"),
-        new("irsa-mutual-trust", "IRSA Mutual Trust"),
-        new("workload-liveness-and-readiness-probes", "Workload Liveness and Readiness Probes"),
-        new("ecr-pull-policy", "ECR pull policy"),
+        "External Secrets",
+        "IRSA Mutual Trust",
+        "Workload Liveness and Readiness Probes",
+        "ECR pull policy",
     };
 
     public StubComplianceApplicationService(
         ICapabilityRepository capabilityRepository,
         IAwsAccountRepository awsAccountRepository,
-        IMembershipRepository membershipRepository
+        IMembershipRepository membershipRepository,
+        SystemTime systemTime
     )
     {
         _capabilityRepository = capabilityRepository;
         _awsAccountRepository = awsAccountRepository;
         _membershipRepository = membershipRepository;
+        _systemTime = systemTime;
     }
 
-    public async Task<CapabilityComplianceResult> GetCapabilityCompliance(CapabilityId capabilityId)
+    public async Task<CapabilityComplianceResult> GetCapabilityCompliance(
+        CapabilityId capabilityId,
+        DateOnly? date = null
+    )
     {
+        ThrowIfHistorical(date);
+
         var capability = await _capabilityRepository.FindBy(capabilityId);
         if (capability == null)
         {
             throw EntityNotFoundException<Capability>.UsingId(capabilityId);
         }
 
-        var hasKubernetesContext = await HasKubernetesContext(capabilityId);
-
-        var categories = new List<ComplianceCategoryResult>();
-
-        categories.Add(CheckTagCompliance(capability.JsonMetadata));
-
-        if (hasKubernetesContext)
-        {
-            // External Secrets unknown without requirements DB
-            categories.Add(
-                new ComplianceCategoryResult
-                {
-                    CategoryName = "External Secrets",
-                    Status = ComplianceStatus.Unknown,
-                    Items = new(),
-                }
-            );
-
-            // IRSA Mutual Trust unknown without requirements DB
-            categories.Add(
-                new ComplianceCategoryResult
-                {
-                    CategoryName = "IRSA Mutual Trust",
-                    Status = ComplianceStatus.Unknown,
-                    Items = new(),
-                }
-            );
-
-            // Workload Liveness and Readiness Probes unknown without requirements DB
-            categories.Add(
-                new ComplianceCategoryResult
-                {
-                    CategoryName = "Workload Liveness and Readiness Probes",
-                    Status = ComplianceStatus.Unknown,
-                    Items = new(),
-                }
-            );
-
-            // ECR pull policy unknown without requirements DB
-            categories.Add(
-                new ComplianceCategoryResult
-                {
-                    CategoryName = "ECR pull policy",
-                    Status = ComplianceStatus.Unknown,
-                    Items = new(),
-                }
-            );
-        }
-
-        foreach (var placeholder in PlaceholderCategories)
-        {
-            categories.Add(
-                new ComplianceCategoryResult
-                {
-                    CategoryName = placeholder,
-                    Status = ComplianceStatus.Unknown,
-                    Items = new(),
-                }
-            );
-        }
-
-        var evaluated = categories.Where(c => c.Status != ComplianceStatus.Unknown).ToList();
-        var overallStatus =
-            evaluated.Count == 0 ? ComplianceStatus.Unknown
-            : evaluated.All(c => c.Status == ComplianceStatus.Compliant) ? ComplianceStatus.Compliant
-            : ComplianceStatus.NonCompliant;
+        var categories = BuildCategories(capability.JsonMetadata, await HasKubernetesContext(capabilityId));
 
         return new CapabilityComplianceResult
         {
             CapabilityId = capabilityId.ToString(),
-            OverallStatus = overallStatus,
+            OverallStatus = DetermineOverallStatus(categories),
             TotalScore = categories.Count(c => c.Status == ComplianceStatus.Compliant),
             Categories = categories,
         };
     }
 
-    public async Task<CostCentreComplianceResult> GetCostCentreCompliance(string costCentre)
+    public async Task<CostCentreComplianceResult> GetCostCentreCompliance(string costCentre, DateOnly? date = null)
     {
-        var details = await GetCostCentreComplianceDetails(costCentre);
+        var details = await GetCostCentreComplianceDetails(costCentre, date);
         return ToCostCentreComplianceResult(details);
     }
 
-    public async Task<CostCentreComplianceDetailsResult> GetCostCentreComplianceDetails(string costCentre)
+    public async Task<CostCentreComplianceDetailsResult> GetCostCentreComplianceDetails(
+        string costCentre,
+        DateOnly? date = null
+    )
     {
-        return await BuildComplianceDetailsForCapabilities(
-            costCentre,
-            c => string.Equals(ExtractCostCentre(c.JsonMetadata), costCentre, StringComparison.OrdinalIgnoreCase)
-        );
+        return BuildDetails(costCentre, await LoadRows(date, InCostCentre(costCentre)));
     }
 
-    public async Task<CostCentreComplianceResult> GetRogueCapabilitiesCompliance()
+    public async Task<AllCostCentresComplianceResult> GetAllCostCentresCompliance(DateOnly? date = null)
     {
-        var details = await GetRogueCapabilitiesComplianceDetails();
-        return ToCostCentreComplianceResult(details);
+        return BuildAllCostCentres(await LoadRows(date, All));
     }
 
-    public async Task<CostCentreComplianceDetailsResult> GetRogueCapabilitiesComplianceDetails()
+    public async Task<CostCentreComplianceResult> GetRogueCapabilitiesCompliance(DateOnly? date = null)
     {
-        return await BuildComplianceDetailsForCapabilities(
-            RogueCostCentreName,
-            c => string.IsNullOrWhiteSpace(ExtractCostCentre(c.JsonMetadata))
-        );
+        var details = await GetRogueCapabilitiesComplianceDetails(date);
+        return ToCostCentreComplianceResult(details, ComplianceCostCentreKind.Rogue);
     }
 
-    public async Task<CostCentreComplianceResult> GetOrphanedCapabilitiesCompliance()
+    public async Task<CostCentreComplianceDetailsResult> GetRogueCapabilitiesComplianceDetails(DateOnly? date = null)
     {
-        var details = await GetOrphanedCapabilitiesComplianceDetails();
-        return ToCostCentreComplianceResult(details);
+        return BuildDetails(RogueLabel, await LoadRows(date, Rogue));
     }
 
-    public async Task<CostCentreComplianceDetailsResult> GetOrphanedCapabilitiesComplianceDetails()
+    public async Task<CostCentreComplianceResult> GetOrphanedCapabilitiesCompliance(DateOnly? date = null)
     {
-        var activeCapabilities = (await _capabilityRepository.GetAllActive()).ToList();
-        var memberCounts = await _membershipRepository.GetMemberCountsByCapabilityIds(
-            activeCapabilities.Select(c => c.Id)
-        );
-
-        return await BuildComplianceDetailsForCapabilities(
-            OrphanedLabel,
-            c => memberCounts.GetValueOrDefault(c.Id, 0) == 0,
-            activeCapabilities
-        );
+        var details = await GetOrphanedCapabilitiesComplianceDetails(date);
+        return ToCostCentreComplianceResult(details, ComplianceCostCentreKind.Orphaned);
     }
 
-    public async Task<ComplianceSummaryResult> GetComplianceSummary()
+    public async Task<CostCentreComplianceDetailsResult> GetOrphanedCapabilitiesComplianceDetails(DateOnly? date = null)
     {
-        var all = await BuildComplianceDetailsForCapabilities("all", _ => true);
-        return new ComplianceSummaryResult
-        {
-            TotalCapabilities = all.TotalCapabilities,
-            FullyCompliantCapabilities = all.CompliantCount,
-            NonCompliantCapabilities = all.NonCompliantCount,
-            UnknownCapabilities = all.UnknownCount,
-        };
+        return BuildDetails(OrphanedLabel, await LoadRows(date, Orphaned));
     }
 
-    public async Task<RequirementsComplianceResult> GetRequirementsCompliance()
+    public async Task<ComplianceSummaryResult> GetComplianceSummary(DateOnly? date = null)
     {
-        var allCapabilitiesDetails = await BuildComplianceDetailsForCapabilities("all", _ => true);
-
-        return new RequirementsComplianceResult
-        {
-            Items = RequirementDefinitions
-                .Select(definition => BuildRequirementSummary(definition, allCapabilitiesDetails.Capabilities))
-                .ToList(),
-        };
+        return BuildSummary(await LoadRows(date, All));
     }
 
-    public async Task<RequirementComplianceDetailsResult> GetRequirementComplianceDetails(string requirementId)
+    public async Task<RequirementsComplianceResult> GetRequirementsCompliance(DateOnly? date = null)
+    {
+        return BuildRequirementsCompliance(await LoadRows(date, All));
+    }
+
+    public async Task<RequirementComplianceDetailsResult> GetRequirementComplianceDetails(
+        string requirementId,
+        DateOnly? date = null
+    )
     {
         var definition = FindRequirementDefinition(requirementId);
         if (definition == null)
@@ -199,226 +123,132 @@ public class StubComplianceApplicationService : IComplianceApplicationService
             throw new KeyNotFoundException($"Unknown compliance requirement id '{requirementId}'.");
         }
 
-        var allCapabilitiesDetails = await BuildComplianceDetailsForCapabilities("all", _ => true);
-        return BuildRequirementDetails(definition, allCapabilitiesDetails.Capabilities);
+        return BuildRequirementDetails(definition, await LoadRows(date, All));
     }
 
-    private async Task<CostCentreComplianceDetailsResult> BuildComplianceDetailsForCapabilities(
-        string costCentreLabel,
-        Func<Capability, bool> filter,
-        List<Capability>? activeCapabilities = null
+    public async Task<ComplianceCaptureResult> CaptureCurrent()
+    {
+        var capturedAt = _systemTime.Now;
+        var date = DateOnly.FromDateTime(capturedAt);
+        var rows = await LoadRows(null, All);
+
+        return new ComplianceCaptureResult
+        {
+            Date = date,
+            CapturedAt = capturedAt,
+            Rows = rows,
+            Summary = BuildDailySummary(date, capturedAt, rows),
+        };
+    }
+
+    public Task<ComplianceHistoryResult> GetHistory(DateOnly? from = null, DateOnly? to = null)
+    {
+        return Task.FromResult(new ComplianceHistoryResult());
+    }
+
+    public Task<CostCentreComplianceHistoryResult> GetCostCentreHistory(
+        ComplianceCostCentreKind kind,
+        string? costCentre,
+        DateOnly? from = null,
+        DateOnly? to = null
     )
     {
-        activeCapabilities ??= (await _capabilityRepository.GetAllActive()).ToList();
+        return Task.FromResult(new CostCentreComplianceHistoryResult());
+    }
 
-        var matchingCapabilities = activeCapabilities.Where(filter).ToList();
+    public Task<RequirementComplianceHistoryResult> GetRequirementHistory(
+        string requirementId,
+        DateOnly? from = null,
+        DateOnly? to = null
+    )
+    {
+        var definition =
+            FindRequirementDefinition(requirementId)
+            ?? throw new KeyNotFoundException($"Unknown compliance requirement id '{requirementId}'.");
+        return Task.FromResult(new RequirementComplianceHistoryResult { RequirementId = definition.RequirementId });
+    }
 
-        var awsAccounts = await _awsAccountRepository.GetByCapabilityIds(matchingCapabilities.Select(c => c.Id));
+    public Task<List<CapabilityComplianceHistoryEntry>> GetCapabilityHistory(
+        CapabilityId capabilityId,
+        DateOnly from,
+        DateOnly to
+    )
+    {
+        return Task.FromResult(new List<CapabilityComplianceHistoryEntry>());
+    }
+
+    private async Task<List<CapabilityComplianceRow>> LoadRows(DateOnly? date, Func<CapabilityPlacement, bool> filter)
+    {
+        ThrowIfHistorical(date);
+
+        var activeCapabilities = (await _capabilityRepository.GetAllActive()).ToList();
+        var memberCounts = await _membershipRepository.GetMemberCountsByCapabilityIds(
+            activeCapabilities.Select(c => c.Id)
+        );
+
+        var matching = activeCapabilities
+            .Select(c =>
+                (
+                    Capability: c,
+                    Placement: new CapabilityPlacement(
+                        PlacementCostCentre(c.JsonMetadata),
+                        memberCounts.GetValueOrDefault(c.Id, 0)
+                    )
+                )
+            )
+            .Where(x => filter(x.Placement))
+            .ToList();
+
+        var awsAccounts = await _awsAccountRepository.GetByCapabilityIds(matching.Select(x => x.Capability.Id));
         var k8sCapabilityIds = awsAccounts
             .Where(a => a.KubernetesLink.LinkedAt is not null)
             .Select(a => a.CapabilityId.ToString())
             .ToHashSet();
 
-        var capabilityResults = matchingCapabilities
-            .Select(cap =>
+        return matching
+            .Select(x =>
             {
-                var categories = new List<ComplianceCategoryResult> { CheckTagCompliance(cap.JsonMetadata) };
+                var cap = x.Capability;
+                var categories = BuildCategories(cap.JsonMetadata, k8sCapabilityIds.Contains(cap.Id.ToString()));
 
-                if (k8sCapabilityIds.Contains(cap.Id.ToString()))
-                {
-                    categories.Add(
-                        new ComplianceCategoryResult
-                        {
-                            CategoryName = "External Secrets",
-                            Status = ComplianceStatus.Unknown,
-                            Items = new(),
-                        }
-                    );
-                    categories.Add(
-                        new ComplianceCategoryResult
-                        {
-                            CategoryName = "IRSA Mutual Trust",
-                            Status = ComplianceStatus.Unknown,
-                            Items = new(),
-                        }
-                    );
-                    categories.Add(
-                        new ComplianceCategoryResult
-                        {
-                            CategoryName = "Workload Liveness and Readiness Probes",
-                            Status = ComplianceStatus.Unknown,
-                            Items = new(),
-                        }
-                    );
-                    categories.Add(
-                        new ComplianceCategoryResult
-                        {
-                            CategoryName = "ECR pull policy",
-                            Status = ComplianceStatus.Unknown,
-                            Items = new(),
-                        }
-                    );
-                }
-
-                var evaluated = categories.Where(c => c.Status != ComplianceStatus.Unknown).ToList();
-                return new CostCentreCapabilityComplianceResult
-                {
-                    CapabilityId = cap.Id.ToString(),
-                    CapabilityName = cap.Name,
-                    JsonMetadata = cap.JsonMetadata,
-                    OverallStatus =
-                        evaluated.Count == 0 ? ComplianceStatus.Unknown
-                        : evaluated.All(c => c.Status == ComplianceStatus.Compliant) ? ComplianceStatus.Compliant
-                        : ComplianceStatus.NonCompliant,
-                    Categories = categories,
-                };
-            })
-            .ToList();
-
-        var allCategoryNames = new[]
-        {
-            "Tags",
-            "External Secrets",
-            "IRSA Mutual Trust",
-            "Workload Liveness and Readiness Probes",
-            "ECR pull policy",
-        }
-            .Concat(PlaceholderCategories)
-            .ToList();
-
-        var categoryBreakdowns = allCategoryNames
-            .Select(name => new CostCentreCategoryBreakdown
-            {
-                CategoryName = name,
-                CompliantCount = capabilityResults.Count(r =>
-                    r.Categories.Any(c => c.CategoryName == name && c.Status == ComplianceStatus.Compliant)
-                ),
-                NonCompliantCount = capabilityResults.Count(r =>
-                    r.Categories.Any(c => c.CategoryName == name && c.Status == ComplianceStatus.NonCompliant)
-                ),
-            })
-            .ToList();
-
-        return new CostCentreComplianceDetailsResult
-        {
-            CostCentre = costCentreLabel,
-            TotalCapabilities = matchingCapabilities.Count,
-            CompliantCount = capabilityResults.Count(r => r.OverallStatus == ComplianceStatus.Compliant),
-            NonCompliantCount = capabilityResults.Count(r => r.OverallStatus == ComplianceStatus.NonCompliant),
-            UnknownCount = capabilityResults.Count(r => r.OverallStatus == ComplianceStatus.Unknown),
-            Categories = categoryBreakdowns,
-            Capabilities = capabilityResults,
-        };
-    }
-
-    private static CostCentreComplianceResult ToCostCentreComplianceResult(CostCentreComplianceDetailsResult details)
-    {
-        return new CostCentreComplianceResult
-        {
-            CostCentre = details.CostCentre,
-            TotalCapabilities = details.TotalCapabilities,
-            CompliantCount = details.CompliantCount,
-            NonCompliantCount = details.NonCompliantCount,
-            Categories = details.Categories,
-        };
-    }
-
-    private static RequirementComplianceSummaryResult BuildRequirementSummary(
-        RequirementDefinition definition,
-        List<CostCentreCapabilityComplianceResult> capabilities
-    )
-    {
-        var matched = capabilities
-            .Select(cap => new
-            {
-                cap,
-                category = cap.Categories.FirstOrDefault(c => c.CategoryName == definition.CategoryName),
-            })
-            .Where(x => x.category != null)
-            .Select(x => new { x.cap, category = x.category! })
-            .ToList();
-
-        var metadataSource = matched.Select(x => x.category).FirstOrDefault();
-
-        var byCostCentre = matched
-            .GroupBy(x => ExtractCostCentre(x.cap.JsonMetadata))
-            .OrderBy(g => g.Key)
-            .Select(g => new RequirementByCostCentreResult
-            {
-                CostCentre = g.Key,
-                TotalCapabilities = g.Count(),
-                CompliantCount = g.Count(x => x.category.Status == ComplianceStatus.Compliant),
-                NonCompliantCount = g.Count(x => x.category.Status == ComplianceStatus.NonCompliant),
-                UnknownCount = g.Count(x => x.category.Status == ComplianceStatus.Unknown),
-            })
-            .ToList();
-
-        return new RequirementComplianceSummaryResult
-        {
-            RequirementId = definition.RequirementId,
-            CategoryName = definition.CategoryName,
-            DisplayName = metadataSource?.DisplayName ?? definition.CategoryName,
-            Description = metadataSource?.Description,
-            HelpUrl = metadataSource?.HelpUrl,
-            TotalCapabilities = matched.Count,
-            CompliantCount = matched.Count(x => x.category.Status == ComplianceStatus.Compliant),
-            NonCompliantCount = matched.Count(x => x.category.Status == ComplianceStatus.NonCompliant),
-            UnknownCount = matched.Count(x => x.category.Status == ComplianceStatus.Unknown),
-            ByCostCentre = byCostCentre,
-        };
-    }
-
-    private static RequirementComplianceDetailsResult BuildRequirementDetails(
-        RequirementDefinition definition,
-        List<CostCentreCapabilityComplianceResult> capabilities
-    )
-    {
-        var capabilityCategories = capabilities
-            .Select(capability =>
-            {
-                var matchingCategory = capability.Categories.FirstOrDefault(category =>
-                    category.CategoryName == definition.CategoryName
+                return new CapabilityComplianceRow(
+                    CapabilityId: cap.Id.ToString(),
+                    CapabilityName: cap.Name,
+                    JsonMetadata: cap.JsonMetadata,
+                    CostCentre: x.Placement.CostCentre,
+                    MemberCount: x.Placement.MemberCount,
+                    OverallStatus: DetermineOverallStatus(categories),
+                    Categories: categories
                 );
-                return new { capability, matchingCategory };
             })
-            .Where(item => item.matchingCategory is not null)
-            .Select(item => new { item.capability, category = item.matchingCategory! })
             .ToList();
-
-        var metadataSource = capabilityCategories.Select(item => item.category).FirstOrDefault();
-
-        return new RequirementComplianceDetailsResult
-        {
-            RequirementId = definition.RequirementId,
-            CategoryName = definition.CategoryName,
-            DisplayName = metadataSource?.DisplayName ?? definition.CategoryName,
-            Description = metadataSource?.Description,
-            HelpUrl = metadataSource?.HelpUrl,
-            TotalCapabilities = capabilityCategories.Count,
-            CompliantCount = capabilityCategories.Count(item => item.category.Status == ComplianceStatus.Compliant),
-            NonCompliantCount = capabilityCategories.Count(item =>
-                item.category.Status == ComplianceStatus.NonCompliant
-            ),
-            UnknownCount = capabilityCategories.Count(item => item.category.Status == ComplianceStatus.Unknown),
-            Capabilities = capabilityCategories
-                .Select(item => new RequirementCapabilityComplianceResult
-                {
-                    CapabilityId = item.capability.CapabilityId,
-                    CapabilityName = item.capability.CapabilityName,
-                    JsonMetadata = item.capability.JsonMetadata,
-                    Status = item.category.Status,
-                    Score = item.category.Score,
-                    Items = item.category.Items,
-                })
-                .ToList(),
-        };
     }
 
-    private static RequirementDefinition? FindRequirementDefinition(string requirementId)
+    private static void ThrowIfHistorical(DateOnly? date)
     {
-        return RequirementDefinitions.FirstOrDefault(definition =>
-            string.Equals(definition.RequirementId, requirementId, StringComparison.OrdinalIgnoreCase)
-        );
+        if (date is { } snapshotDate)
+        {
+            throw new ComplianceSnapshotNotFoundException(snapshotDate);
+        }
+    }
+
+    private static List<ComplianceCategoryResult> BuildCategories(string? jsonMetadata, bool hasKubernetesContext)
+    {
+        var categories = new List<ComplianceCategoryResult> { CheckTagCompliance(jsonMetadata) };
+
+        if (hasKubernetesContext)
+        {
+            categories.AddRange(
+                MetricCategoryNames.Select(name => new ComplianceCategoryResult
+                {
+                    CategoryName = name,
+                    Status = ComplianceStatus.Unknown,
+                    Items = new(),
+                })
+            );
+        }
+
+        return categories;
     }
 
     private async Task<bool> HasKubernetesContext(CapabilityId capabilityId)
@@ -426,37 +256,4 @@ public class StubComplianceApplicationService : IComplianceApplicationService
         var awsAccount = await _awsAccountRepository.FindBy(capabilityId);
         return awsAccount?.KubernetesLink.LinkedAt is not null;
     }
-
-    private static ComplianceCategoryResult CheckTagCompliance(string? jsonMetadata)
-    {
-        var evaluation = TagComplianceEvaluator.Evaluate(jsonMetadata);
-
-        return new ComplianceCategoryResult
-        {
-            CategoryName = TagComplianceEvaluator.CategoryName,
-            Status = evaluation.IsCompliant ? ComplianceStatus.Compliant : ComplianceStatus.NonCompliant,
-            Score = evaluation.Score,
-            Items = evaluation
-                .Tags.Select(t => new ComplianceCategoryItem
-                {
-                    Name = t.Name,
-                    Status = t.IsPresent ? "present" : "missing",
-                    Detail = t.Value,
-                })
-                .ToList(),
-            Description = TagComplianceEvaluator.Description,
-            HelpUrl = TagComplianceEvaluator.HelpUrl,
-            DisplayName = TagComplianceEvaluator.DisplayName,
-        };
-    }
-
-    private static string? ExtractCostCentre(string? jsonMetadata)
-    {
-        if (string.IsNullOrEmpty(jsonMetadata))
-            return null;
-        var jsonObject = JsonNode.Parse(jsonMetadata)?.AsObject();
-        return jsonObject?["dfds.cost.centre"]?.ToString();
-    }
-
-    private sealed record RequirementDefinition(string RequirementId, string CategoryName);
 }

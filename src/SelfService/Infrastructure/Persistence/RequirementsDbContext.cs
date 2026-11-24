@@ -48,6 +48,7 @@ public static class RequirementsDependencyInjection
         builder.Services.AddTransient<IRequirementsMetricService, RequirementsMetricService>();
         builder.Services.AddTransient<IComplianceApplicationService, ComplianceApplicationService>();
         builder.Services.AddHostedService<RequirementScoreUpdater>();
+        builder.Services.AddHostedService<ComplianceSnapshotRecorder>();
     }
 }
 
