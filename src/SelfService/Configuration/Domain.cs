@@ -74,6 +74,7 @@ public static class Domain
         builder.Services.AddTransient<IPrivateAssetService, S3PrivateAssetService>();
         builder.Services.AddTransient<IPrivateAssetApplicationService, PrivateAssetApplicationService>();
         builder.Services.AddTransient<IPrivateAssetRepository, PrivateAssetRepository>();
+        builder.Services.AddTransient<IComplianceSnapshotRepository, ComplianceSnapshotRepository>();
         // Note: IRequirementsMetricService is registered conditionally in RequirementsDbContext.AddRequirementsDatabase
 
         // domain repositories
