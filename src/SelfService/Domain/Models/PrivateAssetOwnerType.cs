@@ -6,4 +6,7 @@ namespace SelfService.Domain.Models;
 public enum PrivateAssetOwnerType
 {
     EmailCampaign,
+    Event,
+    ReleaseNote,
+    News,
 }

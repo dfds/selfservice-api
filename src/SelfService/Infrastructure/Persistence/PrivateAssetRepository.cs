@@ -21,4 +21,22 @@ public class PrivateAssetRepository(SelfServiceDbContext dbContext) : IPrivateAs
             .OrderBy(asset => asset.CreatedAt)
             .ThenBy(asset => asset.Id)
             .ToListAsync();
+
+    public async Task Claim(IEnumerable<Guid> assetIds, PrivateAssetOwnerType ownerType, Guid ownerId, string createdBy)
+    {
+        foreach (var value in assetIds.Distinct().OrderBy(value => value))
+        {
+            var assetId = PrivateAssetId.NewFrom(value);
+            var updated = await dbContext
+                .PrivateAssets.Where(asset =>
+                    asset.Id == assetId
+                    && asset.OwnerType == ownerType
+                    && (asset.OwnerId == ownerId || (asset.OwnerId == null && asset.CreatedBy == createdBy))
+                )
+                .ExecuteUpdateAsync(setters => setters.SetProperty(asset => asset.OwnerId, ownerId));
+
+            if (updated != 1)
+                throw new ArgumentException("One or more assets cannot be attached to this item.");
+        }
+    }
 }

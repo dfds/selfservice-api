@@ -13,6 +13,7 @@ public class EventUpdateRequest
     public DateTime? EventDate { get; set; }
     public EventType? Type { get; set; }
     public List<EventAttachmentDto>? Attachments { get; set; }
+    public List<Guid>? AssetIds { get; set; }
 }
 
 public class EventAttachmentDto

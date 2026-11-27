@@ -10,7 +10,7 @@ public class PrivateAsset : Entity<PrivateAssetId>
         long sizeInBytes,
         string createdBy,
         DateTime createdAt,
-        Guid ownerId,
+        Guid? ownerId,
         PrivateAssetOwnerType ownerType,
         bool isInline
     )
@@ -35,7 +35,7 @@ public class PrivateAsset : Entity<PrivateAssetId>
         string mimeType,
         long sizeInBytes,
         string createdBy,
-        Guid ownerId,
+        Guid? ownerId,
         PrivateAssetOwnerType ownerType
     )
     {
@@ -58,7 +58,7 @@ public class PrivateAsset : Entity<PrivateAssetId>
     public long SizeInBytes { get; private set; }
     public string CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
-    public Guid OwnerId { get; private set; }
+    public Guid? OwnerId { get; private set; }
     public PrivateAssetOwnerType OwnerType { get; private set; }
     public bool IsInline { get; private set; }
 

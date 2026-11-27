@@ -93,27 +93,15 @@ public class EventController : ControllerBase
             createdAt: DateTime.UtcNow
         );
 
-        var createdEvent = await _eventService.CreateEvent(eventModel);
-
-        // Add attachments if provided
-        if (request.Attachments != null && request.Attachments.Any())
+        try
         {
-            foreach (var attachmentDto in request.Attachments)
-            {
-                var attachment = new EventAttachment(
-                    id: new EventAttachmentId(),
-                    eventId: createdEvent.Id,
-                    url: attachmentDto.Url!,
-                    attachmentType: attachmentDto.Type,
-                    description: attachmentDto.Description,
-                    createdAt: DateTime.UtcNow
-                );
-                await _eventService.AddAttachmentToEvent(createdEvent.Id, attachment);
-                createdEvent.AddAttachment(attachment);
-            }
+            var createdEvent = await _eventService.CreateEvent(eventModel, request, userId.ToString());
+            return Ok(await _apiResourceFactory.Convert(createdEvent));
         }
-
-        return Ok(await _apiResourceFactory.Convert(createdEvent));
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = exception.Message });
+        }
     }
 
     [HttpGet("{id}")]
@@ -182,59 +170,16 @@ public class EventController : ControllerBase
             );
         }
 
-        await _eventService.UpdateEvent(id, request);
-
-        // Handle attachments if provided in the request
-        if (request.Attachments != null)
+        try
         {
-            // Get current attachments for this event
-            var currentEvent = await _eventService.GetEventById(id);
-            var currentAttachments = currentEvent.Attachments.ToList();
-
-            // Determine which attachment IDs are in the request (existing attachments to keep)
-            var requestedAttachmentIds = request
-                .Attachments.Where(a => a.Id is not null)
-                .Select(a => a.Id!)
-                .ToHashSet();
-
-            // Delete attachments that are not in the request
-            foreach (var currentAttachment in currentAttachments)
-            {
-                if (!requestedAttachmentIds.Contains(currentAttachment.Id))
-                {
-                    await _eventService.DeleteAttachment(currentAttachment.Id);
-                }
-            }
-
-            // Update existing attachments (those with an ID still present)
-            foreach (var attachmentDto in request.Attachments.Where(a => a.Id is not null && a.Url is not null))
-            {
-                await _eventService.UpdateAttachment(
-                    attachmentDto.Id!,
-                    attachmentDto.Url!,
-                    attachmentDto.Type,
-                    attachmentDto.Description
-                );
-            }
-
-            // Add new attachments (those without an ID)
-            foreach (var attachmentDto in request.Attachments.Where(a => a.Id is null))
-            {
-                var attachment = new EventAttachment(
-                    id: new EventAttachmentId(),
-                    eventId: id,
-                    url: attachmentDto.Url!,
-                    attachmentType: attachmentDto.Type,
-                    description: attachmentDto.Description,
-                    createdAt: DateTime.UtcNow
-                );
-                await _eventService.AddAttachmentToEvent(id, attachment);
-            }
+            await _eventService.UpdateEvent(id, request, userId.ToString());
+            var updatedEvent = await _eventService.GetEventById(id);
+            return Ok(await _apiResourceFactory.Convert(updatedEvent));
         }
-
-        var updatedEvent = await _eventService.GetEventById(id);
-
-        return Ok(await _apiResourceFactory.Convert(updatedEvent));
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = exception.Message });
+        }
     }
 
     [HttpDelete("{id}")]

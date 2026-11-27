@@ -7,11 +7,17 @@ public class NewsItemService : INewsItemService
 {
     private readonly ILogger<NewsItemService> _logger;
     private readonly INewsItemRepository _newsItemRepository;
+    private readonly IPrivateAssetRepository _privateAssetRepository;
 
-    public NewsItemService(ILogger<NewsItemService> logger, INewsItemRepository newsItemRepository)
+    public NewsItemService(
+        ILogger<NewsItemService> logger,
+        INewsItemRepository newsItemRepository,
+        IPrivateAssetRepository privateAssetRepository
+    )
     {
         _logger = logger;
         _newsItemRepository = newsItemRepository;
+        _privateAssetRepository = privateAssetRepository;
     }
 
     public async Task<IEnumerable<NewsItem>> GetAllNewsItems()
@@ -26,19 +32,21 @@ public class NewsItemService : INewsItemService
     }
 
     [TransactionalBoundary]
-    public async Task<NewsItem> CreateNewsItem(NewsItem newsItem)
+    public async Task<NewsItem> CreateNewsItem(NewsItem newsItem, IEnumerable<Guid>? assetIds, string userId)
     {
+        await _privateAssetRepository.Claim(assetIds ?? [], PrivateAssetOwnerType.News, newsItem.Id, userId);
         await _newsItemRepository.Add(newsItem);
         return newsItem;
     }
 
     [TransactionalBoundary]
-    public async Task UpdateNewsItem(NewsItemId id, NewsItemUpdateRequest updateRequest)
+    public async Task UpdateNewsItem(NewsItemId id, NewsItemUpdateRequest updateRequest, string userId)
     {
         var newsItem =
             await _newsItemRepository.FindById(id)
             ?? throw new KeyNotFoundException($"News item with id '{id}' not found.");
 
+        await _privateAssetRepository.Claim(updateRequest.AssetIds ?? [], PrivateAssetOwnerType.News, id, userId);
         newsItem.Update(
             updateRequest.Title,
             updateRequest.Body,

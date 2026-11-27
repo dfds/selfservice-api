@@ -12,6 +12,8 @@ public class NewsItemCreateRequest
 
     public string? FrontpageSummary { get; set; }
 
+    public List<Guid>? AssetIds { get; set; }
+
     [Required]
     public DateTime DueDate { get; set; }
 }
