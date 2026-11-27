@@ -19,7 +19,7 @@ public class ActOnPendingCapabilityDeletions : BackgroundService
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     await DoWork(stoppingToken);
-                    await Task.Delay(TimeSpan.FromHours(12), stoppingToken); // arbitrary long check-cycle.
+                    await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
                 }
             },
             stoppingToken
